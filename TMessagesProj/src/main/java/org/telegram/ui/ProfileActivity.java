@@ -636,7 +636,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private int devicesSectionRow;
     private int helpHeaderRow;
     private int questionRow;
-    private int faqRow;
+    private int nayaGramRow;
     private int policyRow;
     private int helpSectionCell;
     private int debugHeaderRow;
@@ -4548,7 +4548,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 presentFragment(new SessionsActivity(0));
             } else if (position == questionRow) {
                 showDialog(AlertsCreator.createSupportAlert(ProfileActivity.this, resourcesProvider));
-            } else if (position == faqRow) {
+            } else if (position == nayaGramRow) {
+    presentFragment(new uz.unnarsx.cherrygram.preferences.NayaGramNavigator());
+} else if (position == faqRow) {
                 Browser.openUrl(getParentActivity(), LocaleController.getString(R.string.TelegramFaqUrl));
             } else if (position == policyRow) {
                 Browser.openUrl(getParentActivity(), LocaleController.getString(R.string.PrivacyPolicyUrl));
@@ -10485,7 +10487,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         devicesSectionRow = -1;
         helpHeaderRow = -1;
         questionRow = -1;
-        faqRow = -1;
+        nayaGramRow = -1;
         policyRow = -1;
         helpSectionCell = -1;
         debugHeaderRow = -1;
@@ -10671,7 +10673,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
                 helpHeaderRow = rowCount++;
                 questionRow = rowCount++;
-                faqRow = rowCount++;
+                nayaGramRow = rowCount++;
                 policyRow = rowCount++;
                 if (BuildVars.LOGS_ENABLED || BuildVars.DEBUG_PRIVATE_VERSION) {
                     helpSectionCell = rowCount++;
@@ -13849,7 +13851,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         textCell.setTextAndIcon(LocaleController.getString(R.string.PowerUsage), R.drawable.msg2_battery, true);
                     } else if (position == questionRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.AskAQuestion), R.drawable.msg2_ask_question, true);
-                    } else if (position == faqRow) {
+                 } else if (position == nayaGramRow) {
+    TextCell textCell = (TextCell) holder.itemView;
+    textCell.setTextAndIcon("⚙️ 𝐍𝐆 𝐂𝐨𝐧𝐭𝐫𝐨𝐥", R.drawable.msg_settings_old, false);
+} else if (position == faqRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.TelegramFAQ), R.drawable.msg2_help, true);
                     } else if (position == policyRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.PrivacyPolicy), R.drawable.msg2_policy, false);
