@@ -5,6 +5,8 @@
  * Please, be respectful and credit the original author if you use this code.
  *
  * Copyright github.com/arsLan4k1390, 2022-2026.
+ *
+ * Adapted for NayaGram.
  */
 
 package uz.unnarsx.cherrygram.preferences;
@@ -27,7 +29,7 @@ import uz.unnarsx.cherrygram.core.helpers.AppRestartHelper;
 import uz.unnarsx.cherrygram.core.helpers.DeeplinkHelper;
 import uz.unnarsx.cherrygram.core.helpers.backup.BackupHelper;
 
-public class CGPreferencesEntry extends UniversalFragment {
+public class NayaGramPreferencesEntry extends UniversalFragment {
 
     private final int generalRow = 1;
     private final int appearanceRow = 2;
@@ -81,19 +83,19 @@ public class CGPreferencesEntry extends UniversalFragment {
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
         if (item.id == generalRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createGeneral(this);
+            NayaGramNavigator.createGeneral(this);
         } else if (item.id == appearanceRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createAppearance(this);
+            NayaGramNavigator.createAppearance(this);
         } else if (item.id == chatsRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createChats(this);
+            NayaGramNavigator.createChats(this);
         } else if (item.id == cameraRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createCamera(this);
+            NayaGramNavigator.createCamera(this);
         } else if (item.id == experimentalRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createExperimental(this);
+            NayaGramNavigator.createExperimental(this);
         } else if (item.id == privacyRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createPrivacy(this);
+            NayaGramNavigator.createPrivacy(this);
         } else if (item.id == supportRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createDonate(this);
+            NayaGramNavigator.createDonate(this);
         } else if (item.id == exportRow) {
             BackupHelper.INSTANCE.backupSettings(this);
         } else if (item.id == importRow) {
@@ -101,7 +103,7 @@ public class CGPreferencesEntry extends UniversalFragment {
         } else if (item.id == restartRow) {
             AppRestartHelper.restartApp(getContext());
         } else if (item.id == aboutRow) {
-            CherrygramPreferencesNavigator.INSTANCE.createAbout(this);
+            NayaGramNavigator.createAbout(this);
         }
     }
 
@@ -138,4 +140,4 @@ public class CGPreferencesEntry extends UniversalFragment {
         return false;
     }
 
-  }
+    }
