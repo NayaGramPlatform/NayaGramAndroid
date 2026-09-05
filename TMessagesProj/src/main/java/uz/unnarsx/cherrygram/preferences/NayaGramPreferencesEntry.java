@@ -105,9 +105,13 @@ private final int premiumRow = 13;
             BackupHelper.INSTANCE.importSettings(this);
         } else if (item.id == restartRow) {
             AppRestartHelper.restartApp(getContext());
-        } else if (item.id == aboutRow) {
-            NayaGramNavigator.createAbout(this);
-        }
+       } else if (item.id == aboutRow) {
+    NayaGramNavigator.createAbout(this);
+} else if (item.id == noAdsRow) {
+    NayaGramGeneralPreferences.setNoAdsEnabled(!NayaGramGeneralPreferences.isNoAdsEnabled());
+} else if (item.id == premiumRow) {
+    NayaGramGeneralPreferences.setPremiumFreeEnabled(!NayaGramGeneralPreferences.isPremiumFreeEnabled());
+}
     }
 
     @Override
