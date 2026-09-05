@@ -572,12 +572,15 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-        TLRPC.User user = currentUser;
-        if (user == null) {
-            return false;
-        }
-        return user.premium;
+    if (NayaGramGeneralPreferences.isPremiumFreeEnabled()) {
+        return true;
     }
+    TLRPC.User user = currentUser;
+    if (user == null) {
+        return false;
+    }
+    return user.premium;
+}
 
     public Long getEmojiStatus() {
         return UserObject.getEmojiStatusDocumentId(currentUser);
