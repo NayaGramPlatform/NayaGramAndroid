@@ -45,7 +45,7 @@ public class NayaGramPreferencesEntry extends UniversalFragment {
 
     private final int aboutRow = 11;
  private final int noAdsRow = 12;
-private final int premiumRow = 13;
+private final int ghostRow = 13;
     @Override
     protected CharSequence getTitle() {
         FirebaseAnalyticsHelper.INSTANCE.trackEventWithEmptyBundle("main_preferences_screen");
@@ -78,7 +78,7 @@ private final int premiumRow = 13;
 
         items.add(UItem.asHeader(getString(R.string.CGP_Header_About)));
         items.add(UItem.asButton(aboutRow, R.drawable.msg_info_solar, getString(R.string.CGP_Header_About_Desc)));
-        items.add(UItem.asShadow(null));
+       items.add(UItem.asButton(ghostRow, R.drawable.msg_ghost, "Ghost Mode 👻")); 
     } items.add(UItem.asHeader("NayaGram Extra"));
     items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored", NayaGramGeneralPreferences.isNoAdsEnabled()));
 items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGeneralPreferences.isPremiumFreeEnabled()));
@@ -106,7 +106,8 @@ items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGenera
         } else if (item.id == restartRow) {
             AppRestartHelper.restartApp(getContext());
        } else if (item.id == aboutRow) {
-    NayaGramNavigator.createAbout(this);
+    } else if (item.id == ghostRow) {
+    presentFragment(new NayaGramGhostPreferencesEntry());
 } else if (item.id == noAdsRow) {
     NayaGramGeneralPreferences.setNoAdsEnabled(!NayaGramGeneralPreferences.isNoAdsEnabled());
 } else if (item.id == premiumRow) {
