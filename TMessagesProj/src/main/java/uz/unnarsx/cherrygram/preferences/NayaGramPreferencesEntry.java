@@ -28,7 +28,8 @@ import uz.unnarsx.cherrygram.core.crashlytics.FirebaseAnalyticsHelper;
 import uz.unnarsx.cherrygram.core.helpers.AppRestartHelper;
 import uz.unnarsx.cherrygram.core.helpers.DeeplinkHelper;
 import uz.unnarsx.cherrygram.core.helpers.backup.BackupHelper;
-import uz.unnarsx.cherrygram.preferences.NayaGramGeneralPreferences;
+import uz.unnarsx.cherrygram.preferences.tabs.NayaGramGhostPreferencesEntry;
+
 public class NayaGramPreferencesEntry extends UniversalFragment {
 
     private final int generalRow = 1;
@@ -44,8 +45,10 @@ public class NayaGramPreferencesEntry extends UniversalFragment {
     private final int restartRow = 10;
 
     private final int aboutRow = 11;
- private final int noAdsRow = 12;
-private final int ghostRow = 13;
+    private final int ghostRow = 12;
+    private final int noAdsRow = 13;
+    private final int premiumRow = 14;
+
     @Override
     protected CharSequence getTitle() {
         FirebaseAnalyticsHelper.INSTANCE.trackEventWithEmptyBundle("main_preferences_screen");
@@ -69,6 +72,12 @@ private final int ghostRow = 13;
         items.add(UItem.asButton(privacyRow, R.drawable.msg_secret_solar, getString(R.string.SettingsPrivacySecurity)));
         items.add(UItem.asShadow(null));
 
+        items.add(UItem.asHeader("NayaGram"));
+        items.add(UItem.asButton(ghostRow, R.drawable.msg_secret_solar, "Ghost Mode \uD83D\uDC7B"));
+        items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored", "", NayaGramGeneralPreferences.isNoAdsEnabled()));
+        items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", "", NayaGramGeneralPreferences.isPremiumFreeEnabled()));
+        items.add(UItem.asShadow(null));
+
         items.add(UItem.asHeader(getString(R.string.LocalOther)));
         items.add(UItem.asButton(supportRow, R.drawable.heart_angle_solar, getString(R.string.DP_Support)));
         items.add(UItem.asButton(exportRow, R.drawable.msg_instant_link_solar, getString(R.string.CG_ExportSettings)));
@@ -78,10 +87,8 @@ private final int ghostRow = 13;
 
         items.add(UItem.asHeader(getString(R.string.CGP_Header_About)));
         items.add(UItem.asButton(aboutRow, R.drawable.msg_info_solar, getString(R.string.CGP_Header_About_Desc)));
-       items.add(UItem.asButton(ghostRow, R.drawable.msg_ghost, "Ghost Mode 👻")); 
-    } items.add(UItem.asHeader("NayaGram Extra"));
-    items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored", NayaGramGeneralPreferences.isNoAdsEnabled()));
-items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGeneralPreferences.isPremiumFreeEnabled()));
+        items.add(UItem.asShadow(null));
+    }
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
@@ -94,7 +101,7 @@ items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGenera
         } else if (item.id == cameraRow) {
             NayaGramNavigator.createCamera(this);
         } else if (item.id == experimentalRow) {
-            asCheckBox.createExperimental(this);
+            NayaGramNavigator.createExperimental(this);
         } else if (item.id == privacyRow) {
             NayaGramNavigator.createPrivacy(this);
         } else if (item.id == supportRow) {
@@ -105,14 +112,15 @@ items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGenera
             BackupHelper.INSTANCE.importSettings(this);
         } else if (item.id == restartRow) {
             AppRestartHelper.restartApp(getContext());
-       } else if (item.id == aboutRow) {
-    } else if (item.id == ghostRow) {
-    presentFragment(new NayaGramGhostPreferencesEntry());
-} else if (item.id == noAdsRow) {
-    NayaGramGeneralPreferences.setNoAdsEnabled(!NayaGramGeneralPreferences.isNoAdsEnabled());
-} else if (item.id == premiumRow) {
-    NayaGramGeneralPreferences.setPremiumFreeEnabled(!NayaGramGeneralPreferences.isPremiumFreeEnabled());
-}
+        } else if (item.id == aboutRow) {
+            NayaGramNavigator.createAbout(this);
+        } else if (item.id == ghostRow) {
+            presentFragment(new NayaGramGhostPreferencesEntry());
+        } else if (item.id == noAdsRow) {
+            NayaGramGeneralPreferences.setNoAdsEnabled(!NayaGramGeneralPreferences.isNoAdsEnabled());
+        } else if (item.id == premiumRow) {
+            NayaGramGeneralPreferences.setPremiumFreeEnabled(!NayaGramGeneralPreferences.isPremiumFreeEnabled());
+        }
     }
 
     @Override
@@ -146,4 +154,5 @@ items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGenera
             return true;
         }
         return false;
-
+    }
+}
