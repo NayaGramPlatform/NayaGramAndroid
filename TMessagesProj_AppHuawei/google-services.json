@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "376426548741",
-    "project_id": "nayagram-54c9f",
-    "storage_bucket": "nayagram-54c9f.firebasestorage.app"
+    "project_number": "54476862523",
+    "project_id": "nayagram-app-8288e",
+    "storage_bucket": "nayagram-app-8288e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:376426548741:android:2153d2bf9d2be763a3d66c",
+        "mobilesdk_app_id": "1:54476862523:android:9138fd6180d6cb0429981e",
         "android_client_info": {
           "package_name": "org.nayagram.chat"
         }
@@ -15,7 +15,45 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDC_vgEku15ECbn-V1Dtt7KPApL_m8VQ0M"
+          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54476862523:android:c88c9b94af56521a29981e",
+        "android_client_info": {
+          "package_name": "org.nayagram.chat.beta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54476862523:android:d992fb2085ada25229981e",
+        "android_client_info": {
+          "package_name": "org.nayagram.chat.web"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
         }
       ],
       "services": {
