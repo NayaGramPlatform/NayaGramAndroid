@@ -28,7 +28,7 @@ import uz.unnarsx.cherrygram.core.crashlytics.FirebaseAnalyticsHelper;
 import uz.unnarsx.cherrygram.core.helpers.AppRestartHelper;
 import uz.unnarsx.cherrygram.core.helpers.DeeplinkHelper;
 import uz.unnarsx.cherrygram.core.helpers.backup.BackupHelper;
-
+import uz.unnarsx.cherrygram.preferences.NayaGramGeneralPreferences;
 public class NayaGramPreferencesEntry extends UniversalFragment {
 
     private final int generalRow = 1;
@@ -44,7 +44,8 @@ public class NayaGramPreferencesEntry extends UniversalFragment {
     private final int restartRow = 10;
 
     private final int aboutRow = 11;
-
+ private final int noAdsRow = 12;
+private final int premiumRow = 13;
     @Override
     protected CharSequence getTitle() {
         FirebaseAnalyticsHelper.INSTANCE.trackEventWithEmptyBundle("main_preferences_screen");
@@ -78,7 +79,9 @@ public class NayaGramPreferencesEntry extends UniversalFragment {
         items.add(UItem.asHeader(getString(R.string.CGP_Header_About)));
         items.add(UItem.asButton(aboutRow, R.drawable.msg_info_solar, getString(R.string.CGP_Header_About_Desc)));
         items.add(UItem.asShadow(null));
-    }
+    } items.add(UItem.asHeader("NayaGram Extra"));
+    items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored"));
+    items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features"));
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
@@ -138,6 +141,4 @@ public class NayaGramPreferencesEntry extends UniversalFragment {
             return true;
         }
         return false;
-    }
 
-    }
