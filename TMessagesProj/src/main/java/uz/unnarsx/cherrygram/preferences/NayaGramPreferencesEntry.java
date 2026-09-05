@@ -80,8 +80,8 @@ private final int premiumRow = 13;
         items.add(UItem.asButton(aboutRow, R.drawable.msg_info_solar, getString(R.string.CGP_Header_About_Desc)));
         items.add(UItem.asShadow(null));
     } items.add(UItem.asHeader("NayaGram Extra"));
-    items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored"));
-    items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features"));
+    items.add(UItem.asCheckBox(noAdsRow, "No Ads - Block Sponsored", NayaGramGeneralPreferences.isNoAdsEnabled()));
+items.add(UItem.asCheckBox(premiumRow, "Unlock Premium Features", NayaGramGeneralPreferences.isPremiumFreeEnabled()));
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
@@ -94,7 +94,7 @@ private final int premiumRow = 13;
         } else if (item.id == cameraRow) {
             NayaGramNavigator.createCamera(this);
         } else if (item.id == experimentalRow) {
-            NayaGramNavigator.createExperimental(this);
+            asCheckBox.createExperimental(this);
         } else if (item.id == privacyRow) {
             NayaGramNavigator.createPrivacy(this);
         } else if (item.id == supportRow) {
