@@ -24,7 +24,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 50   # a stuck build shouldn't burn the whole Actions quota
+    timeout-minutes: 50   # single-ABI build should comfortably finish well inside this
 
     steps:
       - name: Checkout Source Code
@@ -63,11 +63,23 @@ jobs:
       # packagingOptions block elsewhere in the file, remove/merge it
       # manually first — two packagingOptions blocks using different
       # syntax styles can conflict.
-      - name: Fix Packaging Options for Gradle
+      #
+      # The "afat" flavor is Telegram's own "All-Fat" (universal, all-ABI)
+      # variant, so it hardcodes abiFilters to arm64-v8a + armeabi-v7a + x86.
+      # A CLI flag (-Pandroid.injected.build.abi=...) does NOT override that.
+      # Clearing and re-adding abiFilters here, inside the actual DSL block,
+      # is what reliably restricts the native build to one ABI.
+      - name: Fix Packaging Options and restrict to arm64-v8a
         run: |
           cat << 'EOF' >> TMessagesProj/build.gradle
 
           android {
+              defaultConfig {
+                  ndk {
+                      abiFilters.clear()
+                      abiFilters.add('arm64-v8a')
+                  }
+              }
               packagingOptions {
                   resources {
                       pickFirsts.add('**/libtmessages*.so')
