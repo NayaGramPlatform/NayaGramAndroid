@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "54476862523",
-    "project_id": "nayagram-app-8288e",
-    "storage_bucket": "nayagram-app-8288e.firebasestorage.app"
+    "project_number": "861642543348",
+    "project_id": "nayagram-99af9",
+    "storage_bucket": "nayagram-99af9.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:54476862523:android:9138fd6180d6cb0429981e",
+        "mobilesdk_app_id": "1:861642543348:android:75687da8fd72cb765f8ea1",
         "android_client_info": {
           "package_name": "org.nayagram.chat"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
+          "current_key": "AIzaSyAVAUxMS864yE3Y46ssNfog9VbnQXKi5E8"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:54476862523:android:c88c9b94af56521a29981e",
+        "mobilesdk_app_id": "1:861642543348:android:f69e1ca2400cb4a05f8ea1",
         "android_client_info": {
           "package_name": "org.nayagram.chat.beta"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
+          "current_key": "AIzaSyAVAUxMS864yE3Y46ssNfog9VbnQXKi5E8"
         }
       ],
       "services": {
@@ -45,7 +45,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:54476862523:android:d992fb2085ada25229981e",
+        "mobilesdk_app_id": "1:861642543348:android:5011a25882b933ed5f8ea1",
         "android_client_info": {
           "package_name": "org.nayagram.chat.web"
         }
@@ -53,7 +53,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBRYWIOv6ED1glffttsLAbXTyBZ65yyaGE"
+          "current_key": "AIzaSyAVAUxMS864yE3Y46ssNfog9VbnQXKi5E8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:861642543348:android:e814bfcfef888d7f5f8ea1",
+        "android_client_info": {
+          "package_name": "org.telegram.messenger"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVAUxMS864yE3Y46ssNfog9VbnQXKi5E8"
         }
       ],
       "services": {
