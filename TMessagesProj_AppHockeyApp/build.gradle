@@ -37,7 +37,7 @@ android {
     compileSdkVersion 36
     buildToolsVersion '36.0.0'
 
-    defaultConfig.applicationId = APP_PACKAGE
+   defaultConfig.applicationId = "org.nayagram.chat" 
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
 
@@ -154,7 +154,7 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "Telegram-Beta.apk"
+            outputFileName = "NayaGram-Beta.apk"am-Beta     
             output.versionCodeOverride = defaultConfig.versionCode * 10 + variant.productFlavors.get(0).abiVersionCode
         }
     }
@@ -166,8 +166,7 @@ android {
         }
     }
 
-    defaultConfig {
-        minSdkVersion 21
+    defaultConfi           oinSdkVersion 21
         targetSdkVersion 36
         versionName APP_VERSION_NAME
         ndkVersion "27.2.12479018"
@@ -188,9 +187,8 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace 'org.telegram.messenger.regular'
-
-    lintOptions {
+ namespace 'org.nayagram.chat.regular'
+enger  lintOptions {
         checkReleaseBuilds false
     }
 }
