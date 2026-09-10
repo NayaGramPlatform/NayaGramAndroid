@@ -1,4 +1,4 @@
-package org.telegram.messenger;
+package org.nayagram.chat;
 
 import android.app.Activity;
 import android.content.Context;
