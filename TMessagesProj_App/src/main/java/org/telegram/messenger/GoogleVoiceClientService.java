@@ -6,7 +6,7 @@
  * Copyright Nikolai Kudashov, 2013-2018.
  */
 
-package org.telegram.messenger;
+package org.nayagram.chat;
 
 import android.content.Intent;
 import android.os.Bundle;
