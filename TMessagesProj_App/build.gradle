@@ -24,7 +24,7 @@ android {
     compileSdkVersion 36
     buildToolsVersion '36.0.0'
 
-    defaultConfig.applicationId = "org.nayagram.chat"
+    defaultConfig.applicationId = APP_PACKAGE
 
     sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
 
@@ -192,7 +192,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace 'org.telegram.messenger.regular'
+    namespace 'org.nayagram.chat.regular'
 
     lintOptions {
         checkReleaseBuilds false
