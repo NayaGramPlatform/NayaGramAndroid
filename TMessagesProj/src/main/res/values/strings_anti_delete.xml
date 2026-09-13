@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Anti-Delete Feature Strings -->
+    <string name="AntiDeleteFeature">Anti-Delete</string>
+    <string name="AntiDeleteSettings">Anti-Delete Settings</string>
+    <string name="AntiDeleteEnabled">Anti-Delete Enabled</string>
+    <string name="AntiDeleteDescription">Save messages that are deleted by others</string>
+    <string name="AntiDeleteInfo">When enabled, messages deleted by senders will be saved locally so you can view them later.</string>
+    
+    <string name="EnableAntiDelete">Enable Anti-Delete</string>
+    <string name="DisableAntiDelete">Disable Anti-Delete</string>
+    <string name="AntiDeleteOn">Anti-Delete is ON</string>
+    <string name="AntiDeleteOff">Anti-Delete is OFF</string>
+    
+    <string name="SaveDeletedMessages">Save Deleted Messages</string>
+    <string name="SaveDeletedMessagesInfo">Save all deleted messages to local database</string>
+    <string name="DeletedMessagesSaved">Deleted messages saved: %1$d</string>
+    
+    <string name="ViewDeletedMessages">View Deleted Messages</string>
+    <string name="NoDeletedMessages">No deleted messages saved</string>
+    
+    <string name="MessageDeleted">This message was deleted</string>
+    <string name="MessageDeletedBy">Deleted by sender</string>
+    <string name="OriginalMessage">Original Message</string>
+    <string name="MessageWasDeletedFor">Message was deleted for everyone</string>
+    <string name="ShowOriginal">Show Original</string>
+    <string name="HideOriginal">Hide Original</string>
+    
+    <string name="RestoreMessage">Restore Message</string>
+    <string name="RestoreMessageSuccess">Message restored to chat</string>
+    <string name="RestoreMessageFailed">Failed to restore message</string>
+    
+    <string name="DeletedMessagesStorage">Deleted Messages Storage</string>
+    <string name="ClearDeletedMessages">Clear Deleted Messages</string>
+    <string name="ClearDeletedMessagesConfirm">Are you sure you want to clear all saved deleted messages?</string>
+    <string name="ClearDeletedMessagesSuccess">Deleted messages cleared</string>
+    
+    <string name="AutoClearOldMessages">Auto-Clear Old Messages</string>
+    <string name="AutoClearOldMessagesInfo">Automatically delete saved messages older than selected days</string>
+    <string name="KeepMessagesFor7Days">Keep for 7 days</string>
+    <string name="KeepMessagesFor30Days">Keep for 30 days</string>
+    <string name="KeepMessagesFor90Days">Keep for 90 days</string>
+    <string name="KeepMessagesForever">Keep forever</string>
+    
+    <string name="AntiDeletePrivacy">Privacy & Security</string>
+    <string name="AntiDeleteDataInfo">Your deleted messages are stored only on this device and encrypted</string>
+    
+    <string name="SaveMediaInfo">Save media from deleted messages (photos, videos, files)</string>
+    <string name="SaveMedia">Save Media</string>
+    
+    <string name="ViewAllDeletedMessages">View All Deleted Messages</string>
+    <string name="DeletedMessagesByChatAndDate">Deleted Messages - By Chat</string>
+    <string name="DeletedOn">Deleted on: %1$s</string>
+    <string name="DeletedAt">Deleted at: %1$s</string>
+    <string name="SentAt">Sent at: %1$s</string>
+    
+    <string name="PermanentlyDelete">Delete Permanently</string>
+    <string name="PermanentlyDeleteConfirm">Delete this saved message permanently?</string>
+    
+    <string name="AntiDeleteStatus">Anti-Delete Status</string>
+    <string name="MessagesRecovered">Messages Recovered: %1$d</string>
+    <string name="StorageUsed">Storage Used: %1$s</string>
+</resources>
