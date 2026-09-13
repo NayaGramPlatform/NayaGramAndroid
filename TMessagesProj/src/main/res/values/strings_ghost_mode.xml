@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ghost Mode Feature Strings -->
+    <string name="GhostModeFeature">Ghost Mode</string>
+    <string name="GhostModeEnabled">Enable Ghost Mode</string>
+    <string name="GhostModeDescription">Hide typing status, online status, forward tags, and read receipts</string>
+    <string name="GhostModeOn">Ghost Mode activated</string>
+    <string name="GhostModeOff">Ghost Mode deactivated</string>
+    
+    <!-- Hide Typing Status -->
+    <string name="HideTypingStatus">Hide Typing Status</string>
+    <string name="HideTypingStatusInfo">Others won\'t see when you are typing</string>
+    
+    <!-- Hide Online Status -->
+    <string name="HideOnlineStatus">Hide Online Status</string>
+    <string name="HideOnlineStatusInfo">You will appear offline to everyone</string>
+    
+    <!-- Hide Forward Tag -->
+    <string name="HideForwardTag">Hide Forward Tag</string>
+    <string name="HideForwardTagInfo">Forwarded messages won\'t show "Forwarded from" label</string>
+    
+    <!-- Hide Read Receipts -->
+    <string name="HideReadReceipts">Hide Read Receipts</string>
+    <string name="HideReadReceiptsInfo">Others won\'t know when you read their messages</string>
+    
+    <!-- Categories -->
+    <string name="GhostModeFeatures">Features</string>
+    <string name="GhostModePrivacy">Privacy Settings</string>
+    <string name="GhostModeInfo">Information</string>
+    
+    <!-- Information -->
+    <string name="GhostModeDataInfo">When Ghost Mode is enabled, your activity status will be hidden from other users</string>
+    
+</resources>
