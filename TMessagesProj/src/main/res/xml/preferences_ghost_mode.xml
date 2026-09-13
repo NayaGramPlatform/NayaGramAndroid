@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:key="ghost_mode_main"
+        android:title="@string/GhostModeFeature">
+
+        <SwitchPreference
+            android:key="ghost_mode_enabled"
+            android:title="@string/GhostModeEnabled"
+            android:summary="@string/GhostModeDescription"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="ghost_mode_features"
+        android:title="@string/GhostModeFeatures">
+
+        <SwitchPreference
+            android:key="hide_typing_status"
+            android:title="@string/HideTypingStatus"
+            android:summary="@string/HideTypingStatusInfo"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreference
+            android:key="hide_online_status"
+            android:title="@string/HideOnlineStatus"
+            android:summary="@string/HideOnlineStatusInfo"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreference
+            android:key="hide_forward_tag"
+            android:title="@string/HideForwardTag"
+            android:summary="@string/HideForwardTagInfo"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreference
+            android:key="hide_read_receipts"
+            android:title="@string/HideReadReceipts"
+            android:summary="@string/HideReadReceiptsInfo"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="ghost_mode_privacy"
+        android:title="@string/GhostModePrivacy">
+
+        <Preference
+            android:key="ghost_mode_privacy_info"
+            android:title="@string/GhostModeInfo"
+            android:summary="@string/GhostModeDataInfo"
+            android:selectable="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
