@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:key="anti_delete_main"
+        android:title="@string/AntiDeleteFeature">
+
+        <SwitchPreference
+            android:key="anti_delete_enabled"
+            android:title="@string/EnableAntiDelete"
+            android:summary="@string/AntiDeleteDescription"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="anti_delete_messages"
+        android:title="@string/SaveDeletedMessages">
+
+        <Preference
+            android:key="view_deleted_messages"
+            android:title="@string/ViewDeletedMessages"
+            android:summary="@string/NoDeletedMessages"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreference
+            android:key="save_media_from_deleted"
+            android:title="@string/SaveMedia"
+            android:summary="@string/SaveMediaInfo"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="auto_cleanup_days"
+            android:title="@string/AutoClearOldMessages"
+            android:summary="@string/KeepMessagesForever"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="anti_delete_storage"
+        android:title="@string/DeletedMessagesStorage">
+
+        <Preference
+            android:key="clear_deleted_messages"
+            android:title="@string/ClearDeletedMessages"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="anti_delete_privacy"
+        android:title="@string/AntiDeletePrivacy">
+
+        <Preference
+            android:key="anti_delete_privacy_info"
+            android:title="@string/AntiDeleteDataInfo"
+            android:selectable="false"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
