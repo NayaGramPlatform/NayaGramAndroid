@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
-    <application android:name="org.nayagram.chat.ApplicationLoaderImpl" tools:replace="android:name">
+    <application android:name="org.nayagram.platform.ApplicationLoaderImpl" tools:replace="android:name">
         <service
             android:name="org.telegram.messenger.GoogleVoiceClientService"
             android:exported="true"

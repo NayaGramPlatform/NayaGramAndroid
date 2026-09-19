@@ -95,14 +95,14 @@
     </queries>
 
     <application
-        android:name="org.nayagram.chat.ApplicationLoader"
+        android:name="org.nayagram.platform.ApplicationLoader"
         android:allowBackup="true"
         android:restoreAnyVersion="true"
         android:backupAgent=".BackupAgent"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:theme="@style/Theme.TMessages.Start"
-        android:manageSpaceActivity="org.nayagram.chat.ui.ExternalActionActivity"
+        android:manageSpaceActivity="org.nayagram.platform.ui.ExternalActionActivity"
         android:supportsRtl="false"
         android:requestLegacyExternalStorage="true"
         android:preserveLegacyExternalStorage="true"
@@ -116,8 +116,8 @@
         <!-- NG Sky - ডিফল্ট আইকন (স্কাই ব্লু) -->
         <activity-alias
             android:enabled="true"
-            android:name="org.nayagram.chat.NGSky"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.NGSky"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/ic_launcher"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:exported="true">
@@ -133,8 +133,8 @@
         <!-- NG Blue - গভীর নীল -->
         <activity-alias
             android:enabled="false"
-            android:name="org.nayagram.chat.NGBlue"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.NGBlue"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/icon_6_launcher"
             android:roundIcon="@mipmap/icon_6_launcher_round"
             android:exported="true">
@@ -150,8 +150,8 @@
         <!-- NG Purple - বেগুনি -->
         <activity-alias
             android:enabled="false"
-            android:name="org.nayagram.chat.NGPurple"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.NGPurple"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/icon_4_launcher"
             android:roundIcon="@mipmap/icon_4_launcher_round"
             android:exported="true">
@@ -167,8 +167,8 @@
         <!-- Premium Icon - Telegram এর (লাল/গোলাপী) -->
         <activity-alias
             android:enabled="false"
-            android:name="org.nayagram.chat.PremiumIcon"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.PremiumIcon"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/icon_3_launcher"
             android:roundIcon="@mipmap/icon_3_launcher_round"
             android:exported="true">
@@ -184,8 +184,8 @@
         <!-- NG Neon - নিয়ন (সবুজ) -->
         <activity-alias
             android:enabled="false"
-            android:name="org.nayagram.chat.NGNeon"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.NGNeon"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/icon_5_launcher"
             android:roundIcon="@mipmap/icon_5_launcher_round"
             android:exported="true">
@@ -201,8 +201,8 @@
         <!-- NG Crystal - ক্রিস্টাল (কালো) -->
         <activity-alias
             android:enabled="false"
-            android:name="org.nayagram.chat.NGCrystal"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.NGCrystal"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:icon="@mipmap/icon_2_launcher"
             android:roundIcon="@mipmap/icon_2_launcher_round"
             android:exported="true">
@@ -216,7 +216,7 @@
         </activity-alias>
 
         <activity
-            android:name="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.ui.LaunchActivity"
             android:theme="@style/Theme.TMessages.Start"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode|smallestScreenSize|screenLayout"
             android:supportsPictureInPicture="true"
@@ -260,7 +260,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
-                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.chat.android.profile"/>
+                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.platform.android.profile"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
@@ -286,7 +286,7 @@
                 <data android:scheme="tg" />
             </intent-filter>
             <intent-filter>
-                <action android:name="org.nayagram.chat.CREATE_STICKER_PACK"/>
+                <action android:name="org.nayagram.platform.CREATE_STICKER_PACK"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="*/*"/>
             </intent-filter>
@@ -297,19 +297,19 @@
                 android:value="subject_segment" />
         </activity>
         <activity-alias
-            android:name="org.nayagram.chat.ui.CallsActivity"
-            android:targetActivity="org.nayagram.chat.ui.LaunchActivity"
+            android:name="org.nayagram.platform.ui.CallsActivity"
+            android:targetActivity="org.nayagram.platform.ui.LaunchActivity"
             android:permission="android.permission.CALL_PHONE"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
-                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.chat.android.call"/>
-                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.chat.android.call.video"/>
+                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.platform.android.call"/>
+                <data android:mimeType="vnd.android.cursor.item/vnd.org.nayagram.platform.android.call.video"/>
             </intent-filter>
         </activity-alias>
         <activity
-            android:name="org.nayagram.chat.ui.BubbleActivity"
+            android:name="org.nayagram.platform.ui.BubbleActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
@@ -317,7 +317,7 @@
             android:documentLaunchMode="always"
             android:resizeableActivity="true"/>
         <activity
-            android:name="org.nayagram.chat.ui.ShareActivity"
+            android:name="org.nayagram.platform.ui.ShareActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
@@ -333,7 +333,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="org.nayagram.chat.ui.ExternalActionActivity"
+            android:name="org.nayagram.platform.ui.ExternalActionActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
@@ -344,7 +344,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="org.nayagram.chat.ui.ChatsWidgetConfigActivity"
+            android:name="org.nayagram.platform.ui.ChatsWidgetConfigActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
@@ -354,7 +354,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="org.nayagram.chat.ui.ContactsWidgetConfigActivity"
+            android:name="org.nayagram.platform.ui.ContactsWidgetConfigActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustPan"
@@ -365,17 +365,17 @@
         </activity>
 
         <activity
-            android:name="org.nayagram.chat.messenger.OpenChatReceiver"
+            android:name="org.nayagram.platform.messenger.OpenChatReceiver"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:exported="true">
         </activity>
         <activity
-            android:name="org.nayagram.chat.messenger.OpenAttachedMenuBotReceiver"
+            android:name="org.nayagram.platform.messenger.OpenAttachedMenuBotReceiver"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
             android:exported="true">
         </activity>
         <activity
-            android:name="org.nayagram.chat.ui.PopupNotificationActivity"
+            android:name="org.nayagram.platform.ui.PopupNotificationActivity"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
             android:excludeFromRecents="true"
             android:launchMode="singleTask"
@@ -384,12 +384,12 @@
             android:resizeableActivity="false"
             android:windowSoftInputMode="adjustResize|stateHidden">
         </activity>
-        <activity android:name="org.nayagram.chat.ui.VoIPPermissionActivity"
+        <activity android:name="org.nayagram.platform.ui.VoIPPermissionActivity"
                   android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
                   android:taskAffinity="${applicationId}.voip"
                   android:excludeFromRecents="true"
                 android:theme="@style/Theme.TMessages.Transparent"/>
-        <activity android:name="org.nayagram.chat.ui.VoIPFeedbackActivity"
+        <activity android:name="org.nayagram.platform.ui.VoIPFeedbackActivity"
                   android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
 				  android:taskAffinity="${applicationId}.voip_feedback"
                   android:excludeFromRecents="true"
@@ -399,7 +399,7 @@
             android:name=".AutoMessageHeardReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="org.nayagram.chat.ACTION_MESSAGE_HEARD"/>
+                <action android:name="org.nayagram.platform.ACTION_MESSAGE_HEARD"/>
             </intent-filter>
         </receiver>
 
@@ -407,7 +407,7 @@
             android:name=".CopyCodeReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="org.nayagram.chat.ACTION_COPY_CODE"/>
+                <action android:name="org.nayagram.platform.ACTION_COPY_CODE"/>
             </intent-filter>
         </receiver>
 
@@ -489,7 +489,7 @@
             android:foregroundServiceType="dataSync"
         />
         <service
-            android:name="org.nayagram.chat.ui.Stories.recorder.StoryUploadingService"
+            android:name="org.nayagram.platform.ui.Stories.recorder.StoryUploadingService"
             android:enabled="true"
             android:exported="true"
             android:foregroundServiceType="dataSync"
@@ -540,11 +540,11 @@
 
 		<receiver android:name=".MusicPlayerReceiver" android:exported="false">
             <intent-filter>
-                <action android:name="org.nayagram.chat.android.musicplayer.close" />
-                <action android:name="org.nayagram.chat.android.musicplayer.pause" />
-                <action android:name="org.nayagram.chat.android.musicplayer.next" />
-                <action android:name="org.nayagram.chat.android.musicplayer.play" />
-                <action android:name="org.nayagram.chat.android.musicplayer.previous" />
+                <action android:name="org.nayagram.platform.android.musicplayer.close" />
+                <action android:name="org.nayagram.platform.android.musicplayer.pause" />
+                <action android:name="org.nayagram.platform.android.musicplayer.next" />
+                <action android:name="org.nayagram.platform.android.musicplayer.play" />
+                <action android:name="org.nayagram.platform.android.musicplayer.previous" />
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
             </intent-filter>
@@ -557,7 +557,7 @@
 
         <receiver android:name=".AppStartReceiver" android:enabled="true" android:exported="false">
             <intent-filter>
-                <action android:name="org.nayagram.chat.start" />
+                <action android:name="org.nayagram.platform.start" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
@@ -666,7 +666,7 @@
         <meta-data android:name="android.max_aspect" android:value="2.5" />
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
-            android:value="org.nayagram.chat.chromecast.ChromecastOptionsProvider" />
+            android:value="org.nayagram.platform.chromecast.ChromecastOptionsProvider" />
 
     </application>
 
