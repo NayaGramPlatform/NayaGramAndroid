@@ -1,6 +1,6 @@
-package org.nayagram.chat;
+package org.nayagram.platform;
 
-import org.nayagram.chat.tgnet.TLRPC;
+import org.nayagram.platform.tgnet.TLRPC;
 
 /**
  * GhostModeInterceptor - Intercepts and modifies messages/status updates for Ghost Mode

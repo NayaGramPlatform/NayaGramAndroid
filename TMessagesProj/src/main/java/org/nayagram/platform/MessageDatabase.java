@@ -1,4 +1,4 @@
-package org.nayagram.chat;
+package org.nayagram.platform;
 
 import android.content.ContentValues;
 import android.database.Cursor;

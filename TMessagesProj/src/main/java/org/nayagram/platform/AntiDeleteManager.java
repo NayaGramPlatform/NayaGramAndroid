@@ -1,9 +1,9 @@
-package org.nayagram.chat;
+package org.nayagram.platform;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.nayagram.chat.messenger.ApplicationLoader;
+import org.nayagram.platform.messenger.ApplicationLoader;
 
 /**
  * AntiDeleteManager - Handles anti-delete functionality

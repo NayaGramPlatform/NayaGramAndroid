@@ -1,7 +1,7 @@
-package org.nayagram.chat;
+package org.nayagram.platform;
 
-import org.nayagram.chat.messenger.SendMessagesHelper;
-import org.nayagram.chat.tgnet.TLRPC;
+import org.nayagram.platform.messenger.SendMessagesHelper;
+import org.nayagram.platform.tgnet.TLRPC;
 
 /**
  * MessageDeleteInterceptor - Intercepts message deletion events

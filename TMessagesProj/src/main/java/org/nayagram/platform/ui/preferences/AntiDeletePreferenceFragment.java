@@ -1,4 +1,4 @@
-package org.nayagram.chat.ui.preferences;
+package org.nayagram.platform.ui.preferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,10 +13,10 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
-import org.nayagram.chat.AntiDeleteManager;
-import org.nayagram.chat.FileLog;
-import org.nayagram.chat.MessageDatabase;
-import org.nayagram.chat.R;
+import org.nayagram.platform.AntiDeleteManager;
+import org.nayagram.platform.FileLog;
+import org.nayagram.platform.MessageDatabase;
+import org.nayagram.platform.R;
 
 /**
  * AntiDeletePreferenceFragment - Settings UI for Anti-Delete feature
