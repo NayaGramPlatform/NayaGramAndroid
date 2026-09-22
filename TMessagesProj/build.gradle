@@ -240,7 +240,7 @@ android {
         }
     }
 
-        namespace 'org.nayagram.chat'
+        namespace 'org.nayagram.platform'
 }
 
 
