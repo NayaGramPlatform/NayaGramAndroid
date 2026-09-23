@@ -1,4 +1,5 @@
-package com.example
+package org.nayagram.platform
+
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
