@@ -1,4 +1,4 @@
-package com.example
+package org.nayagram.platform
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
