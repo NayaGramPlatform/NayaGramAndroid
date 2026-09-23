@@ -1,4 +1,5 @@
-package com.example
+package org.nayagram.platform
+
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputDirectory
