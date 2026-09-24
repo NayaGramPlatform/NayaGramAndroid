@@ -1,121 +1,243 @@
 package org.telegram.messenger;
 
 import android.app.Activity;
-import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.RemoteViews;
+import android.widget.RemoteViewsService;
 
+import androidx.collection.LongSparseArray;
+
+
+
+import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.EditWidgetActivity;
-import org.telegram.ui.LaunchActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 
-public class ContactsWidgetProvider extends AppWidgetProvider {
-
+public class ContactsWidgetService extends RemoteViewsService {
     @Override
-    public void onReceive(Context context, Intent intent) {
-        super.onReceive(context, intent);
+    public RemoteViewsFactory onGetViewFactory(Intent intent) {
+        return new ContactsRemoteViewsFactory(getApplicationContext(), intent);
     }
+}
 
-    @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        super.onUpdate(context, appWidgetManager, appWidgetIds);
-        for (int i = 0; i < appWidgetIds.length; i++) {
-            int appWidgetId = appWidgetIds[i];
-            updateWidget(context, appWidgetManager, appWidgetId);
-        }
-    }
+class ContactsRemoteViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
-    @Override
-    public void onDeleted(Context context, int[] appWidgetIds) {
-        super.onDeleted(context, appWidgetIds);
-        ApplicationLoader.postInitApplication();
+    private ArrayList<Long> dids = new ArrayList<>();
+    private Context mContext;
+    private int appWidgetId;
+    private AccountInstance accountInstance;
+    private Paint roundPaint;
+    private RectF bitmapRect;
+    private LongSparseArray<TLRPC.Dialog> dialogs = new LongSparseArray<>();
+    private boolean deleted;
+
+    public ContactsRemoteViewsFactory(Context context, Intent intent) {
+        mContext = context;
+        Theme.createDialogsResources(context);
+        appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
         SharedPreferences preferences = context.getSharedPreferences("shortcut_widget", Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        for (int a = 0; a < appWidgetIds.length; a++) {
-            int accountId = preferences.getInt("account" + appWidgetIds[a], -1);
-            if (accountId >= 0) {
-                AccountInstance accountInstance = AccountInstance.getInstance(accountId);
-                accountInstance.getMessagesStorage().clearWidgetDialogs(appWidgetIds[a]);
-            }
-            editor.remove("account" + appWidgetIds[a]);
-            editor.remove("type" + appWidgetIds[a]);
-            editor.remove("deleted" + appWidgetIds[a]);
+        int accountId = preferences.getInt("account" + appWidgetId, -1);
+        if (accountId >= 0) {
+            accountInstance = AccountInstance.getInstance(accountId);
         }
-        editor.commit();
+        deleted = preferences.getBoolean("deleted" + appWidgetId, false) || accountInstance == null;
     }
 
-    @Override
-    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
-        updateWidget(context, appWidgetManager, appWidgetId);
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
-    }
-
-    private static int getCellsForSize(int size) {
-        int n = 2;
-        while (86 * n < size) {
-            ++n;
-        }
-        return n - 1;
-    }
-
-    public static void updateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+    public void onCreate() {
         ApplicationLoader.postInitApplication();
-        Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
-        int maxHeight = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT);
-        int rows = getCellsForSize(maxHeight);
+    }
 
-        Intent intent2 = new Intent(context, ContactsWidgetService.class);
-        intent2.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        intent2.setData(Uri.parse(intent2.toUri(Intent.URI_INTENT_SCHEME)));
+    public void onDestroy() {
 
-        SharedPreferences preferences = context.getSharedPreferences("shortcut_widget", Activity.MODE_PRIVATE);
-        boolean deleted = preferences.getBoolean("deleted" + appWidgetId, false);
-        int id;
-        if (!deleted) {
-            int accountId = preferences.getInt("account" + appWidgetId, -1);
-            if (accountId == -1) {
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putInt("account" + appWidgetId, UserConfig.selectedAccount);
-                editor.putInt("type" + appWidgetId, EditWidgetActivity.TYPE_CHATS).commit();
-            }
-            ArrayList<Long> selectedDialogs = new ArrayList<>();
-            if (accountId >= 0) {
-                AccountInstance.getInstance(accountId).getMessagesStorage().getWidgetDialogIds(appWidgetId, EditWidgetActivity.TYPE_CONTACTS, selectedDialogs, null, null, false);
-            }
-            int count = (int) Math.ceil(selectedDialogs.size() / 2.0f);
+    }
 
-            if (rows == 1 || count <= 1) {
-                id = R.layout.contacts_widget_layout_1;
-            } else if (rows == 2 || count <= 2) {
-                id = R.layout.contacts_widget_layout_2;
-            } else if (rows == 3 || count <= 3) {
-                id = R.layout.contacts_widget_layout_3;
+    public int getCount() {
+        if (deleted) {
+            return 1;
+        }
+        int count = (int) Math.ceil(dids.size() / 2.0f);
+        return count + 1;
+    }
+
+    public RemoteViews getViewAt(int position) {
+        if (deleted) {
+            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_deleted);
+            rv.setTextViewText(R.id.widget_deleted_text, LocaleController.getString(R.string.WidgetLoggedOff));
+            return rv;
+        } else if (position >= getCount() - 1) {
+            RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.widget_edititem);
+            rv.setTextViewText(R.id.widget_edititem_text, LocaleController.getString(R.string.TapToEditWidgetShort));
+            Bundle extras = new Bundle();
+            extras.putInt("appWidgetId", appWidgetId);
+            extras.putInt("appWidgetType", EditWidgetActivity.TYPE_CONTACTS);
+            extras.putInt("currentAccount", accountInstance.getCurrentAccount());
+            Intent fillInIntent = new Intent();
+            fillInIntent.putExtras(extras);
+            rv.setOnClickFillInIntent(R.id.widget_edititem, fillInIntent);
+            return rv;
+        }
+        RemoteViews rv = new RemoteViews(mContext.getPackageName(), R.layout.contacts_widget_item);
+        for (int a = 0; a < 2; a++) {
+            int num = position * 2 + a;
+            if (num >= dids.size()) {
+                rv.setViewVisibility(a == 0 ? R.id.contacts_widget_item1 : R.id.contacts_widget_item2, View.INVISIBLE);
             } else {
-                id = R.layout.contacts_widget_layout_4;
+                rv.setViewVisibility(a == 0 ? R.id.contacts_widget_item1 : R.id.contacts_widget_item2, View.VISIBLE);
+
+                Long id = dids.get(position * 2 + a);
+                String name;
+
+                TLRPC.FileLocation photoPath = null;
+                TLRPC.User user = null;
+                TLRPC.Chat chat = null;
+                if (DialogObject.isUserDialog(id)) {
+                    user = accountInstance.getMessagesController().getUser(id);
+                    if (UserObject.isUserSelf(user)) {
+                        name = LocaleController.getString(R.string.SavedMessages);
+                    } else if (UserObject.isReplyUser(user)) {
+                        name = LocaleController.getString(R.string.RepliesTitle);
+                    } else if (UserObject.isDeleted(user)) {
+                        name = LocaleController.getString(R.string.HiddenName);
+                    } else {
+                        name = UserObject.getFirstName(user);
+                    }
+                    if (!UserObject.isReplyUser(user) && !UserObject.isUserSelf(user) && user != null && user.photo != null && user.photo.photo_small != null && user.photo.photo_small.volume_id != 0 && user.photo.photo_small.local_id != 0) {
+                        photoPath = user.photo.photo_small;
+                    }
+                } else {
+                    chat = accountInstance.getMessagesController().getChat(-id);
+                    if (chat != null) {
+                        name = chat.title;
+                        if (chat.photo != null && chat.photo.photo_small != null && chat.photo.photo_small.volume_id != 0 && chat.photo.photo_small.local_id != 0) {
+                            photoPath = chat.photo.photo_small;
+                        }
+                    } else {
+                        name = "";
+                    }
+                }
+                rv.setTextViewText(a == 0 ? R.id.contacts_widget_item_text1 : R.id.contacts_widget_item_text2, name);
+
+                try {
+                    Bitmap bitmap = null;
+                    if (photoPath != null) {
+                        File path = FileLoader.getInstance(UserConfig.selectedAccount).getPathToAttach(photoPath, true);
+                        bitmap = BitmapFactory.decodeFile(path.toString());
+                    }
+
+                    int size = AndroidUtilities.dp(48);
+                    Bitmap result = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+                    result.eraseColor(Color.TRANSPARENT);
+                    Canvas canvas = new Canvas(result);
+                    if (bitmap == null) {
+                        AvatarDrawable avatarDrawable;
+                        if (user != null) {
+                            avatarDrawable = new AvatarDrawable(user);
+                            if (UserObject.isReplyUser(user)) {
+                                avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_REPLIES);
+                            } else if (UserObject.isUserSelf(user)) {
+                                avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
+                            }
+                        } else {
+                            avatarDrawable = new AvatarDrawable();
+                            avatarDrawable.setInfo(accountInstance.getCurrentAccount(), chat);
+                        }
+                        avatarDrawable.setBounds(0, 0, size, size);
+                        avatarDrawable.draw(canvas);
+                    } else {
+                        BitmapShader shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                        if (roundPaint == null) {
+                            roundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                            bitmapRect = new RectF();
+                        }
+                        float scale = size / (float) bitmap.getWidth();
+                        canvas.save();
+                        canvas.scale(scale, scale);
+                        roundPaint.setShader(shader);
+                        bitmapRect.set(0, 0, bitmap.getWidth(), bitmap.getHeight());
+                        canvas.drawRoundRect(bitmapRect, bitmap.getWidth(), bitmap.getHeight(), roundPaint);
+                        canvas.restore();
+                    }
+                    canvas.setBitmap(null);
+                    rv.setImageViewBitmap(a == 0 ? R.id.contacts_widget_item_avatar1 : R.id.contacts_widget_item_avatar2, result);
+                } catch (Throwable e) {
+                    FileLog.e(e);
+                }
+
+                TLRPC.Dialog dialog = dialogs.get(id);
+
+                if (dialog != null && dialog.unread_count > 0) {
+                    String count;
+                    if (dialog.unread_count > 99) {
+                        count = String.format("%d+", 99);
+                    } else {
+                        count = String.format("%d", dialog.unread_count);
+                    }
+                    rv.setTextViewText(a == 0 ? R.id.contacts_widget_item_badge1 : R.id.contacts_widget_item_badge2, count);
+                    rv.setViewVisibility(a == 0 ? R.id.contacts_widget_item_badge_bg1 : R.id.contacts_widget_item_badge_bg2, View.VISIBLE);
+                } else {
+                    rv.setViewVisibility(a == 0 ? R.id.contacts_widget_item_badge_bg1 : R.id.contacts_widget_item_badge_bg2, View.GONE);
+                }
+
+                Bundle extras = new Bundle();
+
+                if (DialogObject.isUserDialog(id)) {
+                    extras.putLong("userId", id);
+                } else {
+                    extras.putLong("chatId", -id);
+                }
+                extras.putInt("currentAccount", accountInstance.getCurrentAccount());
+
+                Intent fillInIntent = new Intent();
+                fillInIntent.putExtras(extras);
+                rv.setOnClickFillInIntent(a == 0 ? R.id.contacts_widget_item1 : R.id.contacts_widget_item2, fillInIntent);
             }
-        } else {
-            id = R.layout.contacts_widget_layout_1;
         }
-        RemoteViews rv = new RemoteViews(context.getPackageName(), id);
-        rv.setRemoteAdapter(appWidgetId, R.id.list_view, intent2);
-        rv.setEmptyView(R.id.list_view, R.id.empty_view);
+        return rv;
+    }
 
-        Intent intent = new Intent(ApplicationLoader.applicationContext, LaunchActivity.class);
-        intent.setAction("com.tmessages.openchat" + Math.random() + Integer.MAX_VALUE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-        PendingIntent contentIntent = PendingIntent.getActivity(ApplicationLoader.applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    public RemoteViews getLoadingView() {
+        return null;
+    }
 
-        rv.setPendingIntentTemplate(R.id.list_view, contentIntent);
+    public int getViewTypeCount() {
+        return 2;
+    }
 
-        appWidgetManager.updateAppWidget(appWidgetId, rv);
-        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.list_view);
+    public long getItemId(int position) {
+        return position;
+    }
+
+    public boolean hasStableIds() {
+        return true;
+    }
+
+    public void onDataSetChanged() {
+        dids.clear();
+        if (accountInstance == null || !accountInstance.getUserConfig().isClientActivated()) {
+            return;
+        }
+        ArrayList<TLRPC.User> users = new ArrayList<>();
+        ArrayList<TLRPC.Chat> chats = new ArrayList<>();
+        LongSparseArray<TLRPC.Message> messages = new LongSparseArray<>();
+        accountInstance.getMessagesStorage().getWidgetDialogs(appWidgetId, 1, dids, dialogs, messages, users, chats);
+        accountInstance.getMessagesController().putUsers(users, true);
+        accountInstance.getMessagesController().putChats(chats, true);
     }
 }
