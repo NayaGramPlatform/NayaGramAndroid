@@ -41,6 +41,11 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
+    androidResources {
+        noCompress += "pack"
+        localeFilters += ["zz"]
+    }
+
     signingConfigs {
         debug {
             storeFile file("../TMessagesProj/config/release.keystore")
