@@ -933,7 +933,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     }
                     break;
             }
-            return formatString(R.string.TelegramVersion, String.format(Locale.US, "v%s (%d)\n%s", pInfo.versionName, code, abi));
+            // NayaGram v1.0.0 — first Play Store release branding
+            String nayaGramInfo = "NayaGram for Android v1.0.0 (1)";
+            String telegramInfo = formatString(R.string.TelegramVersion, String.format(Locale.US, "v%s (%d)", pInfo.versionName, code));
+
+            return nayaGramInfo + "\n" + telegramInfo + "\n" + abi;
         } catch (Exception e) {
             FileLog.e(e);
         }
