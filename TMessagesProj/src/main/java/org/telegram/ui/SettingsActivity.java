@@ -691,12 +691,14 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(UItem.asHeader("NayaGram"));
         long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
         if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
-            items.add(SettingCell.Factory.of(101, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NG Control", "Developer & Management"));
+            items.add(SettingCell.Factory.of(101, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NG Control", "Developer & Management", "#00"));
         }
-        items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing"));
-        items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_chat, "Anti-Delete", "Saved deleted messages"));
-        items.add(SettingCell.Factory.of(104, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clear cache"));
-        items.add(SettingCell.Factory.of(105, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Chat Finder", "Open chat by Username or Phone"));
+        items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing", "#01"));
+        items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_folders, "Anti-Delete", "Saved deleted messages", "#02"));
+        items.add(SettingCell.Factory.of(104, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_power, "App Cache", "Free storage & clear cache", "#03"));
+        items.add(SettingCell.Factory.of(105, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Chat Finder", "Open chat by Username or Phone", "#04"));
+        items.add(SettingCell.Factory.of(106, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_chat, "App Themes", "Custom colors, wallpaper & fonts", "#05"));
+        items.add(SettingCell.Factory.of(107, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, "Analytics", "Data usage & network statistics", "#06"));
         items.add(UItem.asShadow(null));
 
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
@@ -834,6 +836,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 105:
                 presentSettingFragment(new DialogsActivity(null));
+                break;
+            case 106:
+                presentSettingFragment(new ThemeActivity(ThemeActivity.THEME_TYPE_BASIC));
+                break;
+            case 107:
+                presentSettingFragment(new DataUsageActivity());
                 break;
             case 1:
                 presentSettingFragment(new UserInfoActivity());
