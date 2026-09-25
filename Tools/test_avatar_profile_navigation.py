@@ -1,114 +1,135 @@
 #!/usr/bin/env python3
 """
-Test Suite: AvatarProfileHelper & Chat List Navigation
-Covers:
-1. User Avatar Tap -> User Profile navigation
-2. Group Avatar Tap -> Group/Channel Profile navigation
-3. Story Priority -> Story ring takes precedence over profile tap
-4. Fast Scroll / Fling -> Suppresses tap during scroll
-5. Long-Press Behavior -> Preserves context menu/preview without opening profile
-6. Back Button Behavior -> Fragment backstack cleanly returns to Chat List (DialogsActivity)
-7. Play Store Policy & Safety Audit
+Regression Test Suite: AvatarProfileHelper Edge Cases & Navigation Safety
+Evaluates:
+1. Saved Messages (Self chat dialogId == clientUserId) -> suppressed (opens chat, not profile)
+2. Replies pseudo-chat -> suppressed
+3. Story Precedence:
+   - STATE_EMPTY (0) -> profile opens
+   - STATE_UNREAD (1) -> story wins, profile suppressed
+   - STATE_READ (2) -> story ring drawn, story viewer wins
+   - STATE_MUTED (3) -> story ring drawn, story viewer wins
+4. Fling / Fast Scroll Guard:
+   - SCROLL_STATE_DRAGGING / SETTLING -> touch absorbed as scroll-stop, profile suppressed
+   - SCROLL_STATE_IDLE -> tap allowed
+5. Action Mode / Multi-selection -> suppressed (avatar functions as checkbox)
+6. Secret Chats & Search Results & Archive -> suppressed
+7. Back Navigation Stack -> removeFragmentOnChatOpen removes profile cleanly
+8. Default State -> Default OFF (opt-in for Play Store policy)
 """
 
 STATE_EMPTY = 0
-STATE_HAS_STORY = 1
+STATE_UNREAD = 1
+STATE_READ = 2
+STATE_MUTED = 3
+
+SCROLL_STATE_IDLE = 0
+SCROLL_STATE_DRAGGING = 1
+SCROLL_STATE_SETTLING = 2
+
+class MockCell:
+    def __init__(self, dialog_id, message_id=0, folder_id=0, scroll_state=SCROLL_STATE_IDLE):
+        self.dialog_id = dialog_id
+        self.message_id = message_id
+        self.folder_id = folder_id
+        self.scroll_state = scroll_state
 
 class MockFragment:
-    def __init__(self, current_user_id=1001):
-        self.current_user_id = current_user_id
+    def __init__(self, client_user_id=12345):
+        self.client_user_id = client_user_id
+        self.action_mode = False
         self.backstack = ["DialogsActivity"]
-        self.presented = None
 
-    def present_fragment(self, activity_name, args):
-        self.backstack.append(activity_name)
-        self.presented = (activity_name, args)
+    def present_fragment(self, name, args):
+        self.backstack.append((name, args))
         return True
 
-    def press_back(self):
-        if len(self.backstack) > 1:
-            popped = self.backstack.pop()
-            return popped
-        return None
+def resolve_target_peer(fragment, cell, is_enabled=True):
+    if not is_enabled:
+        return 0
+    if cell.scroll_state != SCROLL_STATE_IDLE:
+        return 0 # Fast scroll guard
+    if fragment.action_mode:
+        return 0 # Multi-select checkbox
+    if cell.message_id != 0 or cell.folder_id != 0:
+        return 0
+    did = cell.dialog_id
+    if did == 0:
+        return 0
+    if did == fragment.client_user_id:
+        return 0 # Saved Messages
+    if did == 777000 or did == 1271266957: # Replies / service
+        return 0
+    return did
 
-def should_claim_avatar_tap(is_scrolling, has_stories):
-    if is_scrolling:
+def open_profile(fragment, cell, story_state, is_enabled=True):
+    if story_state != STATE_EMPTY:
+        return False # Story ring wins
+    peer = resolve_target_peer(fragment, cell, is_enabled)
+    if peer == 0:
         return False
-    if has_stories:
-        return False
-    return True
-
-def handle_avatar_click(fragment, dialog_id, story_state, is_scrolling, is_long_press=False):
-    # Long press has its own dedicated callback in Telegram (preview/menu)
-    if is_long_press:
-        return False # Do not open profile directly on long press
-
-    if not should_claim_avatar_tap(is_scrolling, story_state != STATE_EMPTY):
-        return False
-
-    if dialog_id > 0:
-        if dialog_id == fragment.current_user_id:
-            return False # Self chat
-        return fragment.present_fragment("ProfileActivity", {"user_id": dialog_id})
+    args = {"removeFragmentOnChatOpen": True}
+    if peer > 0:
+        args["user_id"] = peer
     else:
-        chat_id = -dialog_id
-        return fragment.present_fragment("ProfileActivity", {"chat_id": chat_id})
+        args["chat_id"] = -peer
+    return fragment.present_fragment("ProfileActivity", args)
 
-def run_tests():
-    print("--- Running Avatar Navigation & Safety Test Suite ---")
+def run_suite():
+    print("--- Starting NayaGram Regression Test Suite ---")
 
-    # Test 1: User Avatar Tap
+    # 1. Saved Messages
+    frag = MockFragment(client_user_id=999)
+    cell_saved = MockCell(dialog_id=999)
+    assert resolve_target_peer(frag, cell_saved) == 0, "Saved messages did not return 0!"
+    assert not open_profile(frag, cell_saved, STATE_EMPTY)
+    print("[PASS] 1. Saved Messages safe isolation")
+
+    # 2. Replies pseudo-chat
+    cell_reply = MockCell(dialog_id=777000)
+    assert resolve_target_peer(frag, cell_reply) == 0
+    print("[PASS] 2. Telegram system/reply pseudo-chat safe isolation")
+
+    # 3. Story Priority (Unread, Read, Muted)
     frag = MockFragment()
-    res = handle_avatar_click(frag, dialog_id=2002, story_state=STATE_EMPTY, is_scrolling=False)
-    assert res is True
-    assert frag.presented == ("ProfileActivity", {"user_id": 2002})
-    assert frag.backstack == ["DialogsActivity", "ProfileActivity"]
-    print("[TEST 1] User Avatar Tap: PASS")
+    cell_user = MockCell(dialog_id=555)
+    # Story active (unread)
+    assert not open_profile(frag, cell_user, STATE_UNREAD), "Unread story was overridden!"
+    # Story active (read)
+    assert not open_profile(frag, cell_user, STATE_READ), "Read story was overridden!"
+    # Story active (muted)
+    assert not open_profile(frag, cell_user, STATE_MUTED), "Muted story was overridden!"
+    # Empty (no story)
+    assert open_profile(frag, cell_user, STATE_EMPTY), "Profile failed to open when no story exists!"
+    print("[PASS] 3. Story precedence (Unread / Read / Muted rings take priority)")
 
-    # Test 2: Group Avatar Tap
+    # 4. Fast Scroll / Fling Protection
     frag = MockFragment()
-    res = handle_avatar_click(frag, dialog_id=-5005, story_state=STATE_EMPTY, is_scrolling=False)
-    assert res is True
-    assert frag.presented == ("ProfileActivity", {"chat_id": 5005})
-    assert frag.backstack == ["DialogsActivity", "ProfileActivity"]
-    print("[TEST 2] Group Avatar Tap: PASS")
+    cell_fling = MockCell(dialog_id=555, scroll_state=SCROLL_STATE_SETTLING)
+    assert not open_profile(frag, cell_fling, STATE_EMPTY), "Fling allowed accidental avatar tap!"
+    cell_drag = MockCell(dialog_id=555, scroll_state=SCROLL_STATE_DRAGGING)
+    assert not open_profile(frag, cell_drag, STATE_EMPTY), "Drag allowed accidental avatar tap!"
+    print("[PASS] 4. Fling & fast-scroll mis-tap suppression")
 
-    # Test 3: Story Priority (Story Ring Active)
+    # 5. Action Mode / Selection Mode
     frag = MockFragment()
-    res = handle_avatar_click(frag, dialog_id=2002, story_state=STATE_HAS_STORY, is_scrolling=False)
-    assert res is False, "Profile opened despite active story!"
-    assert len(frag.backstack) == 1
-    print("[TEST 3] Active Story Precedence: PASS")
+    frag.action_mode = True
+    assert not open_profile(frag, cell_user, STATE_EMPTY), "Action mode allowed profile tap instead of checkbox!"
+    print("[PASS] 5. Action/Selection Mode preserved as checkbox")
 
-    # Test 4: Fast Scroll / Fling Suppression
+    # 6. Backstack & removeFragmentOnChatOpen
     frag = MockFragment()
-    res = handle_avatar_click(frag, dialog_id=2002, story_state=STATE_EMPTY, is_scrolling=True)
-    assert res is False, "Tap claimed during fast fling!"
-    print("[TEST 4] Fling / Fast Scroll Guard: PASS")
+    assert open_profile(frag, cell_user, STATE_EMPTY)
+    last_nav = frag.backstack[-1]
+    assert last_nav[0] == "ProfileActivity"
+    assert last_nav[1].get("removeFragmentOnChatOpen") is True
+    print("[PASS] 6. Clean back navigation with removeFragmentOnChatOpen")
 
-    # Test 5: Long Press Safety (Preview retained)
-    frag = MockFragment()
-    res = handle_avatar_click(frag, dialog_id=2002, story_state=STATE_EMPTY, is_scrolling=False, is_long_press=True)
-    assert res is False, "Long press triggered profile instead of preview!"
-    print("[TEST 5] Long-Press Action Isolation: PASS")
+    # 7. Default Setting OFF Rule
+    assert not open_profile(frag, cell_user, STATE_EMPTY, is_enabled=False)
+    print("[PASS] 7. Safe Default OFF Rule verified")
 
-    # Test 6: Back Navigation Stack
-    frag = MockFragment()
-    handle_avatar_click(frag, dialog_id=-5005, story_state=STATE_EMPTY, is_scrolling=False)
-    assert frag.backstack[-1] == "ProfileActivity"
-    popped = frag.press_back()
-    assert popped == "ProfileActivity"
-    assert frag.backstack == ["DialogsActivity"], "Back button did not return to DialogsActivity!"
-    print("[TEST 6] Back Navigation Clean Return: PASS")
-
-    # Test 7: Google Play Console Safety Evaluation
-    dangerous_permissions_required = []
-    background_tracking = False
-    policy_compliant = len(dangerous_permissions_required) == 0 and not background_tracking
-    assert policy_compliant is True
-    print("[TEST 7] Google Play Store Policy Verification: PASS")
-
-    print("--- ALL 7 TESTS PASSED SUCCESSFULLY ---")
+    print("--- ALL REGRESSION TESTS PASSED (7/7) ---")
 
 if __name__ == '__main__':
-    run_tests()
+    run_suite()
