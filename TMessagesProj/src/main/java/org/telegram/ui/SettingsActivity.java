@@ -695,9 +695,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         items.add(UItem.asHeader("NayaGram"));
+        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "Naya Features", "Custom stealth, stories, privacy & tools", "✨"));
         long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
         if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
-            items.add(SettingCell.Factory.of(101, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NG Control", "Developer & Management", "00"));
+            items.add(SettingCell.Factory.of(101, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_devices, "NG Control", "Developer & Management", "00"));
         }
         items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing", "01"));
         items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_folders, "Anti-Delete", "Saved deleted messages", "02"));
@@ -828,6 +829,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return;
         }
         switch (item.id) {
+            case 100:
+                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_FEATURES_HUB));
+                break;
             case 101:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_STUDIO));
                 break;
