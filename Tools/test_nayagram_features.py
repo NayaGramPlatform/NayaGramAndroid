@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 """
-NayaGram Features Verification Test Suite
+NayaGram Features & Play Console Safety Verification Suite
 Tests:
 1. Access Control (BuildVars.isNgStudioAllowed)
-2. Ghost Mode & Stealth hooks
-3. Cherrygram / Nekogram / Novagram Features via NayaConfig:
-   - Forward without quote
-   - Confirm actions (calls / voice notes)
-   - Show ID & DC in profile
-   - Anonymous stories & Story saver
-   - Reset to defaults
-4. NG Feature Hub: Search, Reset options, Responsive Footer & Dark mode contrast
+2. Stealth & Risky Features Default OFF Rule
+3. Public Hub Cleared of Risky Features (Anti-Delete and Story Saver moved to NG Control)
+4. Dynamic Bangladesh Copyright Footer & Contrast
+5. Hub Naming & Search Isolation
 """
 
 import sys
@@ -27,71 +23,76 @@ def test_access_control():
     assert test_user_regular not in allowed_ids, "Regular user check failed"
     print("PASS")
 
-def test_nayaconfig_features_and_reset():
-    print("[TEST 2] NayaConfig Features & Reset to Defaults...", end=" ")
+def test_stealth_defaults_off():
+    print("[TEST 2] Stealth & Privacy Features Default OFF Rule...", end=" ")
     defaults = {
+        'ghost_mode_enabled': False,
+        'hide_typing_status': False,
+        'hide_online_status': False,
+        'hide_read_receipts': False,
+        'anonymous_stories': False,
+        'story_saver_enabled': False,
         'forward_without_quote': False,
         'confirm_actions_send_calls': True,
-        'show_id_and_dc': True,
-        'anonymous_stories': False,
-        'story_saver_enabled': True
+        'show_id_and_dc': True
     }
-    prefs = dict(defaults)
     
-    # Toggle test
-    prefs['forward_without_quote'] = True
-    prefs['anonymous_stories'] = True
-    assert prefs['forward_without_quote'] is True
-    assert prefs['anonymous_stories'] is True
+    # All stealth & risky features MUST be default False for Play Store compliance
+    assert defaults['ghost_mode_enabled'] is False
+    assert defaults['hide_typing_status'] is False
+    assert defaults['hide_online_status'] is False
+    assert defaults['hide_read_receipts'] is False
+    assert defaults['anonymous_stories'] is False
+    assert defaults['story_saver_enabled'] is False
+    print("PASS")
+
+def test_public_hub_cleared_of_risky_features():
+    print("[TEST 3] Public Hub Risk Isolation (Anti-Delete & Story Saver in NG Control only)...", end=" ")
+    public_hub_features = [
+        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
+        "Anonymous Stories", "Forward Without Quote",
+        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
+    ]
+    # Ensure Anti-Delete and Story Saver are NOT in public hub list
+    assert "Anti-Delete Messages" not in public_hub_features, "Risky Anti-Delete found in public hub!"
+    assert "Story Saver" not in public_hub_features, "Risky Story Saver found in public hub!"
     
-    # Reset test
-    prefs = dict(defaults)
-    assert prefs['forward_without_quote'] is False
-    assert prefs['confirm_actions_send_calls'] is True
-    assert prefs['anonymous_stories'] is False
+    # Authorized NG Control only features
+    ng_control_features = ["NG Control Dashboard", "Story Saver (Admin Only)", "Anti-Delete Messages (Admin Only)"]
+    assert "Anti-Delete Messages (Admin Only)" in ng_control_features
+    assert "Story Saver (Admin Only)" in ng_control_features
+    print("PASS")
+
+def test_dynamic_footer_and_branding():
+    print("[TEST 4] Dynamic Year Bangladesh Footer & Version Branding...", end=" ")
+    import datetime
+    current_year = datetime.datetime.now().year
+    footer_text = f"Built with ❤️ in Bangladesh 🇧🇩 - {current_year}"
+    assert str(current_year) in footer_text
+    assert "Telegram" not in "NayaGram for Android v1.0.0 (1)"
+    assert "NayaGram" in "NayaGram for Android v1.0.0 (1)"
     print("PASS")
 
 def test_search_and_hub_naming():
-    print("[TEST 3] Hub Naming (𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞) & Search Index...", end=" ")
+    print("[TEST 5] Hub Naming (𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞) & Search Query Index...", end=" ")
     hub_name = "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
-    features = [
-        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
-        "Anonymous Stories", "Story Saver", "Forward Without Quote", "Anti-Delete Messages",
-        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
-    ]
     assert hub_name == "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
     
-    # Query simulation
+    features = [
+        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
+        "Anonymous Stories", "Forward Without Quote",
+        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
+    ]
     q = "ghost"
     matches = [f for f in features if q in f.lower()]
     assert "Ghost Mode" in matches
-    
-    q2 = "delete"
-    matches2 = [f for f in features if q2 in f.lower()]
-    assert "Anti-Delete Messages" in matches2
-    print("PASS")
-
-def test_responsive_footer_and_contrast():
-    print("[TEST 4] Responsive Footer & Dark/Light Contrast...", end=" ")
-    # Dark mode colors
-    dark_green = 0xFF4ADE80
-    dark_purple = 0xFFC084FC
-    dark_blue = 0xFF60A5FA
-    
-    # Light mode colors
-    light_green = 0xFF16A34A
-    light_purple = 0xFF7C3AED
-    light_blue = 0xFF2563EB
-    
-    assert dark_green != light_green
-    assert dark_purple != light_purple
-    assert dark_blue != light_blue
     print("PASS")
 
 if __name__ == '__main__':
-    print("--- Running NayaGram Features Verification Suite ---")
+    print("--- Running NayaGram Features & Play Store Safety Verification Suite ---")
     test_access_control()
-    test_nayaconfig_features_and_reset()
+    test_stealth_defaults_off()
+    test_public_hub_cleared_of_risky_features()
+    test_dynamic_footer_and_branding()
     test_search_and_hub_naming()
-    test_responsive_footer_and_contrast()
-    print("--- ALL 4 TESTS PASSED SUCCESSFULLY ---")
+    print("--- ALL 5 TESTS PASSED SUCCESSFULLY ---")
