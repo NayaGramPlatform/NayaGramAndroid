@@ -39,6 +39,12 @@ import android.media.MediaCodecList;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
+import android.graphics.Typeface;
+
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -699,7 +705,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Chat Finder", "Open chat by Username or Phone", "04"));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_chat, "App Themes", "Custom colors, wallpaper & fonts", "05"));
         items.add(SettingCell.Factory.of(107, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, "Analytics", "Data usage & network statistics", "06"));
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asShadow(createNayaCopyrightSpan()));
 
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
@@ -948,6 +954,29 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         return false;
     }
 
+    
+    private CharSequence createNayaCopyrightSpan() {
+        SpannableStringBuilder ssb = new SpannableStringBuilder();
+        int start = ssb.length();
+        ssb.append("© 2026 ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        start = ssb.length();
+        ssb.append("NayaGram ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF8A2BE2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        start = ssb.length();
+        ssb.append("Platform");
+        ssb.setSpan(new ForegroundColorSpan(0xFF1DA1F2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        start = ssb.length();
+        ssb.append(" • All Rights Reserved");
+        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return ssb;
+    }
+
     public String getVersionName() {
         try {
             PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
@@ -969,7 +998,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
             // NayaGram for Android v1.0.0 — clean single branding
             String nayaGramInfo = "NayaGram for Android v1.0.0 (1)";
-            return nayaGramInfo + "\n" + abi;
+            return nayaGramInfo + "\n© 2026 NayaGram Platform • All Rights Reserved\n" + abi;
         } catch (Exception e) {
             FileLog.e(e);
         }
