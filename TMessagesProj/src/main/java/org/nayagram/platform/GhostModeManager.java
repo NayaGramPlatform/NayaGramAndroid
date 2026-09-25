@@ -2,6 +2,7 @@ package org.nayagram.platform;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import org.telegram.messenger.ApplicationLoader;
 
 /**
  * GhostModeManager - Manages Ghost Mode and hide features
