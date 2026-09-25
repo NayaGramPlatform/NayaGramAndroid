@@ -1,6 +1,7 @@
 package org.nayagram.platform;
 
-import org.nayagram.platform.tgnet.TLRPC;
+import org.telegram.tgnet.TLRPC;
+import org.telegram.messenger.FileLog;
 
 /**
  * GhostModeInterceptor - Intercepts and modifies messages/status updates for Ghost Mode
