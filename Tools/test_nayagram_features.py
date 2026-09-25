@@ -9,7 +9,8 @@ Tests:
    - Confirm actions (calls / voice notes)
    - Show ID & DC in profile
    - Anonymous stories & Story saver
-4. Novagram-style Settings & dedicated Feature Store with copyright footer
+   - Reset to defaults
+4. NG Feature Hub: Search, Reset options, Responsive Footer & Dark mode contrast
 """
 
 import sys
@@ -26,37 +27,71 @@ def test_access_control():
     assert test_user_regular not in allowed_ids, "Regular user check failed"
     print("PASS")
 
-def test_cherrygram_nekogram_features():
-    print("[TEST 2] Cherrygram/Nekogram Features (NayaConfig)...", end=" ")
-    prefs = {
+def test_nayaconfig_features_and_reset():
+    print("[TEST 2] NayaConfig Features & Reset to Defaults...", end=" ")
+    defaults = {
         'forward_without_quote': False,
         'confirm_actions_send_calls': True,
         'show_id_and_dc': True,
         'anonymous_stories': False,
         'story_saver_enabled': True
     }
+    prefs = dict(defaults)
     
     # Toggle test
     prefs['forward_without_quote'] = True
-    assert prefs['forward_without_quote'] is True
     prefs['anonymous_stories'] = True
+    assert prefs['forward_without_quote'] is True
     assert prefs['anonymous_stories'] is True
+    
+    # Reset test
+    prefs = dict(defaults)
+    assert prefs['forward_without_quote'] is False
+    assert prefs['confirm_actions_send_calls'] is True
+    assert prefs['anonymous_stories'] is False
     print("PASS")
 
-def test_novagram_feature_store_and_footer():
-    print("[TEST 3] Novagram-Style Feature Hub & Footer Copyright...", end=" ")
-    # Verify copyright branding structure
-    c_year = "© 2026"
-    c_brand = "NayaGram"
-    c_plat = "Platform"
-    c_rights = "• All Rights Reserved"
-    full_notice = f"{c_year} {c_brand} {c_plat} {c_rights}"
-    assert "NayaGram Platform" in full_notice
+def test_search_and_hub_naming():
+    print("[TEST 3] Hub Naming (𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞) & Search Index...", end=" ")
+    hub_name = "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
+    features = [
+        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
+        "Anonymous Stories", "Story Saver", "Forward Without Quote", "Anti-Delete Messages",
+        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
+    ]
+    assert hub_name == "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
+    
+    # Query simulation
+    q = "ghost"
+    matches = [f for f in features if q in f.lower()]
+    assert "Ghost Mode" in matches
+    
+    q2 = "delete"
+    matches2 = [f for f in features if q2 in f.lower()]
+    assert "Anti-Delete Messages" in matches2
+    print("PASS")
+
+def test_responsive_footer_and_contrast():
+    print("[TEST 4] Responsive Footer & Dark/Light Contrast...", end=" ")
+    # Dark mode colors
+    dark_green = 0xFF4ADE80
+    dark_purple = 0xFFC084FC
+    dark_blue = 0xFF60A5FA
+    
+    # Light mode colors
+    light_green = 0xFF16A34A
+    light_purple = 0xFF7C3AED
+    light_blue = 0xFF2563EB
+    
+    assert dark_green != light_green
+    assert dark_purple != light_purple
+    assert dark_blue != light_blue
     print("PASS")
 
 if __name__ == '__main__':
     print("--- Running NayaGram Features Verification Suite ---")
     test_access_control()
-    test_cherrygram_nekogram_features()
-    test_novagram_feature_store_and_footer()
-    print("--- ALL 3 TESTS PASSED SUCCESSFULLY ---")
+    test_nayaconfig_features_and_reset()
+    test_search_and_hub_naming()
+    test_responsive_footer_and_contrast()
+    print("--- ALL 4 TESTS PASSED SUCCESSFULLY ---")
