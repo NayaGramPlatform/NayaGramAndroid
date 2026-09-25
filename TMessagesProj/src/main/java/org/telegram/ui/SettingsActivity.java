@@ -695,17 +695,11 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         items.add(UItem.asHeader("NayaGram"));
-        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "Naya Features", "Custom stealth, stories, privacy & tools", "✨"));
+        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "Naya Features", "All custom stealth, stories, privacy & tools", "\u2728"));
         long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
         if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
             items.add(SettingCell.Factory.of(101, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_devices, "NG Control", "Developer & Management", "00"));
         }
-        items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing", "01"));
-        items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_folders, "Anti-Delete", "Saved deleted messages", "02"));
-        items.add(SettingCell.Factory.of(104, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_power, "App Cache", "Free storage & clear cache", "03"));
-        items.add(SettingCell.Factory.of(105, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Chat Finder", "Open chat by Username or Phone", "04"));
-        items.add(SettingCell.Factory.of(106, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_chat, "App Themes", "Custom colors, wallpaper & fonts", "05"));
-        items.add(SettingCell.Factory.of(107, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_data, "Analytics", "Data usage & network statistics", "06"));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
 
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
@@ -960,24 +954,35 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
     
     private CharSequence createNayaCopyrightSpan() {
+        int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
         SpannableStringBuilder ssb = new SpannableStringBuilder();
+
+        // Line 1: © {YEAR} 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.
         int start = ssb.length();
-        ssb.append("© 2026 ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("© ").append(String.valueOf(currentYear)).append(" ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append("NayaGram ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF8A2BE2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF9B51E0), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append("Platform");
-        ssb.setSpan(new ForegroundColorSpan(0xFF1DA1F2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦");
+        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append(" • All Rights Reserved");
-        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append(". All rights reserved.\n");
+        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Line 2: Built with ❤️ in Bangladesh 🇧🇩
+        start = ssb.length();
+        ssb.append("Built with ❤️ in Bangladesh 🇧🇩");
+        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Centered alignment
+        ssb.setSpan(new android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return ssb;
     }
 
@@ -1000,9 +1005,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     }
                     break;
             }
-            // NayaGram for Android v1.0.0 — clean single branding
+            int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
             String nayaGramInfo = "NayaGram for Android v1.0.0 (1)";
-            return nayaGramInfo + "\n© 2026 NayaGram Platform • All Rights Reserved\n" + abi;
+            String copyrightLine = "© " + currentYear + " 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.\nBuilt with ❤️ in Bangladesh 🇧🇩";
+            return nayaGramInfo + "\n" + copyrightLine + "\n" + abi;
         } catch (Exception e) {
             FileLog.e(e);
         }
