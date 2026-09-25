@@ -688,6 +688,15 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
+        items.add(UItem.asHeader("NayaGram"));
+        long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
+        if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
+            items.add(SettingCell.Factory.of(101, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NG Control", "Developer & Management"));
+        }
+        items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing"));
+        items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_chat, "Anti-Delete", "Saved deleted messages"));
+        items.add(UItem.asShadow(null));
+
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
@@ -809,6 +818,15 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return;
         }
         switch (item.id) {
+            case 101:
+                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_STUDIO));
+                break;
+            case 102:
+                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_GHOST_MODE));
+                break;
+            case 103:
+                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_ANTI_DELETE));
+                break;
             case 1:
                 presentSettingFragment(new UserInfoActivity());
                 break;
