@@ -695,6 +695,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
         items.add(SettingCell.Factory.of(102, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, "Ghost Mode", "Stealth reading & typing"));
         items.add(SettingCell.Factory.of(103, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_chat, "Anti-Delete", "Saved deleted messages"));
+        items.add(SettingCell.Factory.of(104, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clear cache"));
+        items.add(SettingCell.Factory.of(105, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, "Chat Finder", "Open chat by Username or Phone"));
         items.add(UItem.asShadow(null));
 
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
@@ -826,6 +828,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 103:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_ANTI_DELETE));
+                break;
+            case 104:
+                presentSettingFragment(new CacheControlActivity());
+                break;
+            case 105:
+                presentSettingFragment(new DialogsActivity(null));
                 break;
             case 1:
                 presentSettingFragment(new UserInfoActivity());
