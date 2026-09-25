@@ -695,7 +695,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         items.add(UItem.asHeader("NayaGram"));
-        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "Naya Features", "All custom stealth, stories, privacy & tools", "\u2728"));
+        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞", "All custom stealth, stories, privacy & tools", "\u2728"));
         long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
         if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
             items.add(SettingCell.Factory.of(101, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_devices, "NG Control", "Developer & Management", "00"));
