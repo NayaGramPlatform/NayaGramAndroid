@@ -325,24 +325,35 @@ public class NGSettingsActivity extends BaseFragment {
     }
 
     private CharSequence createNayaCopyrightSpan() {
+        int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
         SpannableStringBuilder ssb = new SpannableStringBuilder();
+
+        // Line 1: © {YEAR} 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.
         int start = ssb.length();
-        ssb.append("© 2026 ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("© ").append(String.valueOf(currentYear)).append(" ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append("NayaGram ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF8A2BE2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 ");
+        ssb.setSpan(new ForegroundColorSpan(0xFF9B51E0), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append("Platform");
-        ssb.setSpan(new ForegroundColorSpan(0xFF1DA1F2), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append("𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦");
+        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append(" • All Rights Reserved");
-        ssb.setSpan(new ForegroundColorSpan(0xFF27B434), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append(". All rights reserved.\n");
+        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Line 2: Built with ❤️ in Bangladesh 🇧🇩
+        start = ssb.length();
+        ssb.append("Built with ❤️ in Bangladesh 🇧🇩");
+        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Centered alignment
+        ssb.setSpan(new android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return ssb;
     }
 
