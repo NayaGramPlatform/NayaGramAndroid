@@ -6,10 +6,12 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.AlignmentSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
@@ -26,6 +28,9 @@ import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Cells.HeaderCell;
@@ -38,9 +43,11 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
 
 /**
- * NGSettingsActivity - Dedicated NayaGram Feature Store & Settings Hub
+ * NGSettingsActivity - Dedicated NayaGram Feature Hub & Settings
  * Inspired by Nekogram, Cherrygram, and Novagram.
  */
 public class NGSettingsActivity extends BaseFragment {
@@ -50,9 +57,19 @@ public class NGSettingsActivity extends BaseFragment {
     public static final int TYPE_STUDIO = 2;
     public static final int TYPE_ANTI_DELETE = 3;
 
+    private static final int ITEM_SEARCH = 1;
+    private static final int ITEM_MORE = 2;
+    private static final int SUB_ITEM_RESET = 3;
+
     private final int currentType;
     private ListAdapter listAdapter;
     private RecyclerListView listView;
+    private ActionBarMenuItem searchItem;
+
+    private boolean isSearching;
+    private String searchQuery = "";
+    private final ArrayList<SearchItem> searchResults = new ArrayList<>();
+    private final ArrayList<SearchItem> allFeatures = new ArrayList<>();
 
     private int rowCount;
 
@@ -71,6 +88,7 @@ public class NGSettingsActivity extends BaseFragment {
     private int hubHeaderProtection;
     private int hubRowConfirmActions;
     private int hubRowShowIdDc;
+    private int hubRowResetDefaults;
     private int hubHeaderStudio;
     private int hubRowStudio;
     private int hubFooterCopyrightRow;
@@ -90,6 +108,20 @@ public class NGSettingsActivity extends BaseFragment {
     private int studioVersionRow;
     private int studioLogsRow;
 
+    private static class SearchItem {
+        final int id;
+        final String title;
+        final String subtitle;
+        final boolean isCheck;
+
+        SearchItem(int id, String title, String subtitle, boolean isCheck) {
+            this.id = id;
+            this.title = title;
+            this.subtitle = subtitle;
+            this.isCheck = isCheck;
+        }
+    }
+
     public NGSettingsActivity() {
         this(TYPE_FEATURES_HUB);
     }
@@ -102,8 +134,29 @@ public class NGSettingsActivity extends BaseFragment {
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
+        initSearchItems();
         updateRows();
         return true;
+    }
+
+    private void initSearchItems() {
+        allFeatures.clear();
+        allFeatures.add(new SearchItem(1, "Ghost Mode", "Main stealth switch for all privacy hooks", true));
+        allFeatures.add(new SearchItem(2, "Hide Typing Status", "Contacts will not see when you are typing", true));
+        allFeatures.add(new SearchItem(3, "Hide Online Status", "Keep last seen timestamp undisturbed", true));
+        allFeatures.add(new SearchItem(4, "Hide Read Receipts", "Read messages without marking as seen", true));
+        allFeatures.add(new SearchItem(5, "Anonymous Stories", "View user stories without leaving a view trace", true));
+        allFeatures.add(new SearchItem(6, "Story Saver", "Download and save photo/video stories locally", true));
+        allFeatures.add(new SearchItem(7, "Forward Without Quote", "Direct forward without original sender name", true));
+        allFeatures.add(new SearchItem(8, "Anti-Delete Messages", "Save incoming messages locally before deletion", true));
+        allFeatures.add(new SearchItem(9, "Confirm Actions", "Confirmation before placing calls or sending notes", true));
+        allFeatures.add(new SearchItem(10, "Show ID & Datacenter", "Display numeric Telegram ID & DC in user profile", true));
+        allFeatures.add(new SearchItem(11, "Reset All Features", "Restore all NG Features to default values", false));
+        
+        long clientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
+        if (BuildVars.isNgStudioAllowed(clientUserId)) {
+            allFeatures.add(new SearchItem(12, "NG Control Dashboard", "Authorized developer telemetry & diagnostics", false));
+        }
     }
 
     private void updateRows() {
@@ -123,6 +176,7 @@ public class NGSettingsActivity extends BaseFragment {
         hubHeaderProtection = -1;
         hubRowConfirmActions = -1;
         hubRowShowIdDc = -1;
+        hubRowResetDefaults = -1;
         hubHeaderStudio = -1;
         hubRowStudio = -1;
         hubFooterCopyrightRow = -1;
@@ -158,6 +212,7 @@ public class NGSettingsActivity extends BaseFragment {
             hubHeaderProtection = rowCount++;
             hubRowConfirmActions = rowCount++;
             hubRowShowIdDc = rowCount++;
+            hubRowResetDefaults = rowCount++;
 
             long clientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
             if (BuildVars.isNgStudioAllowed(clientUserId)) {
@@ -187,13 +242,51 @@ public class NGSettingsActivity extends BaseFragment {
         }
     }
 
+    private void filterFeatures(String query) {
+        searchResults.clear();
+        if (query == null || query.trim().isEmpty()) {
+            isSearching = false;
+        } else {
+            isSearching = true;
+            String lower = query.trim().toLowerCase(Locale.US);
+            for (SearchItem item : allFeatures) {
+                if (item.title.toLowerCase(Locale.US).contains(lower) || item.subtitle.toLowerCase(Locale.US).contains(lower)) {
+                    searchResults.add(item);
+                }
+            }
+        }
+        if (listAdapter != null) {
+            listAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void showResetConfirmationDialog() {
+        if (getParentActivity() == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Reset NG Features");
+        builder.setMessage("Are you sure you want to restore all Naya Features (Ghost Mode, Anti-Delete, Stories, and Privacy) back to their defaults?");
+        builder.setPositiveButton("Reset", (dialog, which) -> {
+            NayaConfig.getInstance().resetToDefaults();
+            GhostModeManager.getInstance().resetAllSettings();
+            AntiDeleteManager.getInstance().setAntiDeleteEnabled(false);
+            if (listAdapter != null) {
+                listAdapter.notifyDataSetChanged();
+            }
+            if (getParentActivity() != null) {
+                BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "All features reset to default").show();
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        showDialog(builder.create());
+    }
+
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
 
         if (currentType == TYPE_FEATURES_HUB) {
-            actionBar.setTitle("NayaGram Settings");
+            actionBar.setTitle("𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞");
         } else if (currentType == TYPE_GHOST_MODE) {
             actionBar.setTitle("Ghost Mode");
         } else if (currentType == TYPE_STUDIO) {
@@ -202,11 +295,41 @@ public class NGSettingsActivity extends BaseFragment {
             actionBar.setTitle("Anti-Delete");
         }
 
+        ActionBarMenu menu = actionBar.createMenu();
+
+        if (currentType == TYPE_FEATURES_HUB) {
+            searchItem = menu.addItem(ITEM_SEARCH, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+                @Override
+                public void onSearchExpand() {
+                    isSearching = true;
+                }
+
+                @Override
+                public void onSearchCollapse() {
+                    isSearching = false;
+                    searchQuery = "";
+                    filterFeatures("");
+                }
+
+                @Override
+                public void onTextChanged(EditText editText) {
+                    searchQuery = editText.getText().toString();
+                    filterFeatures(searchQuery);
+                }
+            });
+            searchItem.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
+
+            ActionBarMenuItem otherItem = menu.addItem(ITEM_MORE, R.drawable.ic_ab_other);
+            otherItem.addSubItem(SUB_ITEM_RESET, R.drawable.msg_reset, "Reset to defaults");
+        }
+
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
+                } else if (id == SUB_ITEM_RESET) {
+                    showResetConfirmationDialog();
                 }
             }
         });
@@ -218,6 +341,8 @@ public class NGSettingsActivity extends BaseFragment {
         listView = new RecyclerListView(context);
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
+        listView.setClipToPadding(false);
+        listView.setPadding(0, 0, 0, AndroidUtilities.dp(80));
         listView.setAdapter(listAdapter = new ListAdapter(context));
         ((DefaultItemAnimator) listView.getItemAnimator()).setDelayAnimations(false);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
@@ -225,6 +350,52 @@ public class NGSettingsActivity extends BaseFragment {
         listView.setOnItemClickListener((view, position) -> {
             GhostModeManager gm = GhostModeManager.getInstance();
             NayaConfig cfg = NayaConfig.getInstance();
+
+            if (isSearching) {
+                if (position >= 0 && position < searchResults.size()) {
+                    SearchItem item = searchResults.get(position);
+                    switch (item.id) {
+                        case 1:
+                            gm.setGhostModeEnabled(!gm.isGhostModeEnabled());
+                            break;
+                        case 2:
+                            gm.setHideTypingStatus(!gm.isHideTypingStatus());
+                            break;
+                        case 3:
+                            gm.setHideOnlineStatus(!gm.isHideOnlineStatus());
+                            break;
+                        case 4:
+                            gm.setHideReadReceipts(!gm.isHideReadReceipts());
+                            break;
+                        case 5:
+                            cfg.setAnonymousStories(!cfg.isAnonymousStories());
+                            break;
+                        case 6:
+                            cfg.setStorySaverEnabled(!cfg.isStorySaverEnabled());
+                            break;
+                        case 7:
+                            cfg.setForwardWithoutQuote(!cfg.isForwardWithoutQuote());
+                            break;
+                        case 8:
+                            AntiDeleteManager.getInstance().setAntiDeleteEnabled(!AntiDeleteManager.getInstance().isAntiDeleteEnabled());
+                            break;
+                        case 9:
+                            cfg.setConfirmActions(!cfg.isConfirmActions());
+                            break;
+                        case 10:
+                            cfg.setShowIdAndDc(!cfg.isShowIdAndDc());
+                            break;
+                        case 11:
+                            showResetConfirmationDialog();
+                            return;
+                        case 12:
+                            presentFragment(new NGSettingsActivity(TYPE_STUDIO));
+                            return;
+                    }
+                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                }
+                return;
+            }
 
             if (currentType == TYPE_FEATURES_HUB) {
                 if (position == hubRowAnonymousStories) {
@@ -279,6 +450,8 @@ public class NGSettingsActivity extends BaseFragment {
                     if (view instanceof TextCheckCell) {
                         ((TextCheckCell) view).setChecked(cfg.isShowIdAndDc());
                     }
+                } else if (position == hubRowResetDefaults) {
+                    showResetConfirmationDialog();
                 } else if (position == hubRowStudio) {
                     presentFragment(new NGSettingsActivity(TYPE_STUDIO));
                 }
@@ -325,35 +498,41 @@ public class NGSettingsActivity extends BaseFragment {
     }
 
     private CharSequence createNayaCopyrightSpan() {
-        int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         SpannableStringBuilder ssb = new SpannableStringBuilder();
+
+        boolean isDark = Theme.isCurrentThemeDark();
+        int greenColor = isDark ? 0xFF4ADE80 : 0xFF16A34A;
+        int purpleColor = isDark ? 0xFFC084FC : 0xFF7C3AED;
+        int blueColor = isDark ? 0xFF60A5FA : 0xFF2563EB;
 
         // Line 1: © {YEAR} 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.
         int start = ssb.length();
         ssb.append("© ").append(String.valueOf(currentYear)).append(" ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
         ssb.append("𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 ");
-        ssb.setSpan(new ForegroundColorSpan(0xFF9B51E0), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(purpleColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
         ssb.append("𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦");
-        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(blueColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append(". All rights reserved.\n");
-        ssb.setSpan(new ForegroundColorSpan(0xFF34C759), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.append(". All rights reserved.
+");
+        ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Line 2: Built with ❤️ in Bangladesh 🇧🇩
         start = ssb.length();
         ssb.append("Built with ❤️ in Bangladesh 🇧🇩");
-        ssb.setSpan(new ForegroundColorSpan(0xFF2F80ED), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new ForegroundColorSpan(blueColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Centered alignment
-        ssb.setSpan(new android.text.style.AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        ssb.setSpan(new AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return ssb;
     }
 
@@ -366,16 +545,22 @@ public class NGSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemCount() {
+            if (isSearching) {
+                return searchResults.size();
+            }
             return rowCount;
         }
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
+            if (isSearching) {
+                return true;
+            }
             int pos = holder.getAdapterPosition();
             if (currentType == TYPE_FEATURES_HUB) {
                 if (pos == hubRowAnonymousStories || pos == hubRowStorySaver || pos == hubRowGhostMaster ||
                     pos == hubRowForwardNoQuote || pos == hubRowAntiDelete || pos == hubRowConfirmActions ||
-                    pos == hubRowShowIdDc || pos == hubRowStudio) {
+                    pos == hubRowShowIdDc || pos == hubRowResetDefaults || pos == hubRowStudio) {
                     return true;
                 }
                 GhostModeManager gm = GhostModeManager.getInstance();
@@ -424,38 +609,67 @@ public class NGSettingsActivity extends BaseFragment {
             GhostModeManager gm = GhostModeManager.getInstance();
             NayaConfig cfg = NayaConfig.getInstance();
 
+            if (isSearching) {
+                if (position >= 0 && position < searchResults.size()) {
+                    SearchItem item = searchResults.get(position);
+                    if (item.isCheck) {
+                        TextCheckCell checkCell = (TextCheckCell) holder.itemView;
+                        boolean checked = false;
+                        switch (item.id) {
+                            case 1: checked = gm.isGhostModeEnabled(); break;
+                            case 2: checked = gm.isHideTypingStatus(); break;
+                            case 3: checked = gm.isHideOnlineStatus(); break;
+                            case 4: checked = gm.isHideReadReceipts(); break;
+                            case 5: checked = cfg.isAnonymousStories(); break;
+                            case 6: checked = cfg.isStorySaverEnabled(); break;
+                            case 7: checked = cfg.isForwardWithoutQuote(); break;
+                            case 8: checked = AntiDeleteManager.getInstance().isAntiDeleteEnabled(); break;
+                            case 9: checked = cfg.isConfirmActions(); break;
+                            case 10: checked = cfg.isShowIdAndDc(); break;
+                        }
+                        checkCell.setTextAndCheck(item.title, checked, position != searchResults.size() - 1);
+                    } else {
+                        TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
+                        textCell.setTextAndValue(item.title, item.subtitle, position != searchResults.size() - 1);
+                    }
+                }
+                return;
+            }
+
             switch (holder.getItemViewType()) {
                 case 0:
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
                     if (currentType == TYPE_FEATURES_HUB) {
                         if (position == hubHeaderStories) {
-                            headerCell.setText("Story Settings (Nekogram / Novagram)");
+                            headerCell.setText("Story Features");
                         } else if (position == hubHeaderStealth) {
-                            headerCell.setText("Privacy & Stealth (Ghost Mode)");
+                            headerCell.setText("Ghost & Stealth Settings");
                         } else if (position == hubHeaderMessaging) {
-                            headerCell.setText("Messaging & Chats");
+                            headerCell.setText("Chat & Message Tools");
                         } else if (position == hubHeaderProtection) {
-                            headerCell.setText("Protection & Details");
+                            headerCell.setText("Protection & Confirmation");
                         } else if (position == hubHeaderStudio) {
-                            headerCell.setText("NG Studio Management");
+                            headerCell.setText("NG Studio / Developer");
                         }
-                    } else if (position == headerRow) {
-                        headerCell.setText(currentType == TYPE_GHOST_MODE ? "Privacy & Stealth" : "Anti-Delete Settings");
-                    } else if (position == studioHeaderRow) {
-                        headerCell.setText("NG Studio Diagnostics");
+                    } else if (currentType == TYPE_GHOST_MODE) {
+                        headerCell.setText("Stealth Privacy Options");
+                    } else if (currentType == TYPE_STUDIO) {
+                        headerCell.setText("Diagnostic Information");
+                    } else {
+                        headerCell.setText("Message Protection");
                     }
                     break;
                 case 1:
                     TextCheckCell checkCell = (TextCheckCell) holder.itemView;
                     if (currentType == TYPE_FEATURES_HUB) {
                         if (position == hubRowAnonymousStories) {
-                            checkCell.setTextAndCheck("View Stories Anonymously", cfg.isAnonymousStories(), true);
+                            checkCell.setTextAndCheck("Anonymous Story Viewing", cfg.isAnonymousStories(), true);
                         } else if (position == hubRowStorySaver) {
-                            checkCell.setTextAndCheck("Download & Save Stories", cfg.isStorySaverEnabled(), false);
+                            checkCell.setTextAndCheck("Enable Story Saver", cfg.isStorySaverEnabled(), false);
                         } else if (position == hubRowGhostMaster) {
-                            checkCell.setTextAndCheck("Enable Ghost Mode", gm.isGhostModeEnabled(), true);
+                            checkCell.setTextAndCheck("Ghost Mode Master Switch", gm.isGhostModeEnabled(), true);
                         } else if (position == hubRowHideTyping) {
-                            checkCell.setTextAndCheck("Hide Typing Indicator", gm.isHideTypingStatus(), true);
+                            checkCell.setTextAndCheck("Hide Typing Status", gm.isHideTypingStatus(), true);
                             checkCell.setEnabled(gm.isGhostModeEnabled(), null);
                         } else if (position == hubRowHideOnline) {
                             checkCell.setTextAndCheck("Hide Online Status", gm.isHideOnlineStatus(), true);
@@ -464,19 +678,19 @@ public class NGSettingsActivity extends BaseFragment {
                             checkCell.setTextAndCheck("Hide Read Receipts", gm.isHideReadReceipts(), false);
                             checkCell.setEnabled(gm.isGhostModeEnabled(), null);
                         } else if (position == hubRowForwardNoQuote) {
-                            checkCell.setTextAndCheck("Forward Without Quote (Direct Share)", cfg.isForwardWithoutQuote(), true);
+                            checkCell.setTextAndCheck("Forward Without Quote", cfg.isForwardWithoutQuote(), true);
                         } else if (position == hubRowAntiDelete) {
-                            checkCell.setTextAndCheck("Anti-Delete (Save deleted msgs)", AntiDeleteManager.getInstance().isAntiDeleteEnabled(), false);
+                            checkCell.setTextAndCheck("Enable Anti-Delete", AntiDeleteManager.getInstance().isAntiDeleteEnabled(), false);
                         } else if (position == hubRowConfirmActions) {
-                            checkCell.setTextAndCheck("Confirm Calls & Voice Notes", cfg.isConfirmActions(), true);
+                            checkCell.setTextAndCheck("Confirm Calls & Audio Notes", cfg.isConfirmActions(), true);
                         } else if (position == hubRowShowIdDc) {
-                            checkCell.setTextAndCheck("Show User ID & DC in Profile", cfg.isShowIdAndDc(), false);
+                            checkCell.setTextAndCheck("Show User ID & Datacenter", cfg.isShowIdAndDc(), true);
                         }
                     } else if (currentType == TYPE_GHOST_MODE) {
                         if (position == masterSwitchRow) {
                             checkCell.setTextAndCheck("Enable Ghost Mode", gm.isGhostModeEnabled(), true);
                         } else if (position == hideTypingRow) {
-                            checkCell.setTextAndCheck("Hide Typing Indicator", gm.isHideTypingStatus(), true);
+                            checkCell.setTextAndCheck("Hide Typing Status", gm.isHideTypingStatus(), true);
                             checkCell.setEnabled(gm.isGhostModeEnabled(), null);
                         } else if (position == hideOnlineRow) {
                             checkCell.setTextAndCheck("Hide Online Status", gm.isHideOnlineStatus(), true);
@@ -496,17 +710,21 @@ public class NGSettingsActivity extends BaseFragment {
                     break;
                 case 2:
                     TextDetailSettingsCell detailCell = (TextDetailSettingsCell) holder.itemView;
-                    if (position == studioAppIdRow) {
-                        detailCell.setTextAndValue("Package", "org.nayagram.platform", true);
-                    } else if (position == studioVersionRow) {
-                        detailCell.setTextAndValue("Version", "1.0.0 (1)", true);
-                    } else if (position == studioLogsRow) {
-                        detailCell.setTextAndValue("Security Mode", "Production Hardened", false);
+                    if (currentType == TYPE_STUDIO) {
+                        if (position == studioAppIdRow) {
+                            detailCell.setTextAndValue("Telemetry Access", "Developer authorization verified", true);
+                        } else if (position == studioVersionRow) {
+                            detailCell.setTextAndValue("Client Build", "NayaGram for Android v1.0.0 (1)", true);
+                        } else if (position == studioLogsRow) {
+                            detailCell.setTextAndValue("Logging Level", "Standard / Release", false);
+                        }
                     }
                     break;
                 case 4:
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == hubRowStudio) {
+                    if (position == hubRowResetDefaults) {
+                        textCell.setTextAndValue("Reset All Features", "Restore defaults", position != hubFooterCopyrightRow - 1);
+                    } else if (position == hubRowStudio) {
                         textCell.setTextAndValue("NG Control Dashboard", "Authorized access only", true);
                     }
                     break;
@@ -530,12 +748,18 @@ public class NGSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemViewType(int position) {
+            if (isSearching) {
+                if (position >= 0 && position < searchResults.size()) {
+                    return searchResults.get(position).isCheck ? 1 : 4;
+                }
+                return 4;
+            }
             if (currentType == TYPE_FEATURES_HUB) {
                 if (position == hubHeaderStories || position == hubHeaderStealth ||
                     position == hubHeaderMessaging || position == hubHeaderProtection ||
                     position == hubHeaderStudio) {
                     return 0;
-                } else if (position == hubRowStudio) {
+                } else if (position == hubRowResetDefaults || position == hubRowStudio) {
                     return 4;
                 } else if (position == hubFooterCopyrightRow) {
                     return 3;
