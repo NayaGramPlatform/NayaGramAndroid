@@ -156,6 +156,8 @@ public class NGSettingsActivity extends BaseFragment {
         long clientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
         if (BuildVars.isNgStudioAllowed(clientUserId)) {
             allFeatures.add(new SearchItem(12, "NG Control Dashboard", "Authorized developer telemetry & diagnostics", false));
+            allFeatures.add(new SearchItem(6, "Story Saver (Admin Only)", "Download stories locally (NG Control)", true));
+            allFeatures.add(new SearchItem(8, "Anti-Delete Messages (Admin Only)", "Preserve deleted messages (NG Control)", true));
         }
     }
 
@@ -526,9 +528,9 @@ public class NGSettingsActivity extends BaseFragment {
 ");
         ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        // Line 2: Built with ❤️ in Bangladesh 🇧🇩
+        // Line 2: Built with ❤️ in Bangladesh 🇧🇩 - [CurrentYear]
         start = ssb.length();
-        ssb.append("Built with ❤️ in Bangladesh 🇧🇩");
+        ssb.append("Built with ❤️ in Bangladesh 🇧🇩 - ").append(String.valueOf(currentYear));
         ssb.setSpan(new ForegroundColorSpan(blueColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Centered alignment
@@ -716,7 +718,7 @@ public class NGSettingsActivity extends BaseFragment {
                         } else if (position == studioVersionRow) {
                             detailCell.setTextAndValue("Client Build", "NayaGram for Android v1.0.0 (1)", true);
                         } else if (position == studioLogsRow) {
-                            detailCell.setTextAndValue("Logging Level", "Standard / Release", false);
+                            detailCell.setTextAndValue("Logging Level", "Standard / Release", true);
                         }
                     }
                     break;
@@ -771,6 +773,8 @@ public class NGSettingsActivity extends BaseFragment {
                 return 1;
             } else if (position == studioAppIdRow || position == studioVersionRow || position == studioLogsRow) {
                 return 2;
+            } else if (position == hubRowAntiDelete || position == hubRowStorySaver) {
+                return 1;
             }
             return 3;
         }
