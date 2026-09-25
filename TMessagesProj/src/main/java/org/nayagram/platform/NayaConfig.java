@@ -68,7 +68,7 @@ public class NayaConfig {
     }
 
     public boolean isStorySaverEnabled() {
-        return preferences.getBoolean(KEY_STORY_SAVER, true);
+        return preferences.getBoolean(KEY_STORY_SAVER, false);
     }
 
     public void setStorySaverEnabled(boolean enabled) {
@@ -82,7 +82,7 @@ public class NayaConfig {
             .putBoolean(KEY_CONFIRM_ACTIONS, true)
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
-            .putBoolean(KEY_STORY_SAVER, true)
+            .putBoolean(KEY_STORY_SAVER, false)
             .apply();
     }
 }
