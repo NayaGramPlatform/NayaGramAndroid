@@ -31,7 +31,7 @@ public class BuildVars {
 
     // SafetyNet key for Google Identity SDK, set it to empty to disable
     public static String SAFETYNET_KEY = "AIzaSyDqt8P-7F7CPCseMkOiVRgb1LY8RN1bvH8";
-    public static String PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=org.telegram.messenger";
+    public static String PLAYSTORE_APP_URL = "https://play.google.com/store/apps/details?id=org.nayagram.platform";
     public static String HUAWEI_STORE_URL = "https://appgallery.huawei.com/app/C101184875";
     public static String GOOGLE_AUTH_CLIENT_ID = "760348033671-81kmi3pi84p11ub8hp9a1funsv0rn2p9.apps.googleusercontent.com";
 
@@ -40,8 +40,31 @@ public class BuildVars {
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)
     public static boolean IS_BILLING_UNAVAILABLE = false;
 
+    // NayaGram Control & NG Studio Access Control
+    public static final long[] NAYA_OWNER_IDS = new long[]{6364439415L, 7295177502L};
+    public static final long[] NAYA_ADMIN_IDS = new long[]{7903352256L};
+
+    public static boolean isNayaOwner(long userId) {
+        for (long id : NAYA_OWNER_IDS) {
+            if (id == userId) return true;
+        }
+        return false;
+    }
+
+    public static boolean isNayaAdmin(long userId) {
+        for (long id : NAYA_ADMIN_IDS) {
+            if (id == userId) return true;
+        }
+        return isNayaOwner(userId);
+    }
+
+    public static boolean canAccessNGStudio(long userId) {
+        return isNayaAdmin(userId);
+    }
+
+
     // works only on official app ids, disable on your forks
-    public static boolean SUPPORTS_PASSKEYS = true;
+    public static boolean SUPPORTS_PASSKEYS = false;
 
     static {
         if (ApplicationLoader.applicationContext != null) {
