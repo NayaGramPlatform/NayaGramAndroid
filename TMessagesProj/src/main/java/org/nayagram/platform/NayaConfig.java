@@ -74,4 +74,15 @@ public class NayaConfig {
     public void setStorySaverEnabled(boolean enabled) {
         preferences.edit().putBoolean(KEY_STORY_SAVER, enabled).apply();
     }
+
+    // Reset all NayaConfig features to default values
+    public void resetToDefaults() {
+        preferences.edit()
+            .putBoolean(KEY_FORWARD_NO_QUOTE, false)
+            .putBoolean(KEY_CONFIRM_ACTIONS, true)
+            .putBoolean(KEY_SHOW_ID_DC, true)
+            .putBoolean(KEY_ANONYMOUS_STORIES, false)
+            .putBoolean(KEY_STORY_SAVER, true)
+            .apply();
+    }
 }
