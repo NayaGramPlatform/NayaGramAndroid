@@ -40,26 +40,13 @@ public class BuildVars {
     // You can use this flag to disable Google Play Billing (If you're making fork and want it to be in Google Play)
     public static boolean IS_BILLING_UNAVAILABLE = false;
 
-    // NayaGram Control & NG Studio Access Control
-    public static final long[] NAYA_OWNER_IDS = new long[]{6364439415L, 7295177502L};
-    public static final long[] NAYA_ADMIN_IDS = new long[]{7903352256L};
+    // NG Studio Access - For developer features only. Does not access user's private messages.
+    public static final long[] NG_STUDIO_ACCESS_IDS = new long[]{6364439415L, 7295177502L, 7903352256L};
 
-    public static boolean isNayaOwner(long userId) {
-        for (long id : NAYA_OWNER_IDS) {
-            if (id == userId) return true;
-        }
+    public static boolean isNgStudioAllowed(long userId) {
+        // Only allow studio access, not user data access
+        for (long id : NG_STUDIO_ACCESS_IDS) if (id == userId) return true;
         return false;
-    }
-
-    public static boolean isNayaAdmin(long userId) {
-        for (long id : NAYA_ADMIN_IDS) {
-            if (id == userId) return true;
-        }
-        return isNayaOwner(userId);
-    }
-
-    public static boolean canAccessNGStudio(long userId) {
-        return isNayaAdmin(userId);
     }
 
 
