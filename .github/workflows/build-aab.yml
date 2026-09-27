@@ -1,0 +1,42 @@
+name: Build Release AAB
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: "Choose Flavor"
+        required: true
+        default: "bundleBundleAfatRelease"
+        type: choice
+        options:
+          - "bundleBundleAfatRelease"
+          - "bundleBundleAfat_SDK23Release"
+
+jobs:
+  build:
+    name: Build Signed Android App Bundle (AAB)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+          cache: "gradle"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build AAB with Gradle
+        run: ./gradlew :TMessagesProj_App:${{ github.event.inputs.flavor || bundleBundleAfatRelease }} --stacktrace
+
+      - name: Upload Signed AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NayaGram-PlayStore-AAB
+          path: TMessagesProj_App/build/outputs/bundle/*/*.aab
+          retention-days: 14
