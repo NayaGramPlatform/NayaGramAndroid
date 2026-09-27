@@ -166,7 +166,8 @@ android {
         }
     }
 
-    defaultConfi           oinSdkVersion 21
+    defaultConfig {
+        minSdkVersion 21
         targetSdkVersion 36
         versionName APP_VERSION_NAME
         ndkVersion "27.2.12479018"
