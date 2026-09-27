@@ -187,8 +187,8 @@ android {
     buildFeatures {
         buildConfig = true
     }
- namespace 'org.nayagram.platform.regular'
-enger  lintOptions {
+    namespace 'org.telegram.messenger.beta'
+    lintOptions {
         checkReleaseBuilds false
     }
 }
