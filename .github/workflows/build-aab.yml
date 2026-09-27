@@ -38,7 +38,6 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.2.12479018"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
