@@ -1,4 +1,4 @@
-package org.nayagram.platform
+package com.example
 
 
 import org.gradle.api.DefaultTask
