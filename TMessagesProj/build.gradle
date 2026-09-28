@@ -249,7 +249,7 @@ android {
         }
     }
 
-        namespace 'org.nayagram.platform'
+        namespace 'org.telegram.messenger'
 }
 
 
