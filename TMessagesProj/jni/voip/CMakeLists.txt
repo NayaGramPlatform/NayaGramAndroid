@@ -1837,6 +1837,8 @@ target_include_directories(voipandroid PUBLIC
         third_party
         td/tde2e
         td/tde2e/td/e2e
+        tde2e/include
+        tde2e
 )
 
 if (${ANDROID_ABI} STREQUAL "armeabi-v7a")
