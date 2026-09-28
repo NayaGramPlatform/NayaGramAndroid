@@ -89,6 +89,15 @@ jobs:
             cp -r TMessagesProj/jni/ffmpeg/include/dav1d/* TMessagesProj/jni/third_party/dav1d/include/dav1d/ 2>/dev/null || true
           fi
 
+          # 4. tde2e e2e_api.h headers
+          mkdir -p TMessagesProj/jni/td/tde2e/td/e2e
+          if [ -d "TMessagesProj/jni/tde2e/include" ]; then
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/td/tde2e/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/td/tde2e/td/e2e/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/voip/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/ 2>/dev/null || true
+          fi
+
       - name: Configure Keystore and Signing Secrets
         run: |
           mkdir -p TMessagesProj/config
@@ -208,6 +217,15 @@ jobs:
             mkdir -p TMessagesProj/jni/third_party/dav1d/include/dav1d
             cp -r TMessagesProj/jni/ffmpeg/include/dav1d/* TMessagesProj/jni/third_party/dav1d/include/ 2>/dev/null || true
             cp -r TMessagesProj/jni/ffmpeg/include/dav1d/* TMessagesProj/jni/third_party/dav1d/include/dav1d/ 2>/dev/null || true
+          fi
+
+          # 4. tde2e e2e_api.h headers
+          mkdir -p TMessagesProj/jni/td/tde2e/td/e2e
+          if [ -d "TMessagesProj/jni/tde2e/include" ]; then
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/td/tde2e/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/td/tde2e/td/e2e/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/voip/ 2>/dev/null || true
+            cp -r TMessagesProj/jni/tde2e/include/* TMessagesProj/jni/ 2>/dev/null || true
           fi
 
       - name: Configure Keystore and Signing Secrets
