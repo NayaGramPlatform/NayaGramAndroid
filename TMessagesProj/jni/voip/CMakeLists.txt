@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "-std=c++17 -DANDROID -g")
 #openh264 (prebuilt static library)
 add_library(openh264 STATIC IMPORTED)
 set_target_properties(openh264 PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/prebuild/lib/${ANDROID_ABI}/libopenh264.a)
+        IMPORTED_LOCATION ${CMAKE_HOME_DIRECTORY}/prebuild/${ANDROID_ABI}/libopenh264.a)
 
 #rnnoise
 add_library(rnnoise STATIC
