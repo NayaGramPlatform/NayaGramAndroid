@@ -1,62 +1,57 @@
 package org.telegram.messenger;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-
 /**
  * NayaGram Official Ads Configuration & Controller
  * ------------------------------------------------
- * ইউজার-ফ্রেন্ডলি বিজ্ঞাপন কন্ট্রোল সিস্টেম।
- * প্রথম ৩-৫ মাস সম্পূর্ণ বিজ্ঞাপনমুক্ত থাকবে।
- * পরবর্তীতে বিজ্ঞাপন চালু করলেও ব্যবহারকারীদের যাতে কোনো বিরক্তি না হয়,
- * সেজন্য ১০ থেকে ১৫ মিনিট (ডিফল্ট ১২ মিনিট) ব্যবধানে বিজ্ঞাপন দেখানো হবে।
+ * Completely clean English configuration to prevent any charset encoding issues.
+ * Ads are disabled by default for the first 3-5 months (ENABLE_ADS = false).
+ * When enabled in the future, peaceful 12-minute cooldown ensures seamless UX.
  */
 public class NayaGramAdsConfig {
 
     // =========================================================================
-    // ১. মাস্টার সুইচ (Master Switch)
+    // 1. MASTER SWITCH
     // -------------------------------------------------------------------------
-    // প্রথম ৩ থেকে ৫ মাস সম্পূর্ণ বিজ্ঞাপনমুক্ত থাকবে (ডিফল্ট: false)।
-    // ভবিষ্যতে যখন আপনি বিজ্ঞাপন রান করতে চাইবেন, তখন শুধু 'false' এর জায়গায় 'true' লিখে দিন:
+    // Set to 'false' to keep app 100% ad-free during the launch period.
+    // Set to 'true' in the future whenever you want to activate ads:
     // =========================================================================
     public static boolean ENABLE_ADS = false;
 
     // =========================================================================
-    // ২. গুগল অ্যাডমব আইডি (Google AdMob IDs)
+    // 2. GOOGLE ADMOB IDENTIFIERS
     // -------------------------------------------------------------------------
-    // ডিফল্টভাবে গুগলের অফিশিয়াল টেস্ট আইডি দেওয়া আছে (যাতে কোনো ভায়োলেশন না হয়)।
-    // ভবিষ্যতে ৩-৫ মাস পর যখন অ্যাডমব অ্যাকাউন্ট খুলবেন, তখন আপনার আসল আইডিগুলো এখানে বসাবেন:
+    // Configured with Google official test unit IDs to avoid account flags.
+    // Replace with your production AdMob IDs when ready to launch ads:
     // =========================================================================
     public static String ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713";
-    public static String BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";       // ব্যানার অ্যাড
-    public static String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"; // ফুল স্ক্রিন অ্যাড
-    public static String NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110";       // নেটিভ কার্ড অ্যাড
+    public static String BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
+    public static String INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712";
+    public static String NATIVE_AD_UNIT_ID = "ca-app-pub-3940256099942544/2247696110";
 
     // =========================================================================
-    // ৩. সুপার ইউজার-ফ্রেন্ডলি টাইমিং (১০ থেকে ১৫ মিনিট পর পর অ্যাড)
+    // 3. USER-FRIENDLY TIMING & FREQUENCY CONTROL
     // =========================================================================
-    
-    // ফুল স্ক্রিন (Interstitial) অ্যাড প্রতি ১২ মিনিটে (৭২০ সেকেন্ড) সর্বোচ্চ ১ বার আসতে পারে
-    // ফলে ব্যবহারকারীরা মন খুলে চ্যাট করতে পারবে এবং কোনো প্রকার বিরক্তি অনুভব করবে না
-    public static final long INTERSTITIAL_COOLDOWN_MS = 12 * 60 * 1000L; // ১২ মিনিট (৭২০,০০০ মিলি-সেকেন্ড)
 
-    // ব্যবহারকারী কমপক্ষে ১০টি অ্যাকশন (চ্যাট পরিবর্তন বা স্টোরি দেখা) সম্পন্ন করার পর সুযোগ আসবে
-    public static final int ACTIONS_BEFORE_INTERSTITIAL = 10; 
+    // Full screen interstitial ads appear at most once every 12 minutes (720 seconds)
+    public static final long INTERSTITIAL_COOLDOWN_MS = 12 * 60 * 1000L;
 
-    // চ্যাটের ভেতর লেখার জায়গা সম্পূর্ণ ক্লিন থাকবে (চ্যাটে কোনো ব্যানার আসবে না)
+    // User must perform at least 10 actions before eligible for an interstitial ad
+    public static final int ACTIONS_BEFORE_INTERSTITIAL = 10;
+
+    // No banner ads inside active chat screens to preserve speed and cleanliness
     public static final boolean SHOW_BANNER_INSIDE_CHATS = false;
 
-    // শুধুমাত্র হোম স্ক্রিনের চ্যাট তালিকার উপরে বা সাইড ড্রয়ার মেনুর নিচে ছোট ব্যানার দেখানো যাবে
+    // Banners enabled only on top of dialogs list or inside navigation drawer
     public static final boolean SHOW_BANNER_IN_DIALOGS = true;
 
     // -------------------------------------------------------------------------
-    // স্টেট ট্র্যাকিং ভেরিয়েবল
+    // State Tracking Variables
     // -------------------------------------------------------------------------
     private static long lastInterstitialShownTime = 0;
     private static int actionCounter = 0;
 
     /**
-     * ফুল স্ক্রিন অ্যাড দেখানোর উপযুক্ত সময় হয়েছে কি না তা স্বয়ংক্রিয়ভাবে যাচাই করে
+     * Checks if it is appropriate to display an interstitial ad.
      */
     public static boolean shouldShowInterstitial() {
         if (!ENABLE_ADS) {
@@ -79,7 +74,7 @@ public class NayaGramAdsConfig {
     }
 
     /**
-     * হোম স্ক্রিন বা ড্রয়ার ব্যানারের জন্য চেক
+     * Checks if banner ads are allowed in dialogs/home view.
      */
     public static boolean shouldShowBanner() {
         return ENABLE_ADS && SHOW_BANNER_IN_DIALOGS;
