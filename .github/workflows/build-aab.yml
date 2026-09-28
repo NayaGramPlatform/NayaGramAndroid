@@ -52,6 +52,15 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+      - name: Ensure Prebuilt Native Libraries Paths
+        run: |
+          mkdir -p TMessagesProj/jni/prebuild/lib
+          for abi in arm64-v8a armeabi-v7a x86 x86_64; do
+            if [ -d "TMessagesProj/jni/prebuild/$abi" ]; then
+              cp -r "TMessagesProj/jni/prebuild/$abi" "TMessagesProj/jni/prebuild/lib/" 2>/dev/null || true
+            fi
+          done
+
       - name: Configure Keystore and Signing Secrets
         run: |
           mkdir -p TMessagesProj/config
