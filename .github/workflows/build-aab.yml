@@ -52,7 +52,7 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
-      - name: Ensure Prebuilt Native Libraries Paths
+      - name: Ensure Prebuilt Native Libraries and Headers Paths
         run: |
           mkdir -p TMessagesProj/jni/prebuild/lib
           for abi in arm64-v8a armeabi-v7a x86 x86_64; do
@@ -60,6 +60,12 @@ jobs:
               cp -r "TMessagesProj/jni/prebuild/$abi" "TMessagesProj/jni/prebuild/lib/" 2>/dev/null || true
             fi
           done
+
+          # Fix openssl / boringssl header paths for tgcalls_tp and libsrtp
+          mkdir -p TMessagesProj/jni/third_party/boringssl
+          cp -r TMessagesProj/jni/boringssl/include TMessagesProj/jni/third_party/boringssl/ 2>/dev/null || true
+          mkdir -p TMessagesProj/jni/openssl
+          cp -r TMessagesProj/jni/boringssl/include TMessagesProj/jni/openssl/ 2>/dev/null || true
 
       - name: Configure Keystore and Signing Secrets
         run: |
