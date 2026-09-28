@@ -56,6 +56,15 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_HOME" > local.properties
 
+      - name: Sanitize Android Resource Files and Filenames
+        run: |
+          find TMessagesProj/src/main/res -name "*.png.png" | while read -r f; do
+            mv "$f" "${f%.png}" 2>/dev/null || rm -f "$f"
+          done
+          if [ -f "TMessagesProj/src/main/res/values/strings_anti_delete.xml" ]; then
+            sed -i 's/Privacy & Security/Privacy \&amp; Security/g' TMessagesProj/src/main/res/values/strings_anti_delete.xml
+          fi
+
       - name: Link Prebuilt Native Libraries and C++ Headers
         run: |
           # 1. Prebuilt openh264 and tlottie static libraries
@@ -185,6 +194,15 @@ jobs:
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Sanitize Android Resource Files and Filenames
+        run: |
+          find TMessagesProj/src/main/res -name "*.png.png" | while read -r f; do
+            mv "$f" "${f%.png}" 2>/dev/null || rm -f "$f"
+          done
+          if [ -f "TMessagesProj/src/main/res/values/strings_anti_delete.xml" ]; then
+            sed -i 's/Privacy & Security/Privacy \&amp; Security/g' TMessagesProj/src/main/res/values/strings_anti_delete.xml
+          fi
 
       - name: Link Prebuilt Native Libraries and C++ Headers
         run: |
