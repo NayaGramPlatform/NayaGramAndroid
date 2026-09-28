@@ -1,20 +1,33 @@
-name: Build Release AAB
+name: Build NayaGram Release APK and AAB
 
 on:
   workflow_dispatch:
     inputs:
-      flavor:
-        description: "Select Flavor"
+      build_apk:
+        description: "Build Universal Release APK"
         required: true
-        default: "bundleBundleAfatRelease"
-        type: choice
-        options:
-          - "bundleBundleAfatRelease"
-          - "bundleBundleAfat_SDK23Release"
+        type: boolean
+        default: true
+      build_aab:
+        description: "Build Google Play Store AAB Bundle"
+        required: true
+        type: boolean
+        default: true
+  push:
+    branches:
+      - master
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'README*'
+
+concurrency:
+  group: build-nayagram-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Signed Android App Bundle (AAB)
+    name: Build Signed Release APK and AAB
     runs-on: ubuntu-latest
     timeout-minutes: 90
 
@@ -46,27 +59,70 @@ jobs:
             echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > TMessagesProj/config/release.keystore
             echo "Keystore successfully restored from secrets."
           else
-            echo "Warning: RELEASE_KEYSTORE_BASE64 secret not found."
+            echo "Using existing repository keystore at TMessagesProj/config/release.keystore."
           fi
-          
+
           if [ -n "${{ secrets.RELEASE_KEY_PASSWORD }}" ]; then
             echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> gradle.properties
             echo "RELEASE_KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> gradle.properties
             echo "RELEASE_STORE_PASSWORD=${{ secrets.RELEASE_STORE_PASSWORD }}" >> gradle.properties
             echo "Signing properties configured from secrets."
           fi
-          
+
           echo "org.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=1g" >> gradle.properties
+
+      - name: Configure Packaging Options for Native Libraries
+        run: |
+          cat << 'ENDCAT' >> TMessagesProj/build.gradle
+          android {
+              packagingOptions {
+                  resources {
+                      pickFirsts.add('**/libtmessages*.so')
+                      pickFirsts.add('**/*.so')
+                  }
+                  jniLibs {
+                      pickFirsts.add('**/libtmessages*.so')
+                      pickFirsts.add('**/*.so')
+                  }
+              }
+          }
+          ENDCAT
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build AAB
-        run: ./gradlew :TMessagesProj_App:${{ inputs.flavor }} --no-daemon --stacktrace
+      - name: Build Signed Universal Release APK
+        if: ${{ github.event_name == 'push' || inputs.build_apk == true }}
+        run: |
+          ./gradlew :TMessagesProj_App:assembleAfatRelease             -Pandroid.stripDebugSymbol.enable=false             --no-daemon --stacktrace
 
-      - name: Upload Signed AAB
+      - name: Build Signed Google Play AAB Bundle
+        if: ${{ github.event_name == 'push' || inputs.build_aab == true }}
+        run: |
+          ./gradlew :TMessagesProj_App:bundleBundleAfatRelease             -Pandroid.stripDebugSymbol.enable=false             --no-daemon --stacktrace
+
+      - name: List Generated Artifacts
+        if: always()
+        run: |
+          echo "=== APK Files ==="
+          find . -name "*.apk" -print
+          echo "=== AAB Files ==="
+          find . -name "*.aab" -print
+
+      - name: Upload Signed Release APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NayaGram-Release-APK
+          path: TMessagesProj_App/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Signed Google Play AAB Bundle
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: NayaGram-PlayStore-AAB
-          path: TMessagesProj_App/build/outputs/bundle/*/*.aab
+          path: TMessagesProj_App/build/outputs/bundle/**/*.aab
+          if-no-files-found: warn
           retention-days: 14
