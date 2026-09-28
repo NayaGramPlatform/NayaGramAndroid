@@ -42,7 +42,7 @@
     <string name="KeepMessagesFor90Days">Keep for 90 days</string>
     <string name="KeepMessagesForever">Keep forever</string>
     
-    <string name="AntiDeletePrivacy">Privacy & Security</string>
+    <string name="AntiDeletePrivacy">Privacy &amp; Security</string>
     <string name="AntiDeleteDataInfo">Your deleted messages are stored only on this device and encrypted</string>
     
     <string name="SaveMediaInfo">Save media from deleted messages (photos, videos, files)</string>
