@@ -524,8 +524,7 @@ public class NGSettingsActivity extends BaseFragment {
         ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         start = ssb.length();
-        ssb.append(". All rights reserved.
-");
+        ssb.append(". All rights reserved.\n");
         ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         // Line 2: Built with ❤️ in Bangladesh 🇧🇩 - [CurrentYear]
