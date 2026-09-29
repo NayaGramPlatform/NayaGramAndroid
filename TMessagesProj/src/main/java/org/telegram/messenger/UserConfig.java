@@ -572,7 +572,7 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-    if (NayaGramGeneralPreferences.isPremiumFreeEnabled()) {
+    if (false /* NayaGramGeneralPreferences.isPremiumFreeEnabled() */) {
         return true;
     }
     TLRPC.User user = currentUser;
