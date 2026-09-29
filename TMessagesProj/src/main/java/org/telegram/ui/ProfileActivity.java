@@ -4550,7 +4550,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             } else if (position == questionRow) {
                 showDialog(AlertsCreator.createSupportAlert(ProfileActivity.this, resourcesProvider));
             } else if (position == nayaGramRow) {
-                presentFragment(new uz.unnarsx.cherrygram.preferences.NayaGramPreferencesEntry());
+                // presentFragment(new uz.unnarsx.cherrygram.preferences.NayaGramPreferencesEntry());
             } else if (position == faqRow) {
                 Browser.openUrl(getParentActivity(), LocaleController.getString(R.string.TelegramFaqUrl));
             } else if (position == policyRow) {
@@ -13855,7 +13855,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else if (position == questionRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.AskAQuestion), R.drawable.msg2_ask_question, true);
                     } else if (position == nayaGramRow) {
-                        textCell.setTextAndIcon("⚙️ 𝐍𝐆 𝐂𝐨𝐧𝐭𝐫𝐨𝐥", R.drawable.msg_settings_solar, true);
+                        textCell.setTextAndIcon("⚙️ 𝐍𝐆 𝐂𝐨𝐧𝐭𝐫𝐨𝐥", R.drawable.msg_settings, true);
                     } else if (position == faqRow) {
                         textCell.setTextAndIcon(LocaleController.getString(R.string.TelegramFAQ), R.drawable.msg2_help, true);
                     } else if (position == policyRow) {
