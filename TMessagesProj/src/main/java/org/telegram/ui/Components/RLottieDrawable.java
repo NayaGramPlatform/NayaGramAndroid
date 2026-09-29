@@ -590,6 +590,14 @@ public class RLottieDrawable extends BitmapDrawable implements Animatable, Bitma
         this(rawRes, "" + rawRes, w, h, startDecode, colorReplacement);
     }
 
+        public RLottieDrawable(@RawRes int rawRes, int w, int h) {
+        this(rawRes, "" + rawRes, w, h);
+    }
+
+    public RLottieDrawable(@RawRes int rawRes, int w, int h, boolean startDecode, int[] colorReplacement) {
+        this(rawRes, "" + rawRes, w, h, startDecode, colorReplacement);
+    }
+
     public RLottieDrawable(@RawRes int rawRes, String name, int w, int h) {
         this(rawRes, name, w, h, true, null);
     }
