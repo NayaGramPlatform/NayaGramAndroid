@@ -288,6 +288,11 @@ public class ApplicationLoader extends Application {
         }
 
         super.onCreate();
+        try {
+            SchedulerInitializer.initializeScheduler(this);
+        } catch (Throwable t) {
+            FileLog.e("SchedulerInitializer hook error", t);
+        }
 
         // AndroidUtilities must be initialized before FileLog
         final String helloWorld = AndroidUtilities.getHelloWorld();
