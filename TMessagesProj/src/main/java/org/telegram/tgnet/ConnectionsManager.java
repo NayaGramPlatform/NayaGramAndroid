@@ -953,15 +953,6 @@ public class ConnectionsManager extends BaseController {
         return checkProxy(new org.telegram.utils.proxy.ProxySettings(address, port, username, password, secret), delegate);
     }
 
-    
-    public static void setProxySettings(boolean enabled, String address, int port, String username, String password, String secret) {
-        setProxySettings(enabled, new org.telegram.utils.proxy.ProxySettings(address, port, username, password, secret));
-    }
-
-    public long checkProxy(String address, int port, String username, String password, String secret, RequestTimeDelegate delegate) {
-        return checkProxy(new org.telegram.utils.proxy.ProxySettings(address, port, username, password, secret), delegate);
-    }
-
     public static void setProxySettings(boolean enabled, ProxySettings settings) {
         String address = "";
         int port = 0;
