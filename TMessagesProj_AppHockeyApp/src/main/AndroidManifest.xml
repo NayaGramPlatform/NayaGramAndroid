@@ -3,10 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
-<application android:name="org.nayagram.chat.ApplicationLoader Impl" tools:replace="name" android:gwpAsanMode="always">
-        <service android:name="org.nayagram.chat.GoogleVoiceClientService" android:exported="true"/>
+    <application
+        android:name="org.telegram.messenger.ApplicationLoaderImpl"
+        android:gwpAsanMode="always"
+        tools:replace="android:name">
+        <service
+            android:name="org.telegram.messenger.GoogleVoiceClientService"
+            android:exported="true" />
         <activity
-                    android:name="org.nayagram.chat.GoogleVoiceClientActivity"
+            android:name="org.telegram.messenger.GoogleVoiceClientActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="com.google.android.voicesearch.SEND_MESSAGE_TO_CONTACTS" />
@@ -21,14 +26,9 @@
             android:theme="@android:style/Theme.NoDisplay">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <data
-                    android:host="updates"
-                    android:path="/"
-                    android:scheme="appcenter" />
+                <data android:host="updates" android:path="/" android:scheme="appcenter" />
             </intent-filter>
         </activity>
 
