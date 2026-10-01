@@ -1,206 +1,159 @@
 package org.telegram.messenger;
 
+import android.content.SharedPreferences;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * AutoReplyManager - Handles automatic replies for messages
- * Features:
- * - Create auto-reply templates
- * - Keyword-based matching
- * - Enable/disable auto-reply
- * - Per-chat auto-reply settings
- */
+/** Handles automatic replies for incoming messages. */
 public class AutoReplyManager {
-    
     private static AutoReplyManager instance;
-    private SharedPreferences preferences;
-    private List<AutoReplyRule> rules;
-    private boolean autoReplyEnabled;
     private static final String TAG = "AutoReplyManager";
-    
+    private static final String PREFS_NAME = "auto_reply_prefs";
+    private static final String KEY_ENABLED = "auto_reply_enabled";
+    private static final String KEY_RULES = "auto_reply_rules";
+
+    private final SharedPreferences preferences;
+    private final Gson gson = new Gson();
+    private final List<AutoReplyRule> rules = new ArrayList<>();
+    private boolean autoReplyEnabled;
+
     private AutoReplyManager() {
-        this.preferences = ApplicationLoader.applicationContext.getSharedPreferences(
-                "auto_reply_prefs",
-                android.content.Context.MODE_PRIVATE
-        );
-        this.rules = new ArrayList<>();
+        preferences = ApplicationLoader.applicationContext.getSharedPreferences(
+                PREFS_NAME, android.content.Context.MODE_PRIVATE);
         loadRules();
     }
-    
-    /**
-     * Get singleton instance
-     */
+
     public static synchronized AutoReplyManager getInstance() {
         if (instance == null) {
             instance = new AutoReplyManager();
         }
         return instance;
     }
-    
-    /**
-     * Enable/disable auto-reply
-     */
-    public void setAutoReplyEnabled(boolean enabled) {
+
+    public synchronized void setAutoReplyEnabled(boolean enabled) {
         autoReplyEnabled = enabled;
-        preferences.edit().putBoolean("auto_reply_enabled", enabled).apply();
+        preferences.edit().putBoolean(KEY_ENABLED, enabled).apply();
         FileLog.d(TAG + ": Auto-reply " + (enabled ? "enabled" : "disabled"));
     }
-    
-    /**
-     * Check if auto-reply is enabled
-     */
-    public boolean isAutoReplyEnabled() {
+
+    public synchronized boolean isAutoReplyEnabled() {
         return autoReplyEnabled;
     }
-    
-    /**
-     * Add auto-reply rule
-     */
-    public void addRule(AutoReplyRule rule) {
+
+    public synchronized void addRule(AutoReplyRule rule) {
+        if (rule == null || rule.name == null || rule.name.trim().isEmpty()
+                || rule.keyword == null || rule.keyword.isEmpty() || rule.response == null) {
+            return;
+        }
         rules.add(rule);
         saveRules();
-        FileLog.d(TAG + ": Added auto-reply rule: " + rule.name);
     }
-    
-    /**
-     * Remove auto-reply rule
-     */
-    public void removeRule(String ruleName) {
-        rules.removeIf(r -> r.name.equals(ruleName));
+
+    public synchronized void removeRule(String ruleName) {
+        if (ruleName == null) {
+            return;
+        }
+        rules.removeIf(rule -> ruleName.equals(rule.name));
         saveRules();
-        FileLog.d(TAG + ": Removed auto-reply rule: " + ruleName);
     }
-    
-    /**
-     * Get all rules
-     */
-    public List<AutoReplyRule> getRules() {
+
+    public synchronized List<AutoReplyRule> getRules() {
         return new ArrayList<>(rules);
     }
-    
-    /**
-     * Find matching rule for message
-     */
-    public AutoReplyRule findMatchingRule(String messageText) {
+
+    public synchronized AutoReplyRule findMatchingRule(String messageText) {
         if (!autoReplyEnabled || messageText == null) {
             return null;
         }
-        
         for (AutoReplyRule rule : rules) {
-            if (!rule.enabled) {
+            if (rule == null || !rule.enabled || rule.keyword == null) {
                 continue;
             }
-            
-            if (matchesKeyword(messageText, rule.keyword)) {
+            if (matchesKeyword(messageText, rule)) {
                 return rule;
             }
         }
-        
         return null;
     }
-    
-    /**
-     * Check if message matches keyword
-     */
-    private boolean matchesKeyword(String message, String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
+
+    private boolean matchesKeyword(String message, AutoReplyRule rule) {
+        if (rule.keyword.isEmpty()) {
             return false;
         }
-        
+        if (!rule.regex) {
+            return message.toLowerCase().contains(rule.keyword.toLowerCase());
+        }
         try {
-            // Try regex matching
-            Pattern pattern = Pattern.compile(keyword, Pattern.CASE_INSENSITIVE);
-            return pattern.matcher(message).find();
+            return Pattern.compile(rule.keyword, Pattern.CASE_INSENSITIVE).matcher(message).find();
         } catch (Exception e) {
-            // Fallback to simple substring matching
-            return message.toLowerCase().contains(keyword.toLowerCase());
-        }
-    }
-    
-    /**
-     * Get auto-reply response for message
-     */
-    public String getAutoReplyResponse(String messageText) {
-        AutoReplyRule rule = findMatchingRule(messageText);
-        if (rule != null) {
-            return rule.response;
-        }
-        return null;
-    }
-    
-    /**
-     * Check if auto-reply should be sent for this dialog
-     */
-    public boolean shouldSendAutoReply(long dialogId, int accountId) {
-        if (!autoReplyEnabled) {
+            FileLog.e(TAG + ": invalid regex for rule " + rule.name, e);
             return false;
         }
-        
-        // TODO: Add per-chat settings to check if auto-reply is disabled for specific chat
-        return true;
     }
-    
-    /**
-     * Save rules to storage
-     */
-    private void saveRules() {
-        // TODO: Implement serialization to SharedPreferences or database
+
+    public synchronized String getAutoReplyResponse(String messageText) {
+        AutoReplyRule rule = findMatchingRule(messageText);
+        return rule == null ? null : rule.response;
     }
-    
-    /**
-     * Load rules from storage
-     */
-    private void loadRules() {
-        // TODO: Implement deserialization from SharedPreferences or database
-        autoReplyEnabled = preferences.getBoolean("auto_reply_enabled", false);
+
+    public synchronized boolean shouldSendAutoReply(long dialogId, int accountId) {
+        return autoReplyEnabled;
     }
-    
-    /**
-     * Clear all rules
-     */
-    public void clearAllRules() {
+
+    private synchronized void saveRules() {
+        try {
+            preferences.edit().putString(KEY_RULES, gson.toJson(rules)).apply();
+        } catch (Exception e) {
+            FileLog.e(TAG + ": failed to save rules", e);
+        }
+    }
+
+    private synchronized void loadRules() {
+        autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
+        String json = preferences.getString(KEY_RULES, null);
+        if (json == null || json.isEmpty()) {
+            return;
+        }
+        try {
+            Type type = new TypeToken<List<AutoReplyRule>>() {}.getType();
+            List<AutoReplyRule> storedRules = gson.fromJson(json, type);
+            if (storedRules != null) {
+                rules.clear();
+                rules.addAll(storedRules);
+            }
+        } catch (Exception e) {
+            rules.clear();
+            FileLog.e(TAG + ": failed to load rules", e);
+        }
+    }
+
+    public synchronized void clearAllRules() {
         rules.clear();
         saveRules();
-        FileLog.d(TAG + ": Cleared all auto-reply rules");
     }
-    
-    /**
-     * Auto-reply rule data class
-     */
+
     public static class AutoReplyRule {
         public String name;
         public String keyword;
         public String response;
-        public boolean enabled;
+        public boolean enabled = true;
         public boolean regex;
-        
+
         public AutoReplyRule(String name, String keyword, String response) {
-            this.name = name;
-            this.keyword = keyword;
-            this.response = response;
-            this.enabled = true;
-            this.regex = false;
+            this(name, keyword, response, false);
         }
-        
+
         public AutoReplyRule(String name, String keyword, String response, boolean regex) {
             this.name = name;
             this.keyword = keyword;
             this.response = response;
-            this.enabled = true;
             this.regex = regex;
-        }
-        
-        @Override
-        public String toString() {
-            return "AutoReplyRule{" +
-                    "name='" + name + '\'' +
-                    ", keyword='" + keyword + '\'' +
-                    ", response='" + response + '\'' +
-                    ", enabled=" + enabled +
-                    ", regex=" + regex +
-                    '}';
         }
     }
 }
