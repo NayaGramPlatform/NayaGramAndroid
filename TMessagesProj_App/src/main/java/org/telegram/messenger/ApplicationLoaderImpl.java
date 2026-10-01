@@ -1,6 +1,6 @@
-package org.nayagram.chat;
+package org.telegram.messenger;
 
-import org.nayagram.chat.regular.BuildConfig;
+import org.nayagram.platform.regular.BuildConfig;
 
 public class ApplicationLoaderImpl extends ApplicationLoader {
     @Override
