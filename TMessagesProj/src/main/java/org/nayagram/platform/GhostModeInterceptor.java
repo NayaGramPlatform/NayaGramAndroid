@@ -139,7 +139,7 @@ public class GhostModeInterceptor {
         
         // Set status to offline
         TLRPC.TL_userStatusOffline offlineStatus = new TLRPC.TL_userStatusOffline();
-        offlineStatus.was_online = (int) (System.currentTimeMillis() / 1000) - 300; // 5 minutes ago
+        offlineStatus.expires = (int) (System.currentTimeMillis() / 1000) - 300; // 5 minutes ago
         
         FileLog.d("GhostMode: Changed user status to offline");
         return offlineStatus;
