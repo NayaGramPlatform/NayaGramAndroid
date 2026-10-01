@@ -37,6 +37,10 @@ public final class ProxySettings {
     private final @NonNull String password;
     private final @NonNull String secret;
 
+    public ProxySettings(String address, int port, String user, String password, String secret) {
+        this(builder().setAddress(address).setPort(port).setUser(user).setPassword(password).setSecret(secret));
+    }
+
     private ProxySettings(Builder builder) {
         this.type = builder.type;
         this.address = builder.address;
