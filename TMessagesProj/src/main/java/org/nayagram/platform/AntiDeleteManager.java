@@ -3,7 +3,8 @@ package org.nayagram.platform;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.nayagram.platform.messenger.ApplicationLoader;
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.FileLog;
 
 /**
  * AntiDeleteManager - Handles anti-delete functionality
