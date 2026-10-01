@@ -37,17 +37,6 @@
     <string name="RegexSupport">Use regex patterns for advanced matching</string>
     <string name="NoRulesCreated">No auto-reply rules created yet</string>
     <string name="NoScheduledMessages">No scheduled messages</string>
-    
-    <!-- Common Strings -->
-    <string name="Edit">Edit</string>
-    <string name="Delete">Delete</string>
-    <string name="Add">Add</string>
-    <string name="Save">Save</string>
-    <string name="Cancel">Cancel</string>
-    <string name="Done">Done</string>
-    <string name="Settings">Settings</string>
-    <string name="Privacy">Privacy Settings</string>
     <string name="SchedulerInfo">Scheduled messages will be sent at the specified time even if the app is closed</string>
     <string name="AutoReplyInfo">Auto-reply will not respond to your own messages or in disabled chats</string>
-    
 </resources>
