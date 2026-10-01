@@ -862,6 +862,12 @@ public class InstantCameraView extends FrameLayout implements NotificationCenter
         MediaController.getInstance().requestRecordAudioFocus(true);
     }
 
+    public void setAnimationCallback(org.telegram.messenger.Utilities.Callback2<Boolean, Boolean> callback) {
+    }
+
+    public void setTrimCallback(org.telegram.messenger.Utilities.Callback2<Long, Long> callback) {
+    }
+
     public InstantViewCameraContainer getCameraContainer() {
         return cameraContainer;
     }
