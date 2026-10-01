@@ -113,9 +113,81 @@ public final class RLottieNative {
 
     public static RLottieNative createFromRawJson(
             String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
             String name,
             int[] colorReplacement) {
         return createFromRawJson(json, name, null, colorReplacement);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
     }
 
     public static RLottieNative createFromRawJson(
@@ -142,6 +214,42 @@ public final class RLottieNative {
             @Nullable int[] metaOut,
             int[] colorReplacement) {
         return createFromRawJson(json, name, metaOut, colorReplacement, null);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
+    }
+
+    public static RLottieNative createFromRawJson(
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromRawJson(json, "", metaOut, colorReplacement, layerColors);
+    }
+
+    public static RLottieNative createFromFile(
+            String path,
+            String json,
+            @Nullable int[] metaOut,
+            @Nullable int[] colorReplacement,
+            int fitzModifier,
+            @Nullable Map<String, Integer> layerColors) {
+        return createFromFile(path, json, 0, 0, metaOut, false, colorReplacement, false, fitzModifier, layerColors);
     }
 
     public static RLottieNative createFromRawJson(
