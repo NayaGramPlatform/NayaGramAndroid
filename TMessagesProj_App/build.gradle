@@ -46,16 +46,17 @@ android {
         localeFilters += ["zz"]
     }
 
+    def keystorePath = file("../nayagrampro.jks").exists() ? file("../nayagrampro.jks") : (file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : file("../TMessagesProj/config/release.keystore"))
     signingConfigs {
         debug {
-            storeFile file("../TMessagesProj/config/release.keystore")
+            storeFile keystorePath
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
         }
 
         release {
-            storeFile file("../TMessagesProj/config/release.keystore")
+            storeFile keystorePath
             storePassword RELEASE_STORE_PASSWORD
             keyAlias RELEASE_KEY_ALIAS
             keyPassword RELEASE_KEY_PASSWORD
@@ -201,7 +202,7 @@ android {
     buildFeatures {
         buildConfig = true
     }
-    namespace 'org.nayagram.platform.regular'
+    namespace 'org.nayagram.platform'
 
     lintOptions {
         checkReleaseBuilds false
