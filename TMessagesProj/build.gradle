@@ -98,14 +98,14 @@ android {
         externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
     }
     buildTypes {
-        debug { jniDebuggable true; minifyEnabled false; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro', '../TMessagesProj/proguard-rules-beta.pro'; ndk.debugSymbolLevel = 'FULL'; buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""; buildConfigField "String", "APP_CENTER_HASH", "\"\""; buildConfigField "String", "BETA_URL", "\"" + getProps("BETA_PRIVATE_URL") + "\""; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"; buildConfigField "boolean", "BUNDLE", "false"; buildConfigField "int", "VERSION_NUM", "0" }
+        debug { jniDebuggable true; minifyEnabled false; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro' }
         HA_private { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "1" }
         HA_public { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "4" }
         HA_hardcore { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "5" }
         standalone { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "false"; buildConfigField "int", "VERSION_NUM", "6" }
-        release { minifyEnabled true; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'; ndk.debugSymbolLevel = 'FULL'; buildConfigField "boolean", "DEBUG_VERSION", "false"; buildConfigField "int", "VERSION_NUM", "7" }
+        release { minifyEnabled true; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'; ndk.debugSymbolLevel = 'FULL' }
     }
-    namespace 'org.telegram.messenger'
+    namespace 'org.nayagram.platform'
 }
 
 def getProps(String propName) {
