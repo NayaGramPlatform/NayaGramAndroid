@@ -631,6 +631,26 @@ public class RLottieDrawable extends BitmapDrawable implements Animatable, Bitma
         this.onAnimationEndListener = onAnimationEndListener;
     }
 
+    public RLottieDrawable(@RawRes int rawRes, String name, int w, int h) {
+        this(rawRes, w, h, true, null);
+    }
+
+    public RLottieDrawable(@RawRes int rawRes, String name, int w, int h, boolean startDecode, int[] colorReplacement) {
+        this(rawRes, w, h, startDecode, colorReplacement);
+    }
+
+    public RLottieDrawable(File file, int w, int h) {
+        this(file, null, w, h, null, false, null, 0, false);
+    }
+
+    public RLottieDrawable(File file, int w, int h, boolean precache, boolean limitFps) {
+        this(file, null, w, h, null, limitFps, null, 0, false);
+    }
+
+    public RLottieDrawable(File file, int w, int h, boolean precache, boolean limitFps, int[] colorReplacement) {
+        this(file, null, w, h, null, limitFps, colorReplacement, 0, false);
+    }
+
     public RLottieDrawable(@RawRes int rawRes, int w, int h) {
         this(rawRes, w, h, true, null);
     }
