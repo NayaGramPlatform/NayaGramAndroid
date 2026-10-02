@@ -1,12 +1,15 @@
 package org.nayagram.platform.features;
 
 import android.content.Context;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 
 import java.util.ArrayList;
@@ -14,12 +17,14 @@ import java.util.List;
 
 /**
  * FeatureListAdapter - NayaGram Feature Showcase Adapter.
- * 100% Vector XML Icon integration (No raw emojis in code).
+ * Features Alternating Slide-In Animation (Left & Right) on scroll,
+ * well-spaced and non-crowded layout with native XML Vector Drawables.
  */
 public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHolder> {
 
     private final List<FeatureItem> features;
     private final Context context;
+    private int lastAnimatedPosition = -1;
 
     public FeatureListAdapter(Context context) {
         this.context = context;
@@ -180,6 +185,39 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     public void onBindViewHolder(@NonNull FeatureListViewHolder holder, int position) {
         FeatureItem feature = features.get(position);
         holder.bind(feature, position);
+        applySlideAnimation(holder.itemView, position);
+    }
+
+    /**
+     * Alternating smooth slide-in animation from Left and Right on scroll.
+     * Even positions slide in from Left, Odd positions slide in from Right.
+     */
+    private void applySlideAnimation(View view, int position) {
+        if (position > lastAnimatedPosition) {
+            // Even: slide from left (-60dp), Odd: slide from right (+60dp)
+            float startTranslationX = (position % 2 == 0)
+                    ? -AndroidUtilities.dp(60)
+                    : AndroidUtilities.dp(60);
+
+            view.setTranslationX(startTranslationX);
+            view.setAlpha(0.0f);
+
+            view.animate()
+                    .translationX(0f)
+                    .alpha(1.0f)
+                    .setDuration(340)
+                    .setInterpolator(new DecelerateInterpolator(1.4f))
+                    .setStartDelay(Math.min(position * 30L, 180L))
+                    .start();
+
+            lastAnimatedPosition = position;
+        }
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull FeatureListViewHolder holder) {
+        super.onViewDetachedFromWindow(holder);
+        holder.itemView.clearAnimation();
     }
 
     @Override
