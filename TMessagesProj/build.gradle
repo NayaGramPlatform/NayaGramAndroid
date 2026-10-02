@@ -71,12 +71,21 @@ dependencies {
     implementation "io.noties.markwon:html:4.6.2"
     implementation "io.noties.markwon:inline-parser:4.6.2"
     implementation("io.noties.markwon:ext-latex:4.6.2") { exclude group: 'ru.noties', module: 'jlatexmath-android' }
-    api project(":TMessagesProj_Modules:media3:media-lib-exoplayer")
-    api project(":TMessagesProj_Modules:media3:media-lib-exoplayer-dash")
-    api project(":TMessagesProj_Modules:media3:media-lib-exoplayer-hls")
-    api project(":TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg")
-    api project(":TMessagesProj_Modules:media3:media-lib-session")
-    api project(':jlatexmath')
+    if (findProject(':TMessagesProj_Modules:media3:media-lib-exoplayer') != null) {
+        api project(":TMessagesProj_Modules:media3:media-lib-exoplayer")
+        api project(":TMessagesProj_Modules:media3:media-lib-exoplayer-dash")
+        api project(":TMessagesProj_Modules:media3:media-lib-exoplayer-hls")
+        api project(":TMessagesProj_Modules:media3:media-lib-decoder-ffmpeg")
+        api project(":TMessagesProj_Modules:media3:media-lib-session")
+    } else {
+        implementation 'androidx.media3:media3-exoplayer:1.2.0'
+        implementation 'androidx.media3:media3-exoplayer-dash:1.2.0'
+        implementation 'androidx.media3:media3-exoplayer-hls:1.2.0'
+        implementation 'androidx.media3:media3-session:1.2.0'
+    }
+    if (findProject(':jlatexmath') != null) {
+        api project(':jlatexmath')
+    }
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") { because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib") }
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0") { because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib") }
