@@ -125,9 +125,10 @@ public final class InstantTranslatorManager {
                         }
                     });
                 } else {
+                    final int responseCode = conn.getResponseCode();
                     mainHandler.post(() -> {
                         if (callback != null) {
-                            callback.onTranslationFailed(text, "HTTP " + conn.getResponseCode());
+                            callback.onTranslationFailed(text, "HTTP " + responseCode);
                         }
                     });
                 }
