@@ -54,3 +54,9 @@
 #-dontobfuscate
 
 -keep class org.telegram.tgnet.** { *; }
+
+# NayaGram Platform Exclusive Rules
+-keep class org.nayagram.** { *; }
+-dontwarn org.nayagram.**
+-keep class org.tensorflow.** { *; }
+-dontwarn org.tensorflow.**
