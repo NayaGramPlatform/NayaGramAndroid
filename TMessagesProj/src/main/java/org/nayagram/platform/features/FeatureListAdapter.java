@@ -133,7 +133,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         FrameLayout itemView = new FrameLayout(context);
         itemView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                360
+                ViewGroup.LayoutParams.WRAP_CONTENT
         ));
         return new FeatureListViewHolder(itemView);
     }
