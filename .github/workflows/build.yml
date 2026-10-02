@@ -20,13 +20,10 @@ jobs:
           java-version: "17"
           cache: "gradle"
 
-      - name: Set up Android SDK & NDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install NDK and CMake
+      - name: Setup Android SDK and NDK
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -38,12 +35,14 @@ jobs:
         run: ./gradlew bundleBundleAfat_SDK23Release --stacktrace
 
       - name: Upload APK Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: NayaGramPro-Release-APK
           path: TMessagesProj_App/build/outputs/apk/afat/release/*.apk
 
       - name: Upload AAB Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: NayaGramPro-Release-AAB
