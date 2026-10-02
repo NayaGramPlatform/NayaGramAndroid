@@ -79,11 +79,7 @@ public class SelectGiftsBottomSheet extends BottomSheetWithRecyclerListView impl
 
             Utilities.Callback<ArrayList<TL_stars.SavedStarGift>> whenSelected
     ) {
-        super(fragment.getParentActivity(), fragment, new Params.Builder()
-            .actionBarType(ActionBarType.SLIDING)
-            .edgeToEdge(EdgeToEdge.V2)
-            .resourcesProvider(fragment.getResourceProvider())
-            .build());
+        super(fragment.getParentActivity(), fragment, false, true, false, false, false, ActionBarType.SLIDING, fragment.getResourceProvider());
 
         final Context context = getContext();
 
