@@ -360,6 +360,16 @@ public abstract class BotWebViewContainer extends FrameLayout implements Notific
         }
     }
 
+        public void replaceWebView(int currentAccount, MyWebView webView, Object proxy) {
+        replaceWebView(currentAccount, webView, proxy, null, false);
+    }
+
+    public void setTrustedOrigin(String url) {
+        if (bot) {
+            trustedOrigin = getOriginHost(url);
+        }
+    }
+
     public void replaceWebView(int currentAccount, MyWebView webView, Object proxy, String url, boolean sameOrigin) {
         this.currentAccount = currentAccount;
         preserving = false;
