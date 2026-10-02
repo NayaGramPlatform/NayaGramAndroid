@@ -21,8 +21,8 @@ import org.telegram.ui.ActionBar.Theme;
 
 /**
  * FeatureListViewHolder for NayaGram Feature Showcase.
- * Premium, polished UI with native Android Vector Icons (no emojis),
- * tinted rounded icon badges, responsive typography, and navigation chevron.
+ * Premium, spacious (non-crowded) UI with native Android Vector Icons,
+ * tinted rounded icon badges, generous line-height, and smooth touch ripples.
  */
 public class FeatureListViewHolder extends RecyclerView.ViewHolder {
 
@@ -39,22 +39,24 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         Context context = itemView.getContext();
 
         FrameLayout container = (FrameLayout) itemView;
-        container.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(5), AndroidUtilities.dp(14), AndroidUtilities.dp(5));
+        // Spacious margins between cards (14dp vertical gap, 16dp horizontal)
+        container.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(7), AndroidUtilities.dp(16), AndroidUtilities.dp(7));
 
         cardView = new LinearLayout(context);
         cardView.setOrientation(LinearLayout.HORIZONTAL);
         cardView.setGravity(Gravity.CENTER_VERTICAL);
-        cardView.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14));
+        // Generous inner padding inside card for airy, non-crowded look
+        cardView.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(15), AndroidUtilities.dp(16), AndroidUtilities.dp(15));
         cardView.setLayoutParams(new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // 1. Left: Rounded Vector Icon Container (44dp x 44dp)
+        // 1. Left: Rounded Vector Icon Container (46dp x 46dp)
         iconBadgeContainer = new FrameLayout(context);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(
-                AndroidUtilities.dp(44),
-                AndroidUtilities.dp(44)
+                AndroidUtilities.dp(46),
+                AndroidUtilities.dp(46)
         );
         iconParams.rightMargin = AndroidUtilities.dp(14);
         iconBadgeContainer.setLayoutParams(iconParams);
@@ -89,7 +91,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         numberView.setTextColor(Color.WHITE);
         numberView.setGravity(Gravity.CENTER);
         numberView.setTypeface(AndroidUtilities.bold());
-        numberView.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(2), AndroidUtilities.dp(6), AndroidUtilities.dp(2));
+        numberView.setPadding(AndroidUtilities.dp(7), AndroidUtilities.dp(2), AndroidUtilities.dp(7), AndroidUtilities.dp(2));
         LinearLayout.LayoutParams numParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -109,16 +111,16 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         titleRow.addView(numberView);
         titleRow.addView(titleView);
 
-        // Description
+        // Description with comfortable line-spacing (not dense)
         descView = new TextView(context);
         descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         descView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        descView.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
+        descView.setLineSpacing(AndroidUtilities.dp(3), 1.15f);
         LinearLayout.LayoutParams descParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        descParams.topMargin = AndroidUtilities.dp(4);
+        descParams.topMargin = AndroidUtilities.dp(5);
         descView.setLayoutParams(descParams);
 
         centerLayout.addView(titleRow);
@@ -161,7 +163,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         // Left Icon background
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setColor(feature.accentColor);
-        iconBg.setCornerRadius(AndroidUtilities.dp(12));
+        iconBg.setCornerRadius(AndroidUtilities.dp(14));
         iconBadgeContainer.setBackground(iconBg);
 
         // Number badge background
@@ -170,10 +172,10 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         badgeBg.setCornerRadius(AndroidUtilities.dp(5));
         numberView.setBackground(badgeBg);
 
-        // Card background styling
+        // Card background styling (spacious rounded card with 1dp subtle border)
         GradientDrawable cardBg = new GradientDrawable();
         cardBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        cardBg.setCornerRadius(AndroidUtilities.dp(14));
+        cardBg.setCornerRadius(AndroidUtilities.dp(16));
         cardBg.setStroke(AndroidUtilities.dp(1), Theme.getColor(Theme.key_divider));
         cardView.setBackground(cardBg);
     }
