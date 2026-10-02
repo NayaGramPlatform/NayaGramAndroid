@@ -142,17 +142,17 @@ public final class InstantTranslatorManager {
         });
     }
 
-    private String parseGtxResponse(String rawJson) {
+        private String parseGtxResponse(String rawJson) {
         try {
             // Standard gtx response: [[["translated text","original text",null,null,...]]]
-            int firstQuote = rawJson.indexOf(""");
+            int firstQuote = rawJson.indexOf("\"");
             if (firstQuote != -1) {
-                int secondQuote = rawJson.indexOf(""", firstQuote + 1);
+                int secondQuote = rawJson.indexOf("\"", firstQuote + 1);
                 if (secondQuote != -1) {
                     return rawJson.substring(firstQuote + 1, secondQuote)
-                            .replace("\\n", "
+                            .replace("\n", "
 ")
-                            .replace("\\"", """);
+                            .replace("\\"", "\"");
                 }
             }
         } catch (Exception ignored) {}

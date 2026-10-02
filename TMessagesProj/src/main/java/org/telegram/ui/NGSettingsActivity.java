@@ -300,7 +300,7 @@ public class NGSettingsActivity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
 
         if (currentType == TYPE_FEATURES_HUB) {
-            searchItem = menu.addItem(ITEM_SEARCH, R.drawable.ic_ab_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
+            searchItem = menu.addItem(ITEM_SEARCH, R.drawable.outline_header_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
                 @Override
                 public void onSearchExpand() {
                     isSearching = true;

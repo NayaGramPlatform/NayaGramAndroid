@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    >
 
     <PreferenceCategory
         android:key="message_scheduler_main"
@@ -11,13 +11,13 @@
             android:title="@string/EnableMessageScheduler"
             android:summary="@string/MessageSchedulerDescription"
             android:defaultValue="false"
-            app:iconSpaceReserved="false" />
+             />
 
         <Preference
             android:key="schedule_new_message"
             android:title="@string/ScheduleMessage"
             android:summary="@string/ScheduleTime"
-            app:iconSpaceReserved="false" />
+             />
 
     </PreferenceCategory>
 
@@ -30,13 +30,13 @@
             android:title="@string/EnableAutoReply"
             android:summary="@string/AutoReplyDescription"
             android:defaultValue="false"
-            app:iconSpaceReserved="false" />
+             />
 
         <Preference
             android:key="create_auto_reply_rule"
             android:title="@string/CreateAutoReplyRule"
             android:summary="@string/RuleKeyword"
-            app:iconSpaceReserved="false" />
+             />
 
     </PreferenceCategory>
 
@@ -48,7 +48,7 @@
             android:key="scheduled_messages_info"
             android:title="@string/NoScheduledMessages"
             android:selectable="false"
-            app:iconSpaceReserved="false" />
+             />
 
     </PreferenceCategory>
 
@@ -60,7 +60,7 @@
             android:key="auto_reply_rules_info"
             android:title="@string/NoRulesCreated"
             android:selectable="false"
-            app:iconSpaceReserved="false" />
+             />
 
     </PreferenceCategory>
 
@@ -73,7 +73,7 @@
             android:title="@string/SchedulerInfo"
             android:summary="@string/AutoReplyInfo"
             android:selectable="false"
-            app:iconSpaceReserved="false" />
+             />
 
     </PreferenceCategory>
 

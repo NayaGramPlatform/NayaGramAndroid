@@ -81,7 +81,7 @@ public class MessageScheduler {
     /**
      * Schedule message sending using WorkManager
      */
-    private void scheduleMessageSending(long messageId, long scheduleTime) {
+    public void scheduleMessageSending(long messageId, long scheduleTime) {
         long delayMillis = (scheduleTime * 1000) - System.currentTimeMillis();
         
         if (delayMillis <= 0) {

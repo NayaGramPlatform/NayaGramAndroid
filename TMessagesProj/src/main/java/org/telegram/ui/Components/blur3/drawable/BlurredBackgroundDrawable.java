@@ -44,6 +44,21 @@ import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
 public abstract class BlurredBackgroundDrawable extends Drawable {
+    public void updateDisplayList() {
+    }
+
+    public float getOutsetX() {
+        return 0f;
+    }
+
+    public float getOutsetY() {
+        return 0f;
+    }
+
+    public boolean hasDisplayList() {
+        return true;
+    }
+
     public BlurredBackgroundDrawable() {
         boundProps.strokeWidthTop = dpf2(1);
         boundProps.strokeWidthBottom = dpf2(2 / 3f);
