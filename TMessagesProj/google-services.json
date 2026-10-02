@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "598328469455",
-    "project_id": "nayagramplatform",
-    "storage_bucket": "nayagramplatform.firebasestorage.app"
+    "project_number": "697585654416",
+    "project_id": "nayagram-platform-6eecb",
+    "storage_bucket": "nayagram-platform-6eecb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:3b6e537da7b094f874d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:20d41c1ecf26f8d1c8d615",
         "android_client_info": {
           "package_name": "org.nayagram.platform"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:ef86d0e020343cc374d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:4c6786e07d2ef612c8d615",
         "android_client_info": {
           "package_name": "org.nayagram.platform.beta"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
@@ -45,7 +45,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:04f331af3612496574d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:491b8eda69b57302c8d615",
         "android_client_info": {
           "package_name": "org.nayagram.platform.web"
         }
@@ -53,7 +53,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
@@ -64,7 +64,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:8633d249056c2b8674d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:449e5717b4618c8dc8d615",
         "android_client_info": {
           "package_name": "org.telegram.messenger"
         }
@@ -72,7 +72,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
@@ -83,7 +83,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:ae4647071c7456ab74d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:064e0b05a39607a2c8d615",
         "android_client_info": {
           "package_name": "org.telegram.messenger.beta"
         }
@@ -91,7 +91,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
@@ -102,7 +102,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:598328469455:android:fc5f2d077b0d199374d4ba",
+        "mobilesdk_app_id": "1:697585654416:android:b7532752bf587455c8d615",
         "android_client_info": {
           "package_name": "org.telegram.messenger.web"
         }
@@ -110,7 +110,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDanxqPzyes1HAvwgdltWsEB7iHvs8oZ5E"
+          "current_key": "AIzaSyDWjUouxLjRXppRjohJpyh-uY48Y4PxF-U"
         }
       ],
       "services": {
