@@ -229,7 +229,7 @@ public class BotWebViewMenuContainer extends FrameLayout implements Notification
         if (tab.webView != null) {
 //            tab.webView.resumeTimers();
             tab.webView.onResume();
-            webViewContainer.replaceWebView(currentAccount, tab.webView, tab.proxy);
+            webViewContainer.replaceWebView(currentAccount, tab.webView, tab.proxy, tab.lastUrl, false);
         } else {
             tab.props.response = null;
             tab.props.responseTime = 0;
