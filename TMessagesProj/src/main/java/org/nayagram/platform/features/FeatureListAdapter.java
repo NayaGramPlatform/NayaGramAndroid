@@ -139,6 +139,27 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 14,
                 0xFF4D9EFF
         ));
+
+        features.add(new FeatureItem(
+                "Ultra Battery & Low-Data Saver",
+                "Smart eco-mode and metered data optimization",
+                15,
+                0xFF00C2A8
+        ));
+
+        features.add(new FeatureItem(
+                "Biometric Chat Locker",
+                "Protect sensitive chats with fingerprint and PIN",
+                16,
+                0xFF7B61FF
+        ));
+
+        features.add(new FeatureItem(
+                "In-Chat Instant Translator",
+                "Translate foreign messages to Bengali with LRU cache",
+                17,
+                0xFF3DDC97
+        ));
     }
     
     @NonNull
