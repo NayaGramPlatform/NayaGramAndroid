@@ -125,6 +125,20 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 12,
                 0xFF7C3AED
         ));
+
+        features.add(new FeatureItem(
+                "Digital Wellbeing & Focus Mode",
+                "Mute group pings for study, work & prayer with VIP bypass",
+                13,
+                0xFF00C2A8
+        ));
+
+        features.add(new FeatureItem(
+                "Smart Storage Doctor",
+                "One-tap cache and orphaned media optimizer",
+                14,
+                0xFF4D9EFF
+        ));
     }
     
     @NonNull
