@@ -95,6 +95,7 @@ android {
     lintOptions { disable 'MissingTranslation'; disable 'ExtraTranslation'; disable 'BlockedPrivateApi' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8; coreLibraryDesugaringEnabled true }
     defaultConfig {
+        buildConfigField "boolean", "BUNDLE", "false"
         minSdkVersion 21; targetSdkVersion 36
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         multiDexEnabled true
