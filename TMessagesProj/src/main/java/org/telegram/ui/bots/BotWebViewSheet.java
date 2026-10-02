@@ -386,7 +386,7 @@ public class BotWebViewSheet extends Dialog implements NotificationCenter.Notifi
         if (tab.webView != null) {
 //            tab.webView.resumeTimers();
             tab.webView.onResume();
-            webViewContainer.replaceWebView(currentAccount, tab.webView, tab.proxy);
+            webViewContainer.replaceWebView(currentAccount, tab.webView, tab.proxy, tab.lastUrl, false);
             webViewContainer.setState(tab.ready || tab.webView.isPageLoaded(), tab.lastUrl);
             if (Theme.isCurrentThemeDark() != tab.themeIsDark) {
                 webViewContainer.notifyThemeChanged();
