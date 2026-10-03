@@ -118,6 +118,10 @@ android {
         standalone { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "false"; buildConfigField "int", "VERSION_NUM", "6" }
         release { minifyEnabled true; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'; ndk.debugSymbolLevel = 'FULL'; buildConfigField "boolean", "BUNDLE", "false" }
     }
+    buildFeatures {
+        androidResources = true
+        buildConfig = true
+    }
     namespace 'org.telegram.messenger'
 }
 
