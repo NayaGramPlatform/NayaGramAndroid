@@ -22,7 +22,11 @@ dependencyResolutionManagement {
 def mediaDir = file("TMessagesProj_Modules/media")
 if (mediaDir.exists()) {
     gradle.ext.androidxMediaSettingsDir = mediaDir.canonicalPath.replace('\\', '/')
-    gradle.ext.androidxMediaModulePrefix = 'TMessagesProj_Modules:media3:media-'
+    gradle.ext.androidxMediaModulePrefix = 'TMessagesProj_Modules:media:media-'
+
+    include ':TMessagesProj_Modules:media'
+    project(':TMessagesProj_Modules:media').projectDir = mediaDir
+
     def m3Dir = file("TMessagesProj_Modules/media3")
     if (!m3Dir.exists()) {
         m3Dir.mkdirs()
@@ -70,9 +74,12 @@ if (mediaDir.exists()) {
     mediaModules.each { modName, modPath ->
         def targetDir = file("TMessagesProj_Modules/media/${modPath}")
         if (targetDir.exists()) {
-            def fullPath = ":TMessagesProj_Modules:media3:media-${modName}"
+            def fullPath = ":TMessagesProj_Modules:media:media-${modName}"
             include fullPath
             project(fullPath).projectDir = targetDir
+            def fullPath3 = ":TMessagesProj_Modules:media3:media-${modName}"
+            include fullPath3
+            project(fullPath3).projectDir = targetDir
         }
     }
 }
