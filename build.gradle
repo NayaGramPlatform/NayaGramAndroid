@@ -35,7 +35,7 @@ subprojects {
         }
     }
 
-    if (project.projectDir.absolutePath.contains('/TMessagesProj_Modules/media/')) {
+    if (project.projectDir.absolutePath.contains('TMessagesProj_Modules') && (project.projectDir.absolutePath.contains('media') || project.projectDir.absolutePath.contains('media3'))) {
         project.plugins.withId('com.android.library') {
             project.android {
                 if (namespace == null) {
