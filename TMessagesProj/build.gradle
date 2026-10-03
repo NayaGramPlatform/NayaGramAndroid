@@ -1,6 +1,7 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 apply plugin: 'com.android.library'
+apply plugin: 'org.telegram.build-plugin'
 apply plugin: 'org.telegram.lottie-meta'
 apply plugin: 'idea'
 
