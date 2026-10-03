@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    >
+
+    <PreferenceCategory
+        android:key="message_scheduler_main"
+        android:title="@string/MessageSchedulerFeature">
+
+        <SwitchPreference
+            android:key="message_scheduler_enabled"
+            android:title="@string/EnableMessageScheduler"
+            android:summary="@string/MessageSchedulerDescription"
+            android:defaultValue="false"
+             />
+
+        <Preference
+            android:key="schedule_new_message"
+            android:title="@string/ScheduleMessage"
+            android:summary="@string/ScheduleTime"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="auto_reply_main"
+        android:title="@string/AutoReplyFeature">
+
+        <SwitchPreference
+            android:key="auto_reply_enabled"
+            android:title="@string/EnableAutoReply"
+            android:summary="@string/AutoReplyDescription"
+            android:defaultValue="false"
+             />
+
+        <Preference
+            android:key="create_auto_reply_rule"
+            android:title="@string/CreateAutoReplyRule"
+            android:summary="@string/RuleKeyword"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="scheduled_messages_list"
+        android:title="@string/ScheduledMessages">
+
+        <Preference
+            android:key="scheduled_messages_info"
+            android:title="@string/NoScheduledMessages"
+            android:selectable="false"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="auto_reply_rules_list"
+        android:title="@string/AutoReplyRules">
+
+        <Preference
+            android:key="auto_reply_rules_info"
+            android:title="@string/NoRulesCreated"
+            android:selectable="false"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="scheduler_privacy"
+        android:title="@string/Privacy">
+
+        <Preference
+            android:key="scheduler_privacy_info"
+            android:title="@string/SchedulerInfo"
+            android:summary="@string/AutoReplyInfo"
+            android:selectable="false"
+             />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
