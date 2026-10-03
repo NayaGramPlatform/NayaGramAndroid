@@ -2,8 +2,10 @@ import groovy.xml.XmlSlurper
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     repositories {
-        mavenCentral()
         google()
+        maven { url 'https://repo1.maven.org/maven2/' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        mavenCentral()
         maven { url 'https://developer.huawei.com/repo/' }
     }
     dependencies {
