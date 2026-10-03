@@ -21,6 +21,8 @@ dependencyResolutionManagement {
 
 def mediaDir = file("TMessagesProj_Modules/media")
 if (mediaDir.exists()) {
+    gradle.ext.androidxMediaSettingsDir = mediaDir.canonicalPath.replace('\\', '/')
+    gradle.ext.androidxMediaModulePrefix = 'TMessagesProj_Modules:media3:media-'
     def m3Dir = file("TMessagesProj_Modules/media3")
     if (!m3Dir.exists()) {
         m3Dir.mkdirs()
