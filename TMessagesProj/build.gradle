@@ -106,6 +106,10 @@ android {
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8; coreLibraryDesugaringEnabled true }
     defaultConfig {
         buildConfigField "boolean", "BUNDLE", "false"
+        buildConfigField "boolean", "DEBUG_VERSION", "false"
+        buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+        buildConfigField "String", "BUILD_VERSION_STRING", "\"11.7.0\""
+        buildConfigField "int", "VERSION_NUM", "1"
         minSdkVersion 21; targetSdkVersion 36
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         multiDexEnabled true
