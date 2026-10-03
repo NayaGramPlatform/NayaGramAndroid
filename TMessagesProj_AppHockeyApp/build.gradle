@@ -39,7 +39,13 @@ android {
 
    defaultConfig.applicationId = "org.nayagram.platform" 
 
-    sourceSets.main.jniLibs.srcDirs = ['../TMessagesProj/jni/']
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['../TMessagesProj/jni/']
+            res.srcDirs = ['../TMessagesProj/src/main/res']
+            assets.srcDirs = ['../TMessagesProj/src/main/assets']
+        }
+    }
 
     lintOptions {
         disable 'MissingTranslation'
