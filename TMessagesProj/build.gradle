@@ -110,7 +110,8 @@ android {
         multiDexEnabled true
         externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
     }
-    buildTypes {\n    buildTypes.all { it.buildConfigField "boolean", "BUNDLE", "false" }\n
+    buildTypes {
+        buildTypes.all { it.buildConfigField "boolean", "BUNDLE", "false" }
         debug { jniDebuggable true; minifyEnabled false; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro' }
         HA_private { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "1" }
         HA_public { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "4" }
