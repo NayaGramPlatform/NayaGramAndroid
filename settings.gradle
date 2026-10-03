@@ -17,13 +17,58 @@ dependencyResolutionManagement {
     }
 }
 
-if (file("TMessagesProj_Modules/media/core_settings.gradle").exists()) {
-    def mDir = file("TMessagesProj_Modules/media3")
-    if (!mDir.exists()) {
-        mDir.mkdirs()
+def mediaDir = file("TMessagesProj_Modules/media")
+if (mediaDir.exists()) {
+    def m3Dir = file("TMessagesProj_Modules/media3")
+    if (!m3Dir.exists()) {
+        m3Dir.mkdirs()
     }
     include ':TMessagesProj_Modules:media3'
-    project(':TMessagesProj_Modules:media3').projectDir = file("TMessagesProj_Modules/media")
-    gradle.ext.androidxMediaModulePrefix = 'TMessagesProj_Modules:media3:media-'
-    apply from: file("TMessagesProj_Modules/media/core_settings.gradle")
+    project(':TMessagesProj_Modules:media3').projectDir = mediaDir
+
+    def mediaModules = [
+        'lib-common': 'libraries/common',
+        'lib-common-ktx': 'libraries/common_ktx',
+        'lib-container': 'libraries/container',
+        'lib-session': 'libraries/session',
+        'lib-exoplayer': 'libraries/exoplayer',
+        'lib-exoplayer-dash': 'libraries/exoplayer_dash',
+        'lib-exoplayer-hls': 'libraries/exoplayer_hls',
+        'lib-exoplayer-rtsp': 'libraries/exoplayer_rtsp',
+        'lib-exoplayer-smoothstreaming': 'libraries/exoplayer_smoothstreaming',
+        'lib-exoplayer-ima': 'libraries/exoplayer_ima',
+        'lib-exoplayer-workmanager': 'libraries/exoplayer_workmanager',
+        'lib-ui': 'libraries/ui',
+        'lib-ui-leanback': 'libraries/ui_leanback',
+        'lib-database': 'libraries/database',
+        'lib-datasource': 'libraries/datasource',
+        'lib-datasource-cronet': 'libraries/datasource_cronet',
+        'lib-datasource-rtmp': 'libraries/datasource_rtmp',
+        'lib-datasource-okhttp': 'libraries/datasource_okhttp',
+        'lib-decoder': 'libraries/decoder',
+        'lib-decoder-av1': 'libraries/decoder_av1',
+        'lib-decoder-ffmpeg': 'libraries/decoder_ffmpeg',
+        'lib-decoder-flac': 'libraries/decoder_flac',
+        'lib-decoder-iamf': 'libraries/decoder_iamf',
+        'lib-decoder-mpegh': 'libraries/decoder_mpegh',
+        'lib-decoder-opus': 'libraries/decoder_opus',
+        'lib-decoder-vp9': 'libraries/decoder_vp9',
+        'lib-extractor': 'libraries/extractor',
+        'lib-cast': 'libraries/cast',
+        'lib-effect': 'libraries/effect',
+        'lib-muxer': 'libraries/muxer',
+        'lib-transformer': 'libraries/transformer',
+        'test-utils-robolectric': 'libraries/test_utils_robolectric',
+        'test-data': 'libraries/test_data',
+        'test-utils': 'libraries/test_utils'
+    ]
+
+    mediaModules.each { modName, modPath ->
+        def targetDir = file("TMessagesProj_Modules/media/${modPath}")
+        if (targetDir.exists()) {
+            def fullPath = ":TMessagesProj_Modules:media3:media-${modName}"
+            include fullPath
+            project(fullPath).projectDir = targetDir
+        }
+    }
 }
