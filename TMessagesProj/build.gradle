@@ -110,8 +110,8 @@ android {
         buildConfigField "boolean", "BUNDLE", "false"
         buildConfigField "boolean", "DEBUG_VERSION", "false"
         buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
-        buildConfigField "String", "BUILD_VERSION_STRING", "\"11.7.0\""
-        buildConfigField "int", "VERSION_NUM", "1"
+        buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+        buildConfigField "int", "VERSION_NUM", APP_VERSION_CODE
         minSdkVersion 21; targetSdkVersion 36
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         multiDexEnabled true
