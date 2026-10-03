@@ -24,8 +24,11 @@ gradlePlugin {
 }
 
 repositories {
+    maven { url = uri("https://maven.aliyun.com/repository/public") }
     google()
-    maven { url = uri("https://repo1.maven.org/maven2/") }
+    gradlePluginPortal()
+    mavenCentral()
+}
     maven { url = uri("https://maven.aliyun.com/repository/public") }
     mavenCentral()
     gradlePluginPortal()
