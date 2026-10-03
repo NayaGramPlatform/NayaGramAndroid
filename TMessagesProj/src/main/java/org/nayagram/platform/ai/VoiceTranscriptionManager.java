@@ -146,7 +146,7 @@ public class VoiceTranscriptionManager {
             
             long startTime = System.currentTimeMillis();
             tfliteInterpreter.runForMultipleInputsOutputs(
-                    new Object[]{audioTensor.getBuffer()}, outputMap);
+                    new Object[]{audioTensor.getTensorBuffer().getBuffer()}, outputMap);
             long inferenceTime = System.currentTimeMillis() - startTime;
             
             Log.d(TAG, "⚡ Inference completed in " + inferenceTime + "ms");
@@ -285,12 +285,14 @@ public class VoiceTranscriptionManager {
      * Prepare audio for TensorFlow input
      */
     private TensorAudio prepareAudioTensor(byte[] audioData, Language language) {
-        TensorAudio tensorAudio = new TensorAudio(
-                TensorAudio.TensorAudioFormat.PCM16,
-                16000 // 16kHz sample rate
-        );
-        
-        tensorAudio.load(audioData);
+        short[] shortData = new short[audioData.length / 2];
+        java.nio.ByteBuffer.wrap(audioData).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shortData);
+        org.tensorflow.lite.support.audio.TensorAudio.TensorAudioFormat format = org.tensorflow.lite.support.audio.TensorAudio.TensorAudioFormat.builder()
+                .setChannels(1)
+                .setSampleRate(16000)
+                .build();
+        TensorAudio tensorAudio = TensorAudio.create(format);
+        tensorAudio.load(shortData);
         return tensorAudio;
     }
     
