@@ -29,7 +29,7 @@ android {
     sourceSets {
         main {
             jniLibs.srcDirs = ['../TMessagesProj/jni/']
-            res.srcDirs = ['../TMessagesProj/src/main/res']
+            res.srcDirs = ['src/main/res', '../TMessagesProj/src/main/res']
             assets.srcDirs = ['../TMessagesProj/src/main/assets']
         }
     }
