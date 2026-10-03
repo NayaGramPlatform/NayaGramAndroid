@@ -1,5 +1,8 @@
 package org.nayagram.platform;
 
+import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.FileLog;
+
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
