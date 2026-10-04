@@ -1,0 +1,55 @@
+name: Build NayaGram AAB & APK
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Signed AAB and APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free Disk Space
+        run: |
+          sudo rm -rf /usr/share/dotnet || true
+          df -h
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Licenses & Install NDK / CMake
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Build Release AAB (Google Play Bundle)
+        run: ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release --stacktrace
+
+      - name: Build Release APK
+        run: ./gradlew :TMessagesProj_App:assembleAfatRelease --stacktrace
+
+      - name: Upload NayaGram Release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: NayaGram-Release-AAB
+          path: TMessagesProj_App/build/outputs/bundle/bundleAfat_SDK23Release/*.aab
+
+      - name: Upload NayaGram Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NayaGram-Release-APK
+          path: TMessagesProj_App/build/outputs/apk/afat/release/*.apk
