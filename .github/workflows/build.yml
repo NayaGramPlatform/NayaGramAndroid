@@ -42,14 +42,24 @@ jobs:
       - name: Build Release AAB (Google Play Bundle)
         run: ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release --stacktrace
 
-      - name: Generate Universal APK from AAB
+      - name: Generate Signed Universal APK from AAB
         run: |
           curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           echo "Found AAB: $AAB_FILE"
           mkdir -p build_output
           cp "$AAB_FILE" build_output/NayaGram-Release.aab
-          java -jar bundletool-all-1.17.2.jar build-apks --bundle="$AAB_FILE" --output=build_output/app.apks --mode=universal
+          
+          # Build APK signed with official keystore
+          java -jar bundletool-all-1.17.2.jar build-apks \
+            --bundle="$AAB_FILE" \
+            --output=build_output/app.apks \
+            --mode=universal \
+            --ks=TMessagesProj/config/nayagrampro.jks \
+            --ks-pass=pass:NayaGram@2026#BuildTop \
+            --ks-key-alias=nayagrampro_key \
+            --key-pass=pass:NayaGram@2026#BuildTop
+            
           unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
           ls -lh build_output/
 
