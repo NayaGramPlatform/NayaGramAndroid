@@ -1654,6 +1654,9 @@ target_include_directories(tgcalls PUBLIC
         third_party/usrsctplib
         third_party
         prebuild/include/${ANDROID_ABI}
+        ffmpeg/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../ffmpeg/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
         third_party/ffmpeg
         third_party/libvpx
         third_party/dav1d/include
