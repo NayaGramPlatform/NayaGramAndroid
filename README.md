@@ -2,7 +2,7 @@
 # 💎 NayaGram messenger for Android
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/NayaGramPlatform/NayaGramAndroid/master/TMessagesProj/src/main/res/drawable-xxhdpi/ic_launcher.png" width="100" height="100" alt="NayaGram Logo" />
+  <img src="https://i.postimg.cc/65K5k2WS/%F0%9D%90%8D%F0%9D%90%9A%F0%9D%90%B2%F0%9D%90%9A-%F0%9D%90%86%F0%9D%90%AB%F0%9D%90%9A%F0%9D%90%A6-%F0%9D%90%8F%F0%9D%90%A5%F0%9D%90%9A%F0%9D%90%AD%F0%9D%90%9F%F0%9D%90%A8%F0%9D%90%AB%F0%9D%90%A6.png" width="160" alt="𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦 Logo" />
 </p>
 
 <p align="center">
