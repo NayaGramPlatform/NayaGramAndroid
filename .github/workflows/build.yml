@@ -9,6 +9,7 @@ jobs:
   build:
     name: Build Signed AAB and APK
     runs-on: ubuntu-latest
+
     steps:
       - name: Free Disk Space
         run: |
@@ -41,17 +42,29 @@ jobs:
       - name: Build Release AAB (Google Play Bundle)
         run: ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release --stacktrace
 
-      - name: Build Release APK
-        run: ./gradlew :TMessagesProj_App:assembleAfatRelease --stacktrace
+      - name: Generate Universal APK from AAB
+        run: |
+          curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+          AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
+          echo "Found AAB: $AAB_FILE"
+          mkdir -p build_output
+          cp "$AAB_FILE" build_output/NayaGram-Release.aab
+          java -jar bundletool-all-1.17.2.jar build-apks --bundle="$AAB_FILE" --output=build_output/app.apks --mode=universal
+          unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
+          ls -lh build_output/
 
       - name: Upload NayaGram Release AAB
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: NayaGram-Release-AAB
-          path: TMessagesProj_App/build/outputs/bundle/bundleAfat_SDK23Release/*.aab
+          path: build_output/NayaGram-Release.aab
+          if-no-files-found: warn
 
       - name: Upload NayaGram Release APK
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: NayaGram-Release-APK
-          path: TMessagesProj_App/build/outputs/apk/afat/release/*.apk
+          path: build_output/NayaGram-Release.apk
+          if-no-files-found: warn
