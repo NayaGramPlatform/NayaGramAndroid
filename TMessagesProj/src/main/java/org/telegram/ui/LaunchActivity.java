@@ -6959,6 +6959,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onResume() {
+        checkNayaGramProChannelPrompt();
         super.onResume();
         isResumed = true;
         pipActivityHandler.onResume();
@@ -9234,4 +9235,25 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             return AndroidUtilities.fixedDispatchApplyWindowInsets(insets, this);
         }
     }
+
+    private void checkNayaGramProChannelPrompt() {
+        try {
+            android.content.SharedPreferences sp = getSharedPreferences("nayagram_onboarding_prefs", MODE_PRIVATE);
+            if (!sp.getBoolean("nayagrampro_prompted", false)) {
+                sp.edit().putBoolean("nayagrampro_prompted", true).apply();
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (isFinishing()) return;
+                    AlertDialog.Builder b = new AlertDialog.Builder(this);
+                    b.setTitle("Welcome to NayaGram! 🇧🇩");
+                    b.setMessage("Join our official channel @NayaGramPro to receive the latest updates, exclusive features, themes, and community support.");
+                    b.setPositiveButton("Join @NayaGramPro", (dialog, which) -> {
+                        org.telegram.messenger.browser.Browser.openUrl(this, "https://t.me/NayaGramPro");
+                    });
+                    b.setNegativeButton("Later", null);
+                    showDialog(b.create());
+                }, 2000);
+            }
+        } catch (Exception ignored) {}
+    }
+
 }
