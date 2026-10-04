@@ -6,11 +6,10 @@
  * Copyright Nikolai Kudashov, 2013-2018.
  */
 
-package org.nayagram.chat;
+package org.telegram.messenger;
 
 import android.content.Intent;
 import android.os.Bundle;
-
 import com.google.android.search.verification.client.SearchActionVerificationClientService;
 
 public class GoogleVoiceClientService extends SearchActionVerificationClientService {
