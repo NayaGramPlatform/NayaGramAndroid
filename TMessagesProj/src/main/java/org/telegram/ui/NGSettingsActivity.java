@@ -45,6 +45,21 @@ import org.telegram.ui.Components.RecyclerListView;
  */
 public class NGSettingsActivity extends BaseFragment {
 
+    public static final int TYPE_FEATURES_HUB = 0;
+    public static final int TYPE_GHOST_MODE = 1;
+    public static final int TYPE_STUDIO = 2;
+    public static final int TYPE_ANTI_DELETE = 3;
+
+    private int currentType = TYPE_FEATURES_HUB;
+
+    public NGSettingsActivity() {
+        this(TYPE_FEATURES_HUB);
+    }
+
+    public NGSettingsActivity(int type) {
+        this.currentType = type;
+    }
+
     private RecyclerListView listView;
     private ListAdapter listAdapter;
 
