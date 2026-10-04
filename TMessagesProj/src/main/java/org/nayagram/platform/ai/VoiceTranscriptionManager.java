@@ -291,7 +291,7 @@ public class VoiceTranscriptionManager {
                 .setChannels(1)
                 .setSampleRate(16000)
                 .build();
-        TensorAudio tensorAudio = TensorAudio.create(format);
+        TensorAudio tensorAudio = TensorAudio.create(format, shortData.length);
         tensorAudio.load(shortData);
         return tensorAudio;
     }

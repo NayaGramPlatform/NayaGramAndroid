@@ -126,7 +126,7 @@ import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
 @SuppressLint("ViewConstructor")
-public class InstantCameraView extends InstantCameraViewBase implements NotificationCenter.NotificationCenterDelegate {
+public class InstantCameraView extends FrameLayout implements NotificationCenter.NotificationCenterDelegate {
 
     public boolean WRITE_TO_FILE_IN_BACKGROUND;
 
