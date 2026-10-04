@@ -6,8 +6,9 @@
  * Copyright Nikolai Kudashov, 2013-2018.
  */
 
- package org.nayagram.chat;
- import com.google.android.search.verification.client.SearchActionVerificationClientActivity;
+package org.telegram.messenger;
+
+import com.google.android.search.verification.client.SearchActionVerificationClientActivity;
 import com.google.android.search.verification.client.SearchActionVerificationClientService;
 
 public class GoogleVoiceClientActivity extends SearchActionVerificationClientActivity {
