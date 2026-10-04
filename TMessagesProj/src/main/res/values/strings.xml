@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="Privacy">Privacy and Security</string>
     <string name="AppName">NayaGram</string>
     <string name="AppNameBeta">NayaGram Beta</string>
     <string name="LanguageName">English</string>
