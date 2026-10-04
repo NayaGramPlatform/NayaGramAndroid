@@ -82,3 +82,19 @@ We welcome community contributions for localization and translations. Please sub
 ### License
 NayaGram for Android is licensed under the **GNU General Public License v2.0 or later**.  
 *For original Telegram documentation, see [README_TELEGRAM.md](README_TELEGRAM.md).*
+
+---
+
+## 🏛️ About 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦
+
+**𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦** is an independent technology initiative dedicated to delivering next-generation, high-performance, and privacy-respecting communication tools. We believe that digital privacy, freedom of speech, and high-speed global connectivity are fundamental rights for every user worldwide.
+
+### ⚖️ Copyright & Trademarks
+- **Copyright © 2026 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦.** All rights reserved.
+- **Telegram** is a registered trademark of Telegram FZ-LLC / Telegram Messenger Inc.
+- **NayaGram** is an independent client application built on the official open-source Telegram Android codebase under the terms of the **GNU General Public License (GPL) v2.0 or later**.
+- For brand guidelines, media inquiries, or official partnerships, contact us at [support.nayagram@gmail.com](mailto:support.nayagram@gmail.com).
+
+<p align="center">
+  <sub>Built with dedication, passion, and integrity by <b>𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦</b>.</sub>
+</p>
