@@ -9251,7 +9251,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         org.telegram.messenger.browser.Browser.openUrl(this, "https://t.me/NayaGramPro");
                     });
                     b.setNegativeButton("Later", null);
-                    showDialog(b.create());
+                    b.show();
                 }, 2000);
             }
         } catch (Exception ignored) {}
