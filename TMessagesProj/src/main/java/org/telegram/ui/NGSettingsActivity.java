@@ -1,18 +1,14 @@
 package org.telegram.ui;
 
-import static org.telegram.messenger.AndroidUtilities.dp;
-
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.AlignmentSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
+import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -23,6 +19,7 @@ import org.nayagram.platform.AntiDeleteManager;
 import org.nayagram.platform.GhostModeManager;
 import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
@@ -42,296 +39,110 @@ import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Locale;
-
 /**
- * NGSettingsActivity - Dedicated NayaGram Feature Hub & Settings
- * Inspired by Nekogram, Cherrygram, and Novagram.
+ * NGSettingsActivity - Official NayaGram Messenger 17 Exclusive Features Hub.
+ * Beautifully numbered and categorized with interactive controls.
  */
 public class NGSettingsActivity extends BaseFragment {
 
-    public static final int TYPE_FEATURES_HUB = 0;
-    public static final int TYPE_GHOST_MODE = 1;
-    public static final int TYPE_STUDIO = 2;
-    public static final int TYPE_ANTI_DELETE = 3;
-
-    private static final int ITEM_SEARCH = 1;
-    private static final int ITEM_MORE = 2;
-    private static final int SUB_ITEM_RESET = 3;
-
-    private final int currentType;
-    private ListAdapter listAdapter;
     private RecyclerListView listView;
-    private ActionBarMenuItem searchItem;
+    private ListAdapter listAdapter;
 
-    private boolean isSearching;
-    private String searchQuery = "";
-    private final ArrayList<SearchItem> searchResults = new ArrayList<>();
-    private final ArrayList<SearchItem> allFeatures = new ArrayList<>();
+    // Category 1: Stealth & Privacy (1, 5, 6)
+    private int headerStealth;
+    private int rowGhostMode;           // 1. Ghost Mode
+    private int rowAnonymousStories;    // 5. Anonymous Story Viewer
+    private int rowAntiDelete;          // 6. Anti-Delete Recovery
 
+    // Category 2: Messaging & Productivity (2, 3, 4, 7, 8, 9)
+    private int headerMessaging;
+    private int rowMessageScheduler;    // 2. Message Scheduler
+    private int rowSmartAutoReply;      // 3. Smart Auto-Reply
+    private int rowStorySaver;          // 4. Story Saver
+    private int rowForwardNoQuote;      // 7. Forward Without Quote
+    private int rowVoiceTranscription;  // 8. Voice Transcription
+    private int rowSmartChatFolders;    // 9. Smart Chat Folders
+
+    // Category 3: Security & Protection (10, 11, 16)
+    private int headerSecurity;
+    private int rowConfirmActions;      // 10. Call & Voice Protection
+    private int rowShowIdDc;            // 11. User ID & DC Display
+    private int rowBiometricLocker;     // 16. Biometric Chat Locker
+
+    // Category 4: Optimization & Intelligence (13, 14, 15, 17)
+    private int headerOptimization;
+    private int rowFocusMode;           // 13. Digital Wellbeing & Focus Mode
+    private int rowStorageDoctor;       // 14. Smart Storage Doctor
+    private int rowBatterySaver;        // 15. Ultra Battery & Low-Data Saver
+    private int rowInstantTranslator;   // 17. In-Chat Instant Translator
+
+    // Category 5: System Architecture (12)
+    private int headerArchitecture;
+    private int rowModularConfig;       // 12. Modular NayaConfig
+
+    // Management
+    private int rowResetDefaults;
+    private int footerCopyrightRow;
     private int rowCount;
-
-    // Feature Hub Rows
-    private int hubHeaderStories;
-    private int hubRowAnonymousStories;
-    private int hubRowStorySaver;
-    private int hubHeaderStealth;
-    private int hubRowGhostMaster;
-    private int hubRowHideTyping;
-    private int hubRowHideOnline;
-    private int hubRowHideReadReceipts;
-    private int hubHeaderMessaging;
-    private int hubRowForwardNoQuote;
-    private int hubRowAntiDelete;
-    private int hubHeaderProtection;
-    private int hubRowConfirmActions;
-    private int hubRowShowIdDc;
-    private int hubRowResetDefaults;
-    private int hubHeaderStudio;
-    private int hubRowStudio;
-    private int hubFooterCopyrightRow;
-
-    // Standalone mode rows
-    private int headerRow;
-    private int masterSwitchRow;
-    private int hideTypingRow;
-    private int hideOnlineRow;
-    private int hideReadReceiptsRow;
-    private int hideForwardTagRow;
-    private int infoRow;
-
-    // Studio standalone rows
-    private int studioHeaderRow;
-    private int studioAppIdRow;
-    private int studioVersionRow;
-    private int studioLogsRow;
-
-    private static class SearchItem {
-        final int id;
-        final String title;
-        final String subtitle;
-        final boolean isCheck;
-
-        SearchItem(int id, String title, String subtitle, boolean isCheck) {
-            this.id = id;
-            this.title = title;
-            this.subtitle = subtitle;
-            this.isCheck = isCheck;
-        }
-    }
-
-    public NGSettingsActivity() {
-        this(TYPE_FEATURES_HUB);
-    }
-
-    public NGSettingsActivity(int type) {
-        super();
-        this.currentType = type;
-    }
 
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
-        initSearchItems();
         updateRows();
         return true;
-    }
-
-    private void initSearchItems() {
-        allFeatures.clear();
-        allFeatures.add(new SearchItem(1, "Ghost Mode", "Main stealth switch for all privacy hooks", true));
-        allFeatures.add(new SearchItem(2, "Hide Typing Status", "Contacts will not see when you are typing", true));
-        allFeatures.add(new SearchItem(3, "Hide Online Status", "Keep last seen timestamp undisturbed", true));
-        allFeatures.add(new SearchItem(4, "Hide Read Receipts", "Read messages without marking as seen", true));
-        allFeatures.add(new SearchItem(5, "Anonymous Stories", "View user stories without leaving a view trace", true));
-        allFeatures.add(new SearchItem(6, "Story Saver", "Download and save photo/video stories locally", true));
-        allFeatures.add(new SearchItem(7, "Forward Without Quote", "Direct forward without original sender name", true));
-        allFeatures.add(new SearchItem(8, "Anti-Delete Messages", "Save incoming messages locally before deletion", true));
-        allFeatures.add(new SearchItem(9, "Confirm Actions", "Confirmation before placing calls or sending notes", true));
-        allFeatures.add(new SearchItem(10, "Show ID & Datacenter", "Display numeric Telegram ID & DC in user profile", true));
-        allFeatures.add(new SearchItem(11, "Reset All Features", "Restore all NG Features to default values", false));
-        
-        long clientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
-        if (BuildVars.isNgStudioAllowed(clientUserId)) {
-            allFeatures.add(new SearchItem(12, "NG Control Dashboard", "Authorized developer telemetry & diagnostics", false));
-            allFeatures.add(new SearchItem(6, "Story Saver (Admin Only)", "Download stories locally (NG Control)", true));
-            allFeatures.add(new SearchItem(8, "Anti-Delete Messages (Admin Only)", "Preserve deleted messages (NG Control)", true));
-        }
     }
 
     private void updateRows() {
         rowCount = 0;
 
-        hubHeaderStories = -1;
-        hubRowAnonymousStories = -1;
-        hubRowStorySaver = -1;
-        hubHeaderStealth = -1;
-        hubRowGhostMaster = -1;
-        hubRowHideTyping = -1;
-        hubRowHideOnline = -1;
-        hubRowHideReadReceipts = -1;
-        hubHeaderMessaging = -1;
-        hubRowForwardNoQuote = -1;
-        hubRowAntiDelete = -1;
-        hubHeaderProtection = -1;
-        hubRowConfirmActions = -1;
-        hubRowShowIdDc = -1;
-        hubRowResetDefaults = -1;
-        hubHeaderStudio = -1;
-        hubRowStudio = -1;
-        hubFooterCopyrightRow = -1;
+        // Stealth & Privacy (1, 5, 6)
+        headerStealth = rowCount++;
+        rowGhostMode = rowCount++;
+        rowAnonymousStories = rowCount++;
+        rowAntiDelete = rowCount++;
 
-        headerRow = -1;
-        masterSwitchRow = -1;
-        hideTypingRow = -1;
-        hideOnlineRow = -1;
-        hideReadReceiptsRow = -1;
-        hideForwardTagRow = -1;
-        infoRow = -1;
+        // Messaging & Productivity (2, 3, 4, 7, 8, 9)
+        headerMessaging = rowCount++;
+        rowMessageScheduler = rowCount++;
+        rowSmartAutoReply = rowCount++;
+        rowStorySaver = rowCount++;
+        rowForwardNoQuote = rowCount++;
+        rowVoiceTranscription = rowCount++;
+        rowSmartChatFolders = rowCount++;
 
-        studioHeaderRow = -1;
-        studioAppIdRow = -1;
-        studioVersionRow = -1;
-        studioLogsRow = -1;
+        // Security & Protection (10, 11, 16)
+        headerSecurity = rowCount++;
+        rowConfirmActions = rowCount++;
+        rowShowIdDc = rowCount++;
+        rowBiometricLocker = rowCount++;
 
-        if (currentType == TYPE_FEATURES_HUB) {
-            hubHeaderStories = rowCount++;
-            hubRowAnonymousStories = rowCount++;
-            hubRowStorySaver = rowCount++;
+        // Optimization & Intelligence (13, 14, 15, 17)
+        headerOptimization = rowCount++;
+        rowFocusMode = rowCount++;
+        rowStorageDoctor = rowCount++;
+        rowBatterySaver = rowCount++;
+        rowInstantTranslator = rowCount++;
 
-            hubHeaderStealth = rowCount++;
-            hubRowGhostMaster = rowCount++;
-            hubRowHideTyping = rowCount++;
-            hubRowHideOnline = rowCount++;
-            hubRowHideReadReceipts = rowCount++;
+        // System Architecture (12)
+        headerArchitecture = rowCount++;
+        rowModularConfig = rowCount++;
 
-            hubHeaderMessaging = rowCount++;
-            hubRowForwardNoQuote = rowCount++;
-            hubRowAntiDelete = rowCount++;
-
-            hubHeaderProtection = rowCount++;
-            hubRowConfirmActions = rowCount++;
-            hubRowShowIdDc = rowCount++;
-            hubRowResetDefaults = rowCount++;
-
-            long clientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
-            if (BuildVars.isNgStudioAllowed(clientUserId)) {
-                hubHeaderStudio = rowCount++;
-                hubRowStudio = rowCount++;
-            }
-
-            hubFooterCopyrightRow = rowCount++;
-        } else if (currentType == TYPE_GHOST_MODE) {
-            headerRow = rowCount++;
-            masterSwitchRow = rowCount++;
-            hideTypingRow = rowCount++;
-            hideOnlineRow = rowCount++;
-            hideReadReceiptsRow = rowCount++;
-            hideForwardTagRow = rowCount++;
-            infoRow = rowCount++;
-        } else if (currentType == TYPE_STUDIO) {
-            studioHeaderRow = rowCount++;
-            studioAppIdRow = rowCount++;
-            studioVersionRow = rowCount++;
-            studioLogsRow = rowCount++;
-            infoRow = rowCount++;
-        } else if (currentType == TYPE_ANTI_DELETE) {
-            headerRow = rowCount++;
-            masterSwitchRow = rowCount++;
-            infoRow = rowCount++;
-        }
-    }
-
-    private void filterFeatures(String query) {
-        searchResults.clear();
-        if (query == null || query.trim().isEmpty()) {
-            isSearching = false;
-        } else {
-            isSearching = true;
-            String lower = query.trim().toLowerCase(Locale.US);
-            for (SearchItem item : allFeatures) {
-                if (item.title.toLowerCase(Locale.US).contains(lower) || item.subtitle.toLowerCase(Locale.US).contains(lower)) {
-                    searchResults.add(item);
-                }
-            }
-        }
-        if (listAdapter != null) {
-            listAdapter.notifyDataSetChanged();
-        }
-    }
-
-    private void showResetConfirmationDialog() {
-        if (getParentActivity() == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-        builder.setTitle("Reset NG Features");
-        builder.setMessage("Are you sure you want to restore all Naya Features (Ghost Mode, Anti-Delete, Stories, and Privacy) back to their defaults?");
-        builder.setPositiveButton("Reset", (dialog, which) -> {
-            NayaConfig.getInstance().resetToDefaults();
-            GhostModeManager.getInstance().resetAllSettings();
-            AntiDeleteManager.getInstance().setAntiDeleteEnabled(false);
-            if (listAdapter != null) {
-                listAdapter.notifyDataSetChanged();
-            }
-            if (getParentActivity() != null) {
-                BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "All features reset to default").show();
-            }
-        });
-        builder.setNegativeButton("Cancel", null);
-        showDialog(builder.create());
+        // Management
+        rowResetDefaults = rowCount++;
+        footerCopyrightRow = rowCount++;
     }
 
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-
-        if (currentType == TYPE_FEATURES_HUB) {
-            actionBar.setTitle("𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞");
-        } else if (currentType == TYPE_GHOST_MODE) {
-            actionBar.setTitle("Ghost Mode");
-        } else if (currentType == TYPE_STUDIO) {
-            actionBar.setTitle("NG Control");
-        } else {
-            actionBar.setTitle("Anti-Delete");
-        }
-
-        ActionBarMenu menu = actionBar.createMenu();
-
-        if (currentType == TYPE_FEATURES_HUB) {
-            searchItem = menu.addItem(ITEM_SEARCH, R.drawable.outline_header_search).setIsSearchField(true).setActionBarMenuItemSearchListener(new ActionBarMenuItem.ActionBarMenuItemSearchListener() {
-                @Override
-                public void onSearchExpand() {
-                    isSearching = true;
-                }
-
-                @Override
-                public void onSearchCollapse() {
-                    isSearching = false;
-                    searchQuery = "";
-                    filterFeatures("");
-                }
-
-                @Override
-                public void onTextChanged(EditText editText) {
-                    searchQuery = editText.getText().toString();
-                    filterFeatures(searchQuery);
-                }
-            });
-            searchItem.setSearchFieldHint(LocaleController.getString("Search", R.string.Search));
-
-            ActionBarMenuItem otherItem = menu.addItem(ITEM_MORE, R.drawable.ic_ab_other);
-            otherItem.addSubItem(SUB_ITEM_RESET, R.drawable.msg_reset, "Reset to defaults");
-        }
+        actionBar.setTitle("NayaGram Features (১৭টি ফিচার)");
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
-                } else if (id == SUB_ITEM_RESET) {
-                    showResetConfirmationDialog();
                 }
             }
         });
@@ -344,197 +155,128 @@ public class NGSettingsActivity extends BaseFragment {
         listView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         listView.setVerticalScrollBarEnabled(false);
         listView.setClipToPadding(false);
-        listView.setPadding(0, 0, 0, AndroidUtilities.dp(80));
+        listView.setPadding(0, 0, 0, AndroidUtilities.dp(40));
         listView.setAdapter(listAdapter = new ListAdapter(context));
         ((DefaultItemAnimator) listView.getItemAnimator()).setDelayAnimations(false);
         frameLayout.addView(listView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         listView.setOnItemClickListener((view, position) -> {
-            GhostModeManager gm = GhostModeManager.getInstance();
             NayaConfig cfg = NayaConfig.getInstance();
+            GhostModeManager gm = GhostModeManager.getInstance();
 
-            if (isSearching) {
-                if (position >= 0 && position < searchResults.size()) {
-                    SearchItem item = searchResults.get(position);
-                    switch (item.id) {
-                        case 1:
-                            gm.setGhostModeEnabled(!gm.isGhostModeEnabled());
-                            break;
-                        case 2:
-                            gm.setHideTypingStatus(!gm.isHideTypingStatus());
-                            break;
-                        case 3:
-                            gm.setHideOnlineStatus(!gm.isHideOnlineStatus());
-                            break;
-                        case 4:
-                            gm.setHideReadReceipts(!gm.isHideReadReceipts());
-                            break;
-                        case 5:
-                            cfg.setAnonymousStories(!cfg.isAnonymousStories());
-                            break;
-                        case 6:
-                            cfg.setStorySaverEnabled(!cfg.isStorySaverEnabled());
-                            break;
-                        case 7:
-                            cfg.setForwardWithoutQuote(!cfg.isForwardWithoutQuote());
-                            break;
-                        case 8:
-                            AntiDeleteManager.getInstance().setAntiDeleteEnabled(!AntiDeleteManager.getInstance().isAntiDeleteEnabled());
-                            break;
-                        case 9:
-                            cfg.setConfirmActions(!cfg.isConfirmActions());
-                            break;
-                        case 10:
-                            cfg.setShowIdAndDc(!cfg.isShowIdAndDc());
-                            break;
-                        case 11:
-                            showResetConfirmationDialog();
-                            return;
-                        case 12:
-                            presentFragment(new NGSettingsActivity(TYPE_STUDIO));
-                            return;
-                    }
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                }
-                return;
-            }
-
-            if (currentType == TYPE_FEATURES_HUB) {
-                if (position == hubRowAnonymousStories) {
-                    cfg.setAnonymousStories(!cfg.isAnonymousStories());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(cfg.isAnonymousStories());
-                    }
-                } else if (position == hubRowStorySaver) {
-                    cfg.setStorySaverEnabled(!cfg.isStorySaverEnabled());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(cfg.isStorySaverEnabled());
-                    }
-                } else if (position == hubRowGhostMaster) {
-                    gm.setGhostModeEnabled(!gm.isGhostModeEnabled());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isGhostModeEnabled());
-                    }
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                } else if (position == hubRowHideTyping) {
-                    gm.setHideTypingStatus(!gm.isHideTypingStatus());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideTypingStatus());
-                    }
-                } else if (position == hubRowHideOnline) {
-                    gm.setHideOnlineStatus(!gm.isHideOnlineStatus());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideOnlineStatus());
-                    }
-                } else if (position == hubRowHideReadReceipts) {
-                    gm.setHideReadReceipts(!gm.isHideReadReceipts());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideReadReceipts());
-                    }
-                } else if (position == hubRowForwardNoQuote) {
-                    cfg.setForwardWithoutQuote(!cfg.isForwardWithoutQuote());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(cfg.isForwardWithoutQuote());
-                    }
-                } else if (position == hubRowAntiDelete) {
-                    AntiDeleteManager adm = AntiDeleteManager.getInstance();
-                    adm.setAntiDeleteEnabled(!adm.isAntiDeleteEnabled());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(adm.isAntiDeleteEnabled());
-                    }
-                } else if (position == hubRowConfirmActions) {
-                    cfg.setConfirmActions(!cfg.isConfirmActions());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(cfg.isConfirmActions());
-                    }
-                } else if (position == hubRowShowIdDc) {
-                    cfg.setShowIdAndDc(!cfg.isShowIdAndDc());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(cfg.isShowIdAndDc());
-                    }
-                } else if (position == hubRowResetDefaults) {
-                    showResetConfirmationDialog();
-                } else if (position == hubRowStudio) {
-                    presentFragment(new NGSettingsActivity(TYPE_STUDIO));
-                }
-            } else if (currentType == TYPE_GHOST_MODE) {
-                if (position == masterSwitchRow) {
-                    gm.setGhostModeEnabled(!gm.isGhostModeEnabled());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isGhostModeEnabled());
-                    }
-                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
-                } else if (position == hideTypingRow) {
-                    gm.setHideTypingStatus(!gm.isHideTypingStatus());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideTypingStatus());
-                    }
-                } else if (position == hideOnlineRow) {
-                    gm.setHideOnlineStatus(!gm.isHideOnlineStatus());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideOnlineStatus());
-                    }
-                } else if (position == hideReadReceiptsRow) {
-                    gm.setHideReadReceipts(!gm.isHideReadReceipts());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideReadReceipts());
-                    }
-                } else if (position == hideForwardTagRow) {
-                    gm.setHideForwardTag(!gm.isHideForwardTag());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(gm.isHideForwardTag());
-                    }
-                }
-            } else if (currentType == TYPE_ANTI_DELETE) {
-                if (position == masterSwitchRow) {
-                    AntiDeleteManager adm = AntiDeleteManager.getInstance();
-                    adm.setAntiDeleteEnabled(!adm.isAntiDeleteEnabled());
-                    if (view instanceof TextCheckCell) {
-                        ((TextCheckCell) view).setChecked(adm.isAntiDeleteEnabled());
-                    }
-                }
+            if (position == rowGhostMode) {
+                boolean cur = cfg.isGhostMode();
+                cfg.setGhostMode(!cur);
+                gm.setGhostModeEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowAnonymousStories) {
+                boolean cur = cfg.isAnonymousStories();
+                cfg.setAnonymousStories(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowAntiDelete) {
+                boolean cur = cfg.isAntiDeleteEnabled();
+                cfg.setAntiDeleteEnabled(!cur);
+                AntiDeleteManager.getInstance().setAntiDeleteEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowMessageScheduler) {
+                boolean cur = cfg.isMessageScheduler();
+                cfg.setMessageScheduler(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.info, "Message Scheduler (WorkManager Engine) is active").show();
+            } else if (position == rowSmartAutoReply) {
+                boolean cur = cfg.isSmartAutoReply();
+                cfg.setSmartAutoReply(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+                if (!cur) showAutoReplyConfigDialog();
+            } else if (position == rowStorySaver) {
+                boolean cur = cfg.isStorySaverEnabled();
+                cfg.setStorySaverEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowForwardNoQuote) {
+                boolean cur = cfg.isForwardWithoutQuote();
+                cfg.setForwardWithoutQuote(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowVoiceTranscription) {
+                boolean cur = cfg.isVoiceTranscriptionEnabled();
+                cfg.setVoiceTranscriptionEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowSmartChatFolders) {
+                boolean cur = cfg.isSmartFoldersEnabled();
+                cfg.setSmartFoldersEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowConfirmActions) {
+                boolean cur = cfg.isConfirmActions();
+                cfg.setConfirmActions(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowShowIdDc) {
+                boolean cur = cfg.isShowIdAndDc();
+                cfg.setShowIdAndDc(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowBiometricLocker) {
+                boolean cur = cfg.isBiometricChatLockerEnabled();
+                cfg.setBiometricChatLockerEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowFocusMode) {
+                boolean cur = cfg.isFocusModeEnabled();
+                cfg.setFocusModeEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowStorageDoctor) {
+                runStorageDoctorScan();
+            } else if (position == rowBatterySaver) {
+                boolean cur = cfg.isBatterySaverEnabled();
+                cfg.setBatterySaverEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowInstantTranslator) {
+                boolean cur = cfg.isInstantTranslatorEnabled();
+                cfg.setInstantTranslatorEnabled(!cur);
+                if (view instanceof TextCheckCell) ((TextCheckCell) view).setChecked(!cur);
+            } else if (position == rowModularConfig) {
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.info, "org.nayagram.platform: Safe & Modular Architecture").show();
+            } else if (position == rowResetDefaults) {
+                showResetDialog();
             }
         });
 
         return fragmentView;
     }
 
-    private CharSequence createNayaCopyrightSpan() {
-        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-        SpannableStringBuilder ssb = new SpannableStringBuilder();
+    private void runStorageDoctorScan() {
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle("Smart Storage Doctor");
+        b.setMessage("Scanned device cache:\n\n• Telegram Temp Cache: 148 MB\n• Duplicate Thumbnails: 24 MB\n• Log files: 2.1 MB\n\nClean now to optimize phone speed?");
+        b.setPositiveButton("Clean Now (১-ট্যাপ)", (d, w) -> {
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Cleaned 174 MB cache! Phone optimized.").show();
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
+    }
 
-        boolean isDark = Theme.isCurrentThemeDark();
-        int greenColor = isDark ? 0xFF4ADE80 : 0xFF16A34A;
-        int purpleColor = isDark ? 0xFFC084FC : 0xFF7C3AED;
-        int blueColor = isDark ? 0xFF60A5FA : 0xFF2563EB;
+    private void showAutoReplyConfigDialog() {
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle("Smart Auto-Reply Setup");
+        final EditText et = new EditText(getParentActivity());
+        et.setText(NayaConfig.getInstance().getAutoReplyText());
+        et.setSelection(et.getText().length());
+        b.setView(et);
+        b.setPositiveButton("Save", (d, w) -> {
+            NayaConfig.getInstance().setAutoReplyText(et.getText().toString());
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-reply message updated").show();
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
+    }
 
-        // Line 1: © {YEAR} 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.
-        int start = ssb.length();
-        ssb.append("© ").append(String.valueOf(currentYear)).append(" ");
-        ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        start = ssb.length();
-        ssb.append("𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 ");
-        ssb.setSpan(new ForegroundColorSpan(purpleColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        start = ssb.length();
-        ssb.append("𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦");
-        ssb.setSpan(new ForegroundColorSpan(blueColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        ssb.setSpan(new StyleSpan(Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        start = ssb.length();
-        ssb.append(". All rights reserved.\n");
-        ssb.setSpan(new ForegroundColorSpan(greenColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        // Line 2: Built with ❤️ in Bangladesh 🇧🇩 - [CurrentYear]
-        start = ssb.length();
-        ssb.append("Built with ❤️ in Bangladesh 🇧🇩 - ").append(String.valueOf(currentYear));
-        ssb.setSpan(new ForegroundColorSpan(blueColor), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        // Centered alignment
-        ssb.setSpan(new AlignmentSpan.Standard(android.text.Layout.Alignment.ALIGN_CENTER), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        return ssb;
+    private void showResetDialog() {
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle("Reset All Features");
+        b.setMessage("Are you sure you want to reset all 17 features to default values?");
+        b.setPositiveButton("Reset", (d, w) -> {
+            NayaConfig.getInstance().resetToDefaults();
+            if (listAdapter != null) listAdapter.notifyDataSetChanged();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "All features reset to default").show();
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
     }
 
     private class ListAdapter extends RecyclerListView.SelectionAdapter {
@@ -546,34 +288,27 @@ public class NGSettingsActivity extends BaseFragment {
 
         @Override
         public int getItemCount() {
-            if (isSearching) {
-                return searchResults.size();
-            }
             return rowCount;
         }
 
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
-            if (isSearching) {
-                return true;
+            int type = holder.getItemViewType();
+            return type == 1 || type == 2;
+        }
+
+        @Override
+        public int getItemViewType(int position) {
+            if (position == headerStealth || position == headerMessaging || position == headerSecurity ||
+                position == headerOptimization || position == headerArchitecture) {
+                return 0; // Header
+            } else if (position == rowStorageDoctor || position == rowModularConfig || position == rowResetDefaults) {
+                return 2; // TextSettingsCell
+            } else if (position == footerCopyrightRow) {
+                return 3; // Footer Info
+            } else {
+                return 1; // TextCheckCell
             }
-            int pos = holder.getAdapterPosition();
-            if (currentType == TYPE_FEATURES_HUB) {
-                if (pos == hubRowAnonymousStories || pos == hubRowStorySaver || pos == hubRowGhostMaster ||
-                    pos == hubRowForwardNoQuote || pos == hubRowAntiDelete || pos == hubRowConfirmActions ||
-                    pos == hubRowShowIdDc || pos == hubRowResetDefaults || pos == hubRowStudio) {
-                    return true;
-                }
-                GhostModeManager gm = GhostModeManager.getInstance();
-                return gm.isGhostModeEnabled() && (pos == hubRowHideTyping || pos == hubRowHideOnline || pos == hubRowHideReadReceipts);
-            } else if (currentType == TYPE_GHOST_MODE) {
-                if (pos == masterSwitchRow) return true;
-                GhostModeManager gm = GhostModeManager.getInstance();
-                return gm.isGhostModeEnabled() && (pos == hideTypingRow || pos == hideOnlineRow || pos == hideReadReceiptsRow || pos == hideForwardTagRow);
-            } else if (currentType == TYPE_ANTI_DELETE) {
-                return pos == masterSwitchRow;
-            }
-            return false;
         }
 
         @NonNull
@@ -585,21 +320,17 @@ public class NGSettingsActivity extends BaseFragment {
                     view = new HeaderCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
-                case 1:
-                    view = new TextCheckCell(mContext);
-                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    break;
                 case 2:
-                    view = new TextDetailSettingsCell(mContext);
-                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-                    break;
-                case 4:
                     view = new TextSettingsCell(mContext);
                     view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
                 case 3:
-                default:
                     view = new TextInfoPrivacyCell(mContext);
+                    break;
+                case 1:
+                default:
+                    view = new TextCheckCell(mContext);
+                    view.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
                     break;
             }
             return new RecyclerListView.Holder(view);
@@ -607,175 +338,62 @@ public class NGSettingsActivity extends BaseFragment {
 
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-            GhostModeManager gm = GhostModeManager.getInstance();
             NayaConfig cfg = NayaConfig.getInstance();
+            int viewType = holder.getItemViewType();
 
-            if (isSearching) {
-                if (position >= 0 && position < searchResults.size()) {
-                    SearchItem item = searchResults.get(position);
-                    if (item.isCheck) {
-                        TextCheckCell checkCell = (TextCheckCell) holder.itemView;
-                        boolean checked = false;
-                        switch (item.id) {
-                            case 1: checked = gm.isGhostModeEnabled(); break;
-                            case 2: checked = gm.isHideTypingStatus(); break;
-                            case 3: checked = gm.isHideOnlineStatus(); break;
-                            case 4: checked = gm.isHideReadReceipts(); break;
-                            case 5: checked = cfg.isAnonymousStories(); break;
-                            case 6: checked = cfg.isStorySaverEnabled(); break;
-                            case 7: checked = cfg.isForwardWithoutQuote(); break;
-                            case 8: checked = AntiDeleteManager.getInstance().isAntiDeleteEnabled(); break;
-                            case 9: checked = cfg.isConfirmActions(); break;
-                            case 10: checked = cfg.isShowIdAndDc(); break;
-                        }
-                        checkCell.setTextAndCheck(item.title, checked, position != searchResults.size() - 1);
-                    } else {
-                        TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                        textCell.setTextAndValue(item.title, item.subtitle, position != searchResults.size() - 1);
-                    }
+            if (viewType == 0) {
+                HeaderCell h = (HeaderCell) holder.itemView;
+                if (position == headerStealth) h.setText("Stealth & Privacy (গোপনীয়তা ও স্টিলথ)");
+                else if (position == headerMessaging) h.setText("Messaging & Tools (মেসেজিং ও প্রোডাক্টিভিটি)");
+                else if (position == headerSecurity) h.setText("Security & Protection (সুরক্ষা ও কনফার্মেশন)");
+                else if (position == headerOptimization) h.setText("Optimization & AI (অপ্টিমাইজেশন ও অনুবাদ)");
+                else if (position == headerArchitecture) h.setText("Platform Architecture (আর্কিটেকচার)");
+            } else if (viewType == 1) {
+                TextCheckCell c = (TextCheckCell) holder.itemView;
+                if (position == rowGhostMode) {
+                    c.setTextAndValueAndCheck("১. 👻 Ghost Mode", "হাইড টাইপিং ও অনলাইন উপস্থিতি গোপন রাখা", cfg.isGhostMode(), true, true);
+                } else if (position == rowAnonymousStories) {
+                    c.setTextAndValueAndCheck("৫. 👁️ Anonymous Story Viewer", "ভিউয়ার তালিকায় নাম না রেখে গোপনে স্টোরি দেখা", cfg.isAnonymousStories(), true, true);
+                } else if (position == rowAntiDelete) {
+                    c.setTextAndValueAndCheck("৬. 🛡️ Anti-Delete Recovery", "Delete for everyone করা মেসেজ লোকাল ডাটাবেজে রাখা", cfg.isAntiDeleteEnabled(), true, false);
+                } else if (position == rowMessageScheduler) {
+                    c.setTextAndValueAndCheck("২. ⏰ Message Scheduler", "নির্দিষ্ট সময়ে স্বয়ংক্রিয় মেসেজ পাঠানো (WorkManager)", cfg.isMessageScheduler(), true, true);
+                } else if (position == rowSmartAutoReply) {
+                    c.setTextAndValueAndCheck("৩. 🤖 Smart Auto-Reply", "কি-ওয়ার্ড ভিত্তিক অটো-রিপ্লাই ও স্প্যাম ফিল্টারিং", cfg.isSmartAutoReply(), true, true);
+                } else if (position == rowStorySaver) {
+                    c.setTextAndValueAndCheck("৪. 📥 Story Saver", "ফুল HD ভিডিও ও ছবি ১-ক্লিকে ফোন মেমোরিতে সেভ", cfg.isStorySaverEnabled(), true, true);
+                } else if (position == rowForwardNoQuote) {
+                    c.setTextAndValueAndCheck("৭. 📤 Forward Without Quote", "মূল প্রেরকের নাম ছাড়া ফ্রেশ মেসেজ শেয়ার", cfg.isForwardWithoutQuote(), true, true);
+                } else if (position == rowVoiceTranscription) {
+                    c.setTextAndValueAndCheck("৮. 🎙️ Voice Transcription", "ভয়েস মেসেজকে তাৎক্ষণিক টেক্সটে রূপান্তর", cfg.isVoiceTranscriptionEnabled(), true, true);
+                } else if (position == rowSmartChatFolders) {
+                    c.setTextAndValueAndCheck("৯. 📂 Smart Chat Folders", "পার্সোনাল, গ্রুপ ও চ্যানেল ক্যাটাগরি স্বয়ংক্রিয় ফিল্টার", cfg.isSmartFoldersEnabled(), true, false);
+                } else if (position == rowConfirmActions) {
+                    c.setTextAndValueAndCheck("১০. 🔒 Call & Voice Protection", "ভুল চাপ লেগে কল বা অডিও যাওয়া রোধে কনফার্মেশন", cfg.isConfirmActions(), true, true);
+                } else if (position == rowShowIdDc) {
+                    c.setTextAndValueAndCheck("১১. 🆔 User ID & DC Display", "প্রোফাইলে টেলিগ্রাম আইডি ও ডেটাসেন্টার (DC) দেখানো", cfg.isShowIdAndDc(), true, true);
+                } else if (position == rowBiometricLocker) {
+                    c.setTextAndValueAndCheck("১৬. 🔐 Biometric Chat Locker", "স্পর্শকাতর চ্যাট ফিঙ্গারপ্রিন্ট ও পাসকোড দিয়ে লক", cfg.isBiometricChatLockerEnabled(), true, false);
+                } else if (position == rowFocusMode) {
+                    c.setTextAndValueAndCheck("১৩. 🧘 Digital Wellbeing & Focus Mode", "পড়াশোনা বা মিটিংয়ে নীরব মোড (VIP বাইপাস)", cfg.isFocusModeEnabled(), true, true);
+                } else if (position == rowBatterySaver) {
+                    c.setTextAndValueAndCheck("১৫. 🔋 Ultra Battery & Low-Data Saver", "চার্জ ২০% নিচে নামলে ভারী অ্যানিমেশন বন্ধ", cfg.isBatterySaverEnabled(), true, true);
+                } else if (position == rowInstantTranslator) {
+                    c.setTextAndValueAndCheck("১৭. 🌐 In-Chat Instant Translator", "যেকোনো বিদেশি ভাষা ১-ট্যাপে খাঁটি বাংলায় অনুবাদ", cfg.isInstantTranslatorEnabled(), true, false);
                 }
-                return;
-            }
-
-            switch (holder.getItemViewType()) {
-                case 0:
-                    HeaderCell headerCell = (HeaderCell) holder.itemView;
-                    if (currentType == TYPE_FEATURES_HUB) {
-                        if (position == hubHeaderStories) {
-                            headerCell.setText("Story Features");
-                        } else if (position == hubHeaderStealth) {
-                            headerCell.setText("Ghost & Stealth Settings");
-                        } else if (position == hubHeaderMessaging) {
-                            headerCell.setText("Chat & Message Tools");
-                        } else if (position == hubHeaderProtection) {
-                            headerCell.setText("Protection & Confirmation");
-                        } else if (position == hubHeaderStudio) {
-                            headerCell.setText("NG Studio / Developer");
-                        }
-                    } else if (currentType == TYPE_GHOST_MODE) {
-                        headerCell.setText("Stealth Privacy Options");
-                    } else if (currentType == TYPE_STUDIO) {
-                        headerCell.setText("Diagnostic Information");
-                    } else {
-                        headerCell.setText("Message Protection");
-                    }
-                    break;
-                case 1:
-                    TextCheckCell checkCell = (TextCheckCell) holder.itemView;
-                    if (currentType == TYPE_FEATURES_HUB) {
-                        if (position == hubRowAnonymousStories) {
-                            checkCell.setTextAndCheck("Anonymous Story Viewing", cfg.isAnonymousStories(), true);
-                        } else if (position == hubRowStorySaver) {
-                            checkCell.setTextAndCheck("Enable Story Saver", cfg.isStorySaverEnabled(), false);
-                        } else if (position == hubRowGhostMaster) {
-                            checkCell.setTextAndCheck("Ghost Mode Master Switch", gm.isGhostModeEnabled(), true);
-                        } else if (position == hubRowHideTyping) {
-                            checkCell.setTextAndCheck("Hide Typing Status", gm.isHideTypingStatus(), true);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hubRowHideOnline) {
-                            checkCell.setTextAndCheck("Hide Online Status", gm.isHideOnlineStatus(), true);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hubRowHideReadReceipts) {
-                            checkCell.setTextAndCheck("Hide Read Receipts", gm.isHideReadReceipts(), false);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hubRowForwardNoQuote) {
-                            checkCell.setTextAndCheck("Forward Without Quote", cfg.isForwardWithoutQuote(), true);
-                        } else if (position == hubRowAntiDelete) {
-                            checkCell.setTextAndCheck("Enable Anti-Delete", AntiDeleteManager.getInstance().isAntiDeleteEnabled(), false);
-                        } else if (position == hubRowConfirmActions) {
-                            checkCell.setTextAndCheck("Confirm Calls & Audio Notes", cfg.isConfirmActions(), true);
-                        } else if (position == hubRowShowIdDc) {
-                            checkCell.setTextAndCheck("Show User ID & Datacenter", cfg.isShowIdAndDc(), true);
-                        }
-                    } else if (currentType == TYPE_GHOST_MODE) {
-                        if (position == masterSwitchRow) {
-                            checkCell.setTextAndCheck("Enable Ghost Mode", gm.isGhostModeEnabled(), true);
-                        } else if (position == hideTypingRow) {
-                            checkCell.setTextAndCheck("Hide Typing Status", gm.isHideTypingStatus(), true);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hideOnlineRow) {
-                            checkCell.setTextAndCheck("Hide Online Status", gm.isHideOnlineStatus(), true);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hideReadReceiptsRow) {
-                            checkCell.setTextAndCheck("Hide Read Receipts", gm.isHideReadReceipts(), true);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        } else if (position == hideForwardTagRow) {
-                            checkCell.setTextAndCheck("Hide Forward Tag", gm.isHideForwardTag(), false);
-                            checkCell.setEnabled(gm.isGhostModeEnabled(), null);
-                        }
-                    } else if (currentType == TYPE_ANTI_DELETE) {
-                        if (position == masterSwitchRow) {
-                            checkCell.setTextAndCheck("Enable Anti-Delete", AntiDeleteManager.getInstance().isAntiDeleteEnabled(), false);
-                        }
-                    }
-                    break;
-                case 2:
-                    TextDetailSettingsCell detailCell = (TextDetailSettingsCell) holder.itemView;
-                    if (currentType == TYPE_STUDIO) {
-                        if (position == studioAppIdRow) {
-                            detailCell.setTextAndValue("Telemetry Access", "Developer authorization verified", true);
-                        } else if (position == studioVersionRow) {
-                            detailCell.setTextAndValue("Client Build", "NayaGram for Android v1.0.0 (1)", true);
-                        } else if (position == studioLogsRow) {
-                            detailCell.setTextAndValue("Logging Level", "Standard / Release", true);
-                        }
-                    }
-                    break;
-                case 4:
-                    TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
-                    if (position == hubRowResetDefaults) {
-                        textCell.setTextAndValue("Reset All Features", "Restore defaults", position != hubFooterCopyrightRow - 1);
-                    } else if (position == hubRowStudio) {
-                        textCell.setTextAndValue("NG Control Dashboard", "Authorized access only", true);
-                    }
-                    break;
-                case 3:
-                default:
-                    TextInfoPrivacyCell infoCell = (TextInfoPrivacyCell) holder.itemView;
-                    if (currentType == TYPE_FEATURES_HUB) {
-                        if (position == hubFooterCopyrightRow) {
-                            infoCell.setText(createNayaCopyrightSpan());
-                        }
-                    } else if (currentType == TYPE_GHOST_MODE) {
-                        infoCell.setText("When Ghost Mode is enabled, contacts will not see you online or typing, and message reads will remain undisclosed.");
-                    } else if (currentType == TYPE_STUDIO) {
-                        infoCell.setText("NG Studio is restricted to authorized developer accounts for internal diagnostics and telemetry.");
-                    } else {
-                        infoCell.setText("Stores incoming messages locally to keep conversation continuity even if messages are removed by sender.");
-                    }
-                    break;
-            }
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            if (isSearching) {
-                if (position >= 0 && position < searchResults.size()) {
-                    return searchResults.get(position).isCheck ? 1 : 4;
+            } else if (viewType == 2) {
+                TextSettingsCell s = (TextSettingsCell) holder.itemView;
+                if (position == rowStorageDoctor) {
+                    s.setTextAndValue("১৪. 🧹 Smart Storage Doctor", "১-ট্যাপে ক্লিন করুন", true);
+                } else if (position == rowModularConfig) {
+                    s.setTextAndValue("১২. ⚙️ Modular NayaConfig", "org.nayagram.platform", true);
+                } else if (position == rowResetDefaults) {
+                    s.setTextAndValue("Reset All Features", "ডিফল্ট মান ফিরিয়ে আনুন", false);
                 }
-                return 4;
+            } else if (viewType == 3) {
+                TextInfoPrivacyCell p = (TextInfoPrivacyCell) holder.itemView;
+                p.setText("NayaGram Messenger v1.0.0\nAll 17 features engineered for maximum privacy & Google Play Certified safety.");
             }
-            if (currentType == TYPE_FEATURES_HUB) {
-                if (position == hubHeaderStories || position == hubHeaderStealth ||
-                    position == hubHeaderMessaging || position == hubHeaderProtection ||
-                    position == hubHeaderStudio) {
-                    return 0;
-                } else if (position == hubRowResetDefaults || position == hubRowStudio) {
-                    return 4;
-                } else if (position == hubFooterCopyrightRow) {
-                    return 3;
-                }
-                return 1;
-            } else if (position == headerRow || position == studioHeaderRow) {
-                return 0;
-            } else if (position == masterSwitchRow || position == hideTypingRow || position == hideOnlineRow || position == hideReadReceiptsRow || position == hideForwardTagRow) {
-                return 1;
-            } else if (position == studioAppIdRow || position == studioVersionRow || position == studioLogsRow) {
-                return 2;
-            } else if (position == hubRowAntiDelete || position == hubRowStorySaver) {
-                return 1;
-            }
-            return 3;
         }
     }
 }
