@@ -292,7 +292,11 @@ public class VoIPHelper {
 		intent.putExtra("video_call", Build.VERSION.SDK_INT >= 18 && videoCall);
 		intent.putExtra("can_video_call", Build.VERSION.SDK_INT >= 18 && /*canVideoCall*/ true);
 		try {
-			activity.startService(intent);
+			if (Build.VERSION.SDK_INT >= 26) {
+				activity.startForegroundService(intent);
+			} else {
+				activity.startService(intent);
+			}
 		} catch (Throwable e) {
 			FileLog.e(e);
 		}
@@ -408,7 +412,11 @@ public class VoIPHelper {
 		intent.putExtra("can_video_call", Build.VERSION.SDK_INT >= 18 && canVideoCall);
 		intent.putExtra("account", UserConfig.selectedAccount);
 		try {
-			activity.startService(intent);
+			if (Build.VERSION.SDK_INT >= 26) {
+				activity.startForegroundService(intent);
+			} else {
+				activity.startService(intent);
+			}
 		} catch (Throwable e) {
 			FileLog.e(e);
 		}
