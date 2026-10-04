@@ -270,7 +270,9 @@ target_compile_definitions(tgcalls_tp PUBLIC
 target_include_directories(tgcalls_tp PUBLIC
         ./
         voip
-        third_party/boringssl/include/
+        boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/boringssl/include
         openssl/include
         voip/tgcalls/
         voip/webrtc/
@@ -1633,7 +1635,9 @@ target_compile_definitions(tgcalls PUBLIC
 target_include_directories(tgcalls PUBLIC
         ./
         voip
-        third_party/boringssl/include
+        boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/boringssl/include
         openssl/include
         voip/tgcalls
         voip/rnnoise/include
@@ -1820,7 +1824,9 @@ target_include_directories(voipandroid PUBLIC
         ./
         voip
         rlottie/src/lottie
-        third_party/boringssl/include
+        boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../boringssl/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/boringssl/include
         openssl/include
         voip/tgcalls
         voip/webrtc
