@@ -8,6 +8,14 @@
   <b>NayaGram</b> is a messaging app with a focus on speed, privacy, and simplicity. It’s superfast, powerful, and secure.
 </p>
 
+<p align="center">
+  <a href="https://t.me/NayaGramPro"><img src="https://img.shields.io/badge/Telegram-@NayaGramPro-2CA5E0?style=flat-square&logo=telegram&logoColor=white" alt="Telegram"/></a>
+  <a href="https://x.com/NayaGramPro"><img src="https://img.shields.io/badge/Twitter%20%2F%20X-@NayaGramPro-000000?style=flat-square&logo=x&logoColor=white" alt="Twitter"/></a>
+  <a href="https://youtube.com/@NayaGramPro"><img src="https://img.shields.io/badge/YouTube-@NayaGramPro-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="YouTube"/></a>
+  <a href="https://facebook.com/NayaGramPro"><img src="https://img.shields.io/badge/Facebook-@NayaGramPro-1877F2?style=flat-square&logo=facebook&logoColor=white" alt="Facebook"/></a>
+  <a href="mailto:support.nayagram@gmail.com"><img src="https://img.shields.io/badge/Email-support.nayagram@gmail.com-D14836?style=flat-square&logo=gmail&logoColor=white" alt="Support Email"/></a>
+</p>
+
 This repository contains the source code for the official [NayaGram App for Android](https://github.com/NayaGramPlatform/NayaGramAndroid).
 
 ---
@@ -74,11 +82,15 @@ You will require Android Studio 2025.1.4, Android NDK 27.2.12479018, Android SDK
 
 ---
 
-## Community & Channels
+## Official Channels & Community
 
-- Official Telegram Channel: [@NayaGram](https://t.me/NayaGram)
-- Support & Community: [@NayaGramSupport](https://t.me/NayaGramSupport)
-- GitHub Repository: [NayaGramPlatform/NayaGramAndroid](https://github.com/NayaGramPlatform/NayaGramAndroid)
+Stay connected with our global community across all official channels:
+
+- 📢 **Telegram Channel & Group:** [@NayaGramPro](https://t.me/NayaGramPro)
+- 🐦 **Twitter (X):** [@NayaGramPro](https://x.com/NayaGramPro)
+- 🎥 **YouTube:** [@NayaGramPro](https://youtube.com/@NayaGramPro)
+- 👥 **Facebook:** [@NayaGramPro](https://facebook.com/NayaGramPro)
+- ✉️ **Support Email:** [support.nayagram@gmail.com](mailto:support.nayagram@gmail.com)
 
 ---
 
