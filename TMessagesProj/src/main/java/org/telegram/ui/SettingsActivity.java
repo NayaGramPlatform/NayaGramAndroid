@@ -694,20 +694,24 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
+                // 1. Accounts card with Add Account at top
+        items.add(UItem.asHeader("Accounts"));
+        items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.msg_user_add, "Add Account", "Sign in or create another account"));
+        items.add(UItem.asShadow(null));
+
+        // 2. Account item (Number, Username, Bio)
+        items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
+
+        // 3. NayaGram section placed right BELOW Account
         items.add(UItem.asHeader("NayaGram"));
         items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NayaGram Settings (১৭টি ফিচার)", "Ghost mode, stories, anti-delete, translator", "\u2728"));
         items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.msg_bot, "Bots", "AI Bots & Mini Apps directory", ""));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
-        items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_storage, "App Cache & Storage Doctor", "Free storage & clean cache (1-Tap)", ""));
+        items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.msg_storage, "App Cache", "Free storage & clean cache (1-Tap)", ""));
+        items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.msg_channel, "Chat finder", "Find groups, channels & bots", ""));
         items.add(SettingCell.Factory.of(109, IconBackgroundColors.RED.top, IconBackgroundColors.RED.bottom, R.drawable.msg_stats, "Analytics", "Live network and user statistics", ""));
-        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_info, "About NayaGram", "v1.0.0 (Official channel @NayaGramPro)", ""));
-        long currentClientUserId = UserConfig.getInstance(currentAccount).getClientUserId();
-        if (BuildVars.isNgStudioAllowed(currentClientUserId)) {
-            items.add(SettingCell.Factory.of(101, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.settings_devices, "NG Control", "Developer & Management", "00"));
-        }
+        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_info, "About", "v1.0.0 (Official channel @NayaGramPro)", ""));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
-
-        items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
         items.add(SettingCell.Factory.of(5, IconBackgroundColors.RED.top, IconBackgroundColors.RED.bottom, R.drawable.settings_sounds, getString(R.string.SettingsNotifications), getString(R.string.SettingsNotificationsInfo)));
@@ -828,6 +832,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return;
         }
         switch (item.id) {
+            case 200:
+                presentSettingFragment(new LoginActivity());
+                break;
             case 100:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_FEATURES_HUB));
                 break;
