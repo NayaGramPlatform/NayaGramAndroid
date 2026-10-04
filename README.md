@@ -1,108 +1,102 @@
-# 💎 NayaGram for Android
+# NayaGram for Android
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/NayaGramPlatform/NayaGramAndroid/master/TMessagesProj/src/main/res/drawable-xxhdpi/ic_launcher.png" width="110" alt="NayaGram Logo" />
-</p>
+**NayaGram** is a messaging application powered by the Telegram MTProto protocol, with a strong focus on speed, privacy, and an elegant, distraction-free user experience.
 
-<p align="center">
-  <b>A modern, high-speed, and privacy-focused messaging platform powered by Telegram MTProto.</b>
-</p>
-
-<p align="center">
-  <a href="https://github.com/NayaGramPlatform/NayaGramAndroid/actions"><img src="https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square" alt="Build Status"/></a>
-  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Platform Android"/></a>
-  <a href="https://github.com/NayaGramPlatform/NayaGramAndroid/releases"><img src="https://img.shields.io/badge/Version-1.0.0%20(1000)-blue?style=flat-square" alt="Version"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv2%20%2F%20GPLv3-yellow?style=flat-square" alt="License"/></a>
-</p>
+This repository contains the official source code for **NayaGram for Android** (2026 Edition).
 
 ---
 
-## 📖 Overview
+## Overview & Guidelines
 
-**NayaGram** is an enhanced, highly-optimized messaging client built on top of the world-class Telegram Android open-source ecosystem. Designed with simplicity, elegant aesthetics, and pure performance in mind, NayaGram provides a smooth and distraction-free communication experience.
+We welcome all developers and contributors to explore the source code. If you are creating your own application based on this repository, please adhere to the following:
 
-> ℹ️ *For the original official Telegram documentation and reproducible build instructions, please refer to [README_TELEGRAM.md](README_TELEGRAM.md).*
-
----
-
-## ✨ Key Features
-
-- ⚡ **Ultra-Fast & Lightweight:** Optimized memory handling and instant message synchronization via Telegram MTProto API.
-- 🛡️ **Privacy & Security First:** End-to-end secret chats, advanced passcodes, and standard zero-tracking compliance.
-- 🎨 **Modern Clean UI:** Beautiful Material Design 3 inspired elements, custom color palettes, and intuitive typography.
-- 🚫 **Distraction-Free Experience:** 100% ad-free core chatting experience with zero annoying interruptions.
-- 🗂️ **Organized Chat Tabs:** Seamless categorization for personal chats, groups, channels, and bots.
-- 🌐 **Global Multi-Account Support:** Switch between multiple profiles effortlessly without logging out.
+1. [**Obtain your own api_id**](https://core.telegram.org/api/obtaining_api_id) from the official Telegram core platform.
+2. Ensure your application brand and identity are distinct and clearly communicated to users.
+3. Study and follow the [**MTProto Security Guidelines**](https://core.telegram.org/mtproto/security_guidelines) to maintain user privacy and communication security.
+4. Publish your modified source code in compliance with the **GNU General Public License (GPL)**.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## API & Protocol Documentation
 
-- **Language:** Kotlin & Java (Java 17 compatible)
-- **Native Core:** C++ / NDK (`27.2.12479018`) with BoringSSL & LibYUV
-- **Build System:** Gradle with custom Android Gradle Plugin configurations
-- **Target SDK:** Android 14+ (API 34 / 35 / 36)
-- **Minimum SDK:** Android 5.0 (API 21)
-- **Protocol:** Telegram MTProto 2.0
+- Telegram API Documentation: https://core.telegram.org/api
+- MTProto Protocol Manual: https://core.telegram.org/mtproto
 
 ---
 
-## 🚀 Building from Source
+## Compilation Guide
 
 ### Prerequisites
-1. **JDK 17** (OpenJDK 17 recommended)
-2. **Android Studio Ladybug (2024.2+)** or Android Command-line Tools
-3. **Android SDK** (API 34 / 35 installed)
-4. **Android NDK** (`27.2.12479018`)
+- **Android Studio** (2024.2+ / 2025.1+ / 2026.1)
+- **JDK 17** (OpenJDK 17 recommended)
+- **Android SDK** API 34, 35, or 36
+- **Android NDK** `27.2.12479018`
 
-### Clone the Repository
+### 1. Clone the Source Code
+Clone the repository together with all native submodules:
+
 ```bash
-git clone https://github.com/NayaGramPlatform/NayaGramAndroid.git
-cd NayaGramAndroid
+git clone --recursive https://github.com/NayaGramPlatform/NayaGramAndroid.git NayaGram
+```
+
+If you already cloned without the `--recursive` flag, initialize submodules manually:
+
+```bash
+cd NayaGram
 git submodule update --init --recursive
 ```
 
-### Build Commands
+### 2. Configuration & Signing
+The project is pre-configured with signing properties in `gradle.properties`:
+- Set your signing key credentials (`RELEASE_STORE_FILE`, `RELEASE_KEY_ALIAS`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_PASSWORD`).
+- Ensure `google-services.json` is placed in both `TMessagesProj/` and `TMessagesProj_App/` for Firebase Cloud Messaging (FCM).
+- Adjust application versioning in `gradle.properties`:
+  ```properties
+  APP_VERSION_CODE=1000
+  APP_VERSION_NAME=1.0.0
+  APP_PACKAGE=org.nayagram.platform
+  ```
 
-#### 1. Build Debug APK (For rapid local testing):
+### 3. Open in Android Studio
+1. Open Android Studio.
+2. Select **Open** (choose the project root folder `NayaGram`, do NOT use "Import").
+3. Allow Gradle to perform the initial sync.
+
+---
+
+## Build Tasks
+
+You can compile APKs and App Bundles directly from the command line:
+
+### Debug APK (For development and testing)
 ```bash
 ./gradlew :TMessagesProj_App:assembleAfatDebug
 ```
-*Output location:* `TMessagesProj_App/build/outputs/apk/afat/debug/`
+*Output: `TMessagesProj_App/build/outputs/apk/afat/debug/`*
 
-#### 2. Build Release APK (Standalone Universal):
+### Release APK (Standalone Universal APK)
 ```bash
 ./gradlew :TMessagesProj_App:assembleAfatRelease
 ```
-*Output location:* `TMessagesProj_App/build/outputs/apk/afat/release/`
+*Output: `TMessagesProj_App/build/outputs/apk/afat/release/`*
 
-#### 3. Build Google Play Store Release Bundle (AAB):
+### Google Play Release Bundle (AAB)
 ```bash
 ./gradlew :TMessagesProj_App:bundleBundleAfatRelease
 ```
-*Output location:* `TMessagesProj_App/build/outputs/bundle/bundleAfatRelease/`
+*Output: `TMessagesProj_App/build/outputs/bundle/bundleAfatRelease/`*
 
 ---
 
-## 🔑 App Signing & Keystore
+## Security & Privacy
 
-The project is pre-configured with secure keystore properties via `gradle.properties`:
-- **File:** `nayagrampro.jks`
-- **Key Alias:** `nayagrampro_key`
-- **Version Code:** `1000`
-- **Version Name:** `1.0.0`
+Security and data protection are fundamental principles of NayaGram. 
+If you identify any security vulnerability or issue, please responsibly disclose it to the NayaGram security team.
 
 ---
 
-## 📜 License & Compliance
+## License
 
-NayaGram Android is distributed under the GNU General Public License (GPL) v2 or later, following the official Telegram FOSS guidelines.
+NayaGram for Android is licensed under the **GNU General Public License v2.0 or later**.
 
-- Original Source: [Telegram for Android](https://github.com/DrKLO/Telegram)
-- Original Telegram README: [README_TELEGRAM.md](README_TELEGRAM.md)
-
----
-
-<p align="center">
-  Crafted with ❤️ by the <b>NayaGram Team</b>
-</p>
+For the original Telegram source code and documentation, refer to [README_TELEGRAM.md](README_TELEGRAM.md).
