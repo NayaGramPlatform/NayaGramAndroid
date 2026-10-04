@@ -25,10 +25,7 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Licenses & Install NDK / CMake
+      - name: Install NDK and CMake
         run: |
           yes | sdkmanager --licenses || true
           sdkmanager --install "ndk;27.2.12479018" "cmake;3.22.1" "platforms;android-36" "build-tools;36.0.0"
