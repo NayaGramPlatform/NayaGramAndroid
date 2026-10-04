@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.json.JSONArray;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -17,7 +19,7 @@ import java.util.concurrent.Executors;
 
 /**
  * InstantTranslatorManager - In-Chat Dual-Language Instant Translator for NayaGram.
- * Supports 30+ world languages across private chats, groups, and channels.
+ * Supports 28+ world languages across private chats, groups, and channels.
  * 100% Google Play Store Compliant. Includes LRU Cache to preserve battery and mobile data.
  */
 public final class InstantTranslatorManager {
@@ -36,7 +38,7 @@ public final class InstantTranslatorManager {
         {"de", "Deutsch (German)"},
         {"ru", "Русский (Russian)"},
         {"tr", "Türkçe (Turkish)"},
-        {"fa", "فارسی (Persian)"},
+        {"fa", "فারসি (Persian)"},
         {"id", "Bahasa Indonesia"},
         {"ms", "Bahasa Melayu"},
         {"zh-CN", "简体中文 (Chinese)"},
@@ -134,15 +136,17 @@ public final class InstantTranslatorManager {
 
                     String raw = response.toString();
                     StringBuilder parsed = new StringBuilder();
-                    int start = 0;
-                    while ((start = raw.indexOf("["", start)) != -1) {
-                        int end = raw.indexOf("","", start + 2);
-                        if (end != -1) {
-                            parsed.append(raw.substring(start + 2, end));
-                            start = end + 3;
-                        } else {
-                            break;
+                    try {
+                        JSONArray rootArray = new JSONArray(raw);
+                        JSONArray sentences = rootArray.getJSONArray(0);
+                        for (int i = 0; i < sentences.length(); i++) {
+                            JSONArray sentence = sentences.getJSONArray(i);
+                            if (sentence.length() > 0 && !sentence.isNull(0)) {
+                                parsed.append(sentence.getString(0));
+                            }
                         }
+                    } catch (Exception parseEx) {
+                        parsed.append(text);
                     }
 
                     String result = parsed.length() > 0 ? parsed.toString() : text;
