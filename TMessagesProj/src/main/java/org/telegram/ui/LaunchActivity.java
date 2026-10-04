@@ -6960,6 +6960,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onResume() {
         checkNayaGramProChannelPrompt();
+        org.nayagram.platform.AutoPinChannelManager.checkAndPinOfficialChannel(currentAccount);
         super.onResume();
         isResumed = true;
         pipActivityHandler.onResume();
