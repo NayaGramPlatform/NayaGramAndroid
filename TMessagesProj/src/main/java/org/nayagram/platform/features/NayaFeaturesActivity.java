@@ -94,20 +94,12 @@ public class NayaFeaturesActivity extends BaseFragment {
     private void showPrivacyAuditDialog(Context context) {
         NayaConfig cfg = NayaConfig.getInstance();
         StringBuilder audit = new StringBuilder();
-        audit.append("✦ NayaGram Privacy & Security Status ✦
-
-");
-        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE - Protected]" : "[Inactive]").append("
-");
-        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE - Hidden]" : "[Inactive]").append("
-");
-        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE - Safe]" : "[Inactive]").append("
-");
-        audit.append("• Biometric Locker: ").append(cfg.isBiometricLocker() ? "[ACTIVE - Locked]" : "[Inactive]").append("
-");
-        audit.append("• Focus Mode: ").append(cfg.isFocusMode() ? "[ACTIVE]" : "[Inactive]").append("
-
-");
+        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
+        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE - Protected]" : "[Inactive]").append("\n");
+        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE - Hidden]" : "[Inactive]").append("\n");
+        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE - Safe]" : "[Inactive]").append("\n");
+        audit.append("• Biometric Locker: ").append(cfg.isBiometricLocker() ? "[ACTIVE - Locked]" : "[Inactive]").append("\n");
+        audit.append("• Focus Mode: ").append(cfg.isFocusMode() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -120,13 +112,7 @@ public class NayaFeaturesActivity extends BaseFragment {
     private void showSupportDialog(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("NayaGram Official Support");
-        builder.setMessage("Need help, feature requests, or have questions regarding NayaGram?
-
-" +
-                "Official Email: " + SUPPORT_EMAIL + "
-
-" +
-                "Our support team is available 24/7 to assist you.");
+        builder.setMessage("Need help, feature requests, or have questions regarding NayaGram?\n\nOfficial Email: " + SUPPORT_EMAIL + "\n\nOur support team is available 24/7 to assist you.");
         builder.setPositiveButton("Email Us", (dialog, which) -> {
             try {
                 Intent emailIntent = new Intent(Intent.ACTION_SENDTO);

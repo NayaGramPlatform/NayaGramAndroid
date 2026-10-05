@@ -521,20 +521,12 @@ public class NGSettingsActivity extends BaseFragment {
     private void showPrivacyAuditDialog(Context context) {
         NayaConfig cfg = NayaConfig.getInstance();
         StringBuilder audit = new StringBuilder();
-        audit.append("✦ NayaGram Privacy & Security Status ✦
-
-");
-        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE]" : "[Inactive]").append("
-");
-        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("
-");
-        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE]" : "[Inactive]").append("
-");
-        audit.append("• Support Email: support.nayagram@gmail.com
-
-");
+        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
+        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE]" : "[Inactive]").append("\n");
+        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("\n");
+        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n");
+        audit.append("• Support Email: support.nayagram@gmail.com\n\n");
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption.");
-
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Privacy & Stealth Audit");
         builder.setMessage(audit.toString());
