@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * FeatureListAdapter - NayaGram Feature Showcase Adapter.
- * Features Alternating Slide-In Animation (Left & Right) on scroll,
- * well-spaced and non-crowded layout with native XML Vector Drawables.
+ * FeatureListAdapter - NayaGram 17 Exclusive Features Showcase Adapter.
+ * Clean English typography, high-contrast colored icon badges (Green, Blue, Purple, Cyan),
+ * and precise titles and descriptions matching the official NayaGram feature list.
  */
 public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHolder> {
 
@@ -33,139 +33,156 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private void initializeFeatures() {
+        // 1. Ghost Mode (Green)
         features.add(new FeatureItem(
                 "Ghost Mode",
-                "Hidden typing indicator and online status",
+                "Hide typing status & online presence. Browse in stealth mode.",
                 1,
-                0xFF3DDC97,
+                0xFF10B981,
                 R.drawable.ic_naya_ghost
         ));
 
+        // 2. Message Scheduler (Blue)
         features.add(new FeatureItem(
                 "Message Scheduler",
-                "Schedule messages for automatic delivery",
+                "Send messages at a specific date & time (Android Jetpack WorkManager).",
                 2,
-                0xFF4D9EFF,
+                0xFF3B82F6,
                 R.drawable.outline_message_time_24
         ));
 
+        // 3. Smart Auto-Reply (Green)
         features.add(new FeatureItem(
                 "Smart Auto-Reply",
-                "Keyword-based automatic response system",
+                "Keyword-based auto-reply, self-reply protection & spam filtering cache.",
                 3,
-                0xFF9F6BFF,
+                0xFF10B981,
                 R.drawable.menu_reply
         ));
 
+        // 4. Story Saver (Purple)
         features.add(new FeatureItem(
                 "Story Saver",
-                "Download HD quality stories instantly",
+                "Download stories (photos & HD videos) without compression with 1 click.",
                 4,
-                0xFF4CC9F0,
+                0xFF8B5CF6,
                 R.drawable.ic_naya_download
         ));
 
+        // 5. Anonymous Story Viewer (Sky Blue)
         features.add(new FeatureItem(
-                "Anonymous Viewer",
-                "View stories without revealing yourself",
+                "Anonymous Story Viewer",
+                "View friends' stories secretly. Your name will never appear in the viewer list.",
                 5,
-                0xFF00C2A8,
+                0xFF0EA5E9,
                 R.drawable.outline_profile_story
         ));
 
+        // 6. Anti-Delete Recovery (Green)
         features.add(new FeatureItem(
                 "Anti-Delete Recovery",
-                "Recover permanently deleted messages",
+                "Even if the sender deletes messages, it stays safe in local SQLite.",
                 6,
-                0xFF7B61FF,
+                0xFF10B981,
                 R.drawable.outline_shield_check
         ));
 
+        // 7. Forward Without Quote (Blue)
         features.add(new FeatureItem(
                 "Forward Without Quote",
-                "Share media without forwarding tag",
+                "Forward media or messages without the original sender name.",
                 7,
-                0xFF26C281,
+                0xFF3B82F6,
                 R.drawable.send_plane_24
         ));
 
+        // 8. Voice Transcription (Purple)
         features.add(new FeatureItem(
                 "Voice Transcription",
-                "Convert voice messages to searchable text",
+                "Convert voice messages to searchable text instantly.",
                 8,
-                0xFF00A8E8,
+                0xFF8B5CF6,
                 R.drawable.ic_naya_voice
         ));
 
+        // 9. Smart Chat Folders (Violet / Purple)
         features.add(new FeatureItem(
                 "Smart Chat Folders",
-                "Organize conversations by categories",
+                "Auto-organize personal, group, channels & business chats.",
                 9,
-                0xFF8A5CF6,
+                0xFF8B5CF6,
                 R.drawable.settings_folders
         ));
 
+        // 10. Call & Voice Protection (Green)
         features.add(new FeatureItem(
-                "Call Protection",
-                "Confirm before sending calls or voice",
+                "Call & Voice Protection",
+                "Prevent accidental calls or voice messages with confirmation dialog.",
                 10,
-                0xFF34D399,
+                0xFF10B981,
                 R.drawable.outline_profile_call_24
         ));
 
+        // 11. User ID & DC Display (Blue)
         features.add(new FeatureItem(
-                "User ID Display",
-                "See unique ID and server location",
+                "User ID & DC Display",
+                "See your Telegram numeric ID and which data center (DC1-DC5) you're on.",
                 11,
                 0xFF3B82F6,
                 R.drawable.outline_profile_member_24
         ));
 
+        // 12. Modular NayaConfig (Purple)
         features.add(new FeatureItem(
                 "Modular NayaConfig",
-                "Custom settings in isolated module",
+                "All custom settings are kept in a separate, safe package (org.nayagram.platform).",
                 12,
-                0xFF7C3AED,
+                0xFF8B5CF6,
                 R.drawable.settings_features
         ));
 
+        // 13. Digital Wellbeing & Focus Mode (Green)
         features.add(new FeatureItem(
                 "Digital Wellbeing & Focus Mode",
-                "Mute group pings for study, work & prayer with VIP bypass",
+                "Silence non-urgent notifications. VIP contacts bypass (family & important).",
                 13,
-                0xFF00C2A8,
+                0xFF10B981,
                 R.drawable.outline_profile_mute_24
         ));
 
+        // 14. Smart Storage Doctor (Purple)
         features.add(new FeatureItem(
                 "Smart Storage Doctor",
-                "One-tap cache and orphaned media optimizer",
+                "Scan & clean Telegram cache and duplicate media with one tap.",
                 14,
-                0xFF4D9EFF,
+                0xFF8B5CF6,
                 R.drawable.settings_data
         ));
 
+        // 15. Ultra Battery & Low-Data Saver (Green)
         features.add(new FeatureItem(
                 "Ultra Battery & Low-Data Saver",
-                "Smart eco-mode and metered data optimization",
+                "Below 20% charge, auto-pause video & heavy animations. Save 30-40% battery & data.",
                 15,
-                0xFF00C2A8,
+                0xFF10B981,
                 R.drawable.settings_power
         ));
 
+        // 16. Biometric Chat Locker (Cyan / Blue)
         features.add(new FeatureItem(
                 "Biometric Chat Locker",
-                "Protect sensitive chats with fingerprint and PIN",
+                "Lock only sensitive chats with fingerprint & passcode. Keep your privacy safe.",
                 16,
-                0xFF7B61FF,
+                0xFF0EA5E9,
                 R.drawable.outline_header_lock_24
         ));
 
+        // 17. In-Chat Instant Translator (Blue)
         features.add(new FeatureItem(
                 "In-Chat Instant Translator",
-                "Translate foreign messages to Bengali with LRU cache",
+                "Translate any foreign language (English, Arabic, Urdu, etc.) to fluent Bangla with 1 tap.",
                 17,
-                0xFF3DDC97,
+                0xFF3B82F6,
                 R.drawable.outline_ai_translate2
         ));
     }
@@ -188,16 +205,11 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         applySlideAnimation(holder.itemView, position);
     }
 
-    /**
-     * Alternating smooth slide-in animation from Left and Right on scroll.
-     * Even positions slide in from Left, Odd positions slide in from Right.
-     */
     private void applySlideAnimation(View view, int position) {
         if (position > lastAnimatedPosition) {
-            // Even: slide from left (-60dp), Odd: slide from right (+60dp)
             float startTranslationX = (position % 2 == 0)
-                    ? -AndroidUtilities.dp(60)
-                    : AndroidUtilities.dp(60);
+                    ? -AndroidUtilities.dp(40)
+                    : AndroidUtilities.dp(40);
 
             view.setTranslationX(startTranslationX);
             view.setAlpha(0.0f);
@@ -205,9 +217,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             view.animate()
                     .translationX(0f)
                     .alpha(1.0f)
-                    .setDuration(340)
-                    .setInterpolator(new DecelerateInterpolator(1.4f))
-                    .setStartDelay(Math.min(position * 30L, 180L))
+                    .setDuration(280)
+                    .setInterpolator(new DecelerateInterpolator(1.2f))
+                    .setStartDelay(Math.min(position * 25L, 150L))
                     .start();
 
             lastAnimatedPosition = position;
@@ -238,10 +250,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             this.number = number;
             this.accentColor = accentColor;
             this.iconRes = iconRes;
-        }
-
-        public FeatureItem(String title, String description, int number, int accentColor) {
-            this(title, description, number, accentColor, 0);
         }
     }
 }
