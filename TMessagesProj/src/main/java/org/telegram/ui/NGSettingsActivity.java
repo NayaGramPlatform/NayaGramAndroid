@@ -27,6 +27,11 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
+import org.nayagram.platform.features.NayaFeaturesActivity;
+import android.content.Intent;
+import android.net.Uri;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -134,11 +139,37 @@ public class NGSettingsActivity extends BaseFragment {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
         actionBar.setTitle("NayaGram Settings");
+        ActionBarMenu menu = actionBar.createMenu();
+        ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
+        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "17 Features Showcase");
+        overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
+        overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Stealth Audit");
+        overflowItem.addSubItem(4, R.drawable.msg_send, "Support (support.nayagram@gmail.com)");
+        overflowItem.addSubItem(5, R.drawable.msg_delete, "Restore Defaults");
+
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
+                } else if (id == 1 || id == 2) {
+                    presentFragment(new NayaFeaturesActivity());
+                } else if (id == 3) {
+                    showPrivacyAuditDialog(context);
+                } else if (id == 4) {
+                    try {
+                        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                        emailIntent.setData(Uri.parse("mailto:support.nayagram@gmail.com"));
+                        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "NayaGram Support & Inquiry");
+                        context.startActivity(emailIntent);
+                    } catch (Exception ignored) {}
+                } else if (id == 5) {
+                    NayaConfig.getInstance().setGhostMode(false);
+                    NayaConfig.getInstance().setAnonymousStories(false);
+                    NayaConfig.getInstance().setAntiDeleteEnabled(true);
+                    AntiDeleteManager.getInstance().setAntiDeleteEnabled(true);
+                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Restored Defaults").show();
                 }
             }
         });
@@ -485,5 +516,29 @@ public class NGSettingsActivity extends BaseFragment {
                 p.setText("NayaGram Messenger v1.0.85\nModern Telegram client engineered for Bangladesh.");
             }
         }
+    }
+
+    private void showPrivacyAuditDialog(Context context) {
+        NayaConfig cfg = NayaConfig.getInstance();
+        StringBuilder audit = new StringBuilder();
+        audit.append("✦ NayaGram Privacy & Security Status ✦
+
+");
+        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE]" : "[Inactive]").append("
+");
+        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("
+");
+        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE]" : "[Inactive]").append("
+");
+        audit.append("• Support Email: support.nayagram@gmail.com
+
+");
+        audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption.");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Privacy & Stealth Audit");
+        builder.setMessage(audit.toString());
+        builder.setPositiveButton("OK", null);
+        builder.show();
     }
 }
