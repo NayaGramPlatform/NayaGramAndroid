@@ -9553,6 +9553,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        if (listView != null) {
+            listView.setAlpha(1.0f);
+            listView.setTranslationX(0f);
+        }
+        openAnimationInProgress = false;
         if (sharedMediaLayout != null) {
             sharedMediaLayout.onResume();
         }
@@ -9766,11 +9771,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             musicView.setParentExpanded(0);
                         }
                     }
-                    openAnimationInProgress = false;
                     checkListViewScroll();
                     if (recreateMenuAfterAnimation) {
                         createActionBarMenu(true);
                     }
+                }
+                openAnimationInProgress = false;
+                if (listView != null) {
+                    listView.setAlpha(1.0f);
+                    listView.setTranslationX(0f);
                 }
                 if (!fragmentOpened) {
                     fragmentOpened = true;
