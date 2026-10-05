@@ -98,8 +98,8 @@ public class NayaFeaturesActivity extends BaseFragment {
         audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE - Protected]" : "[Inactive]").append("\n");
         audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE - Hidden]" : "[Inactive]").append("\n");
         audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE - Safe]" : "[Inactive]").append("\n");
-        audit.append("• Biometric Locker: ").append(cfg.isBiometricLocker() ? "[ACTIVE - Locked]" : "[Inactive]").append("\n");
-        audit.append("• Focus Mode: ").append(cfg.isFocusMode() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
+        audit.append("• Biometric Locker: ").append(cfg.isBiometricChatLockerEnabled() ? "[ACTIVE - Locked]" : "[Inactive]").append("\n");
+        audit.append("• Focus Mode: ").append(cfg.isFocusModeEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -131,25 +131,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         builder.setTitle("Restore Default Settings");
         builder.setMessage("Are you sure you want to reset all 17 exclusive features to their initial factory settings?");
         builder.setPositiveButton("Reset", (dialog, which) -> {
-            NayaConfig cfg = NayaConfig.getInstance();
-            cfg.setGhostMode(false);
-            cfg.setMessageScheduler(true);
-            cfg.setSmartAutoReply(false);
-            cfg.setStorySaver(true);
-            cfg.setAnonymousStories(false);
-            cfg.setAntiDeleteEnabled(true);
-            cfg.setForwardWithoutQuote(false);
-            cfg.setVoiceTranscription(true);
-            cfg.setSmartChatFolders(true);
-            cfg.setConfirmActions(true);
-            cfg.setShowIdAndDc(true);
-            cfg.setModularConfig(true);
-            cfg.setFocusMode(false);
-            cfg.setStorageDoctor(true);
-            cfg.setBatterySaver(false);
-            cfg.setBiometricLocker(false);
-            cfg.setInstantTranslator(true);
-
+            NayaConfig.getInstance().resetToDefaults();
             if (adapter != null) {
                 adapter.notifyDataSetChanged();
             }
