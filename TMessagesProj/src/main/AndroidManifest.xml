@@ -19,8 +19,7 @@
     <uses-feature android:name="android.hardware.camera2" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.proximity" android:required="false" />
 
-    <uses-permission android:name="android.permission.READ_CLIPBOARD"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+        <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -59,8 +58,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+        <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <uses-permission android:name="com.sec.android.provider.badge.permission.READ"/>
@@ -82,8 +80,7 @@
     <uses-permission android:name="com.android.vending.BILLING"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="replace" />
 
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
+    
     <uses-sdk tools:overrideLibrary="com.google.mlkit.vision.segmentation.subject"/>
 
     <queries>
@@ -95,6 +92,7 @@
     </queries>
 
     <application
+        android:label="@string/AppName"
         android:name="org.telegram.messenger.ApplicationLoader"
         android:allowBackup="true"
         android:restoreAnyVersion="true"
@@ -107,7 +105,7 @@
         android:requestLegacyExternalStorage="true"
         android:preserveLegacyExternalStorage="true"
         android:allowAudioPlaybackCapture="true"
-        tools:replace="android:supportsRtl,android:name,android:theme,android:largeHeap,android:hardwareAccelerated,android:allowBackup"
+        tools:replace="android:supportsRtl,android:name,android:theme,android:largeHeap,android:hardwareAccelerated,android:allowBackup,android:label"
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
     >
@@ -115,6 +113,7 @@
 
         <!-- NG Sky - ডিফল্ট আইকন (স্কাই ব্লু) -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="true"
             android:name="org.nayagram.platform.NGSky"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -132,6 +131,7 @@
 
         <!-- NG Blue - গভীর নীল -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.NGBlue"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -149,6 +149,7 @@
 
         <!-- NG Purple - বেগুনি -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.NGPurple"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -166,6 +167,7 @@
 
         <!-- Premium Icon - Telegram এর (লাল/গোলাপী) -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.PremiumIcon"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -183,6 +185,7 @@
 
         <!-- NG Neon - নিয়ন (সবুজ) -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.NGNeon"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -200,6 +203,7 @@
 
         <!-- NG Crystal - ক্রিস্টাল (কালো) -->
         <activity-alias
+            android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.NGCrystal"
             android:targetActivity="org.telegram.ui.LaunchActivity"
@@ -562,7 +566,7 @@
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".RefererReceiver" android:exported="true" android:permission="android.permission.INSTALL_PACKAGES">
+        <receiver android:name=".RefererReceiver" android:exported="true" >
             <intent-filter>
                 <action android:name="com.android.vending.INSTALL_REFERRER" />
             </intent-filter>
