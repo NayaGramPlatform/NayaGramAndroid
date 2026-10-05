@@ -158,8 +158,9 @@ public final class InstantTranslatorManager {
                         if (callback != null) callback.onTranslationSuccess(text, result, targetLang);
                     });
                 } else {
+                    final int respCode = conn.getResponseCode();
                     mainHandler.post(() -> {
-                        if (callback != null) callback.onTranslationFailed(text, "HTTP " + conn.getResponseCode());
+                        if (callback != null) callback.onTranslationFailed(text, "HTTP " + respCode);
                     });
                 }
             } catch (Exception e) {
