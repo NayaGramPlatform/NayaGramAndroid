@@ -2081,9 +2081,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             return 0;
         }
         // NayaGram: Forward Without Quote pipeline hook
-        if (!forwardFromMyName && org.nayagram.platform.NayaConfig.getInstance().isForwardWithoutQuote()) {
-            forwardFromMyName = true;
-        }
+        final boolean effectiveForwardFromMyName = forwardFromMyName || (org.nayagram.platform.NayaConfig.getInstance() != null && org.nayagram.platform.NayaConfig.getInstance().isForwardWithoutQuote());
         int sendResult = 0;
         long myId = getUserConfig().getClientUserId();
         boolean isChannel = false;
@@ -2108,7 +2106,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
             if (currentPayStars != payStars) {
                 AlertsCreator.ensurePaidMessageConfirmation(currentAccount, peer, Math.max(1, messages.size()), newPayStars -> {
-                    sendMessage(messages, peer, forwardFromMyName, hideCaption, notify, scheduleDate, scheduleRepeatPeriod, replyToTopMsg, video_timestamp, newPayStars, monoForumPeerId, suggestionParams);
+                    sendMessage(messages, peer, effectiveForwardFromMyName, hideCaption, notify, scheduleDate, scheduleRepeatPeriod, replyToTopMsg, video_timestamp, newPayStars, monoForumPeerId, suggestionParams);
                 });
                 return 0;
             }
@@ -2236,7 +2234,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 }
 
                 final TLRPC.Message newMsg = new TLRPC.TL_message();
-                if (!forwardFromMyName) {
+                if (!effectiveForwardFromMyName) {
                     boolean forwardFromSaved = msgObj.getDialogId() == myId && msgObj.isFromUser() && msgObj.messageOwner.from_id.user_id == myId;
                     if (msgObj.isForwarded()) {
                         newMsg.fwd_from = new TLRPC.TL_messageFwdHeader();
@@ -2567,7 +2565,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     }
                     req.random_id = randomIds;
                     req.id = ids;
-                    req.drop_author = forwardFromMyName;
+                    req.drop_author = effectiveForwardFromMyName;
                     req.drop_media_captions = hideCaption;
                     req.with_my_score = messages.size() == 1 && messages.get(0).messageOwner.with_my_score;
                     req.from_ephemeral = fwdEphemeral;
