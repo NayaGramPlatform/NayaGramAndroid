@@ -8,13 +8,13 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
 
 public class LauncherIconController {
+
     public static void tryFixLauncherIconIfNeeded() {
         for (LauncherIcon icon : LauncherIcon.values()) {
             if (isEnabled(icon)) {
                 return;
             }
         }
-
         setIcon(LauncherIcon.DEFAULT);
     }
 
@@ -34,12 +34,10 @@ public class LauncherIconController {
     }
 
     public enum LauncherIcon {
-        DEFAULT("DefaultIcon", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
-        VINTAGE("VintageIcon", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconVintage),
-        AQUA("AquaIcon", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, true),
-        TURBO("TurboIcon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, true),
-        NOX("NoxIcon", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox, true);
+        DEFAULT("NGSky", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
+        PURPLE("NGPurple", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium),
+        CRYSTAL("NGCrystal", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
+        NEON("NGNeon", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox);
 
         public final String key;
         public final int background;
@@ -51,7 +49,7 @@ public class LauncherIconController {
 
         public ComponentName getComponentName(Context ctx) {
             if (componentName == null) {
-                componentName = new ComponentName(ctx.getPackageName(), "org.telegram.messenger." + key);
+                componentName = new ComponentName(ctx.getPackageName(), "org.nayagram.platform." + key);
             }
             return componentName;
         }
