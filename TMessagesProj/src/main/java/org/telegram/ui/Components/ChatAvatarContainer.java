@@ -643,9 +643,8 @@ public class ChatAvatarContainer extends FrameLayout implements FactorAnimator.T
             if (!monoforum) {
                 fragment.setChatInfo(parentFragment.getCurrentChatInfo());
             }
-            if (fromChatAnimation) {
-                fragment.setPlayProfileAnimation(byAvatar ? 2 : 1);
-            }
+            // Disabled to ensure consistent, crash-free navigation across user, group, and channel profiles
+            // if (fromChatAnimation) { fragment.setPlayProfileAnimation(byAvatar ? 2 : 1); }
             parentFragment.presentFragment(fragment, removeLast);
         }
     }
