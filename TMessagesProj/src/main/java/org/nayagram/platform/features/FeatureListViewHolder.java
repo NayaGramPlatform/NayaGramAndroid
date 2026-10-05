@@ -31,6 +31,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
     private final TextView numberView;
     private final TextView titleView;
     private final TextView descView;
+    private final TextView detailsText;
     private final LinearLayout detailsBtn;
     private final LinearLayout cardView;
 
@@ -136,7 +137,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         iiParams.rightMargin = AndroidUtilities.dp(4);
         detailsBtn.addView(infoIcon, iiParams);
 
-        TextView detailsText = new TextView(context);
+        detailsText = new TextView(context);
         detailsText.setText("Details");
         detailsText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
         detailsText.setTypeface(AndroidUtilities.bold());
@@ -163,12 +164,20 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         container.addView(cardView);
     }
 
-    public void bind(FeatureListAdapter.FeatureItem feature, int position) {
+    public void bind(FeatureListAdapter.FeatureItem feature, int position, int lang) {
         if (feature == null) return;
 
-        titleView.setText(feature.catchyTitle != null ? feature.catchyTitle : feature.title);
-        descView.setText(feature.description);
+        titleView.setText(feature.getCatchyTitle(lang));
+        descView.setText(feature.getDesc(lang));
         numberView.setText(String.valueOf(feature.number));
+
+        if (lang == FeatureListAdapter.LANG_BN) {
+            detailsText.setText("বিবরণ");
+        } else if (lang == FeatureListAdapter.LANG_AR) {
+            detailsText.setText("تفاصيل");
+        } else {
+            detailsText.setText("Details");
+        }
 
         // Icon
         if (feature.iconRes != 0) {
