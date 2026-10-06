@@ -103,7 +103,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Privacy & Stealth Audit");
+        builder.setTitle("🛡️ Privacy & Stealth Audit");
         builder.setMessage(audit.toString());
         builder.setPositiveButton("OK", null);
         builder.show();
@@ -111,7 +111,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
     private void showSupportDialog(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("NayaGram Official Support");
+        builder.setTitle("💬 NayaGram Official Support");
         builder.setMessage("Need help, feature requests, or have questions regarding NayaGram?\n\nOfficial Email: " + SUPPORT_EMAIL + "\n\nOur support team is available 24/7 to assist you.");
         builder.setPositiveButton("Email Us", (dialog, which) -> {
             try {
@@ -128,7 +128,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
     private void restoreAllDefaults(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Restore Default Settings");
+        builder.setTitle("🔄 Restore Default Settings");
         builder.setMessage("Are you sure you want to reset all 17 exclusive features to their initial factory settings?");
         builder.setPositiveButton("Reset", (dialog, which) -> {
             NayaConfig.getInstance().resetToDefaults();
