@@ -710,7 +710,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
         items.add(SettingCell.Factory.of(109, IconBackgroundColors.RED.top, IconBackgroundColors.RED.bottom, R.drawable.settings_power, "Analytics", "Live network and user statistics", ""));
-        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_faq, "About", "v1.0.0 (Official channel @NayaGramPro)", ""));
+        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_faq, "About", "v1.0.0 (Official Release)", ""));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
@@ -852,9 +852,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             case 110: {
                 AlertDialog.Builder ab = new AlertDialog.Builder(getParentActivity());
                 ab.setTitle("About NayaGram");
-                ab.setMessage("NayaGram Messenger for Android\nVersion 1.0.0 (Build 1000)\nBased on Telegram 12.10.6\n\nOfficial Updates Channel:\nhttps://t.me/NayaGramPro\n\nDeveloper: Huzaifa Sheikh\nCountry: Bangladesh 🇧🇩\n\nAll 17 exclusive features engineered for speed, privacy, and full Google Play safety.");
+                ab.setMessage("NayaGram Messenger for Android\nVersion 1.0.0 (Build 1000)\nBased on Telegram 12.10.6\n\nOfficial Updates Channel:\n\n\nDeveloper: Huzaifa Sheikh\nCountry: Bangladesh 🇧🇩\n\nAll 17 exclusive features engineered for speed, privacy, and full Google Play safety.");
                 ab.setPositiveButton("Join @NayaGramPro", (d, w) -> {
-                    org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "https://t.me/NayaGramPro");
+                    org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "");
                 });
                 ab.setNegativeButton("Close", null);
                 showDialog(ab.create());
