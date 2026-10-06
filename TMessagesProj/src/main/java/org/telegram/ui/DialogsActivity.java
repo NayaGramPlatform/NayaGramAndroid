@@ -7018,6 +7018,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onResume() {
         super.onResume();
+        org.nayagram.platform.AutoPinChannelManager.checkAndPinChannel();
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
