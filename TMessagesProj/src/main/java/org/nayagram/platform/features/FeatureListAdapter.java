@@ -530,15 +530,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             lrParams.bottomMargin = AndroidUtilities.dp(12);
             card.addView(langRow, lrParams);
 
-            // Logo
-            ImageView logoView = new ImageView(context);
-            logoView.setImageResource(R.drawable.nayagram_intro_logo);
-            LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(
-                    AndroidUtilities.dp(56),
-                    AndroidUtilities.dp(56)
-            );
-            logoParams.bottomMargin = AndroidUtilities.dp(8);
-            card.addView(logoView, logoParams);
+            // Logo removed from this showcase card as requested (kept only for main features)
 
             // Title
             TextView title = new TextView(context);
