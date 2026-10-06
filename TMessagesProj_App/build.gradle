@@ -52,7 +52,7 @@ android {
         localeFilters += ["zz"]
     }
 
-    def keystorePath = file("../nayagrampro.jks").exists() ? file("../nayagrampro.jks") : (file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : file("../TMessagesProj/config/release.keystore"))
+    def keystorePath = file("../TMessagesProj/config/nayagram-release.jks").exists() ? file("../TMessagesProj/config/nayagram-release.jks") : (file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : file("../TMessagesProj/config/release.keystore"))
     signingConfigs {
         debug {
             storeFile keystorePath
