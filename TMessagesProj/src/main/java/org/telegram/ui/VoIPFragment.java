@@ -1839,7 +1839,11 @@ public class VoIPFragment implements
                 break;
             case VoIPService.STATE_ESTABLISHED:
             case VoIPService.STATE_RECONNECTING:
-                updateKeyView(animated);
+                try {
+                    updateKeyView(animated);
+                } catch (Throwable t) {
+                    FileLog.e(t);
+                }
                 if (currentState == VoIPService.STATE_RECONNECTING) {
                     showReconnecting = wasEstablished;
                     if (!wasEstablished && previousState != VoIPService.STATE_RECONNECTING) {
@@ -2463,56 +2467,75 @@ public class VoIPFragment implements
         if (emojiLoaded) {
             return;
         }
-        VoIPService service = VoIPService.getSharedInstance();
-        if (service == null) {
-            return;
-        }
-        byte[] auth_key = null;
         try {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            buf.write(service.getEncryptionKey());
-            buf.write(service.getGA());
-            auth_key = buf.toByteArray();
-        } catch (Exception checkedExceptionsAreBad) {
-            FileLog.e(checkedExceptionsAreBad, false);
-        }
-        if (auth_key == null) {
-            return;
-        }
-        byte[] sha256 = Utilities.computeSHA256(auth_key, 0, auth_key.length);
-        String[] emoji = EncryptionKeyEmojifier.emojifyForCall(sha256);
-
-        for (int i = 0; i < 4; i++) {
-            Emoji.preloadEmoji(emoji[i]);
-            Drawable drawable = Emoji.getEmojiDrawable(emoji[i]);
-            if (drawable != null) {
-                drawable.setBounds(0, 0, AndroidUtilities.dp(40), AndroidUtilities.dp(40));
-                ((Emoji.EmojiDrawable) drawable).preload();
-                int[] emojiOnly = new int[1];
-                TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
-                paint.setTextSize(AndroidUtilities.dp(28));
-                CharSequence txt = emoji[i];
-                txt = Emoji.replaceEmoji(txt, paint.getFontMetricsInt(), false, emojiOnly);
-                TLRPC.Document doc1 = replaceEmojiToLottieFrame(txt, emojiOnly);
-                if (doc1 != null) {
-                    AnimatedEmojiDrawable animatedDrawable;
-                    if (emojiDrawables[i] instanceof AnimatedEmojiDrawable && ((AnimatedEmojiDrawable) emojiDrawables[i]).getDocumentId() == doc1.id) {
-                        animatedDrawable = (AnimatedEmojiDrawable) emojiDrawables[i];
-                    } else {
-                        emojiDrawables[i] = animatedDrawable = new AnimatedEmojiDrawable(AnimatedEmojiDrawable.CACHE_TYPE_ALERT_STANDARD_EMOJI, currentAccount, doc1);
-                    }
-                    animatedDrawable.setupEmojiThumb(emoji[i]);
-                    emojiViews[i].setAnimatedEmojiDrawable(animatedDrawable);
-                    emojiViews[i].getImageReceiver().clearImage();
-                    drawable = animatedDrawable;
-                } else {
-                    emojiViews[i].setImageDrawable(drawable);
-                }
-                emojiViews[i].setVisibility(View.GONE);
+            VoIPService service = VoIPService.getSharedInstance();
+            if (service == null) {
+                return;
             }
-            emojiDrawables[i] = drawable;
+            byte[] encKey = service.getEncryptionKey();
+            byte[] gaKey = service.getGA();
+            if (encKey == null || gaKey == null) {
+                return;
+            }
+            byte[] auth_key = null;
+            try {
+                ByteArrayOutputStream buf = new ByteArrayOutputStream();
+                buf.write(encKey);
+                buf.write(gaKey);
+                auth_key = buf.toByteArray();
+            } catch (Exception checkedExceptionsAreBad) {
+                FileLog.e(checkedExceptionsAreBad, false);
+            }
+            if (auth_key == null) {
+                return;
+            }
+            byte[] sha256 = Utilities.computeSHA256(auth_key, 0, auth_key.length);
+            String[] emoji = EncryptionKeyEmojifier.emojifyForCall(sha256);
+            if (emoji == null || emoji.length < 4) {
+                return;
+            }
+
+            for (int i = 0; i < 4; i++) {
+                Drawable drawable = null;
+                try {
+                    Emoji.preloadEmoji(emoji[i]);
+                    drawable = Emoji.getEmojiDrawable(emoji[i]);
+                    if (drawable != null) {
+                        drawable.setBounds(0, 0, AndroidUtilities.dp(40), AndroidUtilities.dp(40));
+                        if (drawable instanceof Emoji.EmojiDrawable) {
+                            ((Emoji.EmojiDrawable) drawable).preload();
+                        }
+                        int[] emojiOnly = new int[1];
+                        TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+                        paint.setTextSize(AndroidUtilities.dp(28));
+                        CharSequence txt = emoji[i];
+                        txt = Emoji.replaceEmoji(txt, paint.getFontMetricsInt(), false, emojiOnly);
+                        TLRPC.Document doc1 = replaceEmojiToLottieFrame(txt, emojiOnly);
+                        if (doc1 != null) {
+                            AnimatedEmojiDrawable animatedDrawable;
+                            if (emojiDrawables[i] instanceof AnimatedEmojiDrawable && ((AnimatedEmojiDrawable) emojiDrawables[i]).getDocumentId() == doc1.id) {
+                                animatedDrawable = (AnimatedEmojiDrawable) emojiDrawables[i];
+                            } else {
+                                emojiDrawables[i] = animatedDrawable = new AnimatedEmojiDrawable(AnimatedEmojiDrawable.CACHE_TYPE_ALERT_STANDARD_EMOJI, currentAccount, doc1);
+                            }
+                            animatedDrawable.setupEmojiThumb(emoji[i]);
+                            emojiViews[i].setAnimatedEmojiDrawable(animatedDrawable);
+                            emojiViews[i].getImageReceiver().clearImage();
+                            drawable = animatedDrawable;
+                        } else {
+                            emojiViews[i].setImageDrawable(drawable);
+                        }
+                        emojiViews[i].setVisibility(View.GONE);
+                    }
+                } catch (Throwable t) {
+                    FileLog.e("updateKeyView item error", t);
+                }
+                emojiDrawables[i] = drawable;
+            }
+            checkEmojiLoaded(animated);
+        } catch (Throwable t) {
+            FileLog.e("updateKeyView global error", t);
         }
-        checkEmojiLoaded(animated);
     }
 
     private boolean isLoaded(Drawable drawable) {

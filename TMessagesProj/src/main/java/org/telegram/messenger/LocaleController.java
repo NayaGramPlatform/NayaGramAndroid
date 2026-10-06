@@ -602,6 +602,15 @@ public class LocaleController {
         languagesDict.put(localeInfo.shortName, localeInfo);
 
         localeInfo = new LocaleInfo();
+        localeInfo.name = "বাংলা";
+        localeInfo.nameEnglish = "Bengali (Bangla)";
+        localeInfo.shortName = localeInfo.pluralLangCode = "bn";
+        localeInfo.pathToFile = "remote";
+        localeInfo.serverIndex = 1;
+        languages.add(localeInfo);
+        languagesDict.put(localeInfo.shortName, localeInfo);
+
+        localeInfo = new LocaleInfo();
         localeInfo.name = "Italiano";
         localeInfo.nameEnglish = "Italian";
         localeInfo.shortName = localeInfo.pluralLangCode = "it";

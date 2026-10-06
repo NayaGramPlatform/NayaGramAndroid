@@ -1865,6 +1865,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		long fingerprint = Utilities.bytesToLong(authKeyId);
 		this.authKey = authKey;
 		keyFingerprint = fingerprint;
+		if (privateCall == null) {
+			if (BuildVars.LOGS_ENABLED) {
+				FileLog.e("processAcceptedCall: privateCall is null");
+			}
+			callFailed();
+			return;
+		}
 		TL_phone.confirmCall req = new TL_phone.confirmCall();
 		req.g_a = g_a;
 		req.key_fingerprint = fingerprint;

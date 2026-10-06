@@ -1908,7 +1908,7 @@
     <string name="ALongTimeAgo">last seen a long time ago</string>
     <string name="NewMessageTitle">New Message</string>
     <string name="InviteFriendsHelp">Select contacts to invite them to NayaGram</string>
-    <string name="InviteToTelegram">INVITE TO TELEGRAM</string>
+    <string name="InviteToTelegram">INVITE TO NAYAGRAM</string>
     <string name="ShareTelegram2">Share NayaGram</string>
     <string name="UpdateContactsTitle">Update contacts?</string>
     <string name="UpdateContactsMessage">NayaGram has detected many unsynced contacts, would you like to sync them now? Choose \'OK\' if you\'re using your own device, SIM card and Google account.</string>
