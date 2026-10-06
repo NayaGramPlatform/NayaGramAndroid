@@ -22,6 +22,10 @@ public class AutoPinChannelManager {
     private static final String KEY_CHANNEL_PINNED = "channel_pinned_v1_";
     public static final String OFFICIAL_CHANNEL_USERNAME = "NayaGramPro";
 
+        public static void checkAndPinOfficialChannel(int account) {
+        checkAndPinChannel();
+    }
+
     public static void checkAndPinChannel() {
         try {
             int currentAccount = UserConfig.selectedAccount;
