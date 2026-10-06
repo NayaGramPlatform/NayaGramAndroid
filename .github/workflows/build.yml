@@ -55,7 +55,7 @@ jobs:
             --bundle="$AAB_FILE" \
             --output=build_output/app.apks \
             --mode=universal \
-            --ks=TMessagesProj/config/nayagrampro.jks \
+            --ks=TMessagesProj/config/nayagram-release.jks \
             --ks-pass=pass:NayaGram@2026#BuildTop \
             --ks-key-alias=nayagrampro_key \
             --key-pass=pass:NayaGram@2026#BuildTop
