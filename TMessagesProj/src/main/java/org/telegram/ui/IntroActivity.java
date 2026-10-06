@@ -133,7 +133,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", System.currentTimeMillis()).apply();
 
         titles = new CharSequence[]{
-                null,
+                "NayaGram",
                 LocaleController.getString(R.string.Page2Title),
                 LocaleController.getString(R.string.Page3Title),
                 LocaleController.getString(R.string.Page5Title),
@@ -597,7 +597,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
             container.addView(frameLayout, 0);
 
-            headerTextView.setText(titles[position]);
+            headerTextView.setText(titles[position] != null ? titles[position] : "NayaGram");
             messageTextView.setText(AndroidUtilities.replaceTags(messages[position]));
 
             return frameLayout;
