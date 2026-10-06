@@ -705,7 +705,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         // 3. NayaGram section placed right BELOW Account
         items.add(UItem.asHeader("NayaGram"));
         items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NayaGram Settings (১৭টি ফিচার)", "Ghost mode, stories, anti-delete, translator", "\u2728"));
-        items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Bots", "AI Bots & Mini Apps directory", ""));
+        items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Infonity AI 💎", "Official AI Assistant @InfonityAI_Bot", ""));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
@@ -839,7 +839,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_FEATURES_HUB));
                 break;
             case 108:
-                presentSettingFragment(new DialogsActivity(null));
+                MessagesController.getInstance(currentAccount).openByUserName("InfonityAI_Bot", this, 1);
                 break;
             case 109: {
                 AlertDialog.Builder ab = new AlertDialog.Builder(getParentActivity());
@@ -853,9 +853,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 AlertDialog.Builder ab = new AlertDialog.Builder(getParentActivity());
                 ab.setTitle("About NayaGram");
                 ab.setMessage("NayaGram Messenger for Android\nVersion 1.0.0 (Build 1000)\nBased on Telegram 12.10.6\n\nOfficial Updates Channel:\n\n\nDeveloper: Huzaifa Sheikh\nCountry: Bangladesh 🇧🇩\n\nAll 17 exclusive features engineered for speed, privacy, and full Google Play safety.");
-                ab.setPositiveButton("Join @NayaGramPro", (d, w) -> {
-                    org.telegram.messenger.browser.Browser.openUrl(getParentActivity(), "");
-                });
+                ab.setPositiveButton("OK", null);
                 ab.setNegativeButton("Close", null);
                 showDialog(ab.create());
                 break;
