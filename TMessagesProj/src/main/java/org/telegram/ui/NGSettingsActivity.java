@@ -450,7 +450,9 @@ public class NGSettingsActivity extends BaseFragment {
                 else if (position == headerSystem) h.setText("System");
             } else if (viewType == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
-                if (position == rowMessageScheduler) {
+                if (position == rowAnonymousStories) {
+                    c.setFeature("1", 0xFF8E24AA, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
+                } else if (position == rowMessageScheduler) {
                     c.setFeature("4", 0xFFFFA726, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
                     c.setFeature("5", 0xFF43A047, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
