@@ -24,3 +24,5 @@ signing.properties
 release-keystore.properties
 keystore.properties
 secrets.properties
+!TMessagesProj/config/nayagrampro.jks
+!TMessagesProj/config/nayagram-release.jks

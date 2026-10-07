@@ -134,7 +134,7 @@ public class NGSettingsActivity extends BaseFragment {
         actionBar.setTitle("NayaGram Settings");
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
-        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "17 Features Showcase");
+        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase");
         overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Stealth Audit");
         overflowItem.addSubItem(4, R.drawable.msg_send, "Support (support.nayagram@gmail.com)");

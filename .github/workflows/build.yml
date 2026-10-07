@@ -40,7 +40,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Release AAB (Google Play Bundle)
-        run: ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release --stacktrace
+        run: ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release -PRELEASE_STORE_PASSWORD="NayaGram@2026#BuildTop" -PRELEASE_KEY_PASSWORD="NayaGram@2026#BuildTop" -PRELEASE_KEY_ALIAS="nayagrampro_key" --stacktrace
 
       - name: Generate Signed Universal APK from AAB
         run: |
@@ -55,7 +55,7 @@ jobs:
             --bundle="$AAB_FILE" \
             --output=build_output/app.apks \
             --mode=universal \
-            --ks=TMessagesProj/config/nayagram-release.jks \
+            --ks=TMessagesProj/config/nayagrampro.jks \
             --ks-pass=pass:NayaGram@2026#BuildTop \
             --ks-key-alias=nayagrampro_key \
             --key-pass=pass:NayaGram@2026#BuildTop

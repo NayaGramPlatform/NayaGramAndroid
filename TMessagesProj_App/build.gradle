@@ -52,20 +52,24 @@ android {
         localeFilters += ["zz"]
     }
 
-    def keystorePath = file("../TMessagesProj/config/nayagram-release.jks").exists() ? file("../TMessagesProj/config/nayagram-release.jks") : (file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : file("../TMessagesProj/config/release.keystore"))
+    def keystorePath = file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : (file("../TMessagesProj/config/nayagram-release.jks").exists() ? file("../TMessagesProj/config/nayagram-release.jks") : file("../TMessagesProj/config/release.keystore"))
+    def relStorePass = project.hasProperty("RELEASE_STORE_PASSWORD") ? project.property("RELEASE_STORE_PASSWORD") : "NayaGram@2026#BuildTop"
+    def relKeyPass = project.hasProperty("RELEASE_KEY_PASSWORD") ? project.property("RELEASE_KEY_PASSWORD") : "NayaGram@2026#BuildTop"
+    def relKeyAlias = project.hasProperty("RELEASE_KEY_ALIAS") ? project.property("RELEASE_KEY_ALIAS") : "nayagrampro_key"
+
     signingConfigs {
         debug {
             storeFile keystorePath
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
+            storePassword relStorePass
+            keyAlias relKeyAlias
+            keyPassword relKeyPass
         }
 
         release {
             storeFile keystorePath
-            storePassword RELEASE_STORE_PASSWORD
-            keyAlias RELEASE_KEY_ALIAS
-            keyPassword RELEASE_KEY_PASSWORD
+            storePassword relStorePass
+            keyAlias relKeyAlias
+            keyPassword relKeyPass
         }
     }
 

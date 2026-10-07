@@ -318,7 +318,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public void showAllDetailsPipelineDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         if (currentLanguage == LANG_BN) {
-            builder.setTitle("নয়াগ্রাম ১৭টি ফিচারের পূর্ণাঙ্গ পাইপলাইন");
+            builder.setTitle("নয়াগ্রাম প্ল্যাটফর্মের পূর্ণাঙ্গ ফিচার ও সেটিংস পাইপলাইন");
             String pipeline =
                     "✦ নয়গ্রাম প্ল্যাটফর্ম আর্কিটেকচার ও ব্যবহারবিধি ✦\n\n" +
                     "১. প্রাইভেসি ও অদৃশ্যকরণ পাইপলাইন:\n" +
@@ -344,7 +344,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             builder.setMessage(pipeline);
             builder.setPositiveButton("বন্ধ করুন", null);
         } else {
-            builder.setTitle("NayaGram 17-Features Pipeline");
+            builder.setTitle("NayaGram Exclusive Features Pipeline");
             String pipeline =
                     "✦ NayaGram Complete Architecture & Pipeline ✦\n\n" +
                     "1. STEALTH & PRIVACY PIPELINE:\n" +
@@ -449,6 +449,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
         private final FrameLayout root;
         private final TextView allDetailsBtn;
+        private final TextView badge;
         private final TextView tagText;
         private final TextView subText;
         private final TextView tabEn;
@@ -534,7 +535,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
             // Pill Badge
             TextView badge = new TextView(context);
-            badge.setText("✨ 17 Exclusive Features ✨");
+            badge.setText("✨ NayaGram Exclusive Features ✨");
             badge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             badge.setTypeface(AndroidUtilities.bold());
             badge.setTextColor(Color.WHITE);
@@ -602,14 +603,17 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             updateTabStyle(tabAr, currentLang == LANG_AR);
 
             if (currentLang == LANG_BN) {
+                badge.setText("✨ নয়াগ্রাম এক্সক্লুসিভ ফিচার ও সেটিংস ✨");
                 subText.setText("গোপনীয়তা • স্বাচ্ছন্দ্য • গতিময় স্মার্ট চ্যাট");
                 tagText.setText("আপনার চ্যাট, আপনার নিয়ম");
                 allDetailsBtn.setText("📋 সব ফিচার ও ব্যবহারের পাইপলাইন");
             } else if (currentLang == LANG_AR) {
+                badge.setText("✨ ميزات ناياجرام الحصرية ✨");
                 subText.setText("أكثر خصوصية • أكثر تحكماً • شات أذكى");
                 tagText.setText("محادثاتك، قواعدك الخاصة");
                 allDetailsBtn.setText("📋 تفاصيل جميع الميزات وخريطة العمل");
             } else {
+                badge.setText("✨ NayaGram Exclusive Features ✨");
                 subText.setText("More Privacy • More Control • A Smarter Chat");
                 tagText.setText("Your Chat, Your Rules");
                 allDetailsBtn.setText("📋 All Details & Feature Pipeline");
