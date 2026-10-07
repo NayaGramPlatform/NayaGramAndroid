@@ -1816,6 +1816,11 @@ public class VoIPFragment implements
                 if (previousState != VoIPService.STATE_EXCHANGING_KEYS) {
                     statusTextView.setText(LocaleController.getString(R.string.VoipExchangingKeys), true, animated);
                 }
+                try {
+                    updateKeyView(animated);
+                } catch (Throwable t) {
+                    FileLog.e(t);
+                }
                 break;
             case VoIPService.STATE_WAITING:
                 statusTextView.setText(LocaleController.getString(R.string.VoipWaiting), true, animated);

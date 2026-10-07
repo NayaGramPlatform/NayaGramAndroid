@@ -3457,6 +3457,20 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			}
 
 			// encryption key
+			if (authKey == null || authKey.length < 256) {
+				if (BuildVars.LOGS_ENABLED) {
+					FileLog.e("initiateActualEncryptedCall: invalid authKey");
+				}
+				callFailed();
+				return;
+			}
+			if (privateCall == null || privateCall.protocol == null || privateCall.protocol.library_versions == null || privateCall.protocol.library_versions.isEmpty()) {
+				if (BuildVars.LOGS_ENABLED) {
+					FileLog.e("initiateActualEncryptedCall: invalid privateCall protocol or versions");
+				}
+				callFailed();
+				return;
+			}
 			final Instance.EncryptionKey encryptionKey = new Instance.EncryptionKey(authKey, isOutgoing);
 
 			boolean newAvailable = "2.7.7".compareTo(privateCall.protocol.library_versions.get(0)) <= 0;
@@ -5444,10 +5458,12 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				});
 				if (groupCall == null && !wasEstablished) {
 					wasEstablished = true;
-					if (!isProximityNear && !privateCall.video) {
+					if (!isProximityNear && privateCall != null && !privateCall.video) {
 						try {
-							LaunchActivity.getLastFragment().getFragmentView().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
-						} catch (Exception ignore) {}
+							if (LaunchActivity.getLastFragment() != null && LaunchActivity.getLastFragment().getFragmentView() != null) {
+								LaunchActivity.getLastFragment().getFragmentView().performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+							}
+						} catch (Throwable ignore) {}
 					}
 					AndroidUtilities.runOnUIThread(new Runnable() {
 						@Override
