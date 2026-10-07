@@ -11383,9 +11383,6 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean sendTyping(long dialogId, long threadMsgId, int action, String emojicon, int classGuid) {
-        if (!org.nayagram.platform.GhostModeInterceptor.getInstance().shouldSendTypingIndicator(dialogId, action)) {
-            return false;
-        }
         if (action < 0 || action >= sendingTypings.length || dialogId == 0) {
             return false;
         }
@@ -14639,9 +14636,6 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public void markDialogAsReadNow(long dialogId, long replyId) {
-        if (!org.nayagram.platform.GhostModeInterceptor.getInstance().shouldSendReadReceipt(dialogId, (int) replyId)) {
-            return;
-        }
         Utilities.stageQueue.postRunnable(() -> {
             if (replyId != 0) {
                 String key = dialogId + "_" + replyId;
