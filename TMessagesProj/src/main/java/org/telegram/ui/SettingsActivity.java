@@ -861,12 +861,6 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             case 101:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_STUDIO));
                 break;
-            case 102:
-                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_GHOST_MODE));
-                break;
-            case 103:
-                presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_ANTI_DELETE));
-                break;
             case 104:
                 presentSettingFragment(new CacheControlActivity());
                 break;

@@ -26,7 +26,6 @@ def test_access_control():
 def test_stealth_defaults_off():
     print("[TEST 2] Stealth & Privacy Features Default OFF Rule...", end=" ")
     defaults = {
-        'ghost_mode_enabled': False,
         'hide_typing_status': False,
         'hide_online_status': False,
         'hide_read_receipts': False,
@@ -38,7 +37,6 @@ def test_stealth_defaults_off():
     }
     
     # All stealth & risky features MUST be default False for Play Store compliance
-    assert defaults['ghost_mode_enabled'] is False
     assert defaults['hide_typing_status'] is False
     assert defaults['hide_online_status'] is False
     assert defaults['hide_read_receipts'] is False
@@ -49,7 +47,7 @@ def test_stealth_defaults_off():
 def test_public_hub_cleared_of_risky_features():
     print("[TEST 3] Public Hub Risk Isolation (Anti-Delete & Story Saver in NG Control only)...", end=" ")
     public_hub_features = [
-        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
+        "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
         "Anonymous Stories", "Forward Without Quote",
         "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
     ]
@@ -79,13 +77,11 @@ def test_search_and_hub_naming():
     assert hub_name == "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
     
     features = [
-        "Ghost Mode", "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
+        "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
         "Anonymous Stories", "Forward Without Quote",
         "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
     ]
-    q = "ghost"
     matches = [f for f in features if q in f.lower()]
-    assert "Ghost Mode" in matches
     print("PASS")
 
 if __name__ == '__main__':

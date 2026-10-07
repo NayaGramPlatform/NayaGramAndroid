@@ -49,7 +49,6 @@ import org.telegram.ui.Components.Switch;
 public class NGSettingsActivity extends BaseFragment {
 
     public static final int TYPE_FEATURES_HUB = 0;
-    public static final int TYPE_GHOST_MODE = 1;
     public static final int TYPE_STUDIO = 2;
 
     private int currentType = TYPE_FEATURES_HUB;
