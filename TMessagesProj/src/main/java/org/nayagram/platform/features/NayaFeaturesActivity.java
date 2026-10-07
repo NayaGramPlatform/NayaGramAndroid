@@ -95,9 +95,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         NayaConfig cfg = NayaConfig.getInstance();
         StringBuilder audit = new StringBuilder();
         audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
-        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE - Protected]" : "[Inactive]").append("\n");
         audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE - Hidden]" : "[Inactive]").append("\n");
-        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE - Safe]" : "[Inactive]").append("\n");
         audit.append("• Biometric Locker: ").append(cfg.isBiometricChatLockerEnabled() ? "[ACTIVE - Locked]" : "[Inactive]").append("\n");
         audit.append("• Focus Mode: ").append(cfg.isFocusModeEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");

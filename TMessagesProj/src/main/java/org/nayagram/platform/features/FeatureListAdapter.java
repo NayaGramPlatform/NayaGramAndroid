@@ -78,16 +78,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     private void initializeFeatures() {
-        // 1. Ghost Mode
-        features.add(new FeatureItem(
-                1, 0xFF6366F1, 0xFF10B981, R.drawable.ic_naya_ghost, "ghost_mode",
-                "Ghost Mode", "Ghost Mode", "Hide typing status & online presence. Browse in stealth mode.",
-                "• Purpose: 100% stealth privacy.\n• Importance: Your contacts will never see you 'Online', typing actions are concealed, and read receipts (blue ticks) are paused.\n• How to use: Toggle on to browse contacts, read channels, and check messages incognito.\n• Support: " + SUPPORT_EMAIL,
-                "ঘোস্ট মোড", "ঘোস্ট মোড", "অনলাইন উপস্থিতি এবং টাইপিং গোপন রাখুন। সম্পূর্ণ অদৃশ্যভাবে ব্রাউজ করুন।",
-                "• উদ্দেশ্য: ১০০% গোপনীয়তা ও নীরব ব্রাউজিং।\n• গুরুত্ব: কেউ বুঝবে না আপনি অনলাইনে আছেন, টাইপিং স্ট্যাটাস লুকানো থাকবে এবং ব্লু টিক পড়বে না।\n• ব্যবহার: টগল অন করে সম্পূর্ণ গোপনে যেকোনো চ্যাট বা চ্যানেল দেখুন।\n• সাপোর্ট: " + SUPPORT_EMAIL,
-                "وضع الشبح", "وضع الشبح", "إخفاء حالة الظهور وجاري الكتابة. تصفح بكل خصوصية.",
-                "• الهدف: خصوصية كاملة بنسبة 100%.\n• الأهمية: إخفاء حالة الاتصال وصح القراءة والكتابة.\n• الدعم: " + SUPPORT_EMAIL
-        ));
 
         // 2. Message Scheduler
         features.add(new FeatureItem(
@@ -131,17 +121,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 "• উদ্দেশ্য: ছদ্মবেশী স্টোরি ভিউ।\n• গুরুত্ব: স্টোরি দেখা হলেও পোস্টকারীর ভিউয়ার তালিকায় আপনার নাম বা ছবি কখনোই দেখাবে না।\n• ব্যবহার: অন করে নিশ্চিন্তে সবার স্টোরি দেখুন।\n• সাপোর্ট: " + SUPPORT_EMAIL,
                 "مشاهدة القصص بتخفٍ", "مشاهدة متخفية", "مشاهدة القصص دون الظهور في قائمة المشاهدين.",
                 "• الهدف: مشاهدة القصص بشكل غير مرئي وسري تماماً.\n• الدعم: " + SUPPORT_EMAIL
-        ));
-
-        // 6. Anti-Delete Recovery
-        features.add(new FeatureItem(
-                6, 0xFF10B981, 0xFF8B5CF6, R.drawable.outline_shield_check, "anti_delete",
-                "Anti-Delete Recovery", "Anti-Delete", "Keep deleted messages safely stored in local encrypted SQLite.",
-                "• Purpose: Chat recovery protection.\n• Importance: When a sender revokes or deletes messages, NayaGram retains an encrypted copy in your local SQLite so context is never lost.\n• How to use: Works automatically in background. Deleted messages show with a shield marker.\n• Support: " + SUPPORT_EMAIL,
-                "অ্যান্টি-ডিলিট রিকভারি", "অ্যান্টি-ডিলিট", "প্রেরক মেসেজ ডিলিট করে দিলেও লোকাল মেমরিতে তা সংরক্ষিত থাকবে।",
-                "• উদ্দেশ্য: মুছে ফেলা মেসেজ উদ্ধার।\n• গুরুত্ব: প্রেরক চ্যাট থেকে সবার জন্য ডিলিট করলেও আপনার ফোনে মেসেজটি সুরক্ষিত থাকবে।\n• ব্যবহার: এটি স্বয়ংক্রিয়ভাবে কাজ করে, ডিলিট মেসেজের পাশে শিল্ড দেখাবে।\n• সাপোর্ট: " + SUPPORT_EMAIL,
-                "استعادة المحذوفات", "منع الحذف", "حفظ الرسائل المحذوفة من قبل الطرف الآخر محلياً.",
-                "• الهدف: عدم فقدان أي رسالة قام المرسل بحذفها.\n• الدعم: " + SUPPORT_EMAIL
         ));
 
         // 7. Forward Without Quote

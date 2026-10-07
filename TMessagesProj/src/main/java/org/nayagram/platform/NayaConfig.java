@@ -12,13 +12,11 @@ public class NayaConfig {
     private static final String PREF_NAME = "nayagram_config_prefs";
 
     // The 17 Exclusive Features Keys
-    private static final String KEY_GHOST_MODE = "feature_01_ghost_mode";
     private static final String KEY_MESSAGE_SCHEDULER = "feature_02_msg_scheduler";
     private static final String KEY_SMART_AUTO_REPLY = "feature_03_auto_reply";
     private static final String KEY_AUTO_REPLY_TEXT = "feature_03_auto_reply_text";
     private static final String KEY_STORY_SAVER = "feature_04_story_saver";
     private static final String KEY_ANONYMOUS_STORIES = "feature_05_anonymous_stories";
-    private static final String KEY_ANTI_DELETE = "feature_06_anti_delete";
     private static final String KEY_FORWARD_NO_QUOTE = "feature_07_forward_without_quote";
     private static final String KEY_VOICE_TRANSCRIPTION = "feature_08_voice_transcribe";
     private static final String KEY_SMART_CHAT_FOLDERS = "feature_09_smart_chat_folders";
@@ -46,8 +44,6 @@ public class NayaConfig {
     }
 
     // 1. Ghost Mode
-    public boolean isGhostMode() { return preferences.getBoolean(KEY_GHOST_MODE, false); }
-    public void setGhostMode(boolean e) { preferences.edit().putBoolean(KEY_GHOST_MODE, e).apply(); }
 
     // 2. Message Scheduler
     public boolean isMessageScheduler() { return preferences.getBoolean(KEY_MESSAGE_SCHEDULER, true); }
@@ -68,8 +64,6 @@ public class NayaConfig {
     public void setAnonymousStories(boolean e) { preferences.edit().putBoolean(KEY_ANONYMOUS_STORIES, e).apply(); }
 
     // 6. Anti-Delete Recovery
-    public boolean isAntiDeleteEnabled() { return preferences.getBoolean(KEY_ANTI_DELETE, true); }
-    public void setAntiDeleteEnabled(boolean e) { preferences.edit().putBoolean(KEY_ANTI_DELETE, e).apply(); }
 
     // 7. Forward Without Quote
     public boolean isForwardWithoutQuote() { return preferences.getBoolean(KEY_FORWARD_NO_QUOTE, false); }
@@ -118,12 +112,10 @@ public class NayaConfig {
     // Reset all features to default values
     public void resetToDefaults() {
         preferences.edit()
-            .putBoolean(KEY_GHOST_MODE, false)
             .putBoolean(KEY_MESSAGE_SCHEDULER, true)
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
             .putBoolean(KEY_STORY_SAVER, true)
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
-            .putBoolean(KEY_ANTI_DELETE, true)
             .putBoolean(KEY_FORWARD_NO_QUOTE, false)
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, true)

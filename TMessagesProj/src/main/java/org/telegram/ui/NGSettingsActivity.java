@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.nayagram.platform.AntiDeleteManager;
 import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
@@ -52,7 +51,6 @@ public class NGSettingsActivity extends BaseFragment {
     public static final int TYPE_FEATURES_HUB = 0;
     public static final int TYPE_GHOST_MODE = 1;
     public static final int TYPE_STUDIO = 2;
-    public static final int TYPE_ANTI_DELETE = 3;
 
     private int currentType = TYPE_FEATURES_HUB;
 
@@ -68,9 +66,7 @@ public class NGSettingsActivity extends BaseFragment {
     private ListAdapter listAdapter;
 
     private int headerStealth;
-    private int rowGhostMode;
     private int rowAnonymousStories;
-    private int rowAntiDelete;
 
     private int headerMessaging;
     private int rowMessageScheduler;
@@ -106,9 +102,7 @@ public class NGSettingsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
         headerStealth = rowCount++;
-        rowGhostMode = rowCount++;
         rowAnonymousStories = rowCount++;
-        rowAntiDelete = rowCount++;
 
         headerMessaging = rowCount++;
         rowMessageScheduler = rowCount++;
@@ -164,10 +158,7 @@ public class NGSettingsActivity extends BaseFragment {
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
                 } else if (id == 5) {
-                    NayaConfig.getInstance().setGhostMode(false);
                     NayaConfig.getInstance().setAnonymousStories(false);
-                    NayaConfig.getInstance().setAntiDeleteEnabled(true);
-                    AntiDeleteManager.getInstance().setAntiDeleteEnabled(true);
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Restored Defaults").show();
                 }
@@ -191,20 +182,7 @@ public class NGSettingsActivity extends BaseFragment {
                 NGFeatureCell cell = (NGFeatureCell) view;
                 boolean checked = !cell.isChecked();
 
-                if (position == rowGhostMode) {
-                    cfg.setGhostMode(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Ghost Mode: " + (checked ? "Enabled" : "Disabled")).show();
-                } else if (position == rowAnonymousStories) {
-                    cfg.setAnonymousStories(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
-                } else if (position == rowAntiDelete) {
-                    cfg.setAntiDeleteEnabled(checked);
-                    AntiDeleteManager.getInstance().setAntiDeleteEnabled(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anti-Delete Recovery: " + (checked ? "Enabled" : "Disabled")).show();
-                } else if (position == rowMessageScheduler) {
+                if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
                 } else if (position == rowSmartAutoReply) {
@@ -473,13 +451,7 @@ public class NGSettingsActivity extends BaseFragment {
                 else if (position == headerSystem) h.setText("System");
             } else if (viewType == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
-                if (position == rowGhostMode) {
-                    c.setFeature("1", 0xFF7E57C2, "Ghost Mode", "Hide typing status & online presence", cfg.isGhostMode(), true);
-                } else if (position == rowAnonymousStories) {
-                    c.setFeature("2", 0xFF26A69A, "Anonymous Story Viewer", "View stories without leaving your name", cfg.isAnonymousStories(), true);
-                } else if (position == rowAntiDelete) {
-                    c.setFeature("3", 0xFF1E88E5, "Anti-Delete Recovery", "Save & recover deleted messages", cfg.isAntiDeleteEnabled(), false);
-                } else if (position == rowMessageScheduler) {
+                if (position == rowMessageScheduler) {
                     c.setFeature("4", 0xFFFFA726, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
                     c.setFeature("5", 0xFF43A047, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
@@ -522,9 +494,7 @@ public class NGSettingsActivity extends BaseFragment {
         NayaConfig cfg = NayaConfig.getInstance();
         StringBuilder audit = new StringBuilder();
         audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
-        audit.append("• Ghost Mode: ").append(cfg.isGhostMode() ? "[ACTIVE]" : "[Inactive]").append("\n");
         audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("\n");
-        audit.append("• Anti-Delete: ").append(cfg.isAntiDeleteEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n");
         audit.append("• Support Email: support.nayagram@gmail.com\n\n");
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption.");
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
