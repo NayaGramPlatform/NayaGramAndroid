@@ -605,8 +605,8 @@ public class LocaleController {
         localeInfo.name = "বাংলা";
         localeInfo.nameEnglish = "Bengali (Bangla)";
         localeInfo.shortName = localeInfo.pluralLangCode = "bn";
-        localeInfo.pathToFile = "remote";
-        localeInfo.serverIndex = 1;
+        localeInfo.pathToFile = null;
+        localeInfo.builtIn = true;
         languages.add(localeInfo);
         languagesDict.put(localeInfo.shortName, localeInfo);
 

@@ -1884,11 +1884,18 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		req.protocol.udp_p2p = req.protocol.udp_reflector = true;
 		Collections.addAll(req.protocol.library_versions, NativeInstance.getAllVersions());
 		ConnectionsManager.getInstance(currentAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-			if (error != null) {
+			try {
+				if (error != null) {
+					callFailed();
+				} else if (response instanceof TL_phone.TL_phone_phoneCall) {
+					privateCall = ((TL_phone.TL_phone_phoneCall) response).phone_call;
+					initiateActualEncryptedCall();
+				} else {
+					callFailed();
+				}
+			} catch (Throwable t) {
+				FileLog.e(t);
 				callFailed();
-			} else {
-				privateCall = ((TL_phone.TL_phone_phoneCall) response).phone_call;
-				initiateActualEncryptedCall();
 			}
 		}));
 	}
@@ -3528,10 +3535,8 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 					}
 				}
 			}, 5000);
-		} catch (Exception x) {
-			if (BuildVars.LOGS_ENABLED) {
-				FileLog.e("error starting call", x);
-			}
+		} catch (Throwable x) {
+			FileLog.e("error starting call", x);
 			callFailed();
 		}
 	}
