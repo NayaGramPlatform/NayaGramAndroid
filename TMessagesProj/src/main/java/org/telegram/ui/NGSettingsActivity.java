@@ -136,7 +136,7 @@ public class NGSettingsActivity extends BaseFragment {
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase");
         overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
-        overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Stealth Audit");
+        overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit");
         overflowItem.addSubItem(4, R.drawable.msg_send, "Support (support.nayagram@gmail.com)");
         overflowItem.addSubItem(5, R.drawable.msg_delete, "Restore Defaults");
 
@@ -282,7 +282,7 @@ public class NGSettingsActivity extends BaseFragment {
         audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Privacy & Stealth Audit");
+        builder.setTitle("Privacy & Security Audit");
         builder.setMessage(audit.toString());
         builder.setPositiveButton("OK", null);
         builder.show();
@@ -459,54 +459,53 @@ public class NGSettingsActivity extends BaseFragment {
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             NayaConfig cfg = NayaConfig.getInstance();
-            int viewType = holder.getItemViewType();
-
-            if (viewType == 0) {
+            int type = holder.getItemViewType();
+            if (type == 0) {
                 HeaderCell h = (HeaderCell) holder.itemView;
-                if (position == headerStealth) h.setText("Stealth & Privacy");
+                if (position == headerStealth) h.setText("Privacy & Control");
                 else if (position == headerMessaging) h.setText("Messaging & Tools");
                 else if (position == headerSecurity) h.setText("Security & Protection");
-                else if (position == headerOptimization) h.setText("Optimization & AI");
+                else if (position == headerOptimization) h.setText("Optimization");
                 else if (position == headerSystem) h.setText("System");
-            } else if (viewType == 1) {
+            } else if (type == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
                 if (position == rowAnonymousStories) {
-                    c.setFeature("1", 0xFF8E24AA, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
+                    c.setFeature("👁", 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
                 } else if (position == rowMessageScheduler) {
-                    c.setFeature("4", 0xFFFFA726, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
+                    c.setFeature("⏰", 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
-                    c.setFeature("5", 0xFF43A047, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
+                    c.setFeature("🤖", 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
                 } else if (position == rowStorySaver) {
-                    c.setFeature("6", 0xFF039BE5, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
+                    c.setFeature("💾", 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
                 } else if (position == rowForwardNoQuote) {
-                    c.setFeature("7", 0xFF5C6BC0, "Forward Without Quote", "Forward messages without sender author tag", cfg.isForwardWithoutQuote(), true);
+                    c.setFeature("➡️", 0xFF6366F1, "Forward Without Quote", "Forward messages without sender author tag", cfg.isForwardWithoutQuote(), true);
                 } else if (position == rowVoiceTranscription) {
-                    c.setFeature("8", 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
+                    c.setFeature("🎤", 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
                 } else if (position == rowSmartChatFolders) {
-                    c.setFeature("9", 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
+                    c.setFeature("📁", 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
                 } else if (position == rowConfirmActions) {
-                    c.setFeature("10", 0xFFFBC02D, "Call & Voice Protection", "Confirmation prompt before calls & voice notes", cfg.isConfirmActions(), true);
+                    c.setFeature("📞", 0xFFF59E0B, "Call & Voice Protection", "Confirmation prompt before calls & voice notes", cfg.isConfirmActions(), true);
                 } else if (position == rowShowIdDc) {
-                    c.setFeature("11", 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
+                    c.setFeature("🔢", 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
-                    c.setFeature("12", 0xFF2E7D32, "Biometric Chat Locker", "Lock secret & private chats with passcode", cfg.isBiometricChatLockerEnabled(), false);
+                    c.setFeature("🔒", 0xFF2E7D32, "Biometric Chat Locker", "Lock secret & private chats with passcode", cfg.isBiometricChatLockerEnabled(), false);
                 } else if (position == rowFocusMode) {
-                    c.setFeature("13", 0xFF8E24AA, "Focus & Wellbeing Mode", "Quiet hours during meetings & study", cfg.isFocusModeEnabled(), true);
+                    c.setFeature("🧘", 0xFF8E24AA, "Focus & Wellbeing Mode", "Quiet hours during meetings & study", cfg.isFocusModeEnabled(), true);
                 } else if (position == rowBatterySaver) {
-                    c.setFeature("14", 0xFF7CB342, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
+                    c.setFeature("🔋", 0xFF43A047, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
                 } else if (position == rowInstantTranslator) {
-                    c.setFeature("15", 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
+                    c.setFeature("🌐", 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
                 }
-            } else if (viewType == 2) {
+            } else if (type == 2) {
                 TextSettingsCell t = (TextSettingsCell) holder.itemView;
                 if (position == rowStorageDoctor) {
-                    t.setText("Smart Storage Doctor", true);
+                    t.setText("🧹 Smart Storage Doctor", true);
                 } else if (position == rowResetDefaults) {
-                    t.setText("Reset All to Defaults", false);
+                    t.setText("Restore Defaults", true);
                 }
-            } else if (viewType == 3) {
+            } else if (type == 3) {
                 TextInfoPrivacyCell info = (TextInfoPrivacyCell) holder.itemView;
-                info.setText("NayaGram Platform • Independent Telegram client\nsupport.nayagram@gmail.com");
+                info.setText("NayaGram Platform · Built with ❤️ in Bangladesh");
             }
         }
     }
