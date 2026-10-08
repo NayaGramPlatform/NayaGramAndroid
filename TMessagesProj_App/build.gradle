@@ -53,21 +53,32 @@ android {
     }
 
     def envKeystore = System.getenv("RELEASE_KEYSTORE_PATH") ?: (project.hasProperty("RELEASE_KEYSTORE_PATH") ? project.property("RELEASE_KEYSTORE_PATH") : null)
-    def keystorePath = envKeystore ? file(envKeystore) : (file("../TMessagesProj/config/release.keystore").exists() ? file("../TMessagesProj/config/release.keystore") : null)
+    def candidateKeystore = null
+    if (envKeystore) {
+        candidateKeystore = file(envKeystore)
+    } else if (file("../TMessagesProj/config/nayagrampro.jks").exists()) {
+        candidateKeystore = file("../TMessagesProj/config/nayagrampro.jks")
+    } else if (file("../TMessagesProj/config/release.keystore").exists()) {
+        candidateKeystore = file("../TMessagesProj/config/release.keystore")
+    }
+    def keystorePath = (candidateKeystore != null && candidateKeystore.exists()) ? candidateKeystore : null
     def relStorePass = System.getenv("RELEASE_STORE_PASSWORD") ?: (project.hasProperty("RELEASE_STORE_PASSWORD") ? project.property("RELEASE_STORE_PASSWORD") : "")
     def relKeyPass = System.getenv("RELEASE_KEY_PASSWORD") ?: (project.hasProperty("RELEASE_KEY_PASSWORD") ? project.property("RELEASE_KEY_PASSWORD") : "")
     def relKeyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: (project.hasProperty("RELEASE_KEY_ALIAS") ? project.property("RELEASE_KEY_ALIAS") : "")
 
     signingConfigs {
         debug {
-            storeFile keystorePath
-            storePassword relStorePass
-            keyAlias relKeyAlias
-            keyPassword relKeyPass
+            if (keystorePath != null && !relStorePass.isEmpty() && !relKeyAlias.isEmpty()) {
+                storeFile keystorePath
+                storePassword relStorePass
+                keyAlias relKeyAlias
+                keyPassword relKeyPass
+            }
+            // else: use Android default debug keystore
         }
 
         release {
-            if (keystorePath != null && keystorePath.exists() && !relStorePass.isEmpty()) {
+            if (keystorePath != null && keystorePath.exists() && !relStorePass.isEmpty() && !relKeyAlias.isEmpty()) {
                 storeFile keystorePath
                 storePassword relStorePass
                 keyAlias relKeyAlias
@@ -80,7 +91,9 @@ android {
         debug {
             debuggable true
             jniDebuggable true
-            signingConfig signingConfigs.debug
+            if (signingConfigs.debug.storeFile != null) {
+                signingConfig signingConfigs.debug
+            }
             applicationIdSuffix ".beta"
             minifyEnabled false
             shrinkResources false
@@ -92,7 +105,9 @@ android {
         standalone {
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.release
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             applicationIdSuffix ".web"
             minifyEnabled true
             shrinkResources false
@@ -104,7 +119,9 @@ android {
         release {
             debuggable false
             jniDebuggable false
-            signingConfig signingConfigs.release
+            if (signingConfigs.release.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled true
             shrinkResources false
             multiDexEnabled true
@@ -206,7 +223,7 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.22.1'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21' // , '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'
                 targets 'tmessages.49'
             }
         }
