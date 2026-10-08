@@ -52,10 +52,11 @@ android {
         localeFilters += ["zz"]
     }
 
-    def keystorePath = file("../TMessagesProj/config/nayagrampro.jks").exists() ? file("../TMessagesProj/config/nayagrampro.jks") : (file("../TMessagesProj/config/nayagram-release.jks").exists() ? file("../TMessagesProj/config/nayagram-release.jks") : file("../TMessagesProj/config/release.keystore"))
-    def relStorePass = project.hasProperty("RELEASE_STORE_PASSWORD") ? project.property("RELEASE_STORE_PASSWORD") : "NayaGram@2026#BuildTop"
-    def relKeyPass = project.hasProperty("RELEASE_KEY_PASSWORD") ? project.property("RELEASE_KEY_PASSWORD") : "NayaGram@2026#BuildTop"
-    def relKeyAlias = project.hasProperty("RELEASE_KEY_ALIAS") ? project.property("RELEASE_KEY_ALIAS") : "nayagrampro_key"
+    def envKeystore = System.getenv("RELEASE_KEYSTORE_PATH") ?: (project.hasProperty("RELEASE_KEYSTORE_PATH") ? project.property("RELEASE_KEYSTORE_PATH") : null)
+    def keystorePath = envKeystore ? file(envKeystore) : (file("../TMessagesProj/config/release.keystore").exists() ? file("../TMessagesProj/config/release.keystore") : null)
+    def relStorePass = System.getenv("RELEASE_STORE_PASSWORD") ?: (project.hasProperty("RELEASE_STORE_PASSWORD") ? project.property("RELEASE_STORE_PASSWORD") : "")
+    def relKeyPass = System.getenv("RELEASE_KEY_PASSWORD") ?: (project.hasProperty("RELEASE_KEY_PASSWORD") ? project.property("RELEASE_KEY_PASSWORD") : "")
+    def relKeyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: (project.hasProperty("RELEASE_KEY_ALIAS") ? project.property("RELEASE_KEY_ALIAS") : "")
 
     signingConfigs {
         debug {
@@ -66,10 +67,12 @@ android {
         }
 
         release {
-            storeFile keystorePath
-            storePassword relStorePass
-            keyAlias relKeyAlias
-            keyPassword relKeyPass
+            if (keystorePath != null && keystorePath.exists() && !relStorePass.isEmpty()) {
+                storeFile keystorePath
+                storePassword relStorePass
+                keyAlias relKeyAlias
+                keyPassword relKeyPass
+            }
         }
     }
 
