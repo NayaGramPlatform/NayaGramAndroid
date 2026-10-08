@@ -534,7 +534,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             card.addView(subText, subParams);
 
             // Pill Badge
-            TextView badge = new TextView(context);
+            badge = new TextView(context);
             badge.setText("✨ NayaGram Exclusive Features ✨");
             badge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             badge.setTypeface(AndroidUtilities.bold());

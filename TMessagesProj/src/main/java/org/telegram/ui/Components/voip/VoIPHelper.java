@@ -195,7 +195,7 @@ public class VoIPHelper {
 					oldName = sb.toString();
 				} else if (callerId > 0) {
 					TLRPC.User callUser = voIPService.getUser();
-					oldName = ContactsController.formatName(callUser.first_name, callUser.last_name);
+					oldName = callUser != null ? ContactsController.formatName(callUser.first_name, callUser.last_name) : LocaleController.getString(R.string.VoipOngoingAlertTitle);
 					if (newId > 0) {
 						key2 = R.string.VoipOngoingAlert;
 					} else {
@@ -203,7 +203,7 @@ public class VoIPHelper {
 					}
 				} else {
 					TLRPC.Chat callChat = voIPService.getChat();
-					oldName = callChat.title;
+					oldName = callChat != null && callChat.title != null ? callChat.title : LocaleController.getString(R.string.VoipOngoingChatAlertTitle);
 					if (newId > 0) {
 						key2 = R.string.VoipOngoingChatAlert2;
 					} else {
