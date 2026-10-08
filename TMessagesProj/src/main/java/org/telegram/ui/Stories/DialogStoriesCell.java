@@ -1228,6 +1228,9 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
     }
 
     public void openStoryRecorder(long dialogId) {
+        if (!org.nayagram.platform.bot.NGBotAccountGuard.checkStoriesSupported(getContext(), currentAccount)) {
+            return;
+        }
         if (dialogId == 0) {
             final StoriesController.StoryLimit storyLimit = MessagesController.getInstance(currentAccount).getStoriesController().checkStoryLimit();
             if (storyLimit != null && storyLimit.active(currentAccount)) {

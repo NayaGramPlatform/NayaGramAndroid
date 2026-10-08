@@ -218,6 +218,9 @@ public class ContactsActivity extends BaseFragment implements FactorAnimator.Tar
 
     @Override
     public boolean onFragmentCreate() {
+        if (!org.nayagram.platform.bot.NGBotAccountGuard.checkContactsSyncSupported(getParentActivity(), currentAccount)) {
+            return false;
+        }
         super.onFragmentCreate();
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.contactsDidLoad);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
