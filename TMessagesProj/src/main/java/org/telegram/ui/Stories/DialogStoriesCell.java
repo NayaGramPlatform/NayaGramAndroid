@@ -338,6 +338,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         telegramLogoView.setImageResource(R.drawable.nayagram_intro_logo);
         telegramLogoView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         telegramLogoView.setFocusableInTouchMode(true);
+        telegramLogoView.setVisibility(View.GONE); // NayaGram: always show text title, hide logo
         addView(telegramLogoView, LayoutHelper.createFrame(24, 24));
 
         statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
@@ -2219,8 +2220,9 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             titleView.setVisibility(titleAlpha > 0 ? VISIBLE : GONE);
         }
         if (telegramLogoView != null) {
-            telegramLogoView.setAlpha(logoAlpha);
-            telegramLogoView.setVisibility(logoAlpha > 0 ? VISIBLE : GONE);
+            // NayaGram: never show logo in place of title — keep text name always readable
+            telegramLogoView.setAlpha(0f);
+            telegramLogoView.setVisibility(GONE);
         }
         if (emojiStatusView != null) {
             emojiStatusView.setAlpha(logoAlpha);
