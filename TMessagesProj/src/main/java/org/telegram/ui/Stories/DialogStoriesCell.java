@@ -2229,8 +2229,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             telegramLogoView.setVisibility(GONE);
         }
         if (emojiStatusView != null) {
-            emojiStatusView.setAlpha(logoAlpha);
-            emojiStatusView.setVisibility(logoAlpha > 0 ? VISIBLE : GONE);
+            emojiStatusView.setAlpha(titleAlpha);
+            emojiStatusView.setVisibility(titleAlpha > 0 ? VISIBLE : GONE);
         }
         if (subtitleOverlayContainer != null) {
             subtitleOverlayContainer.setAlpha(progress);
