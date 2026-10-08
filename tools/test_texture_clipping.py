@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import sys
 import math
-from PIL import Image
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
 
 def test_texture_boundaries():
     print("[TEST] Running Texture 21 and 22 Boundary & Clipping Suite...")

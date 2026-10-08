@@ -8034,6 +8034,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         } else {
+            if (getParentActivity() != null && org.nayagram.platform.security.BiometricChatLocker.getInstance(getParentActivity()).isChatProtected(dialogId) && !org.nayagram.platform.security.BiometricChatLocker.getInstance(getParentActivity()).isChatUnlockedForSession(dialogId)) {
+                final View finalView = view;
+                final int finalPosition = position;
+                final RecyclerListView.Adapter finalAdapter = adapter;
+                final float finalX = x;
+                final float finalY = y;
+                org.nayagram.platform.security.BiometricChatLocker.getInstance(getParentActivity()).authenticateAndUnlock(getParentActivity(), dialogId, new org.nayagram.platform.security.BiometricChatLocker.UnlockCallback() {
+                    @Override
+                    public void onUnlockSuccess() {
+                        onItemClick(finalView, finalPosition, finalAdapter, finalX, finalY);
+                    }
+
+                    @Override
+                    public void onUnlockFailed() {
+                    }
+                });
+                return;
+            }
             Bundle args = new Bundle();
             if (DialogObject.isEncryptedDialog(dialogId)) {
                 args.putInt("enc_id", DialogObject.getEncryptedChatId(dialogId));

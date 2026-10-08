@@ -7,6 +7,8 @@ import android.text.InputType;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.nayagram.platform.NayaConfig;
+import org.nayagram.platform.security.BiometricChatLocker;
 import org.nayagram.platform.translator.InstantTranslatorManager;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
@@ -16,11 +18,12 @@ import org.telegram.ui.ChatActivity;
 
 /**
  * NGChatMenuHelper - In-Chat 3-Dots Menu & In-Chat Settings for NayaGram.
- * Matches Novagram's in-chat features:
+ * Matches Novagram & NayaGram in-chat features:
  * 1. Chat ID display & copy
- * 2. NayaGram In-Chat Settings (One-time voice & video, Auto-add text signature, Lock chat)
- * 3. Voice to text (Speech transcription)
- * 4. Auto-translate (28+ languages dialog)
+ * 2. Forward Without Quote (Clean Forward) toggle
+ * 3. NayaGram In-Chat Settings (One-time voice & video, Auto-add text signature, Lock chat)
+ * 4. Voice to text (Speech transcription)
+ * 5. Auto-translate (28+ languages dialog)
  */
 public final class NGChatMenuHelper {
 
@@ -28,11 +31,14 @@ public final class NGChatMenuHelper {
     public static final int ITEM_NG_SETTINGS = 29002;
     public static final int ITEM_VOICE_TO_TEXT = 29003;
     public static final int ITEM_AUTO_TRANSLATE = 29004;
+    public static final int ITEM_FORWARD_WITHOUT_QUOTE = 29005;
 
     private static final String PREFS_CHAT = "nayagram_chat_prefs_";
 
     public static void addItems(ActionBarMenuItem headerItem, long dialogId) {
         if (headerItem == null) return;
+        boolean isForwardClean = NayaConfig.getInstance().isForwardWithoutQuote();
+        headerItem.lazilyAddSubItem(ITEM_FORWARD_WITHOUT_QUOTE, R.drawable.msg_forward, "Forward Without Quote: " + (isForwardClean ? "ON" : "OFF"));
         headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId);
         headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings");
         headerItem.lazilyAddSubItem(ITEM_VOICE_TO_TEXT, R.drawable.settings_power, "Voice to text");
@@ -43,7 +49,12 @@ public final class NGChatMenuHelper {
         if (chatActivity == null || chatActivity.getParentActivity() == null) return false;
         Activity activity = chatActivity.getParentActivity();
 
-        if (id == ITEM_CHAT_ID) {
+        if (id == ITEM_FORWARD_WITHOUT_QUOTE) {
+            boolean current = NayaConfig.getInstance().isForwardWithoutQuote();
+            NayaConfig.getInstance().setForwardWithoutQuote(!current);
+            Toast.makeText(activity, "Forward Without Quote: " + (!current ? "Enabled" : "Disabled"), Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == ITEM_CHAT_ID) {
             AndroidUtilities.addToClipboard(String.valueOf(dialogId));
             Toast.makeText(activity, "Chat ID copied: " + dialogId, Toast.LENGTH_SHORT).show();
             return true;
@@ -99,12 +110,14 @@ public final class NGChatMenuHelper {
         boolean oneTime = sp.getBoolean("one_time_media", false);
         boolean autoAddText = sp.getBoolean("auto_add_text", false);
         String customText = sp.getString("custom_appended_text", "https://t.me/NayaGramPro");
+        BiometricChatLocker locker = BiometricChatLocker.getInstance(activity);
+        boolean isLocked = locker.isChatProtected(dialogId);
 
         String[] options = {
             "One-time voice & video: " + (oneTime ? "ON" : "OFF"),
             "Auto-add text: " + (autoAddText ? "ON" : "OFF"),
             "Edit text signature: (" + customText + ")",
-            "Lock chat (PIN / Passcode)"
+            "Biometric Chat Lock: " + (isLocked ? "LOCKED" : "UNLOCKED")
         };
 
         AlertDialog.Builder b = new AlertDialog.Builder(activity);
@@ -121,7 +134,13 @@ public final class NGChatMenuHelper {
             } else if (which == 2) {
                 showEditTextSignatureDialog(activity, sp);
             } else if (which == 3) {
-                Toast.makeText(activity, "Chat lock is active with your Telegram Passcode", Toast.LENGTH_SHORT).show();
+                if (isLocked) {
+                    locker.unlockChatPermanent(dialogId);
+                    Toast.makeText(activity, "Chat Lock Disabled", Toast.LENGTH_SHORT).show();
+                } else {
+                    locker.lockChat(dialogId);
+                    Toast.makeText(activity, "Chat Locked with Biometrics / Device Security", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         b.setPositiveButton("Close", null);
@@ -135,7 +154,6 @@ public final class NGChatMenuHelper {
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.setText(sp.getString("custom_appended_text", "https://t.me/NayaGramPro"));
         b.setView(input);
-
         b.setPositiveButton("Save", (dialog, which) -> {
             String txt = input.getText().toString().trim();
             sp.edit().putString("custom_appended_text", txt).apply();

@@ -1,8 +1,14 @@
 package org.nayagram.platform.security;
 
+import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.hardware.biometrics.BiometricPrompt;
+import android.os.Build;
+import android.os.CancellationSignal;
+import android.widget.Toast;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +26,11 @@ public final class BiometricChatLocker {
     private static volatile BiometricChatLocker sInstance;
     private final SharedPreferences preferences;
     private final Set<Long> unlockedSessionChats = new HashSet<>();
+
+    public interface UnlockCallback {
+        void onUnlockSuccess();
+        void onUnlockFailed();
+    }
 
     private BiometricChatLocker(Context context) {
         this.preferences = context.getApplicationContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -74,5 +85,88 @@ public final class BiometricChatLocker {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public void authenticateAndUnlock(Activity activity, long dialogId, UnlockCallback callback) {
+        if (!isChatProtected(dialogId) || isChatUnlockedForSession(dialogId)) {
+            if (callback != null) callback.onUnlockSuccess();
+            return;
+        }
+
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
+            if (callback != null) callback.onUnlockFailed();
+            return;
+        }
+
+        if (!isDeviceSecurityAvailable(activity)) {
+            grantSessionAccess(dialogId);
+            if (callback != null) callback.onUnlockSuccess();
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                BiometricPrompt prompt = new BiometricPrompt.Builder(activity)
+                        .setTitle("NayaGram Biometric Lock")
+                        .setSubtitle("Confirm your biometric or passcode to open this locked chat")
+                        .setDeviceCredentialAllowed(true)
+                        .build();
+
+                CancellationSignal signal = new CancellationSignal();
+                prompt.authenticate(signal, activity.getMainExecutor(), new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                        grantSessionAccess(dialogId);
+                        if (callback != null) callback.onUnlockSuccess();
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                        if (errorCode != BiometricPrompt.BIOMETRIC_ERROR_USER_CANCELED &&
+                            errorCode != BiometricPrompt.BIOMETRIC_ERROR_CANCELED) {
+                            Toast.makeText(activity, "Unlock failed: " + errString, Toast.LENGTH_SHORT).show();
+                        }
+                        if (callback != null) callback.onUnlockFailed();
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        // User can retry in dialog
+                    }
+                });
+                return;
+            } catch (Exception ignored) {
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                BiometricPrompt prompt = new BiometricPrompt.Builder(activity)
+                        .setTitle("NayaGram Biometric Lock")
+                        .setSubtitle("Confirm fingerprint to open this locked chat")
+                        .setNegativeButton("Cancel", activity.getMainExecutor(), (dialog, which) -> {
+                            if (callback != null) callback.onUnlockFailed();
+                        })
+                        .build();
+
+                CancellationSignal signal = new CancellationSignal();
+                prompt.authenticate(signal, activity.getMainExecutor(), new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                        grantSessionAccess(dialogId);
+                        if (callback != null) callback.onUnlockSuccess();
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                        if (callback != null) callback.onUnlockFailed();
+                    }
+                });
+                return;
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Fallback for older devices: grant session access
+        grantSessionAccess(dialogId);
+        if (callback != null) callback.onUnlockSuccess();
     }
 }

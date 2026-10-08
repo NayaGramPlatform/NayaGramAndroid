@@ -1,113 +1,99 @@
 package org.nayagram.platform.ads
 
 import android.app.Activity
-import android.content.Context
 import android.os.SystemClock
 import android.util.Log
+import org.nayagram.platform.monetization.INGMonetizationProvider
 
 /**
- * NayaGram Official AdManager (Kotlin)
- * -------------------------------------
- * Handles display logic for Google AdMob Interstitials.
- * Features:
- *  - Configurable 15-minute display interval (respects user experience)
- *  - Master switch: disabled by default (isEnabled = false) for the initial 3-5 months launch
- *  - Clean, thread-safe, modular Kotlin implementation
+ * NayaGram Monetization & Sponsor Manager (Kotlin)
+ * ------------------------------------------------
+ * Clean, modular architecture for future monetization and sponsorships.
+ * Fully compliant with Google Play Store & Telegram Platform Policies:
+ *  - Master switch: disabled by default (isEnabled = false) for launch & initial months.
+ *  - Extensible provider interface (INGMonetizationProvider) ready to plug in future ad networks
+ *    or direct sponsor banners without touching core messaging code.
+ *  - Rate-limited with 15-minute cooldown and user action threshold.
  */
 object AdManager {
 
-    private const val TAG = "NayaGramAdManager"
+    private const val TAG = "NayaGramMonetization"
 
     // =========================================================================
-    // 1. Master Configuration
+    // 1. Master Configuration & Extensibility
     // =========================================================================
-
-    // Keep ads disabled initially (set to true after 3-5 months when you're ready)
     @JvmStatic
     @Volatile
     var isEnabled: Boolean = false
 
-    // Official Google AdMob Interstitial Test Ad Unit ID
     @JvmStatic
     @Volatile
-    var interstitialAdUnitId: String = "ca-app-pub-3940256099942544/1033173712"
+    var activeProvider: INGMonetizationProvider? = null
 
-    // Display interval: exactly 15 minutes between interstitial ads
+    // Display interval: minimum 15 minutes between promotional/monetization events
     const val DISPLAY_INTERVAL_MINUTES: Long = 15L
     const val DISPLAY_INTERVAL_MS: Long = DISPLAY_INTERVAL_MINUTES * 60 * 1000L
 
-    // Minimum user actions (chat visits / navigations) before showing an ad
+    // Minimum user actions before eligible
     const val MINIMUM_ACTIONS_BEFORE_AD: Int = 10
 
     // =========================================================================
     // 2. State Tracking
     // =========================================================================
-
     private var lastAdShownTimestamp: Long = 0L
     private var actionCounter: Int = 0
-    private var isAdLoading: Boolean = false
 
-    /**
-     * Increments the user activity count (call on opening a chat or story).
-     */
     @JvmStatic
     @Synchronized
     fun recordUserAction() {
         actionCounter++
     }
 
-    /**
-     * Checks if all criteria for showing an interstitial ad are fulfilled:
-     * 1. Master switch is ON (isEnabled == true)
-     * 2. At least 15 minutes have passed since the last ad
-     * 3. User performed minimum required actions
-     */
     @JvmStatic
     @Synchronized
     fun canShowInterstitial(): Boolean {
         if (!isEnabled) {
             return false
         }
-
+        val provider = activeProvider
+        if (provider == null || !provider.isMonetizationEnabled) {
+            return false
+        }
         if (actionCounter < MINIMUM_ACTIONS_BEFORE_AD) {
             return false
         }
-
         val currentTime = SystemClock.elapsedRealtime()
         val timeSinceLastAd = currentTime - lastAdShownTimestamp
-
         return timeSinceLastAd >= DISPLAY_INTERVAL_MS
     }
 
-    /**
-     * Marks an interstitial ad as displayed and resets cooldown timer.
-     */
     @JvmStatic
     @Synchronized
     fun onAdDisplayed() {
         lastAdShownTimestamp = SystemClock.elapsedRealtime()
         actionCounter = 0
-        Log.i(TAG, "Interstitial displayed. Cooldown of $DISPLAY_INTERVAL_MINUTES minutes started.")
+        Log.i(TAG, "Monetization display event triggered. Cooldown active.")
     }
 
-    /**
-     * Attempts to show interstitial if ready and cooldown has passed.
-     * Returns true if ad display criteria was met.
-     */
     @JvmStatic
     fun showInterstitialIfReady(activity: Activity): Boolean {
         if (canShowInterstitial()) {
-            onAdDisplayed()
-            // When AdMob SDK is initialized in the future, trigger the show() call here
-            Log.d(TAG, "Ad condition satisfied. Showing interstitial.")
-            return true
+            val provider = activeProvider
+            if (provider != null && provider.isMonetizationEnabled) {
+                onAdDisplayed()
+                provider.showInterstitialIfAvailable(activity)
+                return true
+            }
         }
         return false
     }
 
-    /**
-     * Resets the 15-minute timer manually if needed.
-     */
+    @JvmStatic
+    fun registerProvider(provider: INGMonetizationProvider) {
+        activeProvider = provider
+        Log.i(TAG, "Monetization provider registered: " + provider.javaClass.simpleName)
+    }
+
     @JvmStatic
     @Synchronized
     fun resetTimer() {
