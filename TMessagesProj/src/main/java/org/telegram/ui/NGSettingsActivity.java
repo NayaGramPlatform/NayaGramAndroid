@@ -181,7 +181,11 @@ public class NGSettingsActivity extends BaseFragment {
                 NGFeatureCell cell = (NGFeatureCell) view;
                 boolean checked = !cell.isChecked();
 
-                if (position == rowMessageScheduler) {
+                if (position == rowAnonymousStories) {
+                    cfg.setAnonymousStories(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
+                } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
                 } else if (position == rowSmartAutoReply) {
@@ -266,6 +270,22 @@ public class NGSettingsActivity extends BaseFragment {
         });
         b.setNegativeButton("Cancel", null);
         showDialog(b.create());
+    }
+
+    private void showPrivacyAuditDialog(Context context) {
+        NayaConfig cfg = NayaConfig.getInstance();
+        StringBuilder audit = new StringBuilder();
+        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
+        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("\n");
+        audit.append("• Biometric Locker: ").append(cfg.isBiometricChatLockerEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n");
+        audit.append("• Focus Mode: ").append(cfg.isFocusModeEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
+        audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Privacy & Stealth Audit");
+        builder.setMessage(audit.toString());
+        builder.setPositiveButton("OK", null);
+        builder.show();
     }
 
     /**
@@ -478,30 +498,16 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature("15", 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
                 }
             } else if (viewType == 2) {
-                TextSettingsCell s = (TextSettingsCell) holder.itemView;
+                TextSettingsCell t = (TextSettingsCell) holder.itemView;
                 if (position == rowStorageDoctor) {
-                    s.setTextAndValue("Smart Storage Doctor", "1-Tap clean cache & junk", true);
+                    t.setText("Smart Storage Doctor", true);
                 } else if (position == rowResetDefaults) {
-                    s.setTextAndValue("Reset Settings", "Restore default configuration", false);
+                    t.setText("Reset All to Defaults", false);
                 }
             } else if (viewType == 3) {
-                TextInfoPrivacyCell p = (TextInfoPrivacyCell) holder.itemView;
-                p.setText("NayaGram Messenger v1.0.85\nModern Telegram client engineered for Bangladesh.");
+                TextInfoPrivacyCell info = (TextInfoPrivacyCell) holder.itemView;
+                info.setText("NayaGram Platform • Independent Telegram client\nsupport.nayagram@gmail.com");
             }
         }
-    }
-
-    private void showPrivacyAuditDialog(Context context) {
-        NayaConfig cfg = NayaConfig.getInstance();
-        StringBuilder audit = new StringBuilder();
-        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
-        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("\n");
-        audit.append("• Support Email: support.nayagram@gmail.com\n\n");
-        audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption.");
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Privacy & Stealth Audit");
-        builder.setMessage(audit.toString());
-        builder.setPositiveButton("OK", null);
-        builder.show();
     }
 }
