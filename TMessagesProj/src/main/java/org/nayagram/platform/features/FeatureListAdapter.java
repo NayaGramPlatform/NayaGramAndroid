@@ -221,7 +221,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 15,
                 0xFF16A34A,
                 0xFF166534,
-                R.drawable.msg_power,
+                R.drawable.msg2_battery,
                 new String[]{"Battery Saver", "ব্যাটারি সেভার", "توفير البطارية"},
                 new String[]{
                         "Below 20% charge, auto-pause video & heavy animations. Save 30-40% battery.",
