@@ -335,7 +335,7 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         telegramLogoView = new ImageView(context);
         telegramLogoView.setContentDescription(getString(R.string.AppName));
         telegramLogoView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        telegramLogoView.setImageResource(R.drawable.nayagram_intro_logo);
+        telegramLogoView.setImageDrawable(null);
         telegramLogoView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
         telegramLogoView.setFocusableInTouchMode(true);
         telegramLogoView.setVisibility(View.GONE); // NayaGram: always show text title, hide logo
@@ -634,11 +634,15 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
                 LocaleController.formatPluralString("Stories", totalCount);
         }
 
+        if (TextUtils.isEmpty(currentTitle)) {
+            currentTitle = LocaleController.getString(R.string.AppName);
+        }
+
         if (!hasOverlayText) {
             titleView.setText(currentTitle, animated && !LocaleController.isRTL);
         }
 
-        animatorHasTitleText.setValue(!TextUtils.isEmpty(currentTitle) || hasOverlayText, animated);
+        animatorHasTitleText.setValue(true, animated);
 
         miniItems.clear();
         for (int i = 0; i < items.size(); i++) {
@@ -1302,10 +1306,13 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         } else {
             hasOverlayText = false;
             overlayTextId = 0;
+            if (TextUtils.isEmpty(currentTitle)) {
+                currentTitle = LocaleController.getString(R.string.AppName);
+            }
             titleView.setText(currentTitle, !LocaleController.isRTL);
         }
 
-        animatorHasTitleText.setValue(hasOverlayText, true);
+        animatorHasTitleText.setValue(true, true);
         if (hasEllipsizedText) {
             ellipsizeSpanAnimator.addView(titleView);
         } else {
@@ -2210,17 +2217,14 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
 
     private void checkUi_titleVisibility() {
         final float progress = MathUtils.clamp(Math.min(collapsedProgress, collapsedProgress2), 0, 1);
-        final float titleVisibility = animatorHasTitleText.getFloatValue();
-        final float logoVisibility = 1f - titleVisibility;
-        final float titleAlpha = titleVisibility * progress;
-        final float logoAlpha = logoVisibility * progress;
+        final float titleAlpha = progress;
 
         if (titleView != null) {
             titleView.setAlpha(titleAlpha);
             titleView.setVisibility(titleAlpha > 0 ? VISIBLE : GONE);
         }
         if (telegramLogoView != null) {
-            // NayaGram: never show logo in place of title — keep text name always readable
+            telegramLogoView.setImageDrawable(null);
             telegramLogoView.setAlpha(0f);
             telegramLogoView.setVisibility(GONE);
         }
