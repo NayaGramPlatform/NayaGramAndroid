@@ -74,6 +74,10 @@ public class VoIPHelper {
 	private static final int VOIP_SUPPORT_ID = 4244000;
 
 	public static void startCall(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
+		int currentAccount = accountInstance != null ? accountInstance.getCurrentAccount() : UserConfig.selectedAccount;
+		if (!org.nayagram.platform.bot.NGBotAccountGuard.checkCallSupported(activity, currentAccount)) {
+			return;
+		}
 		if (accountInstance == null ? MessagesController.getInstance(UserConfig.selectedAccount).isFrozen() : accountInstance.getMessagesController().isFrozen()) {
 			AccountFrozenAlert.show(accountInstance == null ? UserConfig.selectedAccount : accountInstance.getCurrentAccount());
 			return;
