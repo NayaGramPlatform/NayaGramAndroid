@@ -48,7 +48,7 @@ jobs:
       - name: Run C++ Account Boundary Tests
         run: |
           echo "=== Compiling & Running C++ tgnet Account Boundary Tests ==="
-          g++ -I TMessagesProj/jni/tgnet TMessagesProj/jni/tgnet/test_account_boundary.cpp -o test_account_boundary
+          g++ -std=c++17 -I TMessagesProj/jni/tgnet TMessagesProj/jni/tgnet/test_account_boundary.cpp -o test_account_boundary
           ./test_account_boundary || {
             echo "::error::C++ Account Boundary Test FAILED!"
             exit 1

@@ -10,6 +10,7 @@
 #define DEFINES_H
 
 #include <functional>
+#include <memory>
 #include <list>
 #include <limits.h>
 #include <sstream>
