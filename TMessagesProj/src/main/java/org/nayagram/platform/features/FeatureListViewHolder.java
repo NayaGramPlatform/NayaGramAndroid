@@ -26,6 +26,7 @@ import org.telegram.ui.ActionBar.Theme;
  */
 public class FeatureListViewHolder extends RecyclerView.ViewHolder {
 
+    private final FrameLayout iconBadgeWrapper;
     private final FrameLayout iconBadgeContainer;
     private final ImageView iconView;
     private final TextView numberView;
@@ -52,7 +53,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         ));
 
         // 1. Left: Rounded Vector Icon Container with top-corner Number Badge
-        FrameLayout iconBadgeWrapper = new FrameLayout(context);
+        iconBadgeWrapper = new FrameLayout(context);
         LinearLayout.LayoutParams wrapperParams = new LinearLayout.LayoutParams(
                 AndroidUtilities.dp(52),
                 AndroidUtilities.dp(52)
