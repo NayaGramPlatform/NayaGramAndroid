@@ -171,6 +171,11 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         descView.setText(feature.getDesc(lang));
         numberView.setText(String.valueOf(feature.number));
 
+        cardView.setContentDescription("Feature " + feature.number + ": " + feature.getCatchyTitle(lang) + ". " + feature.getDesc(lang));
+        cardView.setFocusable(true);
+        iconBadgeWrapper.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        detailsBtn.setContentDescription("Details for " + feature.getCatchyTitle(lang));
+
         if (lang == FeatureListAdapter.LANG_BN) {
             detailsText.setText("বিবরণ");
         } else if (lang == FeatureListAdapter.LANG_AR) {

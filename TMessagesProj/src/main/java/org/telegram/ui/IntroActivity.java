@@ -796,8 +796,8 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 android.graphics.drawable.Drawable logo = org.telegram.messenger.ApplicationLoader.applicationContext != null ? 
                         org.telegram.messenger.ApplicationLoader.applicationContext.getResources().getDrawable(R.drawable.nayagram_intro_logo) : null;
                 if (logo != null) {
-                    int pad = (int) (size * 0.08f);
-                    logo.setBounds(pad, pad, size - pad, size - pad);
+                    // Fits perfectly inside the 150dp sphere with zero offset, zero gap and no black stroke
+                    logo.setBounds(0, 0, size, size);
                     logo.draw(c);
                 }
                 return bm;

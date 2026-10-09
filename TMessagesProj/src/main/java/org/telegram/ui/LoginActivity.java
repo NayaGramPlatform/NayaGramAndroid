@@ -1651,8 +1651,15 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         needHideProgress(false);
     }
 
-    public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res) {
+    public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res, String token) {
+        if (res != null && res.user != null) {
+            org.nayagram.platform.auth.NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
+        }
         onAuthSuccess(res);
+    }
+
+    public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res) {
+        handleBotAuthSuccess(res, null);
     }
 
     private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
@@ -2492,7 +2499,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 botLoginButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
                 botLoginButton.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
                 botLoginButton.setGravity(Gravity.CENTER);
-                botLoginButton.setPadding(0, AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14));
+                botLoginButton.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+                botLoginButton.setMinimumHeight(AndroidUtilities.dp(48));
+                botLoginButton.setContentDescription(getString("LogInWithBotToken", R.string.LogInWithBotToken));
+                botLoginButton.setFocusable(true);
                 botLoginButton.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector), AndroidUtilities.dp(8), AndroidUtilities.dp(8)));
                 botLoginButton.setOnClickListener(v -> org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(LoginActivity.this, currentAccount));
                 addView(botLoginButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 16, 6, 16, 0));

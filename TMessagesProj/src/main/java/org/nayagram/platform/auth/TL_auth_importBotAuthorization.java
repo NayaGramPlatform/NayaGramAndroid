@@ -35,4 +35,13 @@ public class TL_auth_importBotAuthorization extends TLObject {
         stream.writeString(api_hash);
         stream.writeString(bot_auth_token);
     }
+
+    @Override
+    public String toString() {
+        return "TL_auth_importBotAuthorization{" +
+                "constructor=" + Integer.toHexString(constructor) +
+                ", api_id=" + api_id +
+                ", bot_auth_token=" + NGBotSessionManager.maskToken(bot_auth_token) +
+                '}';
+    }
 }

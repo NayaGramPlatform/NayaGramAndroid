@@ -292,6 +292,7 @@ public class NGSettingsActivity extends BaseFragment {
             setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
 
             badgeView = new BadgeView(context);
+            badgeView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             addView(badgeView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.CENTER_VERTICAL, 16, 0, 0, 0));
 
             LinearLayout textLayout = new LinearLayout(context);
@@ -302,21 +303,23 @@ public class NGSettingsActivity extends BaseFragment {
             titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
             titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
             titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            titleView.setSingleLine(true);
+            titleView.setMaxLines(2);
             titleView.setEllipsize(TextUtils.TruncateAt.END);
             textLayout.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
             subtitleView = new TextView(context);
             subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             subtitleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
-            subtitleView.setSingleLine(true);
+            subtitleView.setMaxLines(3);
             subtitleView.setEllipsize(TextUtils.TruncateAt.END);
             textLayout.addView(subtitleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
 
             switchView = new Switch(context);
             switchView.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
-            addView(switchView, LayoutHelper.createFrame(37, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
+            addView(switchView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
 
+            setFocusable(true);
+            setMinimumHeight(AndroidUtilities.dp(60));
             setWillNotDraw(false);
         }
 
@@ -326,21 +329,34 @@ public class NGSettingsActivity extends BaseFragment {
             subtitleView.setText(subtitle);
             switchView.setChecked(checked, false);
             this.needDivider = divider;
+            updateAccessibilityLabel();
             invalidate();
         }
 
         public void setChecked(boolean checked) {
             switchView.setChecked(checked, true);
+            updateAccessibilityLabel();
         }
 
         public boolean isChecked() {
             return switchView.isChecked();
         }
 
+        private void updateAccessibilityLabel() {
+            String title = titleView.getText() != null ? titleView.getText().toString() : "";
+            String subtitle = subtitleView.getText() != null ? subtitleView.getText().toString() : "";
+            String status = switchView.isChecked() ? "Enabled" : "Disabled";
+            setContentDescription(title + ", " + subtitle + ", " + status);
+        }
+
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-            super.onMeasure(MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
-                    MeasureSpec.makeMeasureSpec(AndroidUtilities.dp(60), MeasureSpec.EXACTLY));
+            super.onMeasure(
+                    MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec), MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            );
+            int measuredHeight = Math.max(AndroidUtilities.dp(60), getMeasuredHeight());
+            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), measuredHeight);
         }
 
         @Override

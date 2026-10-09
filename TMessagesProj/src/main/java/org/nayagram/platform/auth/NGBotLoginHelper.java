@@ -9,6 +9,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
@@ -29,7 +31,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.LoginActivity;
 
 /**
- * NGBotLoginHelper handles bot token validation, UI dialog, and MTProto authorization.
+ * NGBotLoginHelper handles bot token validation, UI dialog, accessibility, and MTProto authorization.
  */
 public class NGBotLoginHelper {
 
@@ -60,6 +62,32 @@ public class NGBotLoginHelper {
         return secretPart.length() >= 25;
     }
 
+    /**
+     * Formats error message with user-friendly text, never leaking sensitive auth details.
+     */
+    public static String getFriendlyErrorMessage(TLRPC.TL_error error) {
+        if (error == null) {
+            return "Network connection failed. Please check your internet connection.";
+        }
+        String errorText = error.text != null ? error.text : "";
+        if (errorText.contains("ACCESS_TOKEN_INVALID")) {
+            return "The bot token is invalid. Please check the token provided by @BotFather.";
+        } else if (errorText.contains("ACCESS_TOKEN_EXPIRED")) {
+            return "The bot token has expired or been revoked by @BotFather.";
+        } else if (errorText.startsWith("FLOOD_WAIT")) {
+            String seconds = errorText.replaceAll("[^0-9]", "");
+            if (!TextUtils.isEmpty(seconds)) {
+                return "Too many login attempts. Please wait " + seconds + " seconds and try again.";
+            }
+            return "Too many login attempts. Please try again later.";
+        } else if (error.code == 500 || errorText.contains("INTERNAL")) {
+            return "Telegram server error. Please try again shortly.";
+        } else if (error.code == -1000 || errorText.contains("NETWORK") || errorText.contains("CONNECTION")) {
+            return "Network connection failed. Please check your internet connection.";
+        }
+        return "Telegram error: " + errorText;
+    }
+
     public static void showBotLoginDialog(final LoginActivity activity, final int currentAccount) {
         if (activity == null || activity.getParentActivity() == null) {
             return;
@@ -72,7 +100,7 @@ public class NGBotLoginHelper {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(20), AndroidUtilities.dp(24), AndroidUtilities.dp(10));
 
-        // Header icon
+        // Header icon (decorative - hidden from TalkBack to avoid noise)
         FrameLayout iconFrame = new FrameLayout(context);
         GradientDrawable iconBg = new GradientDrawable();
         iconBg.setShape(GradientDrawable.OVAL);
@@ -82,6 +110,7 @@ public class NGBotLoginHelper {
         ImageView botIcon = new ImageView(context);
         botIcon.setImageResource(R.drawable.msg_bot);
         botIcon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        botIcon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         iconFrame.addView(botIcon, LayoutHelper.createFrame(26, 26, Gravity.CENTER));
         layout.addView(iconFrame, LayoutHelper.createLinear(52, 52, Gravity.CENTER_HORIZONTAL, 0, 4, 0, 12));
 
@@ -92,6 +121,7 @@ public class NGBotLoginHelper {
         titleView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         titleView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
         titleView.setGravity(Gravity.CENTER_HORIZONTAL);
+        titleView.setFocusable(true);
         layout.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
 
         // Description
@@ -100,9 +130,10 @@ public class NGBotLoginHelper {
         descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         descView.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
         descView.setGravity(Gravity.CENTER_HORIZONTAL);
+        descView.setFocusable(true);
         layout.addView(descView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
 
-        // Input field container
+        // Input field container (min 48dp touch target)
         FrameLayout inputContainer = new FrameLayout(context);
         GradientDrawable inputBg = new GradientDrawable();
         inputBg.setCornerRadius(AndroidUtilities.dp(10));
@@ -112,12 +143,14 @@ public class NGBotLoginHelper {
 
         final EditText editText = new EditText(context);
         editText.setHint("123456789:ABCdefGhIJKlmNo...");
+        editText.setContentDescription("Telegram bot token input field");
         editText.setHintTextColor(Theme.getColor(Theme.key_dialogTextGray3));
         editText.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
         editText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         editText.setBackground(null);
         editText.setSingleLine(false);
         editText.setMaxLines(3);
+        editText.setMinimumHeight(AndroidUtilities.dp(48));
         editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         editText.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
         inputContainer.addView(editText, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -147,6 +180,8 @@ public class NGBotLoginHelper {
     private static void performBotLogin(final LoginActivity activity, final int currentAccount, final String token) {
         activity.showLoginProgress();
 
+        FileLog.d("NGBotLoginHelper: Initiating bot login with token " + NGBotSessionManager.maskToken(token));
+
         TL_auth_importBotAuthorization req = new TL_auth_importBotAuthorization();
         req.flags = 0;
         req.api_id = BuildVars.APP_ID;
@@ -159,20 +194,11 @@ public class NGBotLoginHelper {
                     activity.hideLoginProgress();
 
                     if (error == null && response instanceof TLRPC.TL_auth_authorization) {
-                        activity.handleBotAuthSuccess((TLRPC.TL_auth_authorization) response);
+                        FileLog.d("NGBotLoginHelper: Bot login succeeded for " + NGBotSessionManager.maskToken(token));
+                        activity.handleBotAuthSuccess((TLRPC.TL_auth_authorization) response, token);
                     } else {
-                        String errorMsg = "Unable to authenticate with this bot token.";
-                        if (error != null && error.text != null) {
-                            if (error.text.contains("ACCESS_TOKEN_INVALID")) {
-                                errorMsg = "The bot token is invalid. Please check the token provided by @BotFather.";
-                            } else if (error.text.contains("ACCESS_TOKEN_EXPIRED")) {
-                                errorMsg = "The bot token has expired or been revoked.";
-                            } else if (error.text.startsWith("FLOOD_WAIT")) {
-                                errorMsg = "Too many attempts. Please try again later.";
-                            } else {
-                                errorMsg = "Telegram error: " + error.text;
-                            }
-                        }
+                        FileLog.e("NGBotLoginHelper: Bot login failed: " + (error != null ? error.text : "null response"));
+                        String errorMsg = getFriendlyErrorMessage(error);
                         AlertsCreator.showSimpleAlert(activity, "Bot Login Failed", errorMsg);
                     }
                 }),

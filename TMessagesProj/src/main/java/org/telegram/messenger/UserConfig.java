@@ -460,6 +460,7 @@ public class UserConfig extends BaseController {
 
     public void clearConfig() {
         getPreferences().edit().clear().apply();
+        org.nayagram.platform.auth.NGBotSessionManager.cleanupAccount(currentAccount);
 
         sharingMyLocationUntil = 0;
         lastMyLocationShareTime = 0;

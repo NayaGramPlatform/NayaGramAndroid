@@ -132,6 +132,7 @@ public class NGPrivacyAuditDialog {
         iv.setImageResource(iconRes);
         iv.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
         iconFrame.addView(iv, LayoutHelper.createFrame(18, 18, Gravity.CENTER));
+        iconFrame.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
         row.addView(iconFrame, LayoutHelper.createLinear(32, 32, Gravity.CENTER_VERTICAL, 0, 0, 10, 0));
 
@@ -171,6 +172,8 @@ public class NGPrivacyAuditDialog {
         }
         badge.setBackground(pill);
         row.addView(badge, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+        row.setContentDescription(title + ", " + subtitle + ", " + badgeText);
+        row.setFocusable(true);
 
         if (!needDivider) {
             return row;
