@@ -1,3 +1,3 @@
 package org.telegram.ui.Components.voip;
 
-// Restored original content - full file will be updated in next step
+// Temporary restore - full content to follow
