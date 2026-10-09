@@ -1,5 +1,7 @@
 package org.telegram.ui;
 
+import org.nayagram.platform.ui.NayaAboutActivity;
+
 import static org.telegram.messenger.AndroidUtilities.dp;
 import static org.telegram.messenger.AndroidUtilities.lerp;
 import static org.telegram.messenger.AndroidUtilities.replaceSingleTag;
@@ -849,13 +851,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 showDialog(ab.create());
                 break;
             }
-            case 110: {
-                AlertDialog.Builder ab = new AlertDialog.Builder(getParentActivity());
-                ab.setTitle("About NayaGram");
-                ab.setMessage("NayaGram Messenger for Android\nVersion 1.0.0 (Build 1000)\nBased on Telegram 12.10.6\n\nOfficial Updates Channel:\n\n\nDeveloper: Huzaifa Sheikh\nCountry: Bangladesh 🇧🇩\n\nAll exclusive features engineered for speed, privacy, and full Google Play safety.");
-                ab.setPositiveButton("OK", null);
-                ab.setNegativeButton("Close", null);
-                showDialog(ab.create());
+                        case 110: {
+                presentFragment(new NayaAboutActivity());
                 break;
             }
             case 101:
