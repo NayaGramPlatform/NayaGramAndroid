@@ -100,7 +100,7 @@ public class NayaAboutActivity extends BaseFragment {
         LinearLayout hero = new LinearLayout(context);
         hero.setOrientation(LinearLayout.VERTICAL);
         hero.setGravity(Gravity.CENTER_HORIZONTAL);
-        hero.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(30), AndroidUtilities.dp(20), AndroidUtilities.dp(24));
+        hero.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(34), AndroidUtilities.dp(20), AndroidUtilities.dp(26));
         heroFrame.addView(hero, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         // Soft glow circle behind logo
@@ -120,9 +120,9 @@ public class NayaAboutActivity extends BaseFragment {
         ImageView logo = new ImageView(context);
         logo.setImageResource(R.drawable.nayagram_intro_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        logoInner.addView(logo, LayoutHelper.createFrame(58, 58, Gravity.CENTER));
-        logoOuter.addView(logoInner, LayoutHelper.createFrame(88, 88, Gravity.CENTER));
-        hero.addView(logoOuter, LayoutHelper.createLinear(100, 100, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 12));
+        logoInner.addView(logo, LayoutHelper.createFrame(78, 78, Gravity.CENTER));
+        logoOuter.addView(logoInner, LayoutHelper.createFrame(112, 112, Gravity.CENTER));
+        hero.addView(logoOuter, LayoutHelper.createLinear(128, 128, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 14));
 
         TextView name = new TextView(context);
         name.setText("NayaGram");
