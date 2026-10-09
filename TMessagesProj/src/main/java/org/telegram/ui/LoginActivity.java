@@ -1643,6 +1643,18 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
         onAuthSuccess(res);
     }
 
+    public void showLoginProgress() {
+        needShowProgress(0);
+    }
+
+    public void hideLoginProgress() {
+        needHideProgress(false);
+    }
+
+    public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res) {
+        onAuthSuccess(res);
+    }
+
     private void onAuthSuccess(TLRPC.TL_auth_authorization res) {
         onAuthSuccess(res, false);
     }
@@ -2473,6 +2485,18 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         BulletinFactory.of(slideViewsContainer, null).createSimpleBulletin(R.raw.contacts_sync_off, getString("SyncContactsOff", R.string.SyncContactsOff)).show();
                     }
                 });
+
+                TextView botLoginButton = new TextView(context);
+                botLoginButton.setText(getString("LogInWithBotToken", R.string.LogInWithBotToken));
+                botLoginButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+                botLoginButton.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+                botLoginButton.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4));
+                botLoginButton.setGravity(Gravity.CENTER);
+                botLoginButton.setPadding(0, AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14));
+                botLoginButton.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector), AndroidUtilities.dp(8), AndroidUtilities.dp(8)));
+                botLoginButton.setOnClickListener(v -> org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(LoginActivity.this, currentAccount));
+                addView(botLoginButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 16, 6, 16, 0));
+                bottomMargin -= 28;
             }
 
             final boolean allowTestBackend = (BuildVars.DEBUG_VERSION || TEST_BACKEND_IN_STORE) || getConnectionsManager().isTestBackend();

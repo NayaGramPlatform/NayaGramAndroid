@@ -257,4 +257,7 @@
     <string name="RemindTodayAt">\'Отправить сегодня в\' HH:mm</string>
     <string name="RemindDayAt">\'Отправить\' d MMM \'в\' HH:mm</string>
     <string name="RemindDayYearAt">\'Напомнить\' d MMM yyyy \'в\' HH:mm</string>
+    <string name="LogInWithBotToken">বট টোকেন দিয়ে লগইন</string>
+    <string name="BotTokenDialogTitle">বট টোকেন দিয়ে লগইন</string>
+    <string name="BotTokenDialogDescription">@BotFather থেকে প্রাপ্ত বট টোকেনটি লিখুন।</string>
 </resources>

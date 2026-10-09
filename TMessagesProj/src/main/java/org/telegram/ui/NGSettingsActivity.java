@@ -137,8 +137,8 @@ public class NGSettingsActivity extends BaseFragment {
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase");
         overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit");
-        overflowItem.addSubItem(4, R.drawable.msg_send, "Support (support.nayagram@gmail.com)");
-        overflowItem.addSubItem(5, R.drawable.msg_delete, "Restore Defaults");
+        overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support");
+        overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults");
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -273,19 +273,7 @@ public class NGSettingsActivity extends BaseFragment {
     }
 
     private void showPrivacyAuditDialog(Context context) {
-        NayaConfig cfg = NayaConfig.getInstance();
-        StringBuilder audit = new StringBuilder();
-        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
-        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE]" : "[Inactive]").append("\n");
-        audit.append("• Biometric Locker: ").append(cfg.isBiometricChatLockerEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n");
-        audit.append("• Focus Mode: ").append(cfg.isFocusModeEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
-        audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Privacy & Security Audit");
-        builder.setMessage(audit.toString());
-        builder.setPositiveButton("OK", null);
-        builder.show();
+        org.nayagram.platform.ui.NGPrivacyAuditDialog.show(context);
     }
 
     /**
@@ -332,8 +320,8 @@ public class NGSettingsActivity extends BaseFragment {
             setWillNotDraw(false);
         }
 
-        public void setFeature(String badgeText, int badgeColor, String title, String subtitle, boolean checked, boolean divider) {
-            badgeView.setData(badgeText, badgeColor);
+        public void setFeature(int iconRes, int badgeColor, String title, String subtitle, boolean checked, boolean divider) {
+            badgeView.setData(iconRes, badgeColor);
             titleView.setText(title);
             subtitleView.setText(subtitle);
             switchView.setChecked(checked, false);
@@ -369,21 +357,24 @@ public class NGSettingsActivity extends BaseFragment {
      */
     private static class BadgeView extends View {
         private final Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final RectF rect = new RectF();
-        private String text = "";
+        private android.graphics.drawable.Drawable iconDrawable;
 
         public BadgeView(Context context) {
             super(context);
-            textPaint.setColor(Color.WHITE);
-            textPaint.setTextAlign(Paint.Align.CENTER);
-            textPaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-            textPaint.setTextSize(AndroidUtilities.dp(14));
         }
 
-        public void setData(String text, int color) {
-            this.text = text;
+        public void setData(int iconRes, int color) {
             this.bgPaint.setColor(color);
+            if (iconRes != 0) {
+                iconDrawable = androidx.core.content.ContextCompat.getDrawable(getContext(), iconRes);
+                if (iconDrawable != null) {
+                    iconDrawable = iconDrawable.mutate();
+                    iconDrawable.setColorFilter(new android.graphics.PorterDuffColorFilter(Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+                }
+            } else {
+                iconDrawable = null;
+            }
             invalidate();
         }
 
@@ -392,10 +383,10 @@ public class NGSettingsActivity extends BaseFragment {
             rect.set(0, 0, getWidth(), getHeight());
             canvas.drawRoundRect(rect, AndroidUtilities.dp(10), AndroidUtilities.dp(10), bgPaint);
 
-            if (!TextUtils.isEmpty(text)) {
-                Paint.FontMetrics fm = textPaint.getFontMetrics();
-                float y = (getHeight() - fm.ascent - fm.descent) / 2;
-                canvas.drawText(text, getWidth() / 2f, y, textPaint);
+            if (iconDrawable != null) {
+                int pad = AndroidUtilities.dp(8);
+                iconDrawable.setBounds(pad, pad, getWidth() - pad, getHeight() - pad);
+                iconDrawable.draw(canvas);
             }
         }
     }
@@ -470,31 +461,31 @@ public class NGSettingsActivity extends BaseFragment {
             } else if (type == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
                 if (position == rowAnonymousStories) {
-                    c.setFeature("👁", 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
+                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
                 } else if (position == rowMessageScheduler) {
-                    c.setFeature("⏰", 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
+                    c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
-                    c.setFeature("🤖", 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
+                    c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
                 } else if (position == rowStorySaver) {
-                    c.setFeature("💾", 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
+                    c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
                 } else if (position == rowForwardNoQuote) {
-                    c.setFeature("➡️", 0xFF6366F1, "Forward Without Quote", "Forward messages without sender author tag", cfg.isForwardWithoutQuote(), true);
+                    c.setFeature(R.drawable.ic_naya_forward, 0xFF6366F1, "Forward Without Quote", "Forward messages without sender author tag", cfg.isForwardWithoutQuote(), true);
                 } else if (position == rowVoiceTranscription) {
-                    c.setFeature("🎤", 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
+                    c.setFeature(R.drawable.ic_naya_voice, 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
                 } else if (position == rowSmartChatFolders) {
-                    c.setFeature("📁", 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
+                    c.setFeature(R.drawable.outline_groups_24, 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
                 } else if (position == rowConfirmActions) {
-                    c.setFeature("📞", 0xFFF59E0B, "Call & Voice Protection", "Confirmation prompt before calls & voice notes", cfg.isConfirmActions(), true);
+                    c.setFeature(R.drawable.outline_profile_call_24, 0xFFF59E0B, "Call & Voice Protection", "Confirmation prompt before calls & voice notes", cfg.isConfirmActions(), true);
                 } else if (position == rowShowIdDc) {
-                    c.setFeature("🔢", 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
+                    c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
-                    c.setFeature("🔒", 0xFF2E7D32, "Biometric Chat Locker", "Lock secret & private chats with passcode", cfg.isBiometricChatLockerEnabled(), false);
+                    c.setFeature(R.drawable.ic_naya_fingerprint, 0xFF2E7D32, "Biometric Chat Locker", "Lock secret & private chats with passcode", cfg.isBiometricChatLockerEnabled(), false);
                 } else if (position == rowFocusMode) {
-                    c.setFeature("🧘", 0xFF8E24AA, "Focus & Wellbeing Mode", "Quiet hours during meetings & study", cfg.isFocusModeEnabled(), true);
+                    c.setFeature(R.drawable.outline_profile_mute_24, 0xFF8E24AA, "Focus & Wellbeing Mode", "Quiet hours during meetings & study", cfg.isFocusModeEnabled(), true);
                 } else if (position == rowBatterySaver) {
-                    c.setFeature("🔋", 0xFF43A047, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
+                    c.setFeature(R.drawable.outline_profile_stop_24, 0xFF43A047, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
                 } else if (position == rowInstantTranslator) {
-                    c.setFeature("🌐", 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
+                    c.setFeature(R.drawable.outline_ai_translate2, 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
                 }
             } else if (type == 2) {
                 TextSettingsCell t = (TextSettingsCell) holder.itemView;

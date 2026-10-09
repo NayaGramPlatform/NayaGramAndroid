@@ -47,7 +47,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem item = menu.addItem(0, R.drawable.ic_ab_other);
         item.addSubItem(MENU_ALL_DETAILS, R.drawable.msg_help, "All Features Pipeline");
-        item.addSubItem(MENU_PRIVACY_AUDIT, R.drawable.outline_shield_check, "Privacy & Stealth Audit");
+        item.addSubItem(MENU_PRIVACY_AUDIT, R.drawable.outline_shield_check, "Privacy & Security Audit");
         item.addSubItem(MENU_SUPPORT, R.drawable.msg_send, "Contact Support");
         item.addSubItem(MENU_RESTORE, R.drawable.msg_delete, "Restore Defaults");
 
@@ -92,19 +92,7 @@ public class NayaFeaturesActivity extends BaseFragment {
     }
 
     private void showPrivacyAuditDialog(Context context) {
-        NayaConfig cfg = NayaConfig.getInstance();
-        StringBuilder audit = new StringBuilder();
-        audit.append("✦ NayaGram Privacy & Security Status ✦\n\n");
-        audit.append("• Anonymous Stories: ").append(cfg.isAnonymousStories() ? "[ACTIVE - Hidden]" : "[Inactive]").append("\n");
-        audit.append("• Biometric Locker: ").append(cfg.isBiometricChatLockerEnabled() ? "[ACTIVE - Locked]" : "[Inactive]").append("\n");
-        audit.append("• Focus Mode: ").append(cfg.isFocusModeEnabled() ? "[ACTIVE]" : "[Inactive]").append("\n\n");
-        audit.append("Your Telegram session is safeguarded with MTProto 2.0 encryption and local biometric security.");
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("🛡️ Privacy & Stealth Audit");
-        builder.setMessage(audit.toString());
-        builder.setPositiveButton("OK", null);
-        builder.show();
+        org.nayagram.platform.ui.NGPrivacyAuditDialog.show(context);
     }
 
     private void showSupportDialog(Context context) {

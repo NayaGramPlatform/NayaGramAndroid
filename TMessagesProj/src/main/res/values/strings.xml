@@ -11303,4 +11303,7 @@
     <string name="SchedulerInfo">Scheduled messages will be sent at the specified time even if the app is closed</string>
     <string name="AutoReplyInfo">Auto-reply will not respond to your own messages or in disabled chats</string>
 
+    <string name="LogInWithBotToken">Log in with bot token</string>
+    <string name="BotTokenDialogTitle">Log in with Bot Token</string>
+    <string name="BotTokenDialogDescription">Enter your Telegram Bot Token provided by @BotFather to access Telegram directly as a bot.</string>
 </resources>
