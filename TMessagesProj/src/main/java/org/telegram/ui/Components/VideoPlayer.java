@@ -331,10 +331,15 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
                 mediaSource2 = mediaSource;
             }
         }
-        player.setMediaSource(mediaSource1, true);
-        player.prepare();
-        audioPlayer.setMediaSource(mediaSource2, true);
-        audioPlayer.prepare();
+        try {
+            player.setMediaSource(mediaSource1, true);
+            player.prepare();
+            audioPlayer.setMediaSource(mediaSource2, true);
+            audioPlayer.prepare();
+        } catch (Exception e) {
+            FileLog.e("VideoPlayer: prepareLoop failed", e);
+            delegate.onError(this, e);
+        }
         activePlayers.add(playerId);
     }
 
@@ -390,8 +395,13 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         isStreaming = scheme != null && !scheme.startsWith("file");
         ensurePlayerCreated();
         MediaSource mediaSource = mediaSourceFromUri(uri, videoByteOffset, type);
-        player.setMediaSource(mediaSource, true);
-        player.prepare();
+        try {
+            player.setMediaSource(mediaSource, true);
+            player.prepare();
+        } catch (Exception e) {
+            FileLog.e("VideoPlayer: prepare failed", e);
+            delegate.onError(this, e);
+        }
     }
 
     public void preparePlayer(ArrayList<Quality> qualities, Quality select) {
@@ -1426,19 +1436,22 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         if (mixedAudio) {
             if (!audioPlayerReady || !videoPlayerReady) {
                 if (player != null) {
-                    player.setPlayWhenReady(false);
+                    try { player.setPlayWhenReady(false); } catch (Exception e) { FileLog.e(e); }
                 }
                 if (audioPlayer != null) {
-                    audioPlayer.setPlayWhenReady(false);
+                    try { audioPlayer.setPlayWhenReady(false); } catch (Exception e) { FileLog.e(e); }
                 }
                 return;
             }
         }
         if (player != null) {
-            player.setPlayWhenReady(true);
+            try { player.setPlayWhenReady(true); } catch (Exception e) { 
+                FileLog.e(e);
+                delegate.onError(this, e);
+            }
         }
         if (audioPlayer != null) {
-            audioPlayer.setPlayWhenReady(true);
+            try { audioPlayer.setPlayWhenReady(true); } catch (Exception e) { FileLog.e(e); }
         }
     }
 
@@ -1682,7 +1695,9 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         AndroidUtilities.runOnUIThread(() -> {
             Throwable cause = error.getCause();
             if (cause instanceof MediaCodecDecoderException) {
-                if (cause.toString().contains("av1") || cause.toString().contains("av01")) {
+                if (cause.toString().contains("av1") || cause.toString().contains("av01") 
+                    || cause.toString().contains("hevc") || cause.toString().contains("h265")
+                    || cause.toString().contains("vp9") || cause.toString().contains("dolby")) {
                     FileLog.e(error);
                     FileLog.e("av1 codec failed, we think this codec is not supported");
                     MessagesController.getGlobalMainSettings().edit().putBoolean("unsupport_video/av01", true).commit();
@@ -1945,7 +1960,13 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
             hdrInfo = new StoryEntry.HDRInfo();
         }
         try {
-            MediaFormat mediaFormat = ((MediaCodecRenderer) player.getRenderer(0)).getCodecOutputMediaFormat();
+            MediaFormat mediaFormat = null;
+            if (player != null && player.getRendererCount() > 0) {
+                com.google.android.exoplayer2.Renderer renderer = player.getRenderer(0);
+                if (renderer instanceof MediaCodecRenderer) {
+                    mediaFormat = ((MediaCodecRenderer) renderer).getCodecOutputMediaFormat();
+                }
+            }
             ByteBuffer byteBuffer = mediaFormat.getByteBuffer(MediaFormat.KEY_HDR_STATIC_INFO);
             byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
             if (byteBuffer.get() == 0) {
