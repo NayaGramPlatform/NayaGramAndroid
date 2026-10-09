@@ -1962,12 +1962,18 @@ public class VideoPlayer implements Player.Listener, VideoListener, AnalyticsLis
         try {
             MediaFormat mediaFormat = null;
             if (player != null && player.getRendererCount() > 0) {
-                com.google.android.exoplayer2.Renderer renderer = player.getRenderer(0);
+                androidx.media3.exoplayer.Renderer renderer = player.getRenderer(0);
                 if (renderer instanceof MediaCodecRenderer) {
                     mediaFormat = ((MediaCodecRenderer) renderer).getCodecOutputMediaFormat();
                 }
             }
+            if (mediaFormat == null) {
+                return hdrInfo;
+            }
             ByteBuffer byteBuffer = mediaFormat.getByteBuffer(MediaFormat.KEY_HDR_STATIC_INFO);
+            if (byteBuffer == null) {
+                return hdrInfo;
+            }
             byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
             if (byteBuffer.get() == 0) {
                 hdrInfo.maxlum = byteBuffer.getShort(17);
