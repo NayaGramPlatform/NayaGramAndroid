@@ -294,6 +294,66 @@ public class NGSettingsActivity extends BaseFragment {
         showDialog(b.create());
     }
 
+
+    private void showFeatureDetailSheet(int position) {
+        if (getParentActivity() == null) return;
+        String title;
+        String body;
+        if (position == rowAnonymousStories) {
+            title = "Anonymous Stories";
+            body = "Privacy preference for story views.\n\nStory view behavior still follows Telegram server rules. This toggle does not hide you from Telegram if the server requires a view receipt.";
+        } else if (position == rowMessageScheduler) {
+            title = "Message Scheduler";
+            body = "Use Telegram's built-in schedule (long-press Send) to send later.\n\nThis switch stores your preference. It does not replace Telegram's official scheduler.";
+        } else if (position == rowSmartAutoReply) {
+            title = "Smart Auto-Reply";
+            body = "Saves an auto-reply message you can copy and send.\n\nTurning it on opens the message editor. It does not silently message people in the background.";
+        } else if (position == rowStorySaver) {
+            title = "Story Saver";
+            body = "Preference for saving stories you are allowed to view.\n\nDownload only content you have permission to save.";
+        } else if (position == rowForwardNoQuote) {
+            title = "Forward Without Quote";
+            body = "Stores a preference used by the chat menu.\n\nForwarding still follows Telegram's rules. The original author is not secretly removed from the server.";
+        } else if (position == rowVoiceTranscription) {
+            title = "Voice Transcription";
+            body = "Uses Telegram's own voice-to-text when your account supports it.\n\nIf Telegram does not offer transcription, this switch cannot create it.";
+        } else if (position == rowSmartChatFolders) {
+            title = "Smart Chat Folders";
+            body = "Preference for organizing chats into Users, Groups, Channels and Bots.\n\nFolders still use Telegram's folder system.";
+        } else if (position == rowConfirmActions) {
+            title = "Call & Voice Protection";
+            body = "When on, NayaGram asks you to confirm before starting a call.\n\nThis reduces accidental calls. It does not block calls from other people.";
+        } else if (position == rowShowIdDc) {
+            title = "User ID & DC Display";
+            body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
+        } else if (position == rowBiometricLocker) {
+            title = "Biometric Chat Locker";
+            body = "Stores the locker preference.\n\nFull chat lock uses your device screen lock. A separate hidden vault is not included.";
+        } else if (position == rowFocusMode) {
+            title = "Focus & Wellbeing Mode";
+            body = "Quiet-hours preference for study and meetings.\n\nIt does not mute Telegram notifications by itself unless you also change notification settings.";
+        } else if (position == rowStorageDoctor) {
+            title = "Smart Storage Doctor";
+            body = "Opens a storage summary and a cleanup confirmation.\n\nThe numbers are an estimate. Chats and media you sent are not deleted.";
+        } else if (position == rowBatterySaver) {
+            title = "Ultra Battery Saver";
+            body = "Preference to reduce extra animations and background work added by NayaGram.\n\nTelegram's own sync still runs so messages arrive.";
+        } else if (position == rowInstantTranslator) {
+            title = "In-Chat Instant Translator";
+            body = "Uses Telegram's translate action when translation is available for that message.\n\nIt does not send your chats to a private NayaGram server.";
+        } else if (position == rowResetDefaults) {
+            title = "Restore Defaults";
+            body = "Resets NayaGram feature switches to their original values. Your Telegram chats are not deleted.";
+        } else {
+            return;
+        }
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle(title);
+        b.setMessage(body);
+        b.setPositiveButton("Got it", null);
+        showDialog(b.create());
+    }
+
     private void showPrivacyAuditDialog(Context context) {
         org.nayagram.platform.ui.NGPrivacyAuditDialog.show(context);
     }
