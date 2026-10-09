@@ -74,6 +74,9 @@ public class VoIPHelper {
 	private static final int VOIP_SUPPORT_ID = 4244000;
 
 	public static void startCall(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
+		if (activity == null || activity.isFinishing()) {
+			return;
+		}
         try {
             org.nayagram.platform.diagnostics.VoIPCrashDiagnostics.logCallState("startCall_initiated", user != null ? user.id : 0, videoCall);
         } catch (Throwable t) {
