@@ -11412,6 +11412,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
+            try {
+                if (org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && user.id > 0) {
+                    int dc = user.photo != null ? user.photo.dc_id : 0;
+                    String idLine = "ID " + user.id + (dc > 0 ? " · DC" + dc : "");
+                    if (newString2 == null || newString2.length() == 0) {
+                        newString2 = idLine;
+                    } else {
+                        newString2 = newString2 + " · " + idLine;
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
             hasCustomPhoto = user.photo != null && user.photo.personal;
             try {
                 newString = Emoji.replaceEmoji(newString, nameTextView[1].getPaint().getFontMetricsInt(), false);
