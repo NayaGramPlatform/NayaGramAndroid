@@ -6,11 +6,7 @@ import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
 import android.net.Uri;
 import android.os.Build;
 import android.util.TypedValue;
@@ -36,8 +32,7 @@ import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 
 /**
- * NayaAboutActivity — premium visual About page.
- * Policy-safe: independent client disclosure, no fake stats, clear privacy links.
+ * Premium About page — large logo, soft cards, policy-safe disclosure.
  */
 public class NayaAboutActivity extends BaseFragment {
 
@@ -49,15 +44,14 @@ public class NayaAboutActivity extends BaseFragment {
     private static final String FB_HANDLE = "NayaGramPro";
 
     private static final int C_BLUE = 0xFF0D80ED;
-    private static final int C_BLUE_DARK = 0xFF0652C5;
-    private static final int C_INDIGO = 0xFF3949AB;
-    private static final int C_TEAL = 0xFF00BFA5;
+    private static final int C_BLUE2 = 0xFF4C6FFF;
     private static final int C_PURPLE = 0xFF7C4DFF;
-    private static final int C_PINK = 0xFFEC407A;
-    private static final int C_ORANGE = 0xFFFF8A00;
+    private static final int C_TEAL = 0xFF00BFA5;
     private static final int C_GREEN = 0xFF43A047;
-    private static final int C_CYAN = 0xFF00ACC1;
+    private static final int C_ORANGE = 0xFFFF8A00;
+    private static final int C_PINK = 0xFFEC407A;
     private static final int C_RED = 0xFFE53935;
+    private static final int C_TG = 0xFF2AABEE;
 
     @Override
     public View createView(Context context) {
@@ -74,210 +68,191 @@ public class NayaAboutActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
-        ScrollView scrollView = new ScrollView(context);
-        scrollView.setFillViewport(true);
-        scrollView.setVerticalScrollBarEnabled(false);
-        scrollView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        ((FrameLayout) fragmentView).addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        ScrollView scroll = new ScrollView(context);
+        scroll.setFillViewport(true);
+        scroll.setVerticalScrollBarEnabled(false);
+        scroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        ((FrameLayout) fragmentView).addView(scroll, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         LinearLayout root = new LinearLayout(context);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(36));
-        scrollView.addView(root, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
+        root.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(6), AndroidUtilities.dp(16), AndroidUtilities.dp(40));
+        scroll.addView(root, LayoutHelper.createScroll(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP));
 
-        // ════════════ HERO ════════════
+        // ════════ HERO ════════
         FrameLayout heroFrame = new FrameLayout(context);
         GradientDrawable heroBg = new GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                new int[]{0xFF0D80ED, 0xFF5B6CFF, 0xFF7C4DFF}
+                new int[]{0xFF0A84FF, 0xFF5B6CFF, 0xFF9B59FF}
         );
-        heroBg.setCornerRadius(AndroidUtilities.dp(22));
+        heroBg.setCornerRadius(AndroidUtilities.dp(24));
         heroFrame.setBackground(heroBg);
-        if (Build.VERSION.SDK_INT >= 21) {
-            heroFrame.setElevation(AndroidUtilities.dp(6));
-        }
+        if (Build.VERSION.SDK_INT >= 21) heroFrame.setElevation(AndroidUtilities.dp(8));
 
         LinearLayout hero = new LinearLayout(context);
         hero.setOrientation(LinearLayout.VERTICAL);
         hero.setGravity(Gravity.CENTER_HORIZONTAL);
-        hero.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(34), AndroidUtilities.dp(20), AndroidUtilities.dp(26));
+        hero.setPadding(AndroidUtilities.dp(22), AndroidUtilities.dp(36), AndroidUtilities.dp(22), AndroidUtilities.dp(28));
         heroFrame.addView(hero, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        // Soft glow circle behind logo
+        // Large logo with soft glow
         FrameLayout logoOuter = new FrameLayout(context);
         GradientDrawable glow = new GradientDrawable();
         glow.setShape(GradientDrawable.OVAL);
-        glow.setColors(new int[]{0x55FFFFFF, 0x00FFFFFF});
+        glow.setColors(new int[]{0x66FFFFFF, 0x00FFFFFF});
         logoOuter.setBackground(glow);
 
         FrameLayout logoInner = new FrameLayout(context);
-        GradientDrawable logoCircle = new GradientDrawable();
-        logoCircle.setShape(GradientDrawable.OVAL);
-        logoCircle.setColor(0x33FFFFFF);
-        logoCircle.setStroke(AndroidUtilities.dp(2), 0x66FFFFFF);
-        logoInner.setBackground(logoCircle);
+        GradientDrawable ring = new GradientDrawable();
+        ring.setShape(GradientDrawable.OVAL);
+        ring.setColor(0x2EFFFFFF);
+        ring.setStroke(AndroidUtilities.dp(3), 0x88FFFFFF);
+        logoInner.setBackground(ring);
 
         ImageView logo = new ImageView(context);
         logo.setImageResource(R.drawable.nayagram_intro_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        logoInner.addView(logo, LayoutHelper.createFrame(78, 78, Gravity.CENTER));
-        logoOuter.addView(logoInner, LayoutHelper.createFrame(112, 112, Gravity.CENTER));
-        hero.addView(logoOuter, LayoutHelper.createLinear(128, 128, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 14));
+        logoInner.addView(logo, LayoutHelper.createFrame(96, 96, Gravity.CENTER));
+        logoOuter.addView(logoInner, LayoutHelper.createFrame(132, 132, Gravity.CENTER));
+        hero.addView(logoOuter, LayoutHelper.createLinear(148, 148, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 16));
 
         TextView name = new TextView(context);
         name.setText("NayaGram");
-        name.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 26);
+        name.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 28);
         name.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         name.setTextColor(Color.WHITE);
         name.setGravity(Gravity.CENTER);
-        name.setLetterSpacing(0.02f);
-        hero.addView(name, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 2));
+        name.setLetterSpacing(0.03f);
+        hero.addView(name, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 4));
 
-        TextView tagline = new TextView(context);
-        tagline.setText("✦  Secure · Modern · Independent  ✦");
-        tagline.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-        tagline.setTextColor(0xDDFFFFFF);
-        tagline.setGravity(Gravity.CENTER);
-        hero.addView(tagline, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
+        TextView tag = new TextView(context);
+        tag.setText("Secure  ·  Modern  ·  Independent");
+        tag.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        tag.setTextColor(0xE6FFFFFF);
+        tag.setGravity(Gravity.CENTER);
+        hero.addView(tag, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
 
-        // Glass version pills
-        LinearLayout versionRow = new LinearLayout(context);
-        versionRow.setOrientation(LinearLayout.HORIZONTAL);
-        versionRow.setGravity(Gravity.CENTER);
-        versionRow.addView(makeGlassPill(context, "VERSION", getAppVersion()), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 8, 0));
-        versionRow.addView(makeGlassPill(context, "CORE", "Telegram 12.x"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 8, 0, 0, 0));
-        hero.addView(versionRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        // Version row — Novagram style dual cards
+        LinearLayout verRow = new LinearLayout(context);
+        verRow.setOrientation(LinearLayout.HORIZONTAL);
+        verRow.addView(makeVerCard(context, "NayaGram", getAppVersion(), "App version"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 8, 0));
+        verRow.addView(makeVerCard(context, "Telegram", "12.x", "Core engine"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 8, 0, 0, 0));
+        hero.addView(verRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        root.addView(heroFrame, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        root.addView(heroFrame, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════════ FEATURE CHIPS (horizontal) ════════════
+        // ════════ CHIPS ════════
         HorizontalScrollView chipsScroll = new HorizontalScrollView(context);
         chipsScroll.setHorizontalScrollBarEnabled(false);
         chipsScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         LinearLayout chips = new LinearLayout(context);
         chips.setOrientation(LinearLayout.HORIZONTAL);
         chips.setPadding(AndroidUtilities.dp(2), 0, AndroidUtilities.dp(2), 0);
-        chips.addView(makeFeatureChip(context, R.drawable.msg_secret, C_TEAL, "E2E Secret"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
-        chips.addView(makeFeatureChip(context, R.drawable.outline_shield_check, C_BLUE, "Privacy First"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
-        chips.addView(makeFeatureChip(context, R.drawable.msg_folders, C_PURPLE, "Smart Tools"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
-        chips.addView(makeFeatureChip(context, R.drawable.ic_naya_fingerprint, C_PINK, "Biometric"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
-        chips.addView(makeFeatureChip(context, R.drawable.outline_ai_translate2, C_ORANGE, "Translate"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 0));
+        chips.addView(chip(context, R.drawable.msg_secret, C_TEAL, "E2E Secret"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
+        chips.addView(chip(context, R.drawable.outline_shield_check, C_BLUE, "Privacy First"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
+        chips.addView(chip(context, R.drawable.msg_folders, C_PURPLE, "Smart Tools"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
+        chips.addView(chip(context, R.drawable.ic_naya_fingerprint, C_PINK, "Biometric"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
+        chips.addView(chip(context, R.drawable.outline_ai_translate2, C_ORANGE, "Translate"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
         chipsScroll.addView(chips);
-        root.addView(chipsScroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        root.addView(chipsScroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════════ DISCLOSURE ════════════
-        LinearLayout notice = makeSoftCard(context, 0x140D80ED);
+        // ════════ DISCLOSURE ════════
+        LinearLayout notice = whiteCard(context);
         notice.setOrientation(LinearLayout.HORIZONTAL);
-        notice.setGravity(Gravity.CENTER_VERTICAL);
         notice.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14));
+        notice.setGravity(Gravity.CENTER_VERTICAL);
+        // soft blue stroke
+        GradientDrawable nBg = new GradientDrawable();
+        nBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        nBg.setCornerRadius(AndroidUtilities.dp(16));
+        nBg.setStroke(AndroidUtilities.dp(1), 0x330D80ED);
+        notice.setBackground(nBg);
 
-        FrameLayout nIcon = makeRoundIcon(context, R.drawable.outline_shield_check, C_BLUE, 40);
-        notice.addView(nIcon, LayoutHelper.createLinear(40, 40, Gravity.TOP, 0, 0, 12, 0));
+        notice.addView(iconBadge(context, R.drawable.outline_shield_check, C_BLUE, 40), LayoutHelper.createLinear(40, 40, Gravity.TOP, 0, 0, 12, 0));
+        LinearLayout nCol = new LinearLayout(context);
+        nCol.setOrientation(LinearLayout.VERTICAL);
+        nCol.addView(bold(context, "Independent messaging client", 14, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
+        TextView nBody = normal(context, "NayaGram is not the official Telegram app. It uses the Telegram API under applicable terms. Telegram® belongs to Telegram FZ-LLC.", 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
+        nCol.addView(nBody, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+        notice.addView(nCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
+        root.addView(notice, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        LinearLayout nText = new LinearLayout(context);
-        nText.setOrientation(LinearLayout.VERTICAL);
-        TextView nTitle = boldText(context, "Independent messaging client", 14, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        TextView nBody = normalText(context,
-                "NayaGram is not the official Telegram app. It uses the Telegram API under applicable terms. Telegram® belongs to Telegram FZ-LLC.",
-                12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
-        nText.addView(nTitle);
-        nText.addView(nBody, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
-        notice.addView(nText, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
-        root.addView(notice, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
-
-        // ════════════ COMMITMENTS ════════════
-        root.addView(makeSectionHeader(context, "Why NayaGram"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
-
+        // ════════ WHY ════════
+        root.addView(section(context, "Why NayaGram"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
         LinearLayout pillars = new LinearLayout(context);
         pillars.setOrientation(LinearLayout.HORIZONTAL);
-        pillars.addView(makePillarCard(context, R.drawable.msg_secret, C_TEAL, "Encrypted", "Secret chats stay end-to-end on your device"), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 0, 0, 6, 0));
-        pillars.addView(makePillarCard(context, R.drawable.msg_policy, C_PURPLE, "Honest", "Clear labels. No ghost or anti-delete tricks."), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 3, 0, 3, 0));
-        pillars.addView(makePillarCard(context, R.drawable.ic_lock_header, C_GREEN, "Compliant", "Designed for Play Store & API rules"), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 6, 0, 0, 0));
-        root.addView(pillars, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        pillars.addView(pillar(context, R.drawable.msg_secret, C_TEAL, "Encrypted", "Secret chats stay end-to-end on your device"), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 0, 0, 6, 0));
+        pillars.addView(pillar(context, R.drawable.msg_policy, C_PURPLE, "Honest", "Clear labels. No ghost or anti-delete tricks."), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 3, 0, 3, 0));
+        pillars.addView(pillar(context, R.drawable.ic_lock_header, C_GREEN, "Compliant", "Designed for Play Store & API rules"), LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, 6, 0, 0, 0));
+        root.addView(pillars, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════════ PRIVACY ════════════
-        root.addView(makeSectionHeader(context, "Privacy & control"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
-
-        LinearLayout privacy = makeWhiteCard(context);
-        privacy.addView(makePrettyRow(context, R.drawable.settings_policy, C_BLUE, "Privacy Policy", "How data is handled — read in full", v -> openUrl(PRIVACY_URL)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        privacy.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        privacy.addView(makePrettyRow(context, R.drawable.outline_shield_check, C_TEAL, "Delete my account", "Settings → Privacy → Delete my account", v -> {
-            if (getParentActivity() != null) {
+        // ════════ PRIVACY ════════
+        root.addView(section(context, "Privacy & control"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        LinearLayout privacy = whiteCard(context);
+        privacy.addView(row(context, R.drawable.settings_policy, C_BLUE, "Privacy Policy", "What we collect and why", v -> openUrl(PRIVACY_URL)));
+        privacy.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        privacy.addView(row(context, R.drawable.outline_shield_check, C_TEAL, "Delete my account", "Settings → Privacy → Delete my account", v -> {
+            if (getParentActivity() != null)
                 BulletinFactory.of(this).createSimpleBulletin(R.raw.info, "Open Settings → Privacy and Security → Delete my account").show();
-            }
-        }), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        privacy.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        privacy.addView(makePrettyRow(context, R.drawable.msg_policy, C_PURPLE, "No chat selling", "We do not sell messages or contacts", v -> openUrl(PRIVACY_URL)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        root.addView(privacy, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        }));
+        privacy.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        privacy.addView(row(context, R.drawable.msg_policy, C_PURPLE, "No chat selling", "We do not sell messages or contacts", v -> openUrl(PRIVACY_URL)));
+        root.addView(privacy, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════════ COMMUNITY ════════════
-        root.addView(makeSectionHeader(context, "Community & updates"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        // ════════ COMMUNITY ════════
+        root.addView(section(context, "Community & updates"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        LinearLayout community = whiteCard(context);
+        community.addView(row(context, R.drawable.msg_channel, C_TG, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)));
+        community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        community.addView(row(context, R.drawable.msg_link, 0xFF1DA1F2, "Twitter / X", "@" + X_HANDLE, v -> openUrl("https://x.com/" + X_HANDLE)));
+        community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        community.addView(row(context, R.drawable.msg_link, C_RED, "YouTube", "@" + YT_HANDLE, v -> openUrl("https://youtube.com/@" + YT_HANDLE)));
+        community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        community.addView(row(context, R.drawable.msg_link, 0xFF1877F2, "Facebook", "@" + FB_HANDLE, v -> openUrl("https://facebook.com/" + FB_HANDLE)));
+        root.addView(community, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        LinearLayout community = makeWhiteCard(context);
-        community.addView(makePrettyRow(context, R.drawable.msg_channel, 0xFF2AABEE, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        community.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(makePrettyRow(context, R.drawable.msg_link, 0xFF1DA1F2, "Twitter / X", "@" + X_HANDLE, v -> openUrl("https://x.com/" + X_HANDLE)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        community.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(makePrettyRow(context, R.drawable.msg_link, C_RED, "YouTube", "@" + YT_HANDLE, v -> openUrl("https://youtube.com/@" + YT_HANDLE)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        community.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(makePrettyRow(context, R.drawable.msg_link, 0xFF1877F2, "Facebook", "@" + FB_HANDLE, v -> openUrl("https://facebook.com/" + FB_HANDLE)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        root.addView(community, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        // ════════ SUPPORT CTA ════════
+        root.addView(section(context, "Support"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
 
-        // ════════════ SUPPORT CTA ════════════
-        root.addView(makeSectionHeader(context, "Support"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
-
-        // Big primary CTA
         TextView cta = new TextView(context);
-        cta.setText("✉  Contact support");
-        cta.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        cta.setText("✉   Contact support");
+        cta.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         cta.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
         cta.setTextColor(Color.WHITE);
         cta.setGravity(Gravity.CENTER);
-        GradientDrawable ctaBg = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{C_BLUE, C_PURPLE}
-        );
-        ctaBg.setCornerRadius(AndroidUtilities.dp(14));
+        GradientDrawable ctaBg = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, new int[]{C_BLUE, C_PURPLE});
+        ctaBg.setCornerRadius(AndroidUtilities.dp(16));
         cta.setBackground(ctaBg);
-        cta.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        if (Build.VERSION.SDK_INT >= 21) cta.setElevation(AndroidUtilities.dp(3));
+        cta.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(15), AndroidUtilities.dp(16), AndroidUtilities.dp(15));
+        if (Build.VERSION.SDK_INT >= 21) cta.setElevation(AndroidUtilities.dp(4));
         cta.setOnClickListener(v -> openEmail());
-        root.addView(cta, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        root.addView(cta, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
 
-        LinearLayout support = makeWhiteCard(context);
-        support.addView(makePrettyRow(context, R.drawable.msg_msgbubble, C_GREEN, "Email", SUPPORT_EMAIL, v -> openEmail()), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        LinearLayout support = whiteCard(context);
+        support.addView(row(context, R.drawable.msg_msgbubble, C_GREEN, "Email", SUPPORT_EMAIL, v -> openEmail()));
         if (BuildVars.PLAYSTORE_APP_URL != null && !BuildVars.PLAYSTORE_APP_URL.isEmpty()) {
-            support.addView(thinDivider(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-            support.addView(makePrettyRow(context, R.drawable.msg_premium_liststar, C_ORANGE, "Rate on Google Play", "Your honest review helps a lot", v -> openUrl(BuildVars.PLAYSTORE_APP_URL)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            support.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+            support.addView(row(context, R.drawable.msg_premium_liststar, C_ORANGE, "Rate on Google Play", "Share honest feedback", v -> openUrl(BuildVars.PLAYSTORE_APP_URL)));
         }
-        root.addView(support, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        root.addView(support, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════════ PLATFORM ════════════
-        root.addView(makeSectionHeader(context, "Platform"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
-
-        LinearLayout platform = makeWhiteCard(context);
+        // ════════ PLATFORM ════════
+        root.addView(section(context, "Platform"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        LinearLayout platform = whiteCard(context);
         platform.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+        LinearLayout pHead = new LinearLayout(context);
+        pHead.setOrientation(LinearLayout.HORIZONTAL);
+        pHead.setGravity(Gravity.CENTER_VERTICAL);
+        pHead.addView(iconBadge(context, R.drawable.ic_naya_info, C_BLUE, 40), LayoutHelper.createLinear(40, 40, 0, 0, 12, 0));
+        LinearLayout pTitles = new LinearLayout(context);
+        pTitles.setOrientation(LinearLayout.VERTICAL);
+        pTitles.addView(bold(context, "NayaGram Platform", 16, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
+        pTitles.addView(normal(context, "Built with care in Bangladesh 🇧🇩", 12, C_BLUE), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        pHead.addView(pTitles, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
+        platform.addView(pHead, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
+        platform.addView(normal(context, "Features are labeled clearly and designed to respect Telegram API requirements and Google Play policies. Future ads, if any, will be disclosed in the Privacy Policy and inside the app.", 13, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2)));
+        root.addView(platform, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 22));
 
-        LinearLayout platHeader = new LinearLayout(context);
-        platHeader.setOrientation(LinearLayout.HORIZONTAL);
-        platHeader.setGravity(Gravity.CENTER_VERTICAL);
-        FrameLayout platIcon = makeRoundIcon(context, R.drawable.ic_naya_info, C_BLUE, 36);
-        platHeader.addView(platIcon, LayoutHelper.createLinear(36, 36, 0, 0, 10, 0));
-        LinearLayout platTitles = new LinearLayout(context);
-        platTitles.setOrientation(LinearLayout.VERTICAL);
-        platTitles.addView(boldText(context, "NayaGram Platform", 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
-        TextView meta = normalText(context, "Built with care in Bangladesh 🇧🇩", 12, C_BLUE);
-        platTitles.addView(meta, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
-        platHeader.addView(platTitles, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f));
-        platform.addView(platHeader, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
-
-        TextView body = normalText(context,
-                "We ship features that are labeled clearly and designed to respect Telegram API requirements and Google Play policies. Future ads, if any, will be disclosed in the Privacy Policy and inside the app.",
-                13, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
-        platform.addView(body);
-        root.addView(platform, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 20));
-
-        // Footer
         TextView footer = new TextView(context);
         int year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
         footer.setText("© " + year + " NayaGram Platform\nNot affiliated with Telegram FZ-LLC\nAll rights reserved");
@@ -290,9 +265,42 @@ public class NayaAboutActivity extends BaseFragment {
         return fragmentView;
     }
 
-    // ── helpers ──────────────────────────────────────────────
+    private LinearLayout makeVerCard(Context context, String brand, String value, String hint) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setGravity(Gravity.CENTER);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0x28FFFFFF);
+        bg.setCornerRadius(AndroidUtilities.dp(16));
+        bg.setStroke(AndroidUtilities.dp(1), 0x44FFFFFF);
+        card.setBackground(bg);
+        card.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12));
 
-    private LinearLayout makeWhiteCard(Context context) {
+        TextView b = new TextView(context);
+        b.setText(brand);
+        b.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        b.setTextColor(0xB3FFFFFF);
+        b.setGravity(Gravity.CENTER);
+        card.addView(b);
+
+        TextView v = new TextView(context);
+        v.setText(value);
+        v.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        v.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
+        v.setTextColor(Color.WHITE);
+        v.setGravity(Gravity.CENTER);
+        card.addView(v, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+        TextView h = new TextView(context);
+        h.setText(hint);
+        h.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+        h.setTextColor(0x99FFFFFF);
+        h.setGravity(Gravity.CENTER);
+        card.addView(h, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        return card;
+    }
+
+    private LinearLayout whiteCard(Context context) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable bg = new GradientDrawable();
@@ -306,126 +314,68 @@ public class NayaAboutActivity extends BaseFragment {
         return card;
     }
 
-    private LinearLayout makeSoftCard(Context context, int tint) {
-        LinearLayout card = new LinearLayout(context);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        bg.setCornerRadius(AndroidUtilities.dp(16));
-        bg.setStroke(AndroidUtilities.dp(1), tint);
-        card.setBackground(bg);
-        if (Build.VERSION.SDK_INT >= 21) card.setElevation(AndroidUtilities.dp(1));
-        return card;
-    }
-
-    private LinearLayout makeSectionHeader(Context context, String title) {
+    private LinearLayout section(Context context, String title) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-
         View bar = new View(context);
-        GradientDrawable barBg = new GradientDrawable();
-        barBg.setColor(C_BLUE);
-        barBg.setCornerRadius(AndroidUtilities.dp(3));
-        bar.setBackground(barBg);
+        GradientDrawable b = new GradientDrawable();
+        b.setColor(C_BLUE);
+        b.setCornerRadius(AndroidUtilities.dp(3));
+        bar.setBackground(b);
         row.addView(bar, LayoutHelper.createLinear(4, 16, 0, 0, 8, 0));
-
-        TextView t = boldText(context, title, 14, Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
-        row.addView(t);
+        row.addView(bold(context, title, 14, Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader)));
         return row;
     }
 
-    private LinearLayout makeGlassPill(Context context, String label, String value) {
-        LinearLayout chip = new LinearLayout(context);
-        chip.setOrientation(LinearLayout.VERTICAL);
-        chip.setGravity(Gravity.CENTER);
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0x28FFFFFF);
-        bg.setCornerRadius(AndroidUtilities.dp(14));
-        bg.setStroke(AndroidUtilities.dp(1), 0x40FFFFFF);
-        chip.setBackground(bg);
-        chip.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
-
-        TextView l = new TextView(context);
-        l.setText(label);
-        l.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
-        l.setTextColor(0xB3FFFFFF);
-        l.setGravity(Gravity.CENTER);
-        l.setLetterSpacing(0.08f);
-        chip.addView(l);
-
-        TextView v = new TextView(context);
-        v.setText(value);
-        v.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
-        v.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-        v.setTextColor(Color.WHITE);
-        v.setGravity(Gravity.CENTER);
-        chip.addView(v, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
-        return chip;
-    }
-
-    private LinearLayout makeFeatureChip(Context context, int iconRes, int color, String label) {
+    private LinearLayout chip(Context context, int iconRes, int color, String label) {
         LinearLayout chip = new LinearLayout(context);
         chip.setOrientation(LinearLayout.HORIZONTAL);
         chip.setGravity(Gravity.CENTER_VERTICAL);
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        bg.setCornerRadius(AndroidUtilities.dp(20));
+        bg.setCornerRadius(AndroidUtilities.dp(22));
         chip.setBackground(bg);
         if (Build.VERSION.SDK_INT >= 21) chip.setElevation(AndroidUtilities.dp(2));
         chip.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(14), AndroidUtilities.dp(8));
-
-        FrameLayout icon = makeRoundIcon(context, iconRes, color, 28);
-        chip.addView(icon, LayoutHelper.createLinear(28, 28, 0, 0, 8, 0));
-
-        TextView t = boldText(context, label, 12, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        chip.addView(t);
+        chip.addView(iconBadge(context, iconRes, color, 28), LayoutHelper.createLinear(28, 28, 0, 0, 8, 0));
+        chip.addView(bold(context, label, 12, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
         return chip;
     }
 
-    private LinearLayout makePillarCard(Context context, int iconRes, int color, String title, String body) {
-        LinearLayout card = makeWhiteCard(context);
+    private LinearLayout pillar(Context context, int iconRes, int color, String title, String body) {
+        LinearLayout card = whiteCard(context);
         card.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(14), AndroidUtilities.dp(10), AndroidUtilities.dp(14));
         card.setGravity(Gravity.CENTER_HORIZONTAL);
-
-        // Top accent line
         View accent = new View(context);
-        GradientDrawable aBg = new GradientDrawable();
-        aBg.setColor(color);
-        aBg.setCornerRadius(AndroidUtilities.dp(2));
-        accent.setBackground(aBg);
-        card.addView(accent, LayoutHelper.createLinear(24, 3, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 10));
-
-        FrameLayout icon = makeRoundIcon(context, iconRes, color, 36);
-        card.addView(icon, LayoutHelper.createLinear(36, 36, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 8));
-
-        TextView t = boldText(context, title, 12, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        GradientDrawable a = new GradientDrawable();
+        a.setColor(color);
+        a.setCornerRadius(AndroidUtilities.dp(2));
+        accent.setBackground(a);
+        card.addView(accent, LayoutHelper.createLinear(28, 3, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 10));
+        card.addView(iconBadge(context, iconRes, color, 36), LayoutHelper.createLinear(36, 36, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 8));
+        TextView t = bold(context, title, 12, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         t.setGravity(Gravity.CENTER);
         card.addView(t, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 4));
-
-        TextView b = normalText(context, body, 10, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
+        TextView b = normal(context, body, 10, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         b.setGravity(Gravity.CENTER);
         card.addView(b, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         return card;
     }
 
-    private LinearLayout makePrettyRow(Context context, int iconRes, int color, String title, String subtitle, View.OnClickListener click) {
+    private LinearLayout row(Context context, int iconRes, int color, String title, String subtitle, View.OnClickListener click) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(13), AndroidUtilities.dp(14), AndroidUtilities.dp(13));
         row.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
         row.setOnClickListener(click);
-
-        FrameLayout icon = makeRoundIcon(context, iconRes, color, 36);
-        row.addView(icon, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
-
+        row.addView(iconBadge(context, iconRes, color, 36), LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
         LinearLayout col = new LinearLayout(context);
         col.setOrientation(LinearLayout.VERTICAL);
-        col.addView(boldText(context, title, 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
-        TextView s = normalText(context, subtitle, 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
-        col.addView(s, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        col.addView(bold(context, title, 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
+        col.addView(normal(context, subtitle, 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         row.addView(col, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
-
         ImageView chevron = new ImageView(context);
         try {
             chevron.setImageResource(R.drawable.msg_arrowright);
@@ -435,16 +385,12 @@ public class NayaAboutActivity extends BaseFragment {
         return row;
     }
 
-    private FrameLayout makeRoundIcon(Context context, int iconRes, int color, int sizeDp) {
+    private FrameLayout iconBadge(Context context, int iconRes, int color, int sizeDp) {
         FrameLayout wrap = new FrameLayout(context);
         GradientDrawable bg = new GradientDrawable();
-        bg.setShape(GradientDrawable.RECTANGLE);
         bg.setCornerRadius(AndroidUtilities.dp(sizeDp * 0.28f));
-        // Soft tinted background + solid icon color
-        int soft = Color.argb(28, Color.red(color), Color.green(color), Color.blue(color));
-        bg.setColor(soft);
+        bg.setColor(Color.argb(28, Color.red(color), Color.green(color), Color.blue(color)));
         wrap.setBackground(bg);
-
         ImageView icon = new ImageView(context);
         try {
             icon.setImageResource(iconRes);
@@ -455,13 +401,13 @@ public class NayaAboutActivity extends BaseFragment {
         return wrap;
     }
 
-    private View thinDivider(Context context) {
+    private View div(Context context) {
         View d = new View(context);
         d.setBackgroundColor(Theme.getColor(Theme.key_divider));
         return d;
     }
 
-    private TextView boldText(Context context, String text, int sp, int color) {
+    private TextView bold(Context context, String text, int sp, int color) {
         TextView t = new TextView(context);
         t.setText(text);
         t.setTextSize(TypedValue.COMPLEX_UNIT_DIP, sp);
@@ -470,7 +416,7 @@ public class NayaAboutActivity extends BaseFragment {
         return t;
     }
 
-    private TextView normalText(Context context, String text, int sp, int color) {
+    private TextView normal(Context context, String text, int sp, int color) {
         TextView t = new TextView(context);
         t.setText(text);
         t.setTextSize(TypedValue.COMPLEX_UNIT_DIP, sp);
@@ -483,9 +429,7 @@ public class NayaAboutActivity extends BaseFragment {
         try {
             PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager()
                     .getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
-            if (pInfo.versionName != null && !pInfo.versionName.isEmpty()) {
-                return pInfo.versionName;
-            }
+            if (pInfo.versionName != null && !pInfo.versionName.isEmpty()) return pInfo.versionName;
         } catch (Exception e) {
             FileLog.e(e);
         }
@@ -505,13 +449,11 @@ public class NayaAboutActivity extends BaseFragment {
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(Uri.parse("mailto:" + SUPPORT_EMAIL));
             intent.putExtra(Intent.EXTRA_SUBJECT, "NayaGram Support");
-            if (getParentActivity() != null) {
+            if (getParentActivity() != null)
                 getParentActivity().startActivity(Intent.createChooser(intent, "Contact support"));
-            }
         } catch (Exception e) {
-            if (getParentActivity() != null) {
+            if (getParentActivity() != null)
                 BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "No email app found").show();
-            }
             FileLog.e(e);
         }
     }
