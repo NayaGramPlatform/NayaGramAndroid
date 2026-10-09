@@ -1,5 +1,7 @@
 package org.telegram.ui;
 
+import org.nayagram.platform.ui.NayaAboutActivity;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -138,6 +140,7 @@ public class NGSettingsActivity extends BaseFragment {
         overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit");
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support");
+        overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram");
         overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults");
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -156,6 +159,8 @@ public class NGSettingsActivity extends BaseFragment {
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, "NayaGram Support & Inquiry");
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
+                } else if (id == 6) {
+                    presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
                     NayaConfig.getInstance().setAnonymousStories(false);
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
