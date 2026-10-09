@@ -193,46 +193,63 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
                     cfg.setSmartAutoReply(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
                     if (checked) showAutoReplyConfigDialog();
                 } else if (position == rowStorySaver) {
                     cfg.setStorySaverEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowForwardNoQuote) {
                     cfg.setForwardWithoutQuote(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Forward Without Quote: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowVoiceTranscription) {
                     cfg.setVoiceTranscriptionEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Voice Transcription: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartChatFolders) {
                     cfg.setSmartFoldersEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Chat Folders: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowConfirmActions) {
                     cfg.setConfirmActions(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Call Protection: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "User ID & DC: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowBiometricLocker) {
                     cfg.setBiometricChatLockerEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Biometric Locker: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowFocusMode) {
                     cfg.setFocusModeEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Focus Mode: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowBatterySaver) {
                     cfg.setBatterySaverEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Battery Saver: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowInstantTranslator) {
                     cfg.setInstantTranslatorEnabled(checked);
                     cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Instant Translator: " + (checked ? "On" : "Off")).show();
                 }
             } else if (position == rowStorageDoctor) {
                 runStorageDoctorScan();
             } else if (position == rowResetDefaults) {
                 showResetDialog();
             }
+        });
+
+        listView.setOnItemLongClickListener((view, position) -> {
+            showFeatureDetailSheet(position);
+            return true;
         });
 
         return fragmentView;
