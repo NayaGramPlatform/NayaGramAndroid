@@ -327,14 +327,14 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         if (item.number == 14) return 0xFF7C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0xFF0284C7;
-        return enabled ? 0xFF15803D : 0xFF757575;
+        return enabled ? 0xFF10B981 : 0xFF0284C7; // ON = Emerald Green, OFF = Royal Blue
     }
 
     private int getLabelBgColor(FeatureItem item) {
         if (item.number == 14) return 0x227C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0x200EA5E9;
-        return enabled ? 0x2416A34A : 0x14000000;
+        return enabled ? 0x2410B981 : 0x240284C7; // ON = Green Tint, OFF = Blue Tint
     }
 
     @Override

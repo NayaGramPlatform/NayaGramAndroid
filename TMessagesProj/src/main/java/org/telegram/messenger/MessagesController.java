@@ -1643,10 +1643,8 @@ public class MessagesController extends BaseController implements NotificationCe
         savedGifsLimitPremium = mainPreferences.getInt("savedGifsLimitPremium", 400);
         stickersFavedLimitDefault = mainPreferences.getInt("stickersFavedLimitDefault", 5);
         stickersFavedLimitPremium = mainPreferences.getInt("stickersFavedLimitPremium", 200);
-        maxPinnedDialogsCountDefault = mainPreferences.getInt("maxPinnedDialogsCountDefault", 5);
-        maxPinnedDialogsCountPremium = mainPreferences.getInt("maxPinnedDialogsCountPremium", 5);
-        maxPinnedDialogsCountDefault = mainPreferences.getInt("maxPinnedDialogsCountDefault", 5);
-        maxPinnedDialogsCountPremium = mainPreferences.getInt("maxPinnedDialogsCountPremium", 5);
+        maxPinnedDialogsCountDefault = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountDefault", 10));
+        maxPinnedDialogsCountPremium = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountPremium", 10));
         dialogFiltersLimitDefault = mainPreferences.getInt("dialogFiltersLimitDefault", 10);
         dialogFiltersLimitPremium = mainPreferences.getInt("dialogFiltersLimitPremium", 20);
         dialogFiltersChatsLimitDefault = mainPreferences.getInt("dialogFiltersChatsLimitDefault", 100);
@@ -3509,8 +3507,9 @@ public class MessagesController extends BaseController implements NotificationCe
                 case "pinned_dialogs_count_max_default": {
                     if (value.value instanceof TLRPC.TL_jsonNumber) {
                         TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
-                        if (number.value != maxPinnedDialogsCountDefault) {
-                            maxPinnedDialogsCountDefault = (int) number.value;
+                        int valDefault = Math.max(10, (int) number.value);
+                        if (valDefault != maxPinnedDialogsCountDefault) {
+                            maxPinnedDialogsCountDefault = valDefault;
                             editor.putInt("maxPinnedDialogsCountDefault", maxPinnedDialogsCountDefault);
                             changed = true;
                         }

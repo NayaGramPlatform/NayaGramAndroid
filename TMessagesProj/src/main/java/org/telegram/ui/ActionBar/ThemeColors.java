@@ -112,8 +112,8 @@ public class ThemeColors {
         defaultColors[key_windowBackgroundWhiteBlueHeader] = TELEGRAM_COLOR_TEXT;
         defaultColors[key_windowBackgroundWhiteInputField] = 0xffdbdbdb;
         defaultColors[key_windowBackgroundWhiteInputFieldActivated] = TELEGRAM_COLOR;
-        defaultColors[key_switchTrack] = 0xffa6adb3;
-        defaultColors[key_switchTrackChecked] = TELEGRAM_COLOR;
+        defaultColors[key_switchTrack] = 0xff0284c7; // Blue for OFF state
+        defaultColors[key_switchTrackChecked] = 0xff10b981; // Green for ON state
         defaultColors[key_switchTrackBlue] = 0xff78828A;
         defaultColors[key_switchTrackBlueChecked] = 0xff1079C4;
         defaultColors[key_switchTrackBlueThumb] = 0xffffffff;
