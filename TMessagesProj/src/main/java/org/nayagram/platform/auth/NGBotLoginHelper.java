@@ -85,7 +85,9 @@ public class NGBotLoginHelper {
         } else if (error.code == -1000 || errorText.contains("NETWORK") || errorText.contains("CONNECTION")) {
             return "Network connection failed. Please check your internet connection.";
         }
-        return "Telegram error: " + errorText;
+        // Redact any possible token patterns or sensitive echoes from raw error
+        String sanitized = errorText.replaceAll("\\b\\d{6,12}:[A-Za-z0-9_-]{20,}\\b", "[REDACTED_TOKEN]");
+        return "Telegram error: " + sanitized;
     }
 
     public static void showBotLoginDialog(final LoginActivity activity, final int currentAccount) {
@@ -197,7 +199,9 @@ public class NGBotLoginHelper {
                         FileLog.d("NGBotLoginHelper: Bot login succeeded for " + NGBotSessionManager.maskToken(token));
                         activity.handleBotAuthSuccess((TLRPC.TL_auth_authorization) response, token);
                     } else {
-                        FileLog.e("NGBotLoginHelper: Bot login failed: " + (error != null ? error.text : "null response"));
+                        String rawErr = error != null ? error.text : "null response";
+                        String safeErr = rawErr != null ? rawErr.replaceAll("\\b\\d{6,12}:[A-Za-z0-9_-]{20,}\\b", "[REDACTED_TOKEN]") : "null";
+                        FileLog.e("NGBotLoginHelper: Bot login failed: " + safeErr);
                         String errorMsg = getFriendlyErrorMessage(error);
                         AlertsCreator.showSimpleAlert(activity, "Bot Login Failed", errorMsg);
                     }
