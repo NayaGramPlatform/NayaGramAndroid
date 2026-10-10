@@ -86,7 +86,8 @@ public class VoIPHelper {
 		if (accountInstance == null) {
 			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
 		}
-		int currentAccount = accountInstance.getCurrentAccount();
+		final AccountInstance finalAccountInstance = accountInstance;
+		int currentAccount = finalAccountInstance.getCurrentAccount();
 		if (!org.nayagram.platform.bot.NGBotAccountGuard.checkCallSupported(activity, currentAccount)) {
 			return;
 		}
@@ -97,7 +98,7 @@ public class VoIPHelper {
 				new AlertDialog.Builder(activity)
 						.setTitle("Confirm call")
 						.setMessage("Start a " + callType + " with " + peerName + "?")
-						.setPositiveButton("Call", (dialog, which) -> startCallInternal(user, videoCall, canVideoCall, activity, userFull, accountInstance))
+						.setPositiveButton("Call", (dialog, which) -> startCallInternal(user, videoCall, canVideoCall, activity, userFull, finalAccountInstance))
 						.setNegativeButton("Cancel", null)
 						.show();
 				return;
@@ -114,7 +115,8 @@ public class VoIPHelper {
 		if (accountInstance == null) {
 			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
 		}
-		if (accountInstance.getMessagesController().isFrozen()) {
+		final AccountInstance finalAccountInstance2 = accountInstance;
+		if (finalAccountInstance2.getMessagesController().isFrozen()) {
 			AccountFrozenAlert.show(accountInstance.getCurrentAccount());
 			return;
 		}
@@ -199,11 +201,12 @@ public class VoIPHelper {
 		if (accountInstance == null) {
 			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
 		}
+		final AccountInstance finalAccountInstance3 = accountInstance;
 		VoIPService voIPService = VoIPService.getSharedInstance();
 		if (voIPService != null) {
 			long newId = user != null ? user.id : -chat.id;
 			long callerId = voIPService.getCallerId();
-			if (callerId != newId || voIPService.getAccount() != accountInstance.getCurrentAccount()) {
+			if (callerId != newId || voIPService.getAccount() != finalAccountInstance3.getCurrentAccount()) {
 				String newName;
 				String oldName;
 				int key2;
@@ -262,10 +265,10 @@ public class VoIPHelper {
 							if (VoIPService.getSharedInstance() != null) {
 								VoIPService.getSharedInstance().hangUp(() -> {
 									lastCallTime = 0;
-									doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, true, true);
+									doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, true, true);
 								});
 							} else {
-								doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, true, true);
+								doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, true, true);
 							}
 						})
 						.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
@@ -365,14 +368,14 @@ public class VoIPHelper {
 						JoinCallByUrlAlert alert = new JoinCallByUrlAlert(activity, chat) {
 							@Override
 							protected void onJoin() {
-								doInitiateCall(user, chat, hash, inputPeer, true, videoCall, canVideoCall, false, activity, fragment, accountInstance, false, false);
+								doInitiateCall(user, chat, hash, inputPeer, true, videoCall, canVideoCall, false, activity, fragment, finalAccountInstance3, false, false);
 							}
 						};
 						if (fragment != null) {
 							fragment.showDialog(alert);
 						}
 					} else {
-						doInitiateCall(user, chat, hash, inputPeer, !param, videoCall, canVideoCall, false, activity, fragment, accountInstance, false, false);
+						doInitiateCall(user, chat, hash, inputPeer, !param, videoCall, canVideoCall, false, activity, fragment, finalAccountInstance3, false, false);
 					}
 				});
 				return;
@@ -381,19 +384,19 @@ public class VoIPHelper {
 		if (checkJoiner && chat != null) {
 			JoinCallAlert.open(activity, -chat.id, accountInstance, fragment, createCall ? JoinCallAlert.TYPE_CREATE : JoinCallAlert.TYPE_JOIN, null, (selectedPeer, hasFew, schedule, rtmp) -> {
 				if (createCall && schedule) {
-					GroupCallActivity.create((LaunchActivity) activity, accountInstance, chat, selectedPeer, hasFew, hash);
+					GroupCallActivity.create((LaunchActivity) activity, finalAccountInstance3, chat, selectedPeer, hasFew, hash);
 				} else if (!hasFew && hash != null) {
 					JoinCallByUrlAlert alert = new JoinCallByUrlAlert(activity, chat) {
 						@Override
 						protected void onJoin() {
-							doInitiateCall(user, chat, hash, selectedPeer, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, true, rtmp);
+							doInitiateCall(user, chat, hash, selectedPeer, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, true, rtmp);
 						}
 					};
 					if (fragment != null) {
 						fragment.showDialog(alert);
 					}
 				} else {
-					doInitiateCall(user, chat, hash, selectedPeer, hasFew, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, true, rtmp);
+					doInitiateCall(user, chat, hash, selectedPeer, hasFew, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, true, rtmp);
 				}
 			});
 			return;
@@ -402,7 +405,7 @@ public class VoIPHelper {
 			new AlertDialog.Builder(activity)
 					.setTitle(ChatObject.isChannelOrGiga(chat) ? LocaleController.getString(R.string.VoipChannelVoiceChat) : LocaleController.getString(R.string.VoipGroupVoiceChat))
 					.setMessage(ChatObject.isChannelOrGiga(chat) ? LocaleController.getString(R.string.VoipChannelJoinAnonymouseAlert) : LocaleController.getString(R.string.VoipGroupJoinAnonymouseAlert))
-					.setPositiveButton(LocaleController.getString(R.string.VoipChatJoin), (dialog, which) -> doInitiateCall(user, chat, hash, peer, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, false))
+					.setPositiveButton(LocaleController.getString(R.string.VoipChatJoin), (dialog, which) -> doInitiateCall(user, chat, hash, peer, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, false))
 					.setNegativeButton(LocaleController.getString(R.string.Cancel), null)
 					.show();
 			return;
