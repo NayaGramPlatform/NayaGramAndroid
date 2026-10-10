@@ -14,7 +14,7 @@ import android.os.SystemClock;
 import android.provider.Settings;
 import android.text.InputType;
 import android.text.TextUtils;
-import android.util.TypedValue;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -344,11 +344,9 @@ public class VoIPHelper {
 				activity.startService(intent);
 			}
 		} catch (Throwable e) {
+			Log.e("NayaGramCall", "joinConference", e);
 			FileLog.e(e);
 		}
-	}
-
-	private static void doInitiateCall(TLRPC.User user, TLRPC.Chat chat, String hash, TLRPC.InputPeer peer, boolean hasFewPeers, boolean videoCall, boolean canVideoCall, boolean createCall, Activity activity, BaseFragment fragment, AccountInstance accountInstance, boolean checkJoiner, boolean checkAnonymous, boolean isRtmpStream) {
 		if (activity == null || activity.isFinishing() || (user == null && chat == null)) {
 			return;
 		}
@@ -468,11 +466,9 @@ public class VoIPHelper {
 				activity.startService(intent);
 			}
 		} catch (Throwable e) {
+			Log.e("NayaGramCall", "doInitiateCall", e);
 			FileLog.e(e);
 		}
-	}
-
-	@TargetApi(Build.VERSION_CODES.M)
 	public static void permissionDenied(final Activity activity, final Runnable onFinish, int code) {
 		boolean mergedRequest = code == 102;
 		if (!activity.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) || mergedRequest && !activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {

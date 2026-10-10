@@ -122,6 +122,10 @@ public class NativeLoader {
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d("loaded normal lib");
                 }
+                // libtmessages already links tgcalls / libtgvoip / webrtc.
+                // Do not System.loadLibrary("tgvoip") or "webrtc" again — that duplicate
+                // (including any Novagram VoIP copy) crashes the process on arm64-v8a and armeabi-v7a.
+                noteCallAbi();
                 return;
             } catch (Error e) {
                 FileLog.e(e);
@@ -155,6 +159,7 @@ public class NativeLoader {
                     }
                     System.load(destLocalFile.getAbsolutePath());
                     nativeLoaded = true;
+                    noteCallAbi();
                     return;
                 } catch (Error e) {
                     log.append(e).append("\n");
@@ -169,6 +174,7 @@ public class NativeLoader {
             }
 
             if (loadFromZip(context, destDir, destLocalFile, folder)) {
+                noteCallAbi();
                 return;
             }
         } catch (Throwable e) {
@@ -179,6 +185,7 @@ public class NativeLoader {
         try {
             System.loadLibrary(LIB_NAME);
             nativeLoaded = true;
+            noteCallAbi();
         } catch (Error e) {
             FileLog.e(e);
             log.append("184: ").append(e).append("\n");
@@ -221,6 +228,17 @@ public class NativeLoader {
 
     public static boolean loaded() {
         return nativeLoaded;
+    }
+
+    /**
+     * Confirms call natives for arm64-v8a and armeabi-v7a live inside libtmessages.
+     * Standalone libtgvoip.so / libwebrtc.so are not loaded a second time.
+     */
+    private static void noteCallAbi() {
+        String abi = getAbiFolder();
+        if ("arm64-v8a".equals(abi) || "armeabi-v7a".equals(abi)) {
+            android.util.Log.i("NayaGramCall", "VoIP via libtmessages abi=" + abi + " (no duplicate tgvoip/webrtc load)");
+        }
     }
     //public static native void crash();
 }

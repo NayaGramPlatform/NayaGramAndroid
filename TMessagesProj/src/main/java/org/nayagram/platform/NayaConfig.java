@@ -2,6 +2,8 @@ package org.nayagram.platform;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.provider.Settings;
 import org.telegram.messenger.ApplicationLoader;
 
 /**
@@ -10,6 +12,9 @@ import org.telegram.messenger.ApplicationLoader;
  */
 public class NayaConfig {
     private static final String PREF_NAME = "nayagram_config_prefs";
+
+    /** Experimental rows (Ghost Mode, APK Block) stay in code but are hidden. */
+    public static final boolean SHOW_EXPERIMENTAL = false;
 
     // The 17 Exclusive Features Keys
     private static final String KEY_MESSAGE_SCHEDULER = "feature_02_msg_scheduler";
@@ -41,6 +46,24 @@ public class NayaConfig {
             instance = new NayaConfig(ApplicationLoader.applicationContext);
         }
         return instance;
+    }
+
+    /**
+     * Floating NG bubble is off unless SYSTEM_ALERT_WINDOW / draw-overlays is granted.
+     * Never attach a TYPE_APPLICATION_OVERLAY window without that permission.
+     */
+    public static boolean allowFloatingOverlay(Context context) {
+        if (context == null) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT < 23) {
+            return false;
+        }
+        try {
+            return Settings.canDrawOverlays(context);
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     // 1. Ghost Mode

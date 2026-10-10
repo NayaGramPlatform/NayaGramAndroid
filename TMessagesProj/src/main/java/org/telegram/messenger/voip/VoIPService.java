@@ -756,6 +756,20 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	@SuppressLint({"MissingPermission", "InlinedApi"})
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		try {
+			return onStartCommandInner(intent, flags, startId);
+		} catch (Throwable e) {
+			android.util.Log.e("NayaGramCall", "onStartCommand", e);
+			try {
+				Toast.makeText(this, "Call service initializing", Toast.LENGTH_SHORT).show();
+			} catch (Throwable ignored) {
+			}
+			stopSelf();
+			return START_NOT_STICKY;
+		}
+	}
+
+	private int onStartCommandInner(Intent intent, int flags, int startId) {
 		if (intent == null) {
 			stopSelf();
 			return START_NOT_STICKY;
@@ -1068,6 +1082,25 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	private void startOutgoingCall() {
+		if (tgVoip == null) {
+			android.util.Log.e("NayaGramCall", "VoIP controller is null");
+			AndroidUtilities.runOnUIThread(() -> {
+				try {
+					Toast.makeText(VoIPService.this, "Call service initializing", Toast.LENGTH_SHORT).show();
+				} catch (Throwable ignored) {
+				}
+			});
+			return;
+		}
+		try {
+			startOutgoingCallInner();
+		} catch (Throwable e) {
+			android.util.Log.e("NayaGramCall", "startOutgoingCall", e);
+			callFailed();
+		}
+	}
+
+	private void startOutgoingCallInner() {
 		if (USE_CONNECTION_SERVICE && systemCallConnection != null) {
 			systemCallConnection.setDialing();
 		}
@@ -3872,7 +3905,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				}
 			});
 			if (fromOverlayWindow) {
-				if (Build.VERSION.SDK_INT >= 26) {
+				if (!org.nayagram.platform.NayaConfig.allowFloatingOverlay(context)) {
+					android.util.Log.e("NayaGramCall", "overlay skipped: SYSTEM_ALERT_WINDOW not granted");
+				} else if (Build.VERSION.SDK_INT >= 26) {
 					bottomSheet.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
 				} else {
 					bottomSheet.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);

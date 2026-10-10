@@ -719,6 +719,22 @@ public class GroupCallPip implements NotificationCenter.NotificationCenterDelega
         if (instance != null) {
             return;
         }
+        if (!org.nayagram.platform.NayaConfig.allowFloatingOverlay(context)) {
+            android.util.Log.e("NayaGramCall", "NG bubble disabled until SYSTEM_ALERT_WINDOW is granted");
+            return;
+        }
+        try {
+            showInner(context, account);
+        } catch (Throwable e) {
+            android.util.Log.e("NayaGramCall", "GroupCallPip.show", e);
+            instance = null;
+        }
+    }
+
+    private static void showInner(Context context, int account) {
+        if (instance != null) {
+            return;
+        }
         instance = new GroupCallPip(context, account);
         WindowManager wm = (WindowManager) ApplicationLoader.applicationContext.getSystemService(Context.WINDOW_SERVICE);
         instance.windowManager = wm;

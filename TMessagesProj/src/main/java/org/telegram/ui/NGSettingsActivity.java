@@ -68,6 +68,8 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerStealth;
     private int rowAnonymousStories;
+    private int rowGhostMode = -1;
+    private int rowApkBlock = -1;
 
     private int headerMessaging;
     private int rowMessageScheduler;
@@ -104,6 +106,12 @@ public class NGSettingsActivity extends BaseFragment {
         rowCount = 0;
         headerStealth = rowCount++;
         rowAnonymousStories = rowCount++;
+        rowGhostMode = -1;
+        rowApkBlock = -1;
+        if (NayaConfig.SHOW_EXPERIMENTAL) {
+            rowGhostMode = rowCount++;
+            rowApkBlock = rowCount++;
+        }
 
         headerMessaging = rowCount++;
         rowMessageScheduler = rowCount++;
@@ -190,6 +198,12 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setAnonymousStories(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
+                } else if (position == rowGhostMode) {
+                    cell.setChecked(false);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
+                } else if (position == rowApkBlock) {
+                    cell.setChecked(false);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK Block is hidden").show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
@@ -591,6 +605,10 @@ public class NGSettingsActivity extends BaseFragment {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
                 if (position == rowAnonymousStories) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
+                } else if (position == rowGhostMode) {
+                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
+                } else if (position == rowApkBlock) {
+                    c.setFeature(R.drawable.outline_shield_check, 0xFF64748B, "APK Block", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowMessageScheduler) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
