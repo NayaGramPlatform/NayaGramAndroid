@@ -428,7 +428,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
             AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
             cleanBldr.setTitle("🧹 Storage Analysis");
-            cleanBldr.setMessage("Found reclaimable cache:
+            cleanBldr.setMessage("Found reclaimable cache:\n- Total Cache: " + report.getFormattedTotal() + "\n- Cached Files: " + report.fileCount + "\nClean cache now to boost NayaGram speed?");
 • Total Cache: " + report.getFormattedTotal() + "
 • Cached Files: " + report.fileCount + "
 Clean cache now to boost NayaGram speed?");
