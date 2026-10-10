@@ -11,6 +11,7 @@ import org.telegram.messenger.ApplicationLoader;
  * Houses state for all 17 exclusive NayaGram Messenger features.
  */
 public class NayaConfig {
+    public static final boolean CALL_VOICE_PROTECTION_DEFAULT = false;
     private static final String PREF_NAME = "nayagram_config_prefs";
 
     /** Experimental rows (Ghost Mode, APK Block) stay in code but are hidden. */
@@ -101,7 +102,7 @@ public class NayaConfig {
     public void setSmartFoldersEnabled(boolean e) { preferences.edit().putBoolean(KEY_SMART_CHAT_FOLDERS, e).apply(); }
 
     // 10. Call & Voice Protection
-    public boolean isConfirmActions() { return preferences.getBoolean(KEY_CONFIRM_ACTIONS, true); }
+    public boolean isConfirmActions() { return preferences.getBoolean(KEY_CONFIRM_ACTIONS, false); }
     public void setConfirmActions(boolean e) { preferences.edit().putBoolean(KEY_CONFIRM_ACTIONS, e).apply(); }
 
     // 11. User ID & DC Display
@@ -144,7 +145,7 @@ public class NayaConfig {
             .putBoolean(KEY_FORWARD_NO_QUOTE, false)
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, true)
-            .putBoolean(KEY_CONFIRM_ACTIONS, true)
+            .putBoolean(KEY_CONFIRM_ACTIONS, false)
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_MODULAR_CONFIG, true)
             .putBoolean(KEY_FOCUS_MODE, false)
