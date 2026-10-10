@@ -1,0 +1,65 @@
+name: Patch Pin Limit to 10
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find and patch dialogFiltersPinnedLimitDefault
+        run: |
+          set -e
+          FILE=TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
+
+          echo "=== Current values ==="
+          grep -n "dialogFiltersPinnedLimit" "$FILE" | head -20 || true
+
+          python3 << 'PY'
+          import re
+          path = "TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java"
+          with open(path, "r", encoding="utf-8", errors="ignore") as f:
+              text = f.read()
+
+          # Show all occurrences related to pin limit
+          for m in re.finditer(r'.{0,40}dialogFiltersPinnedLimitDefault.{0,40}', text):
+              print("FOUND:", m.group(0).replace("\n"," "))
+
+          # Replace common patterns: = 5; or =5;
+          new_text, n1 = re.subn(
+              r'(dialogFiltersPinnedLimitDefault\s*=\s*)5(\s*;)',
+              r'\g<1>10\2',
+              text
+          )
+          # Also in config load from server defaults sometimes hardcoded as 5 nearby
+          new_text, n2 = re.subn(
+              r'(dialogFiltersPinnedLimitDefault\s*=\s*)5(\b)',
+              r'\g<1>10\2',
+              new_text
+          )
+
+          print(f"Replacements: pattern1={n1}, pattern2={n2}")
+
+          if n1 + n2 == 0:
+              # Try finding where default is assigned from a constant
+              for m in re.finditer(r'dialogFiltersPinnedLimitDefault\s*=\s*([^;\n]+)', text):
+                  print("ASSIGN:", m.group(0))
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(new_text)
+          PY
+
+          echo "=== After patch ==="
+          grep -n "dialogFiltersPinnedLimit" "$FILE" | head -20 || true
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add "$FILE"
+          git commit -m "feat(limits): set dialogFiltersPinnedLimitDefault = 10 for free accounts" || echo "No change needed"
+          git push origin master
