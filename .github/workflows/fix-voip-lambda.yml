@@ -1,0 +1,109 @@
+name: Fix VoIPHelper Lambda Final
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fix effectively-final accountInstance
+        run: |
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java"
+          with open(path, "r", encoding="utf-8") as f:
+              text = f.read()
+
+          # Strategy: after every "if (accountInstance == null) { accountInstance = AccountInstance.getInstance(...); }"
+          # insert a final local copy and replace subsequent uses in the same method is complex.
+          # Simpler approach: for each method that reassigns accountInstance, introduce finalAccount right after reassignment
+          # and replace accountInstance with finalAccount in lambda bodies only where errors occur.
+
+          # Method 1 - startCall (user overload) around line 90-100
+          # After the confirm-actions block setup, accountInstance may have been reassigned earlier.
+          # Look for the pattern in startCall:
+          old1 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tint currentAccount = accountInstance.getCurrentAccount();'''
+          new1 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tfinal AccountInstance finalAccountInstance = accountInstance;\n\t\tint currentAccount = finalAccountInstance.getCurrentAccount();'''
+          if old1 in text:
+              text = text.replace(old1, new1, 1)
+              print("Patched startCall null-check")
+          else:
+              print("Pattern1 not found exact - trying alternate")
+
+          # Fix the lambda at ~line 100 to use finalAccountInstance
+          text = text.replace(
+              'setPositiveButton("Call", (dialog, which) -> startCallInternal(user, videoCall, canVideoCall, activity, userFull, accountInstance))',
+              'setPositiveButton("Call", (dialog, which) -> startCallInternal(user, videoCall, canVideoCall, activity, userFull, finalAccountInstance))',
+              1
+          )
+
+          # Method startCallInternal - also reassigns accountInstance
+          old2 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tif (accountInstance.getMessagesController().isFrozen()) {'''
+          new2 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tfinal AccountInstance finalAccountInstance2 = accountInstance;\n\t\tif (finalAccountInstance2.getMessagesController().isFrozen()) {'''
+          if old2 in text:
+              text = text.replace(old2, new2, 1)
+              print("Patched startCallInternal")
+          # Replace remaining accountInstance uses in that method carefully - only frozen check account id already handled
+
+          # initiateCall method
+          old3 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tVoIPService voIPService = VoIPService.getSharedInstance();'''
+          new3 = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tfinal AccountInstance finalAccountInstance3 = accountInstance;\n\t\tVoIPService voIPService = VoIPService.getSharedInstance();'''
+          if old3 in text:
+              text = text.replace(old3, new3, 1)
+              print("Patched initiateCall")
+
+          # Replace accountInstance with finalAccountInstance3 in the lambda blocks of initiateCall
+          # The hangUp lambdas and doInitiateCall calls inside initiateCall
+          # Be careful: only replace in the sections after finalAccountInstance3 declaration
+          # Use a more targeted replace for the known error lines patterns
+
+          replacements = [
+              # hangUp lambda doInitiateCall
+              ('doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, true, true);',
+               'doInitiateCall(user, chat, hash, null, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, true, true);'),
+              # JoinCallByUrlAlert
+              ('doInitiateCall(user, chat, hash, inputPeer, true, videoCall, canVideoCall, false, activity, fragment, accountInstance, false, false);',
+               'doInitiateCall(user, chat, hash, inputPeer, true, videoCall, canVideoCall, false, activity, fragment, finalAccountInstance3, false, false);'),
+              ('doInitiateCall(user, chat, hash, inputPeer, !param, videoCall, canVideoCall, false, activity, fragment, accountInstance, false, false);',
+               'doInitiateCall(user, chat, hash, inputPeer, !param, videoCall, canVideoCall, false, activity, fragment, finalAccountInstance3, false, false);'),
+              ('GroupCallActivity.create((LaunchActivity) activity, accountInstance, chat, selectedPeer, hasFew, hash);',
+               'GroupCallActivity.create((LaunchActivity) activity, finalAccountInstance3, chat, selectedPeer, hasFew, hash);'),
+              ('doInitiateCall(user, chat, hash, selectedPeer, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, true, rtmp);',
+               'doInitiateCall(user, chat, hash, selectedPeer, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, true, rtmp);'),
+              ('doInitiateCall(user, chat, hash, selectedPeer, hasFew, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, true, rtmp);',
+               'doInitiateCall(user, chat, hash, selectedPeer, hasFew, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, true, rtmp);'),
+              ('setPositiveButton(LocaleController.getString(R.string.VoipChatJoin), (dialog, which) -> doInitiateCall(user, chat, hash, peer, false, videoCall, canVideoCall, createCall, activity, fragment, accountInstance, false, false))',
+               'setPositiveButton(LocaleController.getString(R.string.VoipChatJoin), (dialog, which) -> doInitiateCall(user, chat, hash, peer, false, videoCall, canVideoCall, createCall, activity, fragment, finalAccountInstance3, false, false))'),
+          ]
+
+          for old, new in replacements:
+              count = text.count(old)
+              if count:
+                  text = text.replace(old, new)
+                  print(f"Replaced ({count}x): {old[:60]}...")
+              else:
+                  print(f"Not found: {old[:60]}...")
+
+          # Also fix callerId comparison that uses accountInstance.getCurrentAccount()
+          text = text.replace(
+              'voIPService.getAccount() != accountInstance.getCurrentAccount()',
+              'voIPService.getAccount() != finalAccountInstance3.getCurrentAccount()',
+              1
+          )
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(text)
+          print("VoIPHelper.java written")
+          PY
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java
+          git commit -m "fix(voip): use final AccountInstance copies in VoIPHelper lambdas to fix effectively-final compile errors" || echo "no change"
+          git push origin master
