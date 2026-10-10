@@ -573,15 +573,12 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-    if (false /* NayaGramGeneralPreferences.isPremiumFreeEnabled() */) {
-        return true;
-    }
-    TLRPC.User user = currentUser;
-    if (user == null) {
+        // NayaGram: client premium gates are free. Telegram servers can still reject premium-only requests.
+        if (currentUser != null) {
+            return true;
+        }
         return false;
     }
-    return user.premium;
-}
 
     public Long getEmojiStatus() {
         return UserObject.getEmojiStatusDocumentId(currentUser);

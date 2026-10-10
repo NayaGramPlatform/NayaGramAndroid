@@ -183,20 +183,8 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
                 if (peerId < 0) {
                     TLRPC.Chat chat = messagesController.getChat(-peerId);
                     if (chat != null) {
-                        if (peerObj.premium_required) {
-                            SpannableString str = new SpannableString(TextUtils.ellipsize(chat.title, senderView.title.getPaint(), maxWidth - AndroidUtilities.dp(100), TextUtils.TruncateAt.END) + " d");
-                            ColoredImageSpan span = new ColoredImageSpan(R.drawable.msg_mini_premiumlock);
-                            span.setTopOffset(1);
-                            span.setSize(AndroidUtilities.dp(14));
-                            span.setColorKey(Theme.key_windowBackgroundWhiteGrayText5);
-                            str.setSpan(span, str.length() - 1, str.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-                            senderView.title.setEllipsize(null);
-                            senderView.title.setText(str);
-                        } else {
-                            senderView.title.setEllipsize(TextUtils.TruncateAt.END);
-                            senderView.title.setText(chat.title);
-                        }
+                        senderView.title.setEllipsize(TextUtils.TruncateAt.END);
+                        senderView.title.setText(chat.title);
                         senderView.subtitle.setText(LocaleController.formatPluralString(ChatObject.isChannel(chat) && !chat.megagroup ? "Subscribers" : "Members", chat.participants_count));
                         senderView.avatar.setAvatar(chat);
                     }
@@ -233,7 +221,7 @@ public class SenderSelectPopup extends ActionBarPopupWindow {
             if (clicked) {
                 return;
             }
-            if (peerObj.premium_required && !UserConfig.getInstance(UserConfig.selectedAccount).isPremium()) {
+            if (false && peerObj.premium_required && !UserConfig.getInstance(UserConfig.selectedAccount).isPremium()) {
                 try {
                     view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
                 } catch (Exception ignored) {}

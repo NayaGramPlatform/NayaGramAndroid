@@ -1643,14 +1643,14 @@ public class MessagesController extends BaseController implements NotificationCe
         savedGifsLimitPremium = mainPreferences.getInt("savedGifsLimitPremium", 400);
         stickersFavedLimitDefault = mainPreferences.getInt("stickersFavedLimitDefault", 5);
         stickersFavedLimitPremium = mainPreferences.getInt("stickersFavedLimitPremium", 200);
-        maxPinnedDialogsCountDefault = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountDefault", 10));
-        maxPinnedDialogsCountPremium = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountPremium", 10));
+        maxPinnedDialogsCountDefault = 10;
+        maxPinnedDialogsCountPremium = 10;
         dialogFiltersLimitDefault = mainPreferences.getInt("dialogFiltersLimitDefault", 10);
         dialogFiltersLimitPremium = mainPreferences.getInt("dialogFiltersLimitPremium", 20);
         dialogFiltersChatsLimitDefault = mainPreferences.getInt("dialogFiltersChatsLimitDefault", 100);
         dialogFiltersChatsLimitPremium = mainPreferences.getInt("dialogFiltersChatsLimitPremium", 200);
-        dialogFiltersPinnedLimitDefault = mainPreferences.getInt("dialogFiltersPinnedLimitDefault", 10);
-        dialogFiltersPinnedLimitPremium = mainPreferences.getInt("dialogFiltersPinnedLimitPremium", 10);
+        dialogFiltersPinnedLimitDefault = 10;
+        dialogFiltersPinnedLimitPremium = 10;
         publicLinksLimitDefault = mainPreferences.getInt("publicLinksLimitDefault", 10);
         publicLinksLimitPremium = mainPreferences.getInt("publicLinksLimitPremium", 20);
         captionLengthLimitDefault = mainPreferences.getInt("captionLengthLimitDefault", 1024);
@@ -3504,27 +3504,18 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     break;
                 }
-                case "pinned_dialogs_count_max_default": {
-                    if (value.value instanceof TLRPC.TL_jsonNumber) {
-                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
-                        int valDefault = Math.max(10, (int) number.value);
-                        if (valDefault != maxPinnedDialogsCountDefault) {
-                            maxPinnedDialogsCountDefault = valDefault;
-                            editor.putInt("maxPinnedDialogsCountDefault", maxPinnedDialogsCountDefault);
-                            changed = true;
-                        }
-                    }
-                    break;
-                }
-                case "pinned_dialogs_count_max_premium": {
-                    if (value.value instanceof TLRPC.TL_jsonNumber) {
-                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
-                        if (number.value != maxPinnedDialogsCountPremium) {
-                            maxPinnedDialogsCountPremium = (int) number.value;
-                            editor.putInt("maxPinnedDialogsCountPremium", maxPinnedDialogsCountPremium);
-                            changed = true;
-                        }
-                    }
+                case "pinned_dialogs_count_max_default":
+                case "pinned_dialogs_count_max_premium":
+                case "dialog_filters_pinned_limit_default":
+                case "dialog_filters_pinned_limit_premium": {
+                    maxPinnedDialogsCountDefault = 10;
+                    maxPinnedDialogsCountPremium = 10;
+                    dialogFiltersPinnedLimitDefault = 10;
+                    dialogFiltersPinnedLimitPremium = 10;
+                    editor.putInt("maxPinnedDialogsCountDefault", 10);
+                    editor.putInt("maxPinnedDialogsCountPremium", 10);
+                    editor.putInt("dialogFiltersPinnedLimitDefault", 10);
+                    editor.putInt("dialogFiltersPinnedLimitPremium", 10);
                     break;
                 }
                 case "dialog_filters_limit_default": {
@@ -3566,28 +3557,6 @@ public class MessagesController extends BaseController implements NotificationCe
                         if (number.value != dialogFiltersChatsLimitPremium) {
                             dialogFiltersChatsLimitPremium = (int) number.value;
                             editor.putInt("dialogFiltersChatsLimitPremium", dialogFiltersChatsLimitPremium);
-                            changed = true;
-                        }
-                    }
-                    break;
-                }
-                case "dialog_filters_pinned_limit_default": {
-                    if (value.value instanceof TLRPC.TL_jsonNumber) {
-                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
-                        if (number.value != dialogFiltersPinnedLimitDefault) {
-                            dialogFiltersPinnedLimitDefault = (int) number.value;
-                            editor.putInt("dialogFiltersPinnedLimitDefault", dialogFiltersPinnedLimitDefault);
-                            changed = true;
-                        }
-                    }
-                    break;
-                }
-                case "dialog_filters_pinned_limit_premium": {
-                    if (value.value instanceof TLRPC.TL_jsonNumber) {
-                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
-                        if (number.value != dialogFiltersPinnedLimitPremium) {
-                            dialogFiltersPinnedLimitPremium = (int) number.value;
-                            editor.putInt("dialogFiltersPinnedLimitPremium", dialogFiltersPinnedLimitPremium);
                             changed = true;
                         }
                     }
