@@ -7248,7 +7248,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     builder.setPositiveButton(LocaleController.getString(R.string.Cancel), null);
                     builder.setNegativeButton(LocaleController.getString(R.string.LogOut), (dialog, which) -> MessagesController.getInstance(currentAccount).performLogout(2));
                 } else if (type.startsWith("PREMIUM_")) {
-                    builder.setTitle(LocaleController.getString(R.string.TelegramPremium));
+                    builder.setTitle(LocaleController.getString(R.string.NayaGramPremium));
                     builder.setPositiveButton(LocaleController.getString(R.string.OK), null);
                 } else {
                     builder.setPositiveButton(LocaleController.getString(R.string.OK), null);

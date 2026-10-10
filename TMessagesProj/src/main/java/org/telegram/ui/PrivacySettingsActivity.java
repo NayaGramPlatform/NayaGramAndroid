@@ -1181,7 +1181,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         value = getString(feeValue ? R.string.ContactsAndFee : noncontactsValue ? R.string.ContactsAndPremium : R.string.P2PEverybody);
                         textCell.setTextAndValue(getMessagesController().newNoncontactPeersRequirePremiumWithoutOwnpremium && !getMessagesController().starsPaidMessagesAvailable ? getString(R.string.PrivacyMessages) : addPremiumStar(getString(R.string.PrivacyMessages)), value, musicRow != -1);
                     } else if (position == passportRow) {
-                        textCell.setText(getString("TelegramPassport", R.string.TelegramPassport), true);
+                        textCell.setText(getString("TelegramPassport", R.string.NayaGramPassport), true);
                     } else if (position == deleteAccountRow) {
                         if (getContactsController().getLoadingDeleteInfo()) {
                             showLoading = true;

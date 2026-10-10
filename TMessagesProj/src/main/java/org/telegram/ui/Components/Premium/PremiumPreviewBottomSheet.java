@@ -304,13 +304,13 @@ public class PremiumPreviewBottomSheet extends BottomSheetWithRecyclerListView i
             if ((spaceIndex = collectionName.lastIndexOf(' ')) >= 0) {
                 collectionName = collectionName.substring(0, spaceIndex);
             }
-            titleView[0].setText(AndroidUtilities.replaceSingleTag(LocaleController.formatString(R.string.TelegramPremiumUserStatusCollectibleDialogTitle, DialogObject.getShortName(user), collectionName), () -> {
+            titleView[0].setText(AndroidUtilities.replaceSingleTag(LocaleController.formatString(R.string.NayaGramPremiumUserStatusCollectibleDialogTitle, DialogObject.getShortName(user), collectionName), () -> {
                 Browser.openUrl(getContext(), "https://" + MessagesController.getInstance(currentAccount).linkPrefix + "/nft/" + emojiStatusCollectible.slug);
             }));
-            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumUserStatusDialogSubtitle)));
+            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumUserStatusDialogSubtitle)));
         } else if (statusStickerSet != null) {
             final String stickerSetPlaceholder = "<STICKERSET>";
-            String string = LocaleController.formatString(R.string.TelegramPremiumUserStatusDialogTitle, ContactsController.formatName(user.first_name, user.last_name), stickerSetPlaceholder);
+            String string = LocaleController.formatString(R.string.NayaGramPremiumUserStatusDialogTitle, ContactsController.formatName(user.first_name, user.last_name), stickerSetPlaceholder);
             CharSequence charSequence = AndroidUtilities.replaceSingleLink(string, accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor);
             try {
                 charSequence = Emoji.replaceEmoji(charSequence, titleView[0].getPaint().getFontMetricsInt(), false);
@@ -402,20 +402,20 @@ public class PremiumPreviewBottomSheet extends BottomSheetWithRecyclerListView i
                     titleView[0].setText(title, null);
                 }
             }
-            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumUserStatusDialogSubtitle)));
+            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumUserStatusDialogSubtitle)));
         } else if (isEmojiStatus) {
-            titleView[0].setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.TelegramPremiumUserStatusDefaultDialogTitle, ContactsController.formatName(user.first_name, user.last_name))));
-            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.TelegramPremiumUserStatusDialogSubtitle, ContactsController.formatName(user.first_name, user.last_name))));
+            titleView[0].setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NayaGramPremiumUserStatusDefaultDialogTitle, ContactsController.formatName(user.first_name, user.last_name))));
+            subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.formatString(R.string.NayaGramPremiumUserStatusDialogSubtitle, ContactsController.formatName(user.first_name, user.last_name))));
         } else if (giftTier != null) {
             if (isOutboundGift) {
-                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.TelegramPremiumUserGiftedPremiumOutboundDialogTitleWithPlural, user != null ? user.first_name : "", LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
-                subtitleView.setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.TelegramPremiumUserGiftedPremiumOutboundDialogSubtitle, user != null ? user.first_name : ""), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
+                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.NayaGramPremiumUserGiftedPremiumOutboundDialogTitleWithPlural, user != null ? user.first_name : "", LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
+                subtitleView.setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.NayaGramPremiumUserGiftedPremiumOutboundDialogSubtitle, user != null ? user.first_name : ""), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
             } else if (user == null || TextUtils.isEmpty(user.first_name) || user.id == 777000) {
-                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.TelegramPremiumUserGiftedPremiumDialogTitleWithPluralSomeone, LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
-                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumUserGiftedPremiumDialogSubtitle)));
+                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.NayaGramPremiumUserGiftedPremiumDialogTitleWithPluralSomeone, LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
+                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumUserGiftedPremiumDialogSubtitle)));
             } else {
-                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.TelegramPremiumUserGiftedPremiumDialogTitleWithPlural, user.first_name, LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
-                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumUserGiftedPremiumDialogSubtitle)));
+                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.NayaGramPremiumUserGiftedPremiumDialogTitleWithPlural, user.first_name, LocaleController.formatPluralString("GiftMonths", giftTier.getMonths())), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
+                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumUserGiftedPremiumDialogSubtitle)));
             }
         } else if (gift != null) {
             titleView[0].setText(getString(R.string.Gift2PremiumTitle));
@@ -428,11 +428,11 @@ public class PremiumPreviewBottomSheet extends BottomSheetWithRecyclerListView i
             subtitleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         } else {
             if (user == null) {
-                titleView[0].setText(LocaleController.getString(R.string.TelegramPremium));
-                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumSubscribedSubtitle)));
+                titleView[0].setText(LocaleController.getString(R.string.NayaGramPremium));
+                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumSubscribedSubtitle)));
             } else {
-                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.TelegramPremiumUserDialogTitle, ContactsController.formatName(user.first_name, user.last_name)), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
-                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.TelegramPremiumUserDialogSubtitle)));
+                titleView[0].setText(AndroidUtilities.replaceSingleLink(LocaleController.formatString(R.string.NayaGramPremiumUserDialogTitle, ContactsController.formatName(user.first_name, user.last_name)), accentColor == null ? getThemedColor(Theme.key_windowBackgroundWhiteBlueButton) : accentColor));
+                subtitleView.setText(AndroidUtilities.replaceTags(LocaleController.getString(R.string.NayaGramPremiumUserDialogSubtitle)));
             }
         }
         try {
@@ -442,7 +442,7 @@ public class PremiumPreviewBottomSheet extends BottomSheetWithRecyclerListView i
 
     @Override
     protected CharSequence getTitle() {
-        return LocaleController.getString(R.string.TelegramPremium);
+        return LocaleController.getString(R.string.NayaGramPremium);
     }
 
     @Override

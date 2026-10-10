@@ -334,7 +334,7 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
                     actionBar.setTitle(LocaleController.getString(R.string.FeaturePreviewGifts));
                     actionBar.requestLayout();
                 } else if (premiumFeatures.get(i).type == PremiumPreviewFragment.PREMIUM_FEATURE_BUSINESS) {
-                    actionBar.setTitle(LocaleController.getString(R.string.TelegramBusiness));
+                    actionBar.setTitle(LocaleController.getString(R.string.NayaGramBusiness));
                     actionBar.requestLayout();
                 }
                 checkPage();
@@ -635,7 +635,7 @@ public class PremiumFeatureBottomSheet extends BottomSheet implements Notificati
             actionBar.setTitle(LocaleController.getString(R.string.UpgradedStories));
             actionBar.requestLayout();
         } else if (premiumFeatures.get(selectedPosition).type == PremiumPreviewFragment.PREMIUM_FEATURE_BUSINESS) {
-            actionBar.setTitle(LocaleController.getString(R.string.TelegramBusiness));
+            actionBar.setTitle(LocaleController.getString(R.string.NayaGramBusiness));
             actionBar.requestLayout();
         } else if (premiumFeatures.get(selectedPosition).type == PremiumPreviewFragment.FEATURE_GIFTS) {
             actionBar.setTitle(LocaleController.getString(R.string.FeaturePreviewGifts));

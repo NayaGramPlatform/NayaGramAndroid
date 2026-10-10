@@ -349,14 +349,14 @@ public class FeaturesPageView extends BaseListPageView {
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 20);
                 textView.setTypeface(AndroidUtilities.bold());
                 textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
-                textView.setText(LocaleController.getString(R.string.TelegramBusiness));
+                textView.setText(LocaleController.getString(R.string.NayaGramBusiness));
                 textView.setGravity(Gravity.CENTER);
                 addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 33, 150, 33, 0));
 
                 textView = new TextView(context);
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
                 textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2, resourcesProvider));
-                textView.setText(LocaleController.getString(R.string.TelegramBusinessSubtitle2));
+                textView.setText(LocaleController.getString(R.string.NayaGramBusinessSubtitle2));
                 textView.setGravity(Gravity.CENTER);
                 addView(textView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 33, 183, 33, 20));
 

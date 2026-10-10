@@ -29512,7 +29512,7 @@ public class ChatActivity extends BaseFragment implements
                     span.full = false;
                     emoji.setSpan(span, 0, emoji.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
-                SpannableString link = new SpannableString(LocaleController.getString(R.string.TelegramPremium));
+                SpannableString link = new SpannableString(LocaleController.getString(R.string.NayaGramPremium));
                 link.setSpan(new ClickableSpan() {
                     @Override
                     public void onClick(@NonNull View view) {
