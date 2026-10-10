@@ -1,0 +1,53 @@
+name: Restore strings.xml
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore and fix strings.xml
+        run: |
+          git checkout c774935b1367e3db5b160f05a57f8d690aab11c5 -- TMessagesProj/src/main/res/values/strings.xml
+
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/res/values/strings.xml"
+          with open(path, "r", encoding="utf-8") as f:
+              text = f.read()
+
+          text = text.replace(
+              "Turn your account into a **business page** with these additional features.\nThe benefits of NayaGram Business are **temporarily included** with NayaGram Premium.",
+              "Turn your account into a **business page** with these additional features.\\nThe benefits of NayaGram Business are **temporarily included** with NayaGram Premium."
+          )
+          # handle both possible newline forms
+          import re
+          text = re.sub(
+              r'(<string name="TelegramBusinessSubtitleTemp">Turn your account into a \*\*business page\*\* with these additional features\.)\s*\n\s*(The benefits of NayaGram Business are \*\*temporarily included\*\* with NayaGram Premium\.</string>)',
+              r'\1\\n\2',
+              text
+          )
+          text = re.sub(
+              r'(<string name="TelegramStarsInfo2">Buy Stars to unlock content and services)\s*\n\s*(in miniapps on NayaGram\. \*\*More about Stars >\*\*</string>)',
+              r'\1\\n\2',
+              text
+          )
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(text)
+          print("Fixed successfully")
+          PY
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add TMessagesProj/src/main/res/values/strings.xml
+          git commit -m "fix(res): restore strings.xml from c774935 and escape multiline aliases for AAPT" || echo "No changes"
+          git push origin master
