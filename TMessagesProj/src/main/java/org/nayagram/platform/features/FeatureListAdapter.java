@@ -429,14 +429,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
             cleanBldr.setTitle("🧹 Storage Analysis");
             cleanBldr.setMessage("Found reclaimable cache:
-
-" +
-                    "• Total Cache: " + report.getFormattedTotal() + "
-" +
-                    "• Cached Files: " + report.fileCount + "
-
-" +
-                    "Clean cache now to boost NayaGram speed?");
+• Total Cache: " + report.getFormattedTotal() + "
+• Cached Files: " + report.fileCount + "
+Clean cache now to boost NayaGram speed?");
             cleanBldr.setPositiveButton("Clean Now", (d, w) -> {
                 SmartStorageDoctor.getInstance().cleanCache(context, (freed, success) -> {
                     if (fragment != null) {
