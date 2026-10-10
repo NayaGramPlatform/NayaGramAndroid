@@ -162,8 +162,10 @@ public class VoIPPiPView implements VoIPService.StateListener, IPipSourceDelegat
         NotificationCenter.getGlobalInstance().addObserver(instance, NotificationCenter.didEndCall);
         wm.addView(instance.windowView, windowLayoutParams);
 
-        instance.currentUserTextureView.renderer.init(VideoCapturerDevice.eglBase.getEglBaseContext(), null);
-        instance.callingUserTextureView.renderer.init(VideoCapturerDevice.eglBase.getEglBaseContext(), instance.rendererEvents);
+        if (VideoCapturerDevice.eglBase != null) {
+            instance.currentUserTextureView.renderer.init(VideoCapturerDevice.eglBase.getEglBaseContext(), null);
+            instance.callingUserTextureView.renderer.init(VideoCapturerDevice.eglBase.getEglBaseContext(), instance.rendererEvents);
+        }
 
         if (animationType == ANIMATION_ENTER_TYPE_SCALE) {
             instance.windowView.setScaleX(0.5f);

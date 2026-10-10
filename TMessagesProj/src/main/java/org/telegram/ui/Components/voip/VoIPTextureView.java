@@ -210,9 +210,14 @@ public class VoIPTextureView extends FrameLayout {
             }
         }
 
-        if (!applyRotation) {
-            Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-            renderer.setScreenRotation(display.getRotation());
+        if (!applyRotation && getContext() != null) {
+            WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) {
+                Display display = wm.getDefaultDisplay();
+                if (display != null) {
+                    renderer.setScreenRotation(display.getRotation());
+                }
+            }
         }
     }
 
@@ -397,10 +402,15 @@ public class VoIPTextureView extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (!applyRotation) {
+        if (!applyRotation && getContext() != null) {
             ignoreLayout = true;
-            Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-            renderer.setScreenRotation(display.getRotation());
+            WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) {
+                Display display = wm.getDefaultDisplay();
+                if (display != null) {
+                    renderer.setScreenRotation(display.getRotation());
+                }
+            }
             ignoreLayout = false;
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
