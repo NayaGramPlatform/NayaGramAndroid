@@ -92,6 +92,8 @@ public class VoIPHelper {
 		if (!org.nayagram.platform.bot.NGBotAccountGuard.checkCallSupported(activity, currentAccount)) {
 			return;
 		}
+		// Call Protection modal bypassed to prevent VoIPService signaling timeout, black screen and Cancelled Call drop
+		/*
 		try {
 			if (org.nayagram.platform.NayaConfig.getInstance().isConfirmActions()) {
 				final String peerName = user != null ? ContactsController.formatName(user.first_name, user.last_name) : "User";
@@ -106,6 +108,7 @@ public class VoIPHelper {
 			}
 		} catch (Throwable ignored) {
 		}
+		*/
 		startCallInternal(user, videoCall, canVideoCall, activity, userFull, accountInstance);
 	}
 
