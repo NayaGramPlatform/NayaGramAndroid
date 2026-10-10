@@ -8339,7 +8339,7 @@
     <string name="SensitiveContentSettingsToast">You can update the visibility of sensitive media in **Chat Settings > Show 18+ Content**</string>
     <string name="MenuNayaGramStars">Your Stars</string>
     <string name="NayaGramStars">NayaGram Stars</string>
-    <string name="NayaGramStarsInfo2">Buy Stars to unlock content and services\nin miniapps on NayaGram. **More about Stars >**</string>
+    <string name="NayaGramStarsInfo2">Buy Stars to unlock content and services\nin miniapps on NayaGram. **More about Stars &gt;**</string>
     <string name="NayaGramStarsChoose">Choose package</string>
     <string name="NayaGramStarsGift">Gift Stars to Friends</string>
     <string name="StarsCount_one">%d Star</string>
@@ -9082,7 +9082,7 @@
     <string name="Gift2ProfileInvisible4">This gift is hidden. **Show on Profile >**</string>
     <string name="Gift2ChannelProfileVisible3">This gift is visible in your channel\'s Gifts. **Hide >**</string>
     <string name="Gift2ChannelProfileInvisible3">This gift is hidden from visitors of your channel. **Show >**</string>
-    <string name="Gift2More">**More about Stars >**</string>
+    <string name="Gift2More">**More about Stars &gt;**</string>
     <string name="Gift2From">From</string>
     <string name="Gift2To">To</string>
     <string name="Gift2Gift">Gift</string>
@@ -10236,7 +10236,7 @@
     <string name="GiftValueMinPriceInfo">**%1$s** is the floor price for **%2$s** gifts listed on NayaGram and Fragment.</string>
     <string name="GiftValueAveragePrice">Average Price</string>
     <string name="GiftValueAveragePriceInfo">**%1$s** is the average sale price of **%2$s** gifts over the past month.</string>
-    <string name="GiftValueOnSaleNayaGram">for sale on NayaGram ></string>
+    <string name="GiftValueOnSaleNayaGram">for sale on NayaGram &gt;</string>
     <string name="GiftValueOnSaleFragment">for sale on Fragment ></string>
     <string name="GiftSkipAnimation">Skip</string>
     <string name="GiftThemesSetIn">Set as Theme in...</string>
@@ -11323,14 +11323,14 @@
     <string name="NumberNotOnTelegram">This number is not on NayaGram</string>
     <string name="MenuTelegramStars">Your Stars</string>
     <string name="TelegramStars">NayaGram Stars</string>
-    <string name="TelegramStarsInfo2">Buy Stars to unlock content and services in miniapps on NayaGram. **More about Stars >**</string>
+    <string name="TelegramStarsInfo2">Buy Stars to unlock content and services in miniapps on NayaGram. **More about Stars &gt;**</string>
     <string name="TelegramStarsChoose">Choose package</string>
     <string name="TelegramStarsGift">Gift Stars to Friends</string>
     <string name="OpenInTelegramBrowser">Open in NayaGram</string>
     <string name="OpenInTelegramBrowser2">Open In-App</string>
     <string name="TelegramPremiumShort">Premium</string>
     <string name="GiftValueLastTelegram">This is the price at which **%s** was last sold on NayaGram.</string>
-    <string name="GiftValueOnSaleTelegram">for sale on NayaGram ></string>
+    <string name="GiftValueOnSaleTelegram">for sale on NayaGram &gt;</string>
 
 
     <!-- Auto-generated aliases for missing R.string refs -->
