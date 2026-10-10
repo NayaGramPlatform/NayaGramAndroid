@@ -1748,19 +1748,19 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				return;
 			}
 			g_a = phoneCall.g_a_or_b;
-			BigInteger g_a = new BigInteger(1, phoneCall.g_a_or_b);
+			BigInteger g_a_big = new BigInteger(1, phoneCall.g_a_or_b);
 			BigInteger p = new BigInteger(1, MessagesStorage.getInstance(currentAccount).getSecretPBytes());
 
-			if (!Utilities.isGoodGaAndGb(g_a, p)) {
+			if (!Utilities.isGoodGaAndGb(g_a_big, p)) {
 				if (BuildVars.LOGS_ENABLED) {
 					FileLog.w("stopping VoIP service, bad Ga and Gb (accepting)");
 				}
 				callFailed();
 				return;
 			}
-			g_a = g_a.modPow(new BigInteger(1, a_or_b), p);
+			g_a_big = g_a_big.modPow(new BigInteger(1, a_or_b), p);
 
-			byte[] authKey = g_a.toByteArray();
+			byte[] authKey = g_a_big.toByteArray();
 			if (authKey.length > 256) {
 				byte[] correctedAuth = new byte[256];
 				System.arraycopy(authKey, authKey.length - 256, correctedAuth, 0, 256);
@@ -1847,6 +1847,20 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	private void processAcceptedCall() {
 		dispatchStateChanged(STATE_EXCHANGING_KEYS);
+		if (a_or_b == null) {
+			if (BuildVars.LOGS_ENABLED) {
+				FileLog.e("processAcceptedCall: a_or_b is null");
+			}
+			callFailed();
+			return;
+		}
+		if (privateCall == null || privateCall.g_b == null) {
+			if (BuildVars.LOGS_ENABLED) {
+				FileLog.e("processAcceptedCall: privateCall or g_b is null");
+			}
+			callFailed();
+			return;
+		}
 		BigInteger p = new BigInteger(1, MessagesStorage.getInstance(currentAccount).getSecretPBytes());
 		BigInteger i_authKey = new BigInteger(1, privateCall.g_b);
 
@@ -4404,6 +4418,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 							FileLog.w("accept call ok! " + response1);
 						}
 						privateCall = ((TL_phone.TL_phone_phoneCall) response1).phone_call;
+						if (privateCall == null) {
+							if (BuildVars.LOGS_ENABLED) {
+								FileLog.e("acceptIncomingCall: privateCall is null after accept");
+							}
+							callFailed();
+							return;
+						}
 						if (privateCall instanceof TL_phone.TL_phoneCallDiscarded) {
 							onCallUpdated(privateCall);
 						}
