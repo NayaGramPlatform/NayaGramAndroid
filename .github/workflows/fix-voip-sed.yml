@@ -1,0 +1,78 @@
+name: Fix VoIP SED
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sed fix
+        run: |
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java
+
+          # The bad references are only in doInitiateCall (after line ~350).
+          # Replace finalAccountInstance3 with accountInstance first in whole file,
+          # then re-apply finalAccountInstance3 only in initiateCall lambdas,
+          # OR simpler: in doInitiateCall section only replace finalAccountInstance3 -> accountInstance
+          # and make accountInstance final by not reassigning.
+
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java"
+          with open(path) as f:
+              lines = f.readlines()
+
+          # Find start of doInitiateCall with isRtmpStream
+          start = None
+          for i, line in enumerate(lines):
+              if "boolean isRtmpStream)" in line and "doInitiateCall" in (lines[i-1] if i>0 else "" + line):
+                  start = i
+                  break
+              if "boolean isRtmpStream)" in line:
+                  # check nearby for doInitiateCall
+                  window = "".join(lines[max(0,i-3):i+1])
+                  if "doInitiateCall" in window:
+                      start = i
+                      break
+
+          print("doInitiateCall isRtmpStream at line", start)
+
+          # From start to end of method: replace finalAccountInstance3 with finalAccount
+          # and insert final declaration after null check
+          if start is not None:
+              inserted = False
+              for i in range(start, len(lines)):
+                  if (not inserted) and "accountInstance = AccountInstance.getInstance" in lines[i]:
+                      # next lines until closing brace of if
+                      # insert after the closing } of this if
+                      for j in range(i, min(i+5, len(lines))):
+                          if lines[j].strip() == "}":
+                              lines.insert(j+1, "\t\tfinal AccountInstance finalAccount = accountInstance;\n")
+                              inserted = True
+                              print("Inserted finalAccount at", j+1)
+                              break
+                  if "finalAccountInstance3" in lines[i]:
+                      lines[i] = lines[i].replace("finalAccountInstance3", "finalAccount")
+                      print("Replaced at line", i)
+                  # stop at next method at same indent level roughly - if we hit another private static void
+                  if i > start + 5 and lines[i].startswith("\tprivate static") or lines[i].startswith("\tpublic static"):
+                      break
+
+          with open(path, "w") as f:
+              f.writelines(lines)
+          print("Written")
+          PY
+
+          grep -n "finalAccount" "$FILE" | head -40
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add "$FILE"
+          git commit -m "fix(voip): finalAccount scoped correctly inside doInitiateCall" || echo nochange
+          git push origin master
