@@ -80,7 +80,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         recyclerView.setClipToPadding(false);
         recyclerView.setPadding(0, 0, 0, AndroidUtilities.dp(20));
 
-        adapter = new FeatureListAdapter(context);
+        adapter = new FeatureListAdapter(context, this);
         recyclerView.setAdapter(adapter);
 
         container.addView(recyclerView, new FrameLayout.LayoutParams(

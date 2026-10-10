@@ -8,10 +8,15 @@ import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.widget.EditText;
+import org.nayagram.platform.NayaConfig;
+import org.nayagram.platform.storage.SmartStorageDoctor;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.BulletinFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +33,22 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     public static final int LANG_AR = 2;
 
     private final Context context;
+    private BaseFragment fragment;
     private final List<FeatureItem> features = new ArrayList<>();
     private int currentLang = LANG_EN;
 
     public FeatureListAdapter(Context context) {
+        this(context, null);
+    }
+
+    public FeatureListAdapter(Context context, BaseFragment fragment) {
         this.context = context;
+        this.fragment = fragment;
         initializeFeatures();
+    }
+
+    public void setFragment(BaseFragment fragment) {
+        this.fragment = fragment;
     }
 
     public void setLanguage(int lang) {
@@ -270,11 +285,192 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         return new FeatureListViewHolder(container);
     }
 
+    public boolean isFeatureEnabled(FeatureItem item) {
+        NayaConfig cfg = NayaConfig.getInstance();
+        if (cfg == null) return false;
+        switch (item.number) {
+            case 2: return cfg.isMessageScheduler();
+            case 3: return cfg.isSmartAutoReply();
+            case 4: return cfg.isStorySaverEnabled();
+            case 5: return cfg.isAnonymousStories();
+            case 7: return cfg.isForwardWithoutQuote();
+            case 8: return cfg.isVoiceTranscriptionEnabled();
+            case 9: return cfg.isSmartFoldersEnabled();
+            case 10: return cfg.isConfirmActions();
+            case 11: return cfg.isShowIdAndDc();
+            case 12: return cfg.isModularConfig();
+            case 13: return cfg.isFocusModeEnabled();
+            case 14: return true;
+            case 15: return cfg.isBatterySaverEnabled();
+            case 16: return cfg.isBiometricChatLockerEnabled();
+            case 17: return cfg.isInstantTranslatorEnabled();
+            default: return false;
+        }
+    }
+
+    private String getActionLabel(FeatureItem item) {
+        if (item.number == 14) {
+            return currentLang == LANG_BN ? "ক্লিন" : (currentLang == LANG_AR ? "تنظيف" : "CLEAN");
+        }
+        boolean enabled = isFeatureEnabled(item);
+        if (item.number == 3 && enabled) {
+            return currentLang == LANG_BN ? "সেট" : (currentLang == LANG_AR ? "ضبط" : "CONFIG");
+        }
+        if (enabled) {
+            return currentLang == LANG_BN ? "অন" : (currentLang == LANG_AR ? "مفعل" : "ON");
+        } else {
+            return currentLang == LANG_BN ? "অফ" : (currentLang == LANG_AR ? "معطل" : "OFF");
+        }
+    }
+
+    private int getLabelTextColor(FeatureItem item) {
+        if (item.number == 14) return 0xFF7C3AED;
+        boolean enabled = isFeatureEnabled(item);
+        if (item.number == 3 && enabled) return 0xFF0284C7;
+        return enabled ? 0xFF15803D : 0xFF757575;
+    }
+
+    private int getLabelBgColor(FeatureItem item) {
+        if (item.number == 14) return 0x227C3AED;
+        boolean enabled = isFeatureEnabled(item);
+        if (item.number == 3 && enabled) return 0x200EA5E9;
+        return enabled ? 0x2416A34A : 0x14000000;
+    }
+
     @Override
     public void onBindViewHolder(@NonNull FeatureListViewHolder holder, int position) {
         FeatureItem item = features.get(position);
-        holder.bind(item, position, currentLang);
-        holder.setDetailsClickListener(v -> showFeatureDetailsDialog(item));
+        boolean enabled = isFeatureEnabled(item);
+        String label = getActionLabel(item);
+        int textColor = getLabelTextColor(item);
+        int bgColor = getLabelBgColor(item);
+
+        holder.bind(item, position, currentLang, enabled, label, textColor, bgColor);
+        holder.setListeners(
+                v -> handleFeatureClick(item, position),
+                v -> {
+                    showFeatureDetailsDialog(item);
+                    return true;
+                },
+                v -> showFeatureDetailsDialog(item)
+        );
+    }
+
+    private void handleFeatureClick(FeatureItem item, int position) {
+        NayaConfig cfg = NayaConfig.getInstance();
+        if (cfg == null) return;
+
+        if (item.number == 14) {
+            showStorageDoctorScanDialog();
+            return;
+        }
+
+        if (item.number == 3 && cfg.isSmartAutoReply()) {
+            showAutoReplyConfigDialog();
+            return;
+        }
+
+        boolean newState = !isFeatureEnabled(item);
+        switch (item.number) {
+            case 2: cfg.setMessageScheduler(newState); break;
+            case 3:
+                cfg.setSmartAutoReply(newState);
+                if (newState) showAutoReplyConfigDialog();
+                break;
+            case 4: cfg.setStorySaverEnabled(newState); break;
+            case 5: cfg.setAnonymousStories(newState); break;
+            case 7: cfg.setForwardWithoutQuote(newState); break;
+            case 8: cfg.setVoiceTranscriptionEnabled(newState); break;
+            case 9: cfg.setSmartFoldersEnabled(newState); break;
+            case 10: cfg.setConfirmActions(newState); break;
+            case 11: cfg.setShowIdAndDc(newState); break;
+            case 12: cfg.setModularConfig(newState); break;
+            case 13: cfg.setFocusModeEnabled(newState); break;
+            case 15: cfg.setBatterySaverEnabled(newState); break;
+            case 16: cfg.setBiometricChatLockerEnabled(newState); break;
+            case 17: cfg.setInstantTranslatorEnabled(newState); break;
+        }
+
+        notifyItemChanged(position);
+
+        if (fragment != null) {
+            String status = newState ? "ON" : "OFF";
+            BulletinFactory.of(fragment).createSimpleBulletin(
+                    R.raw.done,
+                    item.getCatchyTitle(currentLang) + ": " + status
+            ).show();
+        }
+    }
+
+    private void showStorageDoctorScanDialog() {
+        if (context == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("⚡ Smart Storage Doctor");
+        builder.setMessage("Scanning cache & temporary files...");
+
+        AlertDialog progressDialog = builder.create();
+        progressDialog.show();
+
+        SmartStorageDoctor.getInstance().scanStorage(context, report -> {
+            try {
+                progressDialog.dismiss();
+            } catch (Throwable ignored) {
+            }
+
+            if (report == null || report.totalReclaimableBytes <= 0) {
+                AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
+                cleanBldr.setTitle("✨ Storage Clean");
+                cleanBldr.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
+                cleanBldr.setPositiveButton("OK", null);
+                cleanBldr.show();
+                return;
+            }
+
+            AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
+            cleanBldr.setTitle("🧹 Storage Analysis");
+            cleanBldr.setMessage("Found reclaimable cache:
+
+" +
+                    "• Total Cache: " + report.getFormattedTotal() + "
+" +
+                    "• Cached Files: " + report.fileCount + "
+
+" +
+                    "Clean cache now to boost NayaGram speed?");
+            cleanBldr.setPositiveButton("Clean Now", (d, w) -> {
+                SmartStorageDoctor.getInstance().cleanCache(context, (freed, success) -> {
+                    if (fragment != null) {
+                        BulletinFactory.of(fragment).createSimpleBulletin(
+                                R.raw.done,
+                                "Cleaned " + SmartStorageDoctor.formatSize(freed) + " cache!"
+                        ).show();
+                    }
+                });
+            });
+            cleanBldr.setNegativeButton("Cancel", null);
+            cleanBldr.show();
+        });
+    }
+
+    private void showAutoReplyConfigDialog() {
+        if (context == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("💬 Smart Auto-Reply Message");
+        final EditText et = new EditText(context);
+        et.setText(NayaConfig.getInstance().getAutoReplyText());
+        et.setSelection(et.getText().length());
+        builder.setView(et);
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String text = et.getText().toString().trim();
+            if (!text.isEmpty()) {
+                NayaConfig.getInstance().setAutoReplyText(text);
+                if (fragment != null) {
+                    BulletinFactory.of(fragment).createSimpleBulletin(R.raw.done, "Auto-reply message updated").show();
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     @Override

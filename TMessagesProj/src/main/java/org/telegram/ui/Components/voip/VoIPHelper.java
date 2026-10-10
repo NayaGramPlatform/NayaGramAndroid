@@ -83,7 +83,10 @@ public class VoIPHelper {
             org.nayagram.platform.diagnostics.VoIPCrashDiagnostics.logNativeFailure("startCall", t.getMessage());
         }
 
-		int currentAccount = accountInstance != null ? accountInstance.getCurrentAccount() : UserConfig.selectedAccount;
+		if (accountInstance == null) {
+			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
+		}
+		int currentAccount = accountInstance.getCurrentAccount();
 		if (!org.nayagram.platform.bot.NGBotAccountGuard.checkCallSupported(activity, currentAccount)) {
 			return;
 		}
@@ -105,11 +108,14 @@ public class VoIPHelper {
 	}
 
 	private static void startCallInternal(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
-		if (activity == null || activity.isFinishing()) {
+		if (activity == null || activity.isFinishing() || user == null) {
 			return;
 		}
-		if (accountInstance == null ? MessagesController.getInstance(UserConfig.selectedAccount).isFrozen() : accountInstance.getMessagesController().isFrozen()) {
-			AccountFrozenAlert.show(accountInstance == null ? UserConfig.selectedAccount : accountInstance.getCurrentAccount());
+		if (accountInstance == null) {
+			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
+		}
+		if (accountInstance.getMessagesController().isFrozen()) {
+			AccountFrozenAlert.show(accountInstance.getCurrentAccount());
 			return;
 		}
 		if (userFull != null && userFull.phone_calls_private) {
@@ -187,8 +193,11 @@ public class VoIPHelper {
 	}
 
 	private static void initiateCall(TLRPC.User user, TLRPC.Chat chat, String hash, boolean videoCall, boolean canVideoCall, boolean createCall, Boolean checkJoiner, final Activity activity, BaseFragment fragment, AccountInstance accountInstance) {
-		if (activity == null || user == null && chat == null) {
+		if (activity == null || activity.isFinishing() || (user == null && chat == null)) {
 			return;
+		}
+		if (accountInstance == null) {
+			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
 		}
 		VoIPService voIPService = VoIPService.getSharedInstance();
 		if (voIPService != null) {
@@ -337,8 +346,11 @@ public class VoIPHelper {
 	}
 
 	private static void doInitiateCall(TLRPC.User user, TLRPC.Chat chat, String hash, TLRPC.InputPeer peer, boolean hasFewPeers, boolean videoCall, boolean canVideoCall, boolean createCall, Activity activity, BaseFragment fragment, AccountInstance accountInstance, boolean checkJoiner, boolean checkAnonymous, boolean isRtmpStream) {
-		if (activity == null || user == null && chat == null) {
+		if (activity == null || activity.isFinishing() || (user == null && chat == null)) {
 			return;
+		}
+		if (accountInstance == null) {
+			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
 		}
 		if (SystemClock.elapsedRealtime() - lastCallTime < (chat != null ? 200 : 2000)) {
 			return;
@@ -444,7 +456,7 @@ public class VoIPHelper {
 		intent.putExtra("start_incall_activity", true);
 		intent.putExtra("video_call", Build.VERSION.SDK_INT >= 18 && videoCall);
 		intent.putExtra("can_video_call", Build.VERSION.SDK_INT >= 18 && canVideoCall);
-		intent.putExtra("account", UserConfig.selectedAccount);
+		intent.putExtra("account", accountInstance != null ? accountInstance.getCurrentAccount() : UserConfig.selectedAccount);
 		try {
 			if (Build.VERSION.SDK_INT >= 26) {
 				activity.startForegroundService(intent);

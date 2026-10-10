@@ -756,6 +756,10 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	@SuppressLint({"MissingPermission", "InlinedApi"})
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		if (intent == null) {
+			stopSelf();
+			return START_NOT_STICKY;
+		}
 		if (sharedInstance != null) {
 			if (BuildVars.LOGS_ENABLED) {
 				FileLog.e("Tried to start the VoIP service when it's already started");
@@ -764,8 +768,8 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 
 		currentAccount = intent.getIntExtra("account", -1);
-		if (currentAccount == -1) {
-			throw new IllegalStateException("No account specified when starting VoIP service");
+		if (currentAccount < 0 || currentAccount >= UserConfig.MAX_ACCOUNT_COUNT) {
+			currentAccount = UserConfig.selectedAccount;
 		}
 		classGuid = ConnectionsManager.generateClassGuid();
 		long userID = intent.getLongExtra("user_id", 0);
@@ -844,7 +848,12 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 		if (videoCall) {
 			if (Build.VERSION.SDK_INT < 23 || checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-				captureDevice[CAPTURE_DEVICE_CAMERA] = NativeInstance.createVideoCapturer(localSink[CAPTURE_DEVICE_CAMERA], isFrontFaceCamera ? 1 : 0);
+				try {
+					captureDevice[CAPTURE_DEVICE_CAMERA] = NativeInstance.createVideoCapturer(localSink[CAPTURE_DEVICE_CAMERA], isFrontFaceCamera ? 1 : 0);
+				} catch (Throwable t) {
+					FileLog.e("VoIPService createVideoCapturer error", t);
+					captureDevice[CAPTURE_DEVICE_CAMERA] = 0;
+				}
 				if (chatID != 0) {
 					videoState[CAPTURE_DEVICE_CAMERA] = Instance.VIDEO_STATE_PAUSED;
 				} else {
@@ -906,6 +915,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 					ContactsController.getInstance(currentAccount).createOrUpdateConnectionServiceContact(user.id, user.first_name, user.last_name);
 					tm.placeCall(Uri.fromParts("tel", "+99084" + user.id, null), extras);
 				} else {
+					try {
+						showNotification();
+					} catch (Throwable t) {
+						FileLog.e(t);
+					}
 					delayedStartOutgoingCall = () -> {
 						delayedStartOutgoingCall = null;
 						startOutgoingCall();
@@ -5368,6 +5382,9 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
 		}
 		type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
+		if (Build.VERSION.SDK_INT >= 34) {
+			type |= 4; // ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+		}
 		return type;
 	}
 

@@ -256,14 +256,45 @@ public class NGSettingsActivity extends BaseFragment {
     }
 
     private void runStorageDoctorScan() {
+        if (getParentActivity() == null) return;
         AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
-        b.setTitle("Smart Storage Doctor");
-        b.setMessage("Storage analysis completed:\n\n• Cache: 148 MB\n• Thumbnails: 24 MB\n• Logs: 2.1 MB\n\nClean up to speed up NayaGram?");
-        b.setPositiveButton("Clean Now", (d, w) -> {
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Cleaned 174.1 MB cache!").show();
+        b.setTitle("⚡ Smart Storage Doctor");
+        b.setMessage("Scanning cache & temporary files...");
+        AlertDialog progressDialog = b.create();
+        showDialog(progressDialog);
+
+        org.nayagram.platform.storage.SmartStorageDoctor.getInstance().scanStorage(getParentActivity(), report -> {
+            try {
+                progressDialog.dismiss();
+            } catch (Throwable ignored) {
+            }
+
+            if (report == null || report.totalReclaimableBytes <= 0) {
+                AlertDialog.Builder cleanB = new AlertDialog.Builder(getParentActivity());
+                cleanB.setTitle("✨ Storage Clean");
+                cleanB.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
+                cleanB.setPositiveButton("OK", null);
+                showDialog(cleanB.create());
+                return;
+            }
+
+            AlertDialog.Builder cleanB = new AlertDialog.Builder(getParentActivity());
+            cleanB.setTitle("🧹 Storage Analysis");
+            cleanB.setMessage("Found reclaimable cache:\n\n" +
+                    "• Total Cache: " + report.getFormattedTotal() + "\n" +
+                    "• Cached Files: " + report.fileCount + "\n\n" +
+                    "Clean cache now to boost NayaGram speed?");
+            cleanB.setPositiveButton("Clean Now", (d, w) -> {
+                org.nayagram.platform.storage.SmartStorageDoctor.getInstance().cleanCache(getParentActivity(), (freed, success) -> {
+                    BulletinFactory.of(this).createSimpleBulletin(
+                            R.raw.done,
+                            "Cleaned " + org.nayagram.platform.storage.SmartStorageDoctor.formatSize(freed) + " cache!"
+                    ).show();
+                });
+            });
+            cleanB.setNegativeButton("Cancel", null);
+            showDialog(cleanB.create());
         });
-        b.setNegativeButton("Cancel", null);
-        showDialog(b.create());
     }
 
     private void showAutoReplyConfigDialog() {

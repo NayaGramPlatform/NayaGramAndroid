@@ -22,7 +22,8 @@ import org.telegram.ui.ActionBar.Theme;
 /**
  * FeatureListViewHolder for NayaGram Feature Showcase.
  * Premium card layout with alternating colored circle number badges (#1 to #17),
- * colored squircle vector icon badges, bold typography, and a clickable Details button.
+ * colored squircle vector icon badges, bold typography, dynamic status pills (ON / OFF / RUN),
+ * and interactive toggle & configuration triggers.
  */
 public class FeatureListViewHolder extends RecyclerView.ViewHolder {
 
@@ -33,6 +34,7 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
     private final TextView titleView;
     private final TextView descView;
     private final TextView detailsText;
+    private final ImageView infoIcon;
     private final LinearLayout detailsBtn;
     private final LinearLayout cardView;
 
@@ -123,32 +125,25 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         descView.setLayoutParams(descParams);
         centerLayout.addView(descView);
 
-        // 3. Right: Clickable 'Details' button with info icon
+        // 3. Right: Action & Status Button
         detailsBtn = new LinearLayout(context);
         detailsBtn.setOrientation(LinearLayout.HORIZONTAL);
         detailsBtn.setGravity(Gravity.CENTER);
-        detailsBtn.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6), AndroidUtilities.dp(8), AndroidUtilities.dp(6));
+        detailsBtn.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6));
 
-        ImageView infoIcon = new ImageView(context);
+        infoIcon = new ImageView(context);
         infoIcon.setImageResource(R.drawable.ic_naya_info);
         LinearLayout.LayoutParams iiParams = new LinearLayout.LayoutParams(
-                AndroidUtilities.dp(16),
-                AndroidUtilities.dp(16)
+                AndroidUtilities.dp(14),
+                AndroidUtilities.dp(14)
         );
         iiParams.rightMargin = AndroidUtilities.dp(4);
         detailsBtn.addView(infoIcon, iiParams);
 
         detailsText = new TextView(context);
-        detailsText.setText("Details");
-        detailsText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        detailsText.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         detailsText.setTypeface(AndroidUtilities.bold());
-        detailsText.setTextColor(0xFF2563EB); // Royal Blue
         detailsBtn.addView(detailsText);
-
-        GradientDrawable detBg = new GradientDrawable();
-        detBg.setColor(0x153B82F6);
-        detBg.setCornerRadius(AndroidUtilities.dp(10));
-        detailsBtn.setBackground(detBg);
 
         LinearLayout.LayoutParams detParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -165,25 +160,25 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         container.addView(cardView);
     }
 
-    public void bind(FeatureListAdapter.FeatureItem feature, int position, int lang) {
+    public void bind(FeatureListAdapter.FeatureItem feature, int position, int lang, boolean isEnabled, String actionLabel, int labelColor, int labelBgColor) {
         if (feature == null) return;
 
         titleView.setText(feature.getCatchyTitle(lang));
         descView.setText(feature.getDesc(lang));
         numberView.setText(String.valueOf(feature.number));
 
-        cardView.setContentDescription("Feature " + feature.number + ": " + feature.getCatchyTitle(lang) + ". " + feature.getDesc(lang));
+        cardView.setContentDescription("Feature " + feature.number + ": " + feature.getCatchyTitle(lang) + ". Status: " + actionLabel + ". Tap to toggle or configure, long press for details.");
         cardView.setFocusable(true);
         iconBadgeWrapper.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-        detailsBtn.setContentDescription("Details for " + feature.getCatchyTitle(lang));
+        detailsBtn.setContentDescription(actionLabel + " for " + feature.getCatchyTitle(lang));
 
-        if (lang == FeatureListAdapter.LANG_BN) {
-            detailsText.setText("বিবরণ");
-        } else if (lang == FeatureListAdapter.LANG_AR) {
-            detailsText.setText("تفاصيل");
-        } else {
-            detailsText.setText("Details");
-        }
+        detailsText.setText(actionLabel);
+        detailsText.setTextColor(labelColor);
+
+        GradientDrawable detBg = new GradientDrawable();
+        detBg.setColor(labelBgColor);
+        detBg.setCornerRadius(AndroidUtilities.dp(12));
+        detailsBtn.setBackground(detBg);
 
         // Icon
         if (feature.iconRes != 0) {
@@ -213,8 +208,10 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         cardView.setBackground(cardBg);
     }
 
-    public void setDetailsClickListener(View.OnClickListener listener) {
-        detailsBtn.setOnClickListener(listener);
-        cardView.setOnClickListener(listener);
+    public void setListeners(View.OnClickListener clickListener, View.OnLongClickListener longClickListener, View.OnClickListener infoListener) {
+        cardView.setOnClickListener(clickListener);
+        detailsBtn.setOnClickListener(clickListener);
+        cardView.setOnLongClickListener(longClickListener);
+        infoIcon.setOnClickListener(infoListener);
     }
 }
