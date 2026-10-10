@@ -7255,7 +7255,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 }
             } else if (reason == 3) {
                 builder.setTitle(LocaleController.getString(R.string.Proxy));
-                builder.setMessage(LocaleController.getString(R.string.UseProxyTelegramError));
+                builder.setMessage(LocaleController.getString(R.string.UseProxyNayaGramError));
                 builder.setPositiveButton(LocaleController.getString(R.string.OK), null);
                 proxyErrorDialog = showAlertDialog(builder);
                 return;

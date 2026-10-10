@@ -279,7 +279,7 @@ public class ProxySettingsActivity extends BaseFragment {
             if (a == 0) {
                 typeCell[a].setText(LocaleController.getString(R.string.UseProxySocks5), a == currentType, true);
             } else {
-                typeCell[a].setText(LocaleController.getString(R.string.UseProxyTelegram), a == currentType, false);
+                typeCell[a].setText(LocaleController.getString(R.string.UseProxyNayaGram), a == currentType, false);
             }
             linearLayout2.addView(typeCell[a], LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 50));
             typeCell[a].setOnClickListener(typeCellClickListener);
@@ -442,7 +442,7 @@ public class ProxySettingsActivity extends BaseFragment {
             if (i == 0) {
                 bottomCells[i].setText(LocaleController.getString(R.string.UseProxyInfo));
             } else {
-                bottomCells[i].setText(LocaleController.getString(R.string.UseProxyTelegramInfo) + "\n\n" + LocaleController.getString(R.string.UseProxyTelegramInfo2));
+                bottomCells[i].setText(LocaleController.getString(R.string.UseProxyNayaGramInfo) + "\n\n" + LocaleController.getString(R.string.UseProxyNayaGramInfo2));
                 bottomCells[i].setVisibility(View.GONE);
             }
             linearLayout2.addView(bottomCells[i], LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));

@@ -44979,7 +44979,7 @@ public class ChatActivity extends BaseFragment implements
                 options.addGap();
             }
             if (user == null) {
-                options.add(R.drawable.menu_invit_telegram, getString(R.string.InviteToTelegramShort), () -> {
+                options.add(R.drawable.menu_invit_telegram, getString(R.string.InviteToNayaGramShort), () -> {
                     if (getParentActivity() == null) return;
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.fromParts("sms", phone, null));

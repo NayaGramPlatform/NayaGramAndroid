@@ -485,7 +485,7 @@ public class SearchAdapter extends RecyclerListView.SelectionAdapter {
             case 1: {
                 GraySectionCell cell = (GraySectionCell) holder.itemView;
                 if (position ==  unregistredContactsHeaderRow) {
-                    cell.setText(LocaleController.getString(R.string.InviteToTelegramShort));
+                    cell.setText(LocaleController.getString(R.string.InviteToNayaGramShort));
                 } else if (getItem(position) == null) {
                     cell.setText(LocaleController.getString(R.string.GlobalSearch));
                 } else {
