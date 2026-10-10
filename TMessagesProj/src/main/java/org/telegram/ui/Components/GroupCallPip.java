@@ -24,6 +24,7 @@ import android.view.WindowManager;
 import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.core.graphics.ColorUtils;
 
@@ -721,6 +722,10 @@ public class GroupCallPip implements NotificationCenter.NotificationCenterDelega
         }
         if (!org.nayagram.platform.NayaConfig.allowFloatingOverlay(context)) {
             android.util.Log.e("NayaGramCall", "NG bubble disabled until SYSTEM_ALERT_WINDOW is granted");
+            try {
+                Toast.makeText(context.getApplicationContext(), "Display over other apps is off. Call stays in the app.", Toast.LENGTH_SHORT).show();
+            } catch (Throwable ignored) {
+            }
             return;
         }
         try {
