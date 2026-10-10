@@ -1,0 +1,51 @@
+name: Fix strings v2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fix aliases
+        run: |
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/res/values/strings.xml"
+          with open(path, "r", encoding="utf-8") as f:
+              text = f.read()
+
+          import re
+          # Clean UseProxyTelegramInfo2
+          text = re.sub(
+              r'<string name="UseProxyTelegramInfo2">[^<]*</string>',
+              "<string name=\"UseProxyTelegramInfo2\">This proxy may display a sponsored channel in your chat list. This doesn\\'t reveal any of your NayaGram traffic.</string>",
+              text
+          )
+          # Clean multiline aliases to single line
+          text = re.sub(
+              r'<string name="TelegramBusinessSubtitleTemp">[^<]*</string>',
+              '<string name="TelegramBusinessSubtitleTemp">Turn your account into a **business page** with these additional features. The benefits of NayaGram Business are **temporarily included** with NayaGram Premium.</string>',
+              text
+          )
+          text = re.sub(
+              r'<string name="TelegramStarsInfo2">[^<]*</string>',
+              '<string name="TelegramStarsInfo2">Buy Stars to unlock content and services in miniapps on NayaGram. **More about Stars >**</string>',
+              text
+          )
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(text)
+          print("Fixed")
+          PY
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add TMessagesProj/src/main/res/values/strings.xml
+          git commit -m "fix(res): clean UseProxyTelegramInfo2 apostrophe and single-line aliases" || echo "no change"
+          git push origin master
