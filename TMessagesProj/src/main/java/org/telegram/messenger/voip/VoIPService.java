@@ -3907,6 +3907,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			if (fromOverlayWindow) {
 				if (!org.nayagram.platform.NayaConfig.allowFloatingOverlay(context)) {
 					android.util.Log.e("NayaGramCall", "overlay skipped: SYSTEM_ALERT_WINDOW not granted");
+					return;
 				} else if (Build.VERSION.SDK_INT >= 26) {
 					bottomSheet.getWindow().setType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
 				} else {

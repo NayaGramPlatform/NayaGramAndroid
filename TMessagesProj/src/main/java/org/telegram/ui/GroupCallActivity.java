@@ -7666,6 +7666,10 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         builder.setPositiveButton(getString(R.string.VoipGroupLeave), (dialogInterface, position) -> processOnLeave(call, cells[0] != null && cells[0].isChecked(), selfId, onLeave));
         builder.setNegativeButton(getString(R.string.Cancel), null);
         if (fromOverlayWindow) {
+            if (!org.nayagram.platform.NayaConfig.allowFloatingOverlay(context)) {
+                android.util.Log.e("NayaGramCall", "leave dialog skipped: SYSTEM_ALERT_WINDOW not granted");
+                return;
+            }
             builder.setDimEnabled(false);
         }
         AlertDialog dialog = builder.create();

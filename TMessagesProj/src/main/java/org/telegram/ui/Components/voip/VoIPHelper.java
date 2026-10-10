@@ -347,6 +347,9 @@ public class VoIPHelper {
 			Log.e("NayaGramCall", "joinConference", e);
 			FileLog.e(e);
 		}
+	}
+
+	private static void doInitiateCall(TLRPC.User user, TLRPC.Chat chat, String hash, TLRPC.InputPeer peer, boolean hasFewPeers, boolean videoCall, boolean canVideoCall, boolean createCall, Activity activity, BaseFragment fragment, AccountInstance accountInstance, boolean checkJoiner, boolean checkAnonymous, boolean isRtmpStream) {
 		if (activity == null || activity.isFinishing() || (user == null && chat == null)) {
 			return;
 		}
@@ -469,6 +472,8 @@ public class VoIPHelper {
 			Log.e("NayaGramCall", "doInitiateCall", e);
 			FileLog.e(e);
 		}
+	}
+
 	public static void permissionDenied(final Activity activity, final Runnable onFinish, int code) {
 		boolean mergedRequest = code == 102;
 		if (!activity.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO) || mergedRequest && !activity.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
