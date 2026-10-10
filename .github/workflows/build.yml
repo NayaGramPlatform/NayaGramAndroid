@@ -22,28 +22,6 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Restore VoIPHelper.java (fix compile error)
-        run: |
-          TARGET="TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java"
-          curl -fsSL "https://raw.githubusercontent.com/NayaGramPlatform/NayaGramAndroid/3a002cafdc33c9b41913da2f7ad18ef61d423589/TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java" -o "$TARGET"
-          sed -i 's/user != null ? user.id : 0, isVideo)/user != null ? user.id : 0, videoCall)/g' "$TARGET"
-          if ! grep -q "public class VoIPHelper" "$TARGET"; then
-            echo "::error::VoIPHelper missing class"
-            exit 1
-          fi
-          echo "VoIPHelper OK"
-
-      - name: Clean policy feature marketing text
-        run: |
-          FLA="TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureListAdapter.java"
-          if [ -f "$FLA" ]; then
-            sed -i 's/Ghost Mode -> Invisible online status \& typing/Focus Mode -> Quiet hours with VIP bypass/g' "$FLA"
-            sed -i 's/Anti-Delete -> Encrypted SQLite message safety/Biometric Chat Locker -> Fingerprint-locked chats/g' "$FLA"
-            sed -i 's/STEALTH \& PRIVACY PIPELINE/PRIVACY \& CONTROL PIPELINE/g' "$FLA"
-            echo "Pipeline cleaned"
-            grep -n "Ghost Mode\|Anti-Delete\|PRIVACY" "$FLA" | head -8 || true
-          fi
-
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
