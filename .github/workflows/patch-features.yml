@@ -1,0 +1,53 @@
+name: Patch Features
+
+on:
+  workflow_dispatch:
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch pin limit and feature colors
+        run: |
+          set -e
+
+          # 1. Raise free pin limit 5 -> 10 in MessagesController
+          # Common patterns in Telegram forks
+          if grep -q "dialogFiltersPinnedLimitDefault" TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java; then
+            # Replace assignment of default pin limit when set to 5
+            sed -i 's/dialogFiltersPinnedLimitDefault = 5/dialogFiltersPinnedLimitDefault = 10/g' TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java || true
+            sed -i 's/dialogFiltersPinnedLimitDefault=5/dialogFiltersPinnedLimitDefault=10/g' TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java || true
+            # Also catch init patterns
+            sed -i 's/\(dialogFiltersPinnedLimitDefault[[:space:]]*=[[:space:]]*\)5/\110/g' TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java || true
+            echo "Patched MessagesController pin limit"
+            grep -n "dialogFiltersPinnedLimitDefault" TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java | head -5 || true
+          else
+            echo "dialogFiltersPinnedLimitDefault not found directly"
+          fi
+
+          # Also check SharedConfig / BuildVars style overrides
+          for f in TMessagesProj/src/main/java/org/telegram/messenger/*.java; do
+            if grep -q "PinnedLimitDefault.*=.*5" "$f" 2>/dev/null; then
+              sed -i 's/PinnedLimitDefault = 5/PinnedLimitDefault = 10/g' "$f" || true
+              echo "Patched $f"
+            fi
+          done
+
+          # 2. Ensure FeatureListAdapter has correct colors (ON green, OFF blue)
+          # Already set in previous commits: ON=0xFF10B981 OFF=0xFF0284C7
+          if grep -q "0xFF10B981" TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureListAdapter.java; then
+            echo "Feature switch colors already correct"
+          fi
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add -A
+          git diff --cached --stat
+          git commit -m "feat(limits): raise free dialogFiltersPinnedLimitDefault from 5 to 10" || echo "No changes to commit"
+          git push origin master
