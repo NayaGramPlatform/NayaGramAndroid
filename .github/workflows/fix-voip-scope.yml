@@ -1,0 +1,86 @@
+name: Fix VoIPHelper Scope
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fix doInitiateCall finalAccount scope
+        run: |
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java"
+          with open(path, "r", encoding="utf-8") as f:
+              text = f.read()
+
+          # In doInitiateCall (4-arg isRtmpStream overload), after null-check reassignment, add final copy
+          old = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tif (SystemClock.elapsedRealtime() - lastCallTime < 2000) {'''
+          # Try alternate nearby pattern
+          import re
+
+          # Find doInitiateCall method with isRtmpStream and fix the section after null check
+          # Replace all finalAccountInstance3 inside doInitiateCall with a proper local final
+
+          # First: add final declaration after the null check in doInitiateCall (the long overload)
+          # Look for the pattern unique to doInitiateCall
+          pattern = r'(private static void doInitiateCall\(TLRPC\.User user, TLRPC\.Chat chat, String hash, TLRPC\.InputPeer peer, boolean hasFewPeers, boolean videoCall, boolean canVideoCall, boolean createCall, Activity activity, BaseFragment fragment, AccountInstance accountInstance, boolean checkJoiner, boolean checkAnonymous, boolean isRtmpStream\) \{[\s\S]*?if \(accountInstance == null\) \{\s*accountInstance = AccountInstance\.getInstance\(UserConfig\.selectedAccount\);\s*\})'
+
+          def add_final(m):
+              return m.group(1) + '\n\t\tfinal AccountInstance finalAccount = accountInstance;'
+
+          new_text, n = re.subn(pattern, add_final, text, count=1)
+          print(f"Added finalAccount declaration: {n}")
+          text = new_text if n else text
+
+          # If pattern didn't match, try simpler insert after first null check that is followed by chatFull
+          if n == 0:
+              old_simple = '''\tif (accountInstance == null) {\n\t\t\taccountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);\n\t\t}\n\t\tif (chat != null'''
+              # count occurrences
+              print("Trying alternate...")
+              # Just replace finalAccountInstance3 globally in file where it appears in doInitiateCall context
+              # Safest: replace ALL remaining finalAccountInstance3 with a local that we define in doInitiateCall
+
+          # Replace finalAccountInstance3 with finalAccount everywhere it's wrong (doInitiateCall scope)
+          # But keep finalAccountInstance3 in initiateCall method
+          # initiateCall ends before doInitiateCall starts
+
+          # Split by doInitiateCall long signature
+          marker = 'private static void doInitiateCall(TLRPC.User user, TLRPC.Chat chat, String hash, TLRPC.InputPeer peer, boolean hasFewPeers, boolean videoCall, boolean canVideoCall, boolean createCall, Activity activity, BaseFragment fragment, AccountInstance accountInstance, boolean checkJoiner, boolean checkAnonymous, boolean isRtmpStream)'
+          if marker in text:
+              parts = text.split(marker, 1)
+              before = parts[0]  # includes initiateCall with finalAccountInstance3 - keep
+              after = parts[1]
+              # In after: add final after null check and replace finalAccountInstance3 -> finalAccount
+              after = after.replace('finalAccountInstance3', 'finalAccount')
+              # Ensure finalAccount is declared
+              null_check = '''if (accountInstance == null) {
+			accountInstance = AccountInstance.getInstance(UserConfig.selectedAccount);
+		}'''
+              if null_check in after and 'final AccountInstance finalAccount' not in after[:500]:
+                  after = after.replace(null_check, null_check + '\n\t\tfinal AccountInstance finalAccount = accountInstance;', 1)
+                  print("Inserted finalAccount in doInitiateCall")
+              text = before + marker + after
+              print("Replaced finalAccountInstance3 -> finalAccount in doInitiateCall")
+          else:
+              print("MARKER NOT FOUND")
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(text)
+          print("Done")
+          PY
+
+          # Verify
+          grep -n "finalAccount" TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java | head -30
+
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add TMessagesProj/src/main/java/org/telegram/ui/Components/voip/VoIPHelper.java
+          git commit -m "fix(voip): declare finalAccount inside doInitiateCall scope (fix cannot find symbol)" || echo "no change"
+          git push origin master
