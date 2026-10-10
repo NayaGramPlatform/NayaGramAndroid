@@ -175,6 +175,14 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
         detailsText.setText(actionLabel);
         detailsText.setTextColor(labelColor);
 
+        if (isEnabled) {
+            infoIcon.setImageResource(R.drawable.ic_ab_done);
+            infoIcon.setColorFilter(labelColor);
+            infoIcon.setVisibility(View.VISIBLE);
+        } else {
+            infoIcon.setVisibility(View.GONE);
+        }
+
         GradientDrawable detBg = new GradientDrawable();
         detBg.setColor(labelBgColor);
         detBg.setCornerRadius(AndroidUtilities.dp(12));

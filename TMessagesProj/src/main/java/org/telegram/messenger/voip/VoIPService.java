@@ -1204,7 +1204,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 		if (privateCall instanceof TL_phone.TL_phoneCallDiscarded) {
 			if (BuildVars.LOGS_ENABLED) {
-				FileLog.w("Call " + privateCall.id + " was discarded before the service started, stopping");
+				FileLog.w("Call " + (privateCall != null ? privateCall.id : 0) + " was discarded before the service started, stopping");
 			}
 			stopSelf();
 			return;
@@ -1670,7 +1670,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		if (phoneCall == null) {
 			return;
 		}
-		if (phoneCall.id != privateCall.id) {
+		if (privateCall != null && phoneCall.id != privateCall.id) {
 //			if (invitingCall != null && invitingCall.call != null && invitingCall.call.id == phoneCall.id) {
 //				if (invitingCall.accepting) {
 //					if (phoneCall.reason instanceof TLRPC.TL_phoneCallDiscardReasonAllowGroupCall) {
@@ -3433,7 +3433,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			} else {
 				hashes = new HashSet<>();
 			}
-			hashes.add(privateCall.id + " " + privateCall.access_hash + " " + System.currentTimeMillis());
+			hashes.add((privateCall != null ? privateCall.id : 0) + " " + (privateCall != null ? privateCall.access_hash : 0) + " " + System.currentTimeMillis());
 			while (hashes.size() > 20) {
 				String oldest = null;
 				long oldestTime = Long.MAX_VALUE;
@@ -3483,8 +3483,8 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			final Instance.ServerConfig serverConfig = Instance.getGlobalServerConfig();
 			final boolean enableAec = !(sysAecAvailable && serverConfig.useSystemAec);
 			final boolean enableNs = !(sysNsAvailable && serverConfig.useSystemNs);
-			final String logFilePath = BuildVars.DEBUG_VERSION ? VoIPHelper.getLogFilePath("voip" + privateCall.id) : VoIPHelper.getLogFilePath("" + privateCall.id, false);
-			final String statsLogFilePath = VoIPHelper.getLogFilePath("" + privateCall.id, true);
+			final String logFilePath = BuildVars.DEBUG_VERSION ? VoIPHelper.getLogFilePath("voip" + (privateCall != null ? privateCall.id : 0)) : VoIPHelper.getLogFilePath("" + (privateCall != null ? privateCall.id : 0), false);
+			final String statsLogFilePath = VoIPHelper.getLogFilePath("" + (privateCall != null ? privateCall.id : 0), true);
 			final Instance.Config config = new Instance.Config(initializationTimeout, receiveTimeout, voipDataSaving, privateCall.p2p_allowed, enableAec, enableNs, true, false, serverConfig.enableStunMarking, logFilePath, statsLogFilePath, privateCall.protocol.max_layer, privateCall.custom_parameters == null ? "" : privateCall.custom_parameters.data);
 			lastLogFilePath = logFilePath;
 
@@ -4583,11 +4583,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			systemCallConnection.setRinging();
 		}
 		if (BuildVars.LOGS_ENABLED) {
-			FileLog.d("starting ringing for call " + privateCall.id);
+			FileLog.d("starting ringing for call " + (privateCall != null ? privateCall.id : 0));
 		}
 		dispatchStateChanged(STATE_WAITING_INCOMING);
 		if (!notificationsDisabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			showIncomingNotification(ContactsController.formatName(user.first_name, user.last_name), user, privateCall.video, 0);
+			showIncomingNotification(ContactsController.formatName(user.first_name, user.last_name), user, privateCall != null && privateCall.video, 0);
 			if (BuildVars.LOGS_ENABLED) {
 				FileLog.d("Showing incoming call notification");
 			}
@@ -4682,7 +4682,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 		if (TextUtils.isEmpty(finalState.debugLog)) {
 			try {
-				finalState.debugLog = getStringFromFile(VoIPHelper.getLogFilePath("" + privateCall.id, true));
+				finalState.debugLog = getStringFromFile(VoIPHelper.getLogFilePath("" + (privateCall != null ? privateCall.id : 0), true));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -4691,11 +4691,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		if (messagesController.voipDebug == null) {
 			messagesController.voipDebug = new VoIPDebugToSend(currentAccount);
 		}
-		messagesController.voipDebug.push(privateCall.id, privateCall.access_hash, finalState, lastLogFilePath);
+		messagesController.voipDebug.push(privateCall != null ? privateCall.id : 0, privateCall != null ? privateCall.access_hash : 0, finalState, lastLogFilePath);
 		lastLogFilePath = null;
 
 		if (needSendDebugLog) {
-			messagesController.voipDebug.done(privateCall.id, needSendDebugLog);
+			messagesController.voipDebug.done(privateCall != null ? privateCall.id : 0, needSendDebugLog);
 			needSendDebugLog = false;
 		}
 	}
@@ -5683,7 +5683,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	private void acceptIncomingCallFromNotification() {
 		showNotification();
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED || privateCall.video && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED || (privateCall != null && privateCall.video) && checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)) {
 			try {
 				//intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 				PendingIntent.getActivity(VoIPService.this, 0, new Intent(VoIPService.this, VoIPPermissionActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ONE_SHOT).send();
