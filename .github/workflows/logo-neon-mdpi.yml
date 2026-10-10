@@ -1,0 +1,28 @@
+name: logo-neon-mdpi
+on:
+  workflow_dispatch:
+jobs:
+  i:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          python3 << 'EOF'
+          import base64, os
+          raw = base64.b64decode("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")
+          folder = "TMessagesProj/src/main/res/mipmap-mdpi"
+          os.makedirs(folder, exist_ok=True)
+          for name in ['ic_launcher.png', 'ic_launcher_round.png', 'icon_5_launcher.png', 'icon_5_launcher_round.png', 'icon_foreground.png', 'icon_foreground_round.png', 'icon_foreground_sa.png']:
+              open(f"{folder}/{name}", "wb").write(raw)
+              print("wrote", name, len(raw))
+          EOF
+      - run: |
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add TMessagesProj/src/main/res/mipmap-mdpi/
+          git commit -m "assets: neon mdpi icons" || echo nochange
+          git push origin master
