@@ -1106,8 +1106,15 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 					salt1[a] = (byte) ((byte) (Utilities.random.nextDouble() * 256) ^ res.random[a]);
 				}
 
-				BigInteger i_g_a = BigInteger.valueOf(messagesStorage.getSecretG());
-				i_g_a = i_g_a.modPow(new BigInteger(1, salt1), new BigInteger(1, messagesStorage.getSecretPBytes()));
+				BigInteger i_g_a;
+				try {
+					i_g_a = BigInteger.valueOf(messagesStorage.getSecretG());
+					i_g_a = i_g_a.modPow(new BigInteger(1, salt1), new BigInteger(1, messagesStorage.getSecretPBytes()));
+				} catch (Exception e) {
+					FileLog.e("getDhConfig: BigInteger operation failed", e);
+					callFailed();
+					return;
+				}
 				byte[] g_a = i_g_a.toByteArray();
 				if (g_a.length > 256) {
 					byte[] correctedAuth = new byte[256];
@@ -1748,6 +1755,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				return;
 			}
 			g_a = phoneCall.g_a_or_b;
+			if (phoneCall.g_a_or_b == null) {
+				if (BuildVars.LOGS_ENABLED) {
+					FileLog.e("processAcceptedCall: phoneCall.g_a_or_b is null");
+				}
+				callFailed();
+				return;
+			}
 			BigInteger g_a_big = new BigInteger(1, phoneCall.g_a_or_b);
 			BigInteger p = new BigInteger(1, MessagesStorage.getInstance(currentAccount).getSecretPBytes());
 
@@ -1758,7 +1772,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				callFailed();
 				return;
 			}
-			g_a_big = g_a_big.modPow(new BigInteger(1, a_or_b), p);
+			try {
+				g_a_big = g_a_big.modPow(new BigInteger(1, a_or_b), p);
+			} catch (Exception e) {
+				FileLog.e("processAcceptedCall: modPow failed (incoming)", e);
+				callFailed();
+				return;
+			}
 
 			byte[] authKey = g_a_big.toByteArray();
 			if (authKey.length > 256) {
@@ -1872,7 +1892,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			return;
 		}
 
-		i_authKey = i_authKey.modPow(new BigInteger(1, a_or_b), p);
+		try {
+			i_authKey = i_authKey.modPow(new BigInteger(1, a_or_b), p);
+		} catch (Exception e) {
+			FileLog.e("processAcceptedCall: modPow failed", e);
+			callFailed();
+			return;
+		}
 
 		byte[] authKey = i_authKey.toByteArray();
 		if (authKey.length > 256) {
