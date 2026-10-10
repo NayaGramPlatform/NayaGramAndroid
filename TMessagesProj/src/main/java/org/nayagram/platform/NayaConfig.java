@@ -87,6 +87,8 @@ public class NayaConfig {
 
     // 12. Modular NayaConfig
     public boolean isModularConfigActive() { return preferences.getBoolean(KEY_MODULAR_CONFIG, true); }
+    public boolean isModularConfig() { return isModularConfigActive(); }
+    public void setModularConfig(boolean e) { setModularConfigActive(e); }
     public void setModularConfigActive(boolean e) { preferences.edit().putBoolean(KEY_MODULAR_CONFIG, e).apply(); }
 
     // 13. Digital Wellbeing & Focus Mode
