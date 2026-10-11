@@ -1,0 +1,76 @@
+name: Fix UI Simple
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Patch CheckBoxBase animator
+        run: |
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java
+          # Cancel any running animator before starting a new one
+          if ! grep -q "cancelCheckAnimator();" "$FILE" || ! grep -A2 "animateToCheckedState" "$FILE" | grep -q "cancelCheckAnimator"; then
+            sed -i 's/private void animateToCheckedState(boolean newCheckedState) {/private void animateToCheckedState(boolean newCheckedState) {\n        cancelCheckAnimator();/' "$FILE"
+            echo "CheckBoxBase patched"
+          else
+            echo "CheckBoxBase already has cancel in animate"
+          fi
+          grep -A3 "animateToCheckedState" "$FILE" | head -5
+
+      - name: Patch pin limit to 10
+        run: |
+          FILE=TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
+          sed -i 's/dialogFiltersPinnedLimitDefault = 5/dialogFiltersPinnedLimitDefault = 10/g' "$FILE"
+          sed -i 's/dialogFiltersPinnedLimitDefault=5/dialogFiltersPinnedLimitDefault=10/g' "$FILE"
+          # Force any remaining single-digit default that is 5
+          python3 -c "
+          import re
+          p='$FILE'
+          t=open(p).read()
+          m=re.findall(r'dialogFiltersPinnedLimitDefault\s*=\s*(\d+)', t)
+          print('values found:', m)
+          t2=re.sub(r'dialogFiltersPinnedLimitDefault\s*=\s*5\b','dialogFiltersPinnedLimitDefault = 10',t)
+          open(p,'w').write(t2)
+          "
+
+      - name: Unlock launcher icons
+        run: |
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java
+          # Add isIconAvailable/canUseIcon if missing
+          if ! grep -q "isIconAvailable" "$FILE"; then
+            python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java"
+          text = open(path).read()
+          insert = """
+    public static boolean isIconAvailable(LauncherIcon icon) {
+        return true;
+    }
+
+    public static boolean canUseIcon(LauncherIcon icon) {
+        return true;
+    }
+
+"""
+          text = text.replace("public static void setIcon(LauncherIcon icon) {", insert + "    public static void setIcon(LauncherIcon icon) {", 1)
+          open(path, "w").write(text)
+          print("Added isIconAvailable/canUseIcon")
+          PY
+          fi
+          grep -n "isIconAvailable\|canUseIcon\|premium" "$FILE" | head -20
+
+      - name: Commit and push
+        run: |
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.platform"
+          git add -A
+          git status --short
+          git commit -m "fix(ui): checkbox cancel animator, pin limit 10, unlock all icons" || echo nochange
+          git push origin master
