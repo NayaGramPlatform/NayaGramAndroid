@@ -56,6 +56,9 @@ public class NativeInstance {
     }
 
     public static NativeInstance make(String version, Instance.Config config, String path, Instance.Endpoint[] endpoints, Instance.Proxy proxy, int networkType, Instance.EncryptionKey encryptionKey, VideoSink remoteSink, long videoCapturer, AudioLevelsCallback audioLevelsCallback) {
+        try {
+            ContextUtils.initialize(ApplicationLoader.applicationContext);
+        } catch (Throwable ignore) {}
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("create new tgvoip instance, version " + version);
         }
