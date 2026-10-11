@@ -273,7 +273,7 @@ public class PhotoAttachPhotoCell extends FrameLayout {
 
         checkBox = new CheckBox2(context, 24, resourcesProvider);
         checkBox.setDrawBackgroundAsArc(7);
-        checkBox.setColor(Theme.key_checkbox, Theme.key_chat_attachPhotoBackground, Theme.key_checkboxCheck);
+        checkBox.setColor(Theme.key_chat_attachCheckBoxBackground, Theme.key_chat_attachPhotoBackground, Theme.key_chat_attachCheckBoxCheck);
         addView(checkBox, LayoutHelper.createFrame(26, 26, Gravity.LEFT | Gravity.TOP, 52, 4, 0, 0));
         checkBox.setVisibility(VISIBLE);
         setFocusable(true);
@@ -601,6 +601,10 @@ public class PhotoAttachPhotoCell extends FrameLayout {
 
     public void setChecked(int num, boolean checked, boolean animated) {
         checkBox.setChecked(num, checked, animated);
+        if (checked && checkBox.getProgress() < 0.5f) {
+            checkBox.getCheckBoxBase().cancelCheckAnimator();
+            checkBox.getCheckBoxBase().setProgress(1.0f);
+        }
         if (itemSizeChanged) {
             if (animator != null) {
                 animator.cancel();
