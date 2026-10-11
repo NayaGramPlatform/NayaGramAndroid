@@ -277,6 +277,7 @@ public class CheckBoxBase {
 
     public long animationDuration = 200;
     private void animateToCheckedState(boolean newCheckedState) {
+        cancelCheckAnimator();
         checkAnimator = ObjectAnimator.ofFloat(this, "progress", newCheckedState ? 1 : 0);
         checkAnimator.addListener(new AnimatorListenerAdapter() {
             @Override

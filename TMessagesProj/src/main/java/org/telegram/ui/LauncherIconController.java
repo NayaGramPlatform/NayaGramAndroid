@@ -37,6 +37,15 @@ public class LauncherIconController {
         }
     }
 
+    
+    public static boolean isIconAvailable(LauncherIcon icon) {
+        return true;
+    }
+
+    public static boolean canUseIcon(LauncherIcon icon) {
+        return true;
+    }
+
     public static void setIcon(LauncherIcon icon) {
         try {
             Context ctx = ApplicationLoader.applicationContext;
