@@ -13,57 +13,69 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fix CheckBoxBase + pin + icons
+      - name: Unlock AppIconsSelectorCell + verify fixes
         run: |
           set -e
-          # 1. CheckBoxBase - cancel animator before new transition
-          FILE=TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java
-          python3 -c "
-          path='$FILE'
-          t=open(path).read()
-          old='private void animateToCheckedState(boolean newCheckedState) {\n        checkAnimator = ObjectAnimator'
-          new='private void animateToCheckedState(boolean newCheckedState) {\n        cancelCheckAnimator();\n        checkAnimator = ObjectAnimator'
-          if old in t:
-              t=t.replace(old,new,1)
-              open(path,'w').write(t)
-              print('CheckBoxBase: cancelCheckAnimator injected')
-          elif 'cancelCheckAnimator();' in t.split('animateToCheckedState')[1][:80]:
-              print('CheckBoxBase: already fixed')
-          else:
-              print('CheckBoxBase: pattern miss')
-          "
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Cells/AppIconsSelectorCell.java
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Cells/AppIconsSelectorCell.java"
+          t = open(path).read()
 
-          # 2. Pin limit
-          FILE=TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
+          # 1. Click: allow all icons (remove premium paywall block)
+          old_click = """            if (icon.premium && !UserConfig.hasPremiumOnAccounts()) {
+                fragment.showDialog(new PremiumFeatureBottomSheet(fragment, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS, true));
+                return;
+            }
+"""
+          new_click = """            // NayaGram: all icons free; isIconAvailable always true. Premium flag is badge only.
+            if (!LauncherIconController.isIconAvailable(icon)) {
+                return;
+            }
+"""
+          if old_click in t:
+              t = t.replace(old_click, new_click, 1)
+              print("Click paywall removed")
+          else:
+              print("Click pattern not found or already patched")
+
+          # 2. Bind: still show optional lock badge only on PREMIUM icon for visual, but don't block
+          # Keep badge UI as-is for PREMIUM (optional label)
+
+          # 3. updateIconsVisibility: never remove premium icons from list
+          old_vis = """        if (MessagesController.getInstance(currentAccount).premiumFeaturesBlocked()) {
+            for (int i = 0; i < availableIcons.size(); i++) {
+                if (availableIcons.get(i).premium) {
+                    availableIcons.remove(i);
+                    i--;
+                }
+            }
+        }
+"""
+          new_vis = """        // NayaGram: keep all icons visible (including premium-badge icon)
+"""
+          if old_vis in t:
+              t = t.replace(old_vis, new_vis, 1)
+              print("Visibility filter removed")
+          else:
+              print("Visibility pattern miss")
+
+          open(path, "w").write(t)
+          PY
+
+          # Verify CheckBoxBase
+          grep -A3 "animateToCheckedState" TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java | head -6
+
+          # Verify pin
           python3 -c "
           import re
-          path='$FILE'
-          t=open(path).read()
-          vals=re.findall(r'dialogFiltersPinnedLimitDefault\s*=\s*(\d+)', t)
-          print('pin values before:', vals)
-          t2=re.sub(r'dialogFiltersPinnedLimitDefault\s*=\s*5\b','dialogFiltersPinnedLimitDefault = 10',t)
-          open(path,'w').write(t2)
-          vals=re.findall(r'dialogFiltersPinnedLimitDefault\s*=\s*(\d+)', t2)
-          print('pin values after:', vals)
-          "
-
-          # 3. Unlock icons
-          FILE=TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java
-          python3 -c "
-          path='$FILE'
-          t=open(path).read()
-          if 'isIconAvailable' not in t:
-              insert='''\n    public static boolean isIconAvailable(LauncherIcon icon) {\n        return true;\n    }\n\n    public static boolean canUseIcon(LauncherIcon icon) {\n        return true;\n    }\n\n'''
-              t=t.replace('public static void setIcon(LauncherIcon icon) {', insert+'    public static void setIcon(LauncherIcon icon) {',1)
-              open(path,'w').write(t)
-              print('LauncherIcon: isIconAvailable added')
-          else:
-              print('LauncherIcon: already has isIconAvailable')
+          t=open('TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java').read()
+          print('pin defaults:', re.findall(r'dialogFiltersPinnedLimitDefault\s*=\s*(\d+)', t)[:5])
+          print('maxPinned:', re.findall(r'maxPinnedDialogsCountDefault\s*=\s*(\d+)', t)[:5])
           "
 
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git status --short
-          git commit -m "fix(ui): checkbox animator cancel, pin limit 10, unlock launcher icons" || echo nochange
+          git commit -m "fix(ui): unlock all launcher icons in selector (badge only on PREMIUM)" || echo nochange
           git push origin master
