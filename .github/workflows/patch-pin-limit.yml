@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  patch:
+  fix:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -13,53 +13,130 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find and patch dialogFiltersPinnedLimitDefault
+      - name: Fix media tick visibility and checkbox progress
         run: |
           set -e
-          FILE=TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 
-          echo "=== Current values ==="
-          grep -n "dialogFiltersPinnedLimit" "$FILE" | head -20 || true
-
+          # 1. PhotoAttachPhotoCell - high contrast checkbox colors + force progress
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Cells/PhotoAttachPhotoCell.java
           python3 << 'PY'
-          import re
-          path = "TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java"
-          with open(path, "r", encoding="utf-8", errors="ignore") as f:
-              text = f.read()
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Cells/PhotoAttachPhotoCell.java"
+          t = open(path, encoding="utf-8").read()
 
-          # Show all occurrences related to pin limit
-          for m in re.finditer(r'.{0,40}dialogFiltersPinnedLimitDefault.{0,40}', text):
-              print("FOUND:", m.group(0).replace("\n"," "))
-
-          # Replace common patterns: = 5; or =5;
-          new_text, n1 = re.subn(
-              r'(dialogFiltersPinnedLimitDefault\s*=\s*)5(\s*;)',
-              r'\g<1>10\2',
-              text
+          t2 = t.replace(
+              "checkBox.setColor(Theme.key_checkbox, Theme.key_chat_attachPhotoBackground, Theme.key_checkboxCheck);",
+              "checkBox.setColor(Theme.key_chat_attachCheckBoxBackground, Theme.key_chat_attachPhotoBackground, Theme.key_chat_attachCheckBoxCheck);",
+              1
           )
-          # Also in config load from server defaults sometimes hardcoded as 5 nearby
-          new_text, n2 = re.subn(
-              r'(dialogFiltersPinnedLimitDefault\s*=\s*)5(\b)',
-              r'\g<1>10\2',
-              new_text
-          )
+          if t2 != t:
+              print("PhotoAttach: colors fixed")
+              t = t2
+          else:
+              print("PhotoAttach: color already ok or pattern miss")
 
-          print(f"Replacements: pattern1={n1}, pattern2={n2}")
+          old = """    public void setChecked(int num, boolean checked, boolean animated) {
+        checkBox.setChecked(num, checked, animated);
+"""
+          new = """    public void setChecked(int num, boolean checked, boolean animated) {
+        checkBox.setChecked(num, checked, animated);
+        if (checked && checkBox.getProgress() < 0.5f) {
+            checkBox.getCheckBoxBase().cancelCheckAnimator();
+            checkBox.getCheckBoxBase().setProgress(1.0f);
+        } else if (!checked && !animated && checkBox.getProgress() > 0.5f) {
+            checkBox.getCheckBoxBase().cancelCheckAnimator();
+            checkBox.getCheckBoxBase().setProgress(0.0f);
+        }
+"""
+          if old in t:
+              t = t.replace(old, new, 1)
+              print("PhotoAttach: setChecked force progress")
+          else:
+              print("PhotoAttach: setChecked pattern miss")
 
-          if n1 + n2 == 0:
-              # Try finding where default is assigned from a constant
-              for m in re.finditer(r'dialogFiltersPinnedLimitDefault\s*=\s*([^;\n]+)', text):
-                  print("ASSIGN:", m.group(0))
-
-          with open(path, "w", encoding="utf-8") as f:
-              f.write(new_text)
+          open(path, "w", encoding="utf-8").write(t)
           PY
 
-          echo "=== After patch ==="
-          grep -n "dialogFiltersPinnedLimit" "$FILE" | head -20 || true
+          # 2. CheckBoxBase - ensure animation end snaps to isChecked state
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java
+          python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java"
+          t = open(path, encoding="utf-8").read()
+
+          # Ensure cancel at start of animate
+          if "private void animateToCheckedState(boolean newCheckedState) {\n        cancelCheckAnimator();" not in t:
+              t = t.replace(
+                  "private void animateToCheckedState(boolean newCheckedState) {\n        checkAnimator = ObjectAnimator",
+                  "private void animateToCheckedState(boolean newCheckedState) {\n        cancelCheckAnimator();\n        checkAnimator = ObjectAnimator",
+                  1
+              )
+              print("CheckBoxBase: cancel injected")
+          else:
+              print("CheckBoxBase: cancel already present")
+
+          # On animation end, snap progress to isChecked
+          old_end = """                if (animation.equals(checkAnimator)) {
+                    checkAnimator = null;
+                }
+                if (!isChecked) {
+                    checkedText = null;
+                }"""
+          new_end = """                if (animation.equals(checkAnimator)) {
+                    checkAnimator = null;
+                }
+                // Snap final visual state to logical checked flag
+                setProgress(isChecked ? 1.0f : 0.0f);
+                if (!isChecked) {
+                    checkedText = null;
+                }"""
+          if old_end in t and "Snap final visual" not in t:
+              t = t.replace(old_end, new_end, 1)
+              print("CheckBoxBase: snap on animation end")
+          else:
+              print("CheckBoxBase: snap skip")
+
+          open(path, "w", encoding="utf-8").write(t)
+          PY
+
+          # 3. SharedPhotoVideoCell - ensure visible when checked
+          FILE=TMessagesProj/src/main/java/org/telegram/ui/Cells/SharedPhotoVideoCell.java
+          if [ -f "$FILE" ]; then
+            python3 << 'PY'
+          path = "TMessagesProj/src/main/java/org/telegram/ui/Cells/SharedPhotoVideoCell.java"
+          t = open(path, encoding="utf-8").read()
+          old = """        public void setChecked(final boolean checked, boolean animated) {
+            if (checkBox.getVisibility() != VISIBLE) {
+                checkBox.setVisibility(VISIBLE);
+            }
+            checkBox.setChecked(checked, animated);
+"""
+          new = """        public void setChecked(final boolean checked, boolean animated) {
+            if (checkBox.getVisibility() != VISIBLE) {
+                checkBox.setVisibility(VISIBLE);
+            }
+            checkBox.setChecked(checked, animated);
+            if (checked && checkBox.getProgress() < 0.5f) {
+                checkBox.getCheckBoxBase().cancelCheckAnimator();
+                checkBox.getCheckBoxBase().setProgress(1.0f);
+            }
+"""
+          if old in t:
+              t = t.replace(old, new, 1)
+              open(path, "w", encoding="utf-8").write(t)
+              print("SharedPhotoVideoCell: force progress")
+          else:
+              print("SharedPhotoVideoCell: pattern miss")
+          PY
+          fi
+
+          # 4. Verify pin already 10
+          grep -n "maxPinnedDialogsCountDefault = " TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java | head -5
+
+          # 5. Verify isIconAvailable
+          grep -n "isIconAvailable" TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java | head -5
 
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
-          git add "$FILE"
-          git commit -m "feat(limits): set dialogFiltersPinnedLimitDefault = 10 for free accounts" || echo "No change needed"
+          git add -A
+          git status --short
+          git commit -m "fix(ui): media selection tick visibility + checkbox progress snap" || echo nochange
           git push origin master
