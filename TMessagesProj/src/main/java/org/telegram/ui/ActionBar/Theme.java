@@ -3634,7 +3634,10 @@ public class Theme {
         fallbackKeys.put(key_chat_inPollWrongAnswer, key_chat_attachAudioBackground);
         fallbackKeys.put(key_chat_outPollWrongAnswer, key_chat_attachAudioBackground);
         fallbackKeys.put(key_chat_editMediaButton, key_dialogFloatingButton);
+        fallbackKeys.put(key_dialogRoundCheckBox, key_checkbox);
+        fallbackKeys.put(key_dialogRoundCheckBoxCheck, key_checkboxCheck);
         fallbackKeys.put(key_chat_attachCheckBoxBackground, key_dialogRoundCheckBox);
+        fallbackKeys.put(key_chat_attachCheckBoxCheck, key_checkboxCheck);
         fallbackKeys.put(key_pollCreateIcons, key_windowBackgroundWhiteGrayIcon);
 
         fallbackKeys.put(key_profile_tabText, key_windowBackgroundWhiteGrayText);
