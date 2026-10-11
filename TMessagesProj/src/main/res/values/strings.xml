@@ -11367,7 +11367,7 @@
     <string name="TelegramFAQ">NayaGram FAQ</string>
     <string name="TelegramFaqUrl">https://telegram.org/faq</string>
     <string name="TelegramFeatures">NayaGram Features</string>
-    <string name="TelegramFeaturesUrl">https://t.me/NayaGramTips</string>
+    <string name="TelegramFeaturesUrl">https://t.me/TelegramTips</string>
     <string name="TelegramPassport">NayaGram Passport</string>
     <string name="TelegramPassportCreatePassword">CREATE A PASSWORD</string>
     <string name="TelegramPassportCreatePasswordInfo">Please create a password to secure your personal data with end-to-end encryption.\n\nThis password will also be required whenever you log in to NayaGram on a new device.</string>
