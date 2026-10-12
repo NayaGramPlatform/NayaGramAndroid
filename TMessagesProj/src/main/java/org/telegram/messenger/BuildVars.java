@@ -24,6 +24,8 @@ public class BuildVars {
     public static boolean USE_CLOUD_STRINGS = false;
     public static boolean CHECK_UPDATES = true;
     public static boolean NO_SCOPED_STORAGE = Build.VERSION.SDK_INT <= 29;
+    /** Internal NayaGram number. Play's uploaded versionCode is this times 10 plus the ABI digit. */
+    public static final int BUILD_VERSION = 4012;
     public static String BUILD_VERSION_STRING = BuildConfig.BUILD_VERSION_STRING;
 
     public static int APP_ID = 39273870;
