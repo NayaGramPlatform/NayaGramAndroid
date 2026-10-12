@@ -13,47 +13,45 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply remaining UI fixes
+      - name: Apply UI fixes with Python
         run: |
           set -e
+          python3 <<'ENDSCRIPT'
+          from pathlib import Path
 
-          # 1) CheckBoxBase - snap progress to isChecked on animation end
-          python3 -c '
-          path = "TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java"
-          t = open(path, encoding="utf-8").read()
-          old = """                if (animation.equals(checkAnimator)) {
+          # 1) CheckBoxBase snap
+          p = Path("TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java")
+          t = p.read_text(encoding="utf-8")
+          needle = """                if (animation.equals(checkAnimator)) {
                     checkAnimator = null;
                 }
                 if (!isChecked) {
                     checkedText = null;
                 }"""
-          new = """                if (animation.equals(checkAnimator)) {
+          repl = """                if (animation.equals(checkAnimator)) {
                     checkAnimator = null;
                 }
-                // Snap final visual to logical state (prevents frozen empty ticks)
                 setProgress(isChecked ? 1.0f : 0.0f);
                 if (!isChecked) {
                     checkedText = null;
                 }"""
-          if "setProgress(isChecked" not in t and old in t:
-              t = t.replace(old, new, 1)
-              open(path, "w", encoding="utf-8").write(t)
-              print("CheckBoxBase: snap OK")
+          if "setProgress(isChecked ? 1.0f : 0.0f)" not in t and needle in t:
+              t = t.replace(needle, repl, 1)
+              p.write_text(t, encoding="utf-8")
+              print("CheckBoxBase: snap applied")
           else:
-              print("CheckBoxBase: already snapped or pattern miss")
-          '
+              print("CheckBoxBase: skip")
 
-          # 2) SharedPhotoVideoCell - force progress when checked
-          python3 -c '
-          path = "TMessagesProj/src/main/java/org/telegram/ui/Cells/SharedPhotoVideoCell.java"
-          t = open(path, encoding="utf-8").read()
-          old = """        public void setChecked(final boolean checked, boolean animated) {
+          # 2) SharedPhotoVideoCell force progress
+          p = Path("TMessagesProj/src/main/java/org/telegram/ui/Cells/SharedPhotoVideoCell.java")
+          t = p.read_text(encoding="utf-8")
+          needle = """        public void setChecked(final boolean checked, boolean animated) {
             if (checkBox.getVisibility() != VISIBLE) {
                 checkBox.setVisibility(VISIBLE);
             }
             checkBox.setChecked(checked, animated);
 """
-          new = """        public void setChecked(final boolean checked, boolean animated) {
+          repl = """        public void setChecked(final boolean checked, boolean animated) {
             if (checkBox.getVisibility() != VISIBLE) {
                 checkBox.setVisibility(VISIBLE);
             }
@@ -63,19 +61,17 @@ jobs:
                 checkBox.getCheckBoxBase().setProgress(1.0f);
             }
 """
-          if "getProgress() < 0.5f" not in t and old in t:
-              t = t.replace(old, new, 1)
-              open(path, "w", encoding="utf-8").write(t)
-              print("SharedPhotoVideoCell: force progress OK")
+          if "getProgress() < 0.5f" not in t and needle in t:
+              t = t.replace(needle, repl, 1)
+              p.write_text(t, encoding="utf-8")
+              print("SharedPhotoVideoCell: applied")
           else:
               print("SharedPhotoVideoCell: skip")
-          '
 
-          # 3) SettingsActivity case 23 Tips link fallback
-          python3 -c '
-          path = "TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java"
-          t = open(path, encoding="utf-8").read()
-          old = """            case 23: {
+          # 3) Settings Tips fallback
+          p = Path("TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java")
+          t = p.read_text(encoding="utf-8")
+          needle = """            case 23: {
                 if (MessagesController.getInstance(currentAccount).isFrozen()) {
                     AccountFrozenAlert.show(currentAccount);
                 } else {
@@ -83,11 +79,10 @@ jobs:
                 }
                 break;
             }"""
-          new = """            case 23: {
+          repl = """            case 23: {
                 if (MessagesController.getInstance(currentAccount).isFrozen()) {
                     AccountFrozenAlert.show(currentAccount);
                 } else {
-                    // Prefer NayaGram Tips URL; fallback to TelegramTips via browser then username
                     String tipsUrl = LocaleController.getString(R.string.NayaGramFeaturesUrl);
                     if (tipsUrl == null || tipsUrl.length() == 0) {
                         tipsUrl = "https://t.me/TelegramTips";
@@ -104,24 +99,19 @@ jobs:
                 }
                 break;
             }"""
-          if "openByUserName(\"TelegramTips\"" not in t and old in t:
-              t = t.replace(old, new, 1)
-              open(path, "w", encoding="utf-8").write(t)
-              print("SettingsActivity: Tips fallback OK")
+          if 'openByUserName("TelegramTips"' not in t and needle in t:
+              t = t.replace(needle, repl, 1)
+              p.write_text(t, encoding="utf-8")
+              print("SettingsActivity: tips fallback applied")
           else:
               print("SettingsActivity: skip")
-          '
 
-          # 4) Ensure PhotoAttach colors still correct
-          grep -n "chat_attachCheckBoxBackground" TMessagesProj/src/main/java/org/telegram/ui/Cells/PhotoAttachPhotoCell.java || echo "PhotoAttach color MISSING"
-
-          # 5) Ensure pin=10 and icons free
-          grep -n "maxPinnedDialogsCountDefault = 10" TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java | head -3
-          grep -n "isIconAvailable" -A2 TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java | head -6
+          print("DONE")
+          ENDSCRIPT
 
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git status --short
-          git commit -m "fix(ui): checkbox snap, media ticks, Settings Tips fallback" || echo nochange
+          git commit -m "fix(ui): checkbox snap + media ticks + Settings Tips fallback" || echo nochange
           git push origin master
