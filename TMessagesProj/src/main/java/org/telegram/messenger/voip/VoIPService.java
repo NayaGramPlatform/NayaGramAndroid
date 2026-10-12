@@ -4803,13 +4803,15 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			am.registerMediaButtonEventReceiver(new ComponentName(this, VoIPMediaButtonReceiver.class));
 
 			checkUpdateBluetoothHeadset();
-		} catch (Exception x) {
-			if (BuildVars.LOGS_ENABLED) {
-				FileLog.e("error initializing voip controller", x);
+		} catch (Throwable x) {
+			android.util.Log.e("NayaGramCall", "onCreate init", x);
+			try {
+				callFailed();
+			} catch (Throwable ignored) {
 			}
-			callFailed();
 		}
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			try {
 			if (callIShouldHavePutIntoIntent != null) {
 				NotificationsController.checkOtherNotificationsChannel();
 				Notification.Builder bldr = new Notification.Builder(this, NotificationsController.OTHER_NOTIFICATIONS_CHANNEL)
@@ -4837,6 +4839,25 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 					startForeground(foregroundId = ID_ONGOING_CALL_NOTIFICATION, foregroundNotification = bldr.build(), lastForegroundType = getCurrentForegroundType());
 				} else {
 					startForeground(foregroundId = ID_ONGOING_CALL_NOTIFICATION, foregroundNotification = bldr.build());
+				}
+			}
+			} catch (Throwable fg) {
+				android.util.Log.e("NayaGramCall", "startForeground", fg);
+				try {
+					int safeType = android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
+					if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+						safeType |= android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+					}
+					if (foregroundNotification != null) {
+						if (Build.VERSION.SDK_INT >= 33) {
+							startForeground(foregroundId, foregroundNotification, safeType);
+						} else {
+							startForeground(foregroundId, foregroundNotification);
+						}
+					}
+				} catch (Throwable fg2) {
+					android.util.Log.e("NayaGramCall", "startForeground fallback", fg2);
+					try { stopSelf(); } catch (Throwable ignored) {}
 				}
 			}
 		}
@@ -5465,9 +5486,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
 		}
 		type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
-		if (Build.VERSION.SDK_INT >= 34) {
-			type |= 4; // ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
-		}
+		// phoneCall FGS type crashes non-dialer clients (NayaGram keeps stopping)
 		return type;
 	}
 

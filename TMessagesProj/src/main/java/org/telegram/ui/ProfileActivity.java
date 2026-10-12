@@ -11412,10 +11412,17 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     }
                 }
             }
+            final String[] nayaIdCopy = new String[1];
+            final String[] nayaDcCopy = new String[1];
+            final String[] nayaFullCopy = new String[1];
             try {
                 if (org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && user.id > 0) {
                     int dc = user.photo != null ? user.photo.dc_id : 0;
                     String idLine = "ID " + user.id + (dc > 0 ? " · DC" + dc : "");
+                    nayaIdCopy[0] = Long.toString(user.id);
+                    nayaDcCopy[0] = dc > 0 ? ("DC" + dc) : "";
+                    String nayaUser = user.username != null && user.username.length() > 0 ? ("@" + user.username) : "";
+                    nayaFullCopy[0] = idLine + (nayaUser.length() > 0 ? (" · " + nayaUser) : "");
                     if (newString2 == null || newString2.length() == 0) {
                         newString2 = idLine;
                     } else {
@@ -11465,6 +11472,42 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     onlineTextView[a].setText(newString2);
                 }
                 onlineTextView[a].setDrawablePadding(dp(9));
+                if (nayaIdCopy[0] != null) {
+                    onlineTextView[a].setOnLongClickListener(v -> {
+                        String full = nayaFullCopy[0] != null ? nayaFullCopy[0] : nayaIdCopy[0];
+                        AndroidUtilities.addToClipboard(full);
+                        Toast.makeText(getContext(), "Copied", Toast.LENGTH_SHORT).show();
+                        return true;
+                    });
+                    onlineTextView[a].setOnTouchListener((v, ev) -> {
+                        if (ev.getAction() != android.view.MotionEvent.ACTION_UP) {
+                            return false;
+                        }
+                        SimpleTextView tv = (SimpleTextView) v;
+                        String text = tv.getText() != null ? tv.getText().toString() : "";
+                        int idIdx = text.lastIndexOf("ID ");
+                        if (idIdx < 0) {
+                            return false;
+                        }
+                        float x = ev.getX();
+                        float idX = tv.getPaint().measureText(text.substring(0, idIdx));
+                        int dcIdx = text.lastIndexOf(" · DC");
+                        if (dcIdx >= 0 && nayaDcCopy[0] != null && nayaDcCopy[0].length() > 0) {
+                            float dcX = tv.getPaint().measureText(text.substring(0, dcIdx + 3));
+                            if (x >= dcX) {
+                                AndroidUtilities.addToClipboard(nayaDcCopy[0]);
+                                Toast.makeText(getContext(), "DC Copied!", Toast.LENGTH_SHORT).show();
+                                return true;
+                            }
+                        }
+                        if (x >= idX) {
+                            AndroidUtilities.addToClipboard(nayaIdCopy[0]);
+                            Toast.makeText(getContext(), "ID Copied!", Toast.LENGTH_SHORT).show();
+                            return true;
+                        }
+                        return false;
+                    });
+                }
                 onlineTextView[a].setRightDrawableInside(true);
                 onlineTextView[a].setRightDrawable(a == 1 && hiddenStatusButton ? getShowStatusButton() : null);
                 onlineTextView[a].setRightDrawableOnClick(a == 1 && hiddenStatusButton ? v -> {

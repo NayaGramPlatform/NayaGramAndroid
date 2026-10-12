@@ -72,6 +72,19 @@ public class VoIPHelper {
 
 	public static long lastCallTime = 0;
 
+	private static void safeCreateGroupCall(Activity activity, AccountInstance account, TLRPC.Chat chat, TLRPC.InputPeer peer, boolean hasFew, String hash) {
+		if (!(activity instanceof LaunchActivity) || activity.isFinishing()) {
+			android.util.Log.e("NayaGramCall", "skip GroupCallActivity.create");
+			return;
+		}
+		try {
+			GroupCallActivity.create((LaunchActivity) activity, account, chat, peer, hasFew, hash);
+		} catch (Throwable e) {
+			android.util.Log.e("NayaGramCall", "GroupCallActivity.create", e);
+		}
+	}
+
+
 	private static final int VOIP_SUPPORT_ID = 4244000;
 
 	public static void startCall(TLRPC.User user, boolean videoCall, boolean canVideoCall, final Activity activity, TLRPC.UserFull userFull, AccountInstance accountInstance) {
@@ -284,7 +297,7 @@ public class VoIPHelper {
 					if (!TextUtils.isEmpty(hash)) {
 						voIPService.setGroupCallHash(hash);
 					}
-					GroupCallActivity.create((LaunchActivity) activity, AccountInstance.getInstance(UserConfig.selectedAccount), null, null, false, null);
+					safeCreateGroupCall(activity, AccountInstance.getInstance(UserConfig.selectedAccount), null, null, false, null);
 				}
 			}
 		} else if (VoIPService.callIShouldHavePutIntoIntent == null) {
@@ -390,7 +403,7 @@ public class VoIPHelper {
 		if (checkJoiner && chat != null) {
 			JoinCallAlert.open(activity, -chat.id, accountInstance, fragment, createCall ? JoinCallAlert.TYPE_CREATE : JoinCallAlert.TYPE_JOIN, null, (selectedPeer, hasFew, schedule, rtmp) -> {
 				if (createCall && schedule) {
-					GroupCallActivity.create((LaunchActivity) activity, finalAccount, chat, selectedPeer, hasFew, hash);
+					safeCreateGroupCall(activity, finalAccount, chat, selectedPeer, hasFew, hash);
 				} else if (!hasFew && hash != null) {
 					JoinCallByUrlAlert alert = new JoinCallByUrlAlert(activity, chat) {
 						@Override
@@ -439,7 +452,7 @@ public class VoIPHelper {
 		if (chat != null && !createCall) {
 			ChatObject.Call call = accountInstance.getMessagesController().getGroupCall(chat.id, false);
 			if (call != null && call.isScheduled()) {
-				GroupCallActivity.create((LaunchActivity) activity, accountInstance, chat, peer, hasFewPeers, hash);
+				safeCreateGroupCall(activity, accountInstance, chat, peer, hasFewPeers, hash);
 				return;
 			}
 		}
