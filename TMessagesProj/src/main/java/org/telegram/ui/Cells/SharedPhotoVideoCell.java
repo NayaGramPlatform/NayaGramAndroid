@@ -147,6 +147,10 @@ public class SharedPhotoVideoCell extends FrameLayout {
                 checkBox.setVisibility(VISIBLE);
             }
             checkBox.setChecked(checked, animated);
+            if (checked && checkBox.getProgress() < 0.5f) {
+                checkBox.getCheckBoxBase().cancelCheckAnimator();
+                checkBox.getCheckBoxBase().setProgress(1.0f);
+            }
             if (animator != null) {
                 animator.cancel();
                 animator = null;

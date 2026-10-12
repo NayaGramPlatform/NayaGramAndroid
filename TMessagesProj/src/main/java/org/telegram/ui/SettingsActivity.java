@@ -937,7 +937,19 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 if (MessagesController.getInstance(currentAccount).isFrozen()) {
                     AccountFrozenAlert.show(currentAccount);
                 } else {
-                    Browser.openUrl(getContext(), LocaleController.getString(R.string.NayaGramFeaturesUrl));
+                    String tipsUrl = LocaleController.getString(R.string.NayaGramFeaturesUrl);
+                    if (tipsUrl == null || tipsUrl.length() == 0) {
+                        tipsUrl = "https://t.me/TelegramTips";
+                    }
+                    try {
+                        Browser.openUrl(getContext(), tipsUrl);
+                    } catch (Throwable e1) {
+                        try {
+                            Browser.openUrl(getContext(), "https://t.me/TelegramTips");
+                        } catch (Throwable e2) {
+                            MessagesController.getInstance(currentAccount).openByUserName("TelegramTips", SettingsActivity.this, 1);
+                        }
+                    }
                 }
                 break;
             }
