@@ -13,31 +13,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Snap CheckBoxBase progress on animation end
+      - name: Patch call crash, ID copy, version 4012
         run: |
           set -e
-          python3 -c "
-          import re
-          path = 'TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java'
-          t = open(path, encoding='utf-8').read()
-          if 'setProgress(isChecked ? 1.0f : 0.0f)' in t:
-              print('already snapped')
-          else:
-              pat = r'(if \(animation\.equals\(checkAnimator\)\) \{\s*checkAnimator = null;\s*\}\s*)(if \(!isChecked\))'
-              repl = r'\1setProgress(isChecked ? 1.0f : 0.0f);\n                \2'
-              t2, n = re.subn(pat, repl, t, count=1)
-              if n:
-                  open(path, 'w', encoding='utf-8').write(t2)
-                  print('CheckBoxBase snap applied')
-              else:
-                  print('pattern miss')
-                  # show context
-                  i = t.find('animation.equals(checkAnimator)')
-                  print(repr(t[i:i+200]))
-          "
+          python3 Tools/ci_patch_call.py
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
-          git status --short
-          git commit -m "fix(ui): CheckBoxBase snap progress on animation end" || echo nochange
+          git diff --stat
+          git commit -m "fix(call): catch VoIP crash, copy profile ID/DC, versionCode 4012" || echo nochange
           git push origin master
