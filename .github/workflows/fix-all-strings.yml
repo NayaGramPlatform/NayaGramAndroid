@@ -13,14 +13,31 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply UI fixes
+      - name: Snap CheckBoxBase progress on animation end
         run: |
-          rm -f /tmp/fix_ui.b64
-          echo "CmZyb20gcGF0aGxpYiBpbXBvcnQgUGF0aAoKIyAxKSBDaGVja0JveEJhc2Ugc25hcApwID0gUGF0aCgiVE1lc3NhZ2VzUHJvai9zcmMvbWFpbi9qYXZhL29yZy90ZWxlZ3JhbS91aS9Db21wb25lbnRzL0NoZWNrQm94QmFzZS5qYXZhIikKdCA9IHAucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCm5lZWRsZSA9ICIgICAgICAgICAgICBpZiAoYW5pbWF0aW9uLmVxdWFscyhjaGVja0FuaW1hdG9yKSkge1xuICAgICAgICAgICAgICAgIGNoZWNrQW5pbWF0b3IgPSBudWxsO1xuICAgICAgICAgICAgfVxuICAgICAgICAgICAgaWYgKCFpc0NoZWNrZWQpIHtcbiAgICAgICAgICAgICAgICBjaGVja2VkVGV4dCA9IG51bGw7XG4gICAgICAgICAgICB9IgpycmVwbCA9ICIgICAgICAgICAgICBpZiAoYW5pbWF0aW9uLmVxdWFscyhjaGVja0FuaW1hdG9yKSkge1xuICAgICAgICAgICAgICAgIGNoZWNrQW5pbWF0b3IgPSBudWxsO1xuICAgICAgICAgICAgfVxuICAgICAgICAgICAgc2V0UHJvZ3Jlc3MoaXNDaGVja2VkID8gMS4wZiA6IDAuMGYpO1xuICAgICAgICAgICAgaWYgKCFpc0NoZWNrZWQpIHtcbiAgICAgICAgICAgICAgICBjaGVja2VkVGV4dCA9IG51bGw7XG4gICAgICAgICAgICB9IgppZiAic2V0UHJvZ3Jlc3MoaXNDaGVja2VkID8gMS4wZiA6IDAuMGYpIiBub3QgaW4gdCBhbmQgbmVlZGxlIGluIHQ6CiAgICB0ID0gdC5yZXBsYWNlKG5lZWRsZSwgcmVwbCwgMSkKICAgIHAud3JpdGVfdGV4dCh0LCBlbmNvZGluZz0idXRmLTgiKQogICAgcHJpbnQoIkNoZWNrQm94QmFzZTogc25hcCBhcHBsaWVkIikKZWxzZToKICAgIHByaW50KCJDaGVja0JveEJhc2U6IHNraXAiKQoKIyAyKSBTaGFyZWRQaG90b1ZpZGVvQ2VsbApwID0gUGF0aCgiVE1lc3NhZ2VzUHJvai9zcmMvbWFpbi9qYXZhL29yZy90ZWxlZ3JhbS91aS9DZWxscy9TaGFyZWRQaG90b1ZpZGVvQ2VsbC5qYXZhIikKdCA9IHAucmVhZF90ZXh0KGVuY29kaW5nPSJ1dGYtOCIpCm5lZWRsZSA9ICIgICAgICAgIHB1YmxpYyB2b2lkIHNldENoZWNrZWQoZmluYWwgYm9vbGVhbiBjaGVja2VkLCBib29sZWFuIGFuaW1hdGVkKSB7XG4gICAgICAgICAgICBpZiAoY2hlY2tCb3guZ2V0VmlzaWJpbGl0eSgpICE9IFZJU0lCTEUpIHtcbiAgICAgICAgICAgICAgICBjaGVja0JveC5zZXRWaXNpYmlsaXR5KFZJU0lCTEUpO1xuICAgICAgICAgICAgfVxuICAgICAgICAgICAgY2hlY2tCb3guc2V0Q2hlY2tlZChjaGVja2VkLCBhbmltYXRlZCk7XG4iCnJlcGwgPSAiICAgICAgICBwdWJsaWMgdm9pZCBzZXRDaGVja2VkKGZpbmFsIGJvb2xlYW4gY2hlY2tlZCwgYm9vbGVhbiBhbmltYXRlZCkge1xuICAgICAgICAgICAgaWYgKGNoZWNrQm94LmdldFZpc2liaWxpdHkoKSAhPSBWSVNJQkxFKSB7XG4gICAgICAgICAgICAgICAgY2hlY2tCb3guc2V0VmlzaWJpbGl0eShWSVNJQkxFKTtcbiAgICAgICAgICAgIH1cbiAgICAgICAgICAgIGNoZWNrQm94LnNldENoZWNrZWQoY2hlY2tlZCwgYW5pbWF0ZWQpO1xuICAgICAgICAgICAgaWYgKGNoZWNrZWQgJiYgY2hlY2tCb3guZ2V0UHJvZ3Jlc3MoKSA8IDAuNWYpIHtcbiAgICAgICAgICAgICAgICBjaGVja0JveC5nZXRDaGVja0JveEJhc2UoKS5jYW5jZWxDaGVja0FuaW1hdG9yKCk7XG4gICAgICAgICAgICAgICAgY2hlY2tCb3guZ2V0Q2hlY2tCb3hCYXNlKCkuc2V0UHJvZ3Jlc3MoMS4wZik7XG4gICAgICAgICAgICB9XG4iCmlmICJnZXRQcm9ncmVzcygpIDwgMC41ZiIgbm90IGluIHQgYW5kIG5lZWRsZSBpbiB0OgogICAgdCA9IHQucmVwbGFjZShuZWVkbGUsIHJlcGwsIDEpCiAgICBwLndyaXRlX3RleHQodCwgZW5jb2Rpbmc9InV0Zi04IikKICAgIHByaW50KCJTaGFyZWRQaG90b1ZpZGVvQ2VsbDogYXBwbGllZCIpCmVsc2U6CiAgICBwcmludCgiU2hhcmVkUGhvdG9WaWRlb0NlbGw6IHNraXAiKQoKIyAzKSBTZXR0aW5ncyBUaXBzCnAgPSBQYXRoKCJUTWVzc2FnZXNQcm9qL3NyYy9tYWluL2phdmEvb3JnL3RlbGVncmFtL3VpL1NldHRpbmdzQWN0aXZpdHkuamF2YSIpCnQgPSBwLnJlYWRfdGV4dChlbmNvZGluZz0idXRmLTgiKQpuZWVkbGUgPSAiICAgICAgICAgICAgY2FzZSAyMzoge1xuICAgICAgICAgICAgICAgIGlmIChNZXNzYWdlc0NvbnRyb2xsZXIuZ2V0SW5zdGFuY2UoY3VycmVudEFjY291bnQpLmlzRnJvemVuKCkpIHtcbiAgICAgICAgICAgICAgICAgICAgQWNjb3VudEZyb3plbkFsZXJ0LnNob3coY3VycmVudEFjY291bnQpO1xuICAgICAgICAgICAgICAgIH0gZWxzZSB7XG4gICAgICAgICAgICAgICAgICAgIEJyb3dzZXIub3BlblVybChnZXRDb250ZXh0KCksIExvY2FsZUNvbnRyb2xsZXIuZ2V0U3RyaW5nKFIuc3RyaW5nLk5heWFHcmFtRmVhdHVyZXNVcmwpKTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgICAgYnJlYWs7XG4gICAgICAgICAgICB9IgpyZXBsID0gIiAgICAgICAgICAgIGNhc2UgMjM6IHtcbiAgICAgICAgICAgICAgICBpZiAoTWVzc2FnZXNDb250cm9sbGVyLmdldEluc3RhbmNlKGN1cnJlbnRBY2NvdW50KS5pc0Zyb3plbigpKSB7XG4gICAgICAgICAgICAgICAgICAgIEFjY291bnRGcm96ZW5BbGVydC5zaG93KGN1cnJlbnRBY2NvdW50KTtcbiAgICAgICAgICAgICAgICB9IGVsc2Uge1xuICAgICAgICAgICAgICAgICAgICBTdHJpbmcgdGlwc1VybCA9IExvY2FsZUNvbnRyb2xsZXIuZ2V0U3RyaW5nKFIuc3RyaW5nLk5heWFHcmFtRmVhdHVyZXNVcmwpO1xuICAgICAgICAgICAgICAgICAgICBpZiAodGlwc1VybCA9PSBudWxsIHx8IHRpcHNVcmwubGVuZ3RoKCkgPT0gMCkge1xuICAgICAgICAgICAgICAgICAgICAgICAgdGlwc1VybCA9IFwiaHR0cHM6Ly90Lm1lL1RlbGVncmFtVGlwc1wiO1xuICAgICAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICAgICAgICAgIHRyeSB7XG4gICAgICAgICAgICAgICAgICAgICAgICBCcm93c2VyLm9wZW5VcmwoZ2V0Q29udGV4dCgpLCB0aXBzVXJsKTtcbiAgICAgICAgICAgICAgICAgICAgfSBjYXRjaCAoVGhyb3dhYmxlIGUxKSB7XG4gICAgICAgICAgICAgICAgICAgICAgICB0cnkge1xuICAgICAgICAgICAgICAgICAgICAgICAgICAgIEJyb3dzZXIub3BlblVybChnZXRDb250ZXh0KCksIFwiaHR0cHM6Ly90Lm1lL1RlbGVncmFtVGlwc1wiKTtcbiAgICAgICAgICAgICAgICAgICAgICAgIH0gY2F0Y2ggKFRocm93YWJsZSBlMikge1xuICAgICAgICAgICAgICAgICAgICAgICAgICAgIE1lc3NhZ2VzQ29udHJvbGxlci5nZXRJbnN0YW5jZShjdXJyZW50QWNjb3VudCkub3BlbkJ5VXNlck5hbWUoXCJUZWxlZ3JhbVRpcHNcIiwgU2V0dGluZ3NBY3Rpdml0eS50aGlzLCAxKTtcbiAgICAgICAgICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgICAgICAgICAgfVxuICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgICAgICBicmVhaztcbiAgICAgICAgICAgIH0iCmlmICdvcGVuQnlVc2VyTmFtZSgiVGVsZWdyYW1UaXBzIicgbm90IGluIHQgYW5kIG5lZWRsZSBpbiB0OgogICAgdCA9IHQucmVwbGFjZShuZWVkbGUsIHJlcGwsIDEpCiAgICBwLndyaXRlX3RleHQodCwgZW5jb2Rpbmc9InV0Zi04IikKICAgIHByaW50KCJTZXR0aW5nc0FjdGl2aXR5OiB0aXBzIGZhbGxiYWNrIGFwcGxpZWQiKQplbHNlOgogICAgcHJpbnQoIlNldHRpbmdzQWN0aXZpdHk6IHNraXAiKQoKcHJpbnQoIkRPTkUiKQo=" | base64 -d > /tmp/fix_ui.py
-          python3 /tmp/fix_ui.py
+          set -e
+          python3 -c "
+          import re
+          path = 'TMessagesProj/src/main/java/org/telegram/ui/Components/CheckBoxBase.java'
+          t = open(path, encoding='utf-8').read()
+          if 'setProgress(isChecked ? 1.0f : 0.0f)' in t:
+              print('already snapped')
+          else:
+              pat = r'(if \(animation\.equals\(checkAnimator\)\) \{\s*checkAnimator = null;\s*\}\s*)(if \(!isChecked\))'
+              repl = r'\1setProgress(isChecked ? 1.0f : 0.0f);\n                \2'
+              t2, n = re.subn(pat, repl, t, count=1)
+              if n:
+                  open(path, 'w', encoding='utf-8').write(t2)
+                  print('CheckBoxBase snap applied')
+              else:
+                  print('pattern miss')
+                  # show context
+                  i = t.find('animation.equals(checkAnimator)')
+                  print(repr(t[i:i+200]))
+          "
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git status --short
-          git commit -m "fix(ui): checkbox snap + media ticks + Settings Tips fallback" || echo nochange
+          git commit -m "fix(ui): CheckBoxBase snap progress on animation end" || echo nochange
           git push origin master
