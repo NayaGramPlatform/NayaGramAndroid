@@ -137,8 +137,8 @@
             android:enabled="false"
             android:name="org.nayagram.platform.NGBlue"
             android:targetActivity="org.telegram.ui.LaunchActivity"
-            android:icon="@mipmap/icon_6_launcher"
-            android:roundIcon="@mipmap/icon_6_launcher_round"
+            android:icon="@mipmap/icon_2_launcher"
+            android:roundIcon="@mipmap/icon_2_launcher_round"
             android:exported="true">
 
             <intent-filter>
@@ -209,8 +209,8 @@
             android:enabled="false"
             android:name="org.nayagram.platform.NGCrystal"
             android:targetActivity="org.telegram.ui.LaunchActivity"
-            android:icon="@mipmap/icon_2_launcher"
-            android:roundIcon="@mipmap/icon_2_launcher_round"
+            android:icon="@mipmap/icon_6_launcher"
+            android:roundIcon="@mipmap/icon_6_launcher_round"
             android:exported="true">
 
             <intent-filter>

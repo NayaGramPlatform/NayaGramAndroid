@@ -109,8 +109,13 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
         setOnItemClickListener((view, position) -> {
             IconHolderView holderView = (IconHolderView) view;
             LauncherIconController.LauncherIcon icon = availableIcons.get(position);
-            // NayaGram: all icons free; premium flag is badge only
+            // Crystal requires a real premium entitlement.
             if (!LauncherIconController.isIconAvailable(icon)) {
+                return;
+            }
+
+            if (!LauncherIconController.canUseIcon(icon)) {
+                android.widget.Toast.makeText(context, LocaleController.getString(R.string.UnlockPremiumIcons), android.widget.Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -151,7 +156,8 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
     private void updateIconsVisibility() {
         availableIcons.clear();
         availableIcons.addAll(Arrays.asList(LauncherIconController.LauncherIcon.values()));
-        // NayaGram: keep all icons visible (premium = badge only)
+        // TURBO is a legacy Neon alias; keep one visible Neon choice.
+        availableIcons.remove(LauncherIconController.LauncherIcon.TURBO);
         getAdapter().notifyDataSetChanged();
         invalidateItemDecorations();
 
@@ -268,7 +274,7 @@ public class AppIconsSelectorCell extends RecyclerListView implements Notificati
             iconView.setImageResource(icon.background);
 
             MarginLayoutParams params = (MarginLayoutParams) titleView.getLayoutParams();
-            if (icon.premium && !UserConfig.hasPremiumOnAccounts()) {
+            if (icon.premium && !LauncherIconController.hasIconPremium()) {
                 SpannableString str = new SpannableString("d " + LocaleController.getString(icon.title));
                 ColoredImageSpan span = new ColoredImageSpan(R.drawable.msg_mini_premiumlock);
                 span.setTopOffset(1);

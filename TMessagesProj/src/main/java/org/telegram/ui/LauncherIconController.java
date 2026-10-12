@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserConfig;
 
 public class LauncherIconController {
 
@@ -14,6 +15,9 @@ public class LauncherIconController {
         try {
             for (LauncherIcon icon : LauncherIcon.values()) {
                 if (isEnabled(icon)) {
+                    if (icon == LauncherIcon.TURBO || !canUseIcon(icon)) {
+                        setIcon(LauncherIcon.DEFAULT);
+                    }
                     return;
                 }
             }
@@ -42,11 +46,24 @@ public class LauncherIconController {
         return true;
     }
 
+    public static boolean hasIconPremium() {
+        for (int account = 0; account < UserConfig.MAX_ACCOUNT_COUNT; account++) {
+            if (UserConfig.getInstance(account).getCurrentUser() != null
+                    && UserConfig.getInstance(account).getCurrentUser().premium) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean canUseIcon(LauncherIcon icon) {
-        return true;
+        return !icon.premium || hasIconPremium();
     }
 
     public static void setIcon(LauncherIcon icon) {
+        if (!canUseIcon(icon)) {
+            return;
+        }
         try {
             Context ctx = ApplicationLoader.applicationContext;
             if (ctx == null) {
@@ -70,11 +87,11 @@ public class LauncherIconController {
 
     public enum LauncherIcon {
         DEFAULT("NGSky", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
-        VINTAGE("NGBlue", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconVintage),
-        AQUA("NGPurple", R.drawable.icon_4_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, true),
+        VINTAGE("NGBlue", R.drawable.icon_2_background_sa, R.mipmap.icon_2_foreground_sa, R.string.AppIconVintage),
+        AQUA("NGPurple", R.drawable.icon_4_background_sa, R.mipmap.icon_4_foreground_sa, R.string.AppIconAqua),
+        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, false),
         TURBO("NGNeon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, false),
-        NOX("NGCrystal", R.mipmap.icon_2_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconNox, false);
+        NOX("NGCrystal", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconNox, true);
 
         public final String key;
         public final int background;
