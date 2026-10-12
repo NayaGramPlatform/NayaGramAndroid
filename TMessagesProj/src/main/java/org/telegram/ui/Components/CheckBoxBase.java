@@ -285,6 +285,7 @@ public class CheckBoxBase {
                 if (animation.equals(checkAnimator)) {
                     checkAnimator = null;
                 }
+                setProgress(isChecked ? 1.0f : 0.0f);
                 if (!isChecked) {
                     checkedText = null;
                 }
