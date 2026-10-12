@@ -78,6 +78,50 @@ jobs:
           unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
           ls -lh build_output/
 
+          # Play Store download for a normal arm64 phone (not the universal APK).
+          cat > /tmp/nayagram-phone.json << 'EOF'
+          {
+            "supportedAbis": ["arm64-v8a"],
+            "supportedLocales": ["bn", "en"],
+            "screenDensity": 480,
+            "sdkVersion": 34
+          }
+          EOF
+          java -jar bundletool-all-1.17.2.jar build-apks \
+            --bundle="$AAB_FILE" \
+            --output=build_output/phone.apks \
+            --mode=default \
+            --ks=TMessagesProj/config/nayagrampro.jks \
+            --ks-pass=pass:'NayaGramCI@Test2026' \
+            --ks-key-alias=nayagrampro_key \
+            --key-pass=pass:'NayaGramCI@Test2026'
+          rm -rf build_output/phone-splits
+          mkdir -p build_output/phone-splits
+          java -jar bundletool-all-1.17.2.jar extract-apks \
+            --apks=build_output/phone.apks \
+            --device-spec=/tmp/nayagram-phone.json \
+            --output-dir=build_output/phone-splits
+          python3 - << 'PY'
+          import os
+          root = "build_output/phone-splits"
+          total = 0
+          lines = []
+          for name in sorted(os.listdir(root)):
+              path = os.path.join(root, name)
+              if not os.path.isfile(path):
+                  continue
+              size = os.path.getsize(path)
+              total += size
+              lines.append(f"{size/1048576:.1f} MB  {name}")
+          text = "\n".join(lines + [f"Play arm64 download ≈ {total/1048576:.1f} MB"])
+          print(text)
+          open("build_output/play-download-size.txt", "w").write(text + "\n")
+          summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary:
+              open(summary, "a").write("\n### Play download (arm64 phone)\n```\n" + text + "\n```\n")
+          PY
+          ls -lh build_output/phone-splits build_output/play-download-size.txt
+
       - name: Upload NayaGram Release AAB
         uses: actions/upload-artifact@v4
         if: always()

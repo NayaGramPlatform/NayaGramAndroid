@@ -147,7 +147,8 @@ android {
     productFlavors {
         bundleAfat {
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                // Phones only. x86/x86_64 were inflating the AAB; Play still sends just one ABI.
+                abiFilters "arm64-v8a", "armeabi-v7a"
             }
             ext {
                 abiVersionCode = 1
@@ -156,7 +157,7 @@ android {
         }
         bundleAfat_SDK23 {
             ndk {
-                abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+                abiFilters "arm64-v8a", "armeabi-v7a"
             }
             sourceSets.debug {
                 manifest.srcFile '../TMessagesProj/config/debug/AndroidManifest_SDK23.xml'
@@ -191,6 +192,26 @@ android {
                 abiVersionCode = 9
             }
             buildConfigField "boolean", "BUNDLE", "false"
+        }
+    }
+
+    // Play delivers one ABI + one screen density + one language, same as Telegram.
+    // The 141 MB AAB is every CPU packed together, not the size a phone downloads.
+    bundle {
+        abi {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        language {
+            enableSplit = true
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 
