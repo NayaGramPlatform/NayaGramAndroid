@@ -30,8 +30,6 @@ public class NayaConfig {
     private static final String KEY_AUTO_REPLY_TEXT = "feature_03_auto_reply_text";
     private static final String KEY_STORY_SAVER = "feature_04_story_saver";
     private static final String KEY_ANONYMOUS_STORIES = "feature_05_anonymous_stories";
-    private static final String KEY_FORWARD_NO_QUOTE = "feature_07_forward_without_quote";
-    private static final String KEY_VOICE_TRANSCRIPTION = "feature_08_voice_transcribe";
     private static final String KEY_SMART_CHAT_FOLDERS = "feature_09_smart_chat_folders";
     /** Legacy only: Call & Voice Protection / confirm-actions. Never reintroduce as active API. */
     private static final String LEGACY_KEY_CONFIRM_ACTIONS = "feature_10_confirm_actions";
@@ -136,13 +134,17 @@ public class NayaConfig {
 
     // 6. Anti-Delete Recovery
 
-    // 7. Forward Without Quote
-    public boolean isForwardWithoutQuote() { return false; }
-    public void setForwardWithoutQuote(boolean e) { }
+    // 18. Adaptive Network & Data Saver
+    public boolean isDataSaverEnabled() { return preferences.getBoolean("feature_data_saver", true); }
+    public void setDataSaverEnabled(boolean e) { preferences.edit().putBoolean("feature_data_saver", e).apply(); }
 
-    // 8. Voice Transcription
-    public boolean isVoiceTranscriptionEnabled() { return false; }
-    public void setVoiceTranscriptionEnabled(boolean e) { }
+    // 19. WebRTC Acoustic Noise Suppression
+    public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", true); }
+    public void setNoiseSuppressionEnabled(boolean e) { preferences.edit().putBoolean("feature_noise_suppression", e).apply(); }
+
+    // 20. Smart Storage & Cache Auto-Limiter
+    public boolean isAutoCacheGuardEnabled() { return preferences.getBoolean("feature_auto_cache_guard", true); }
+    public void setAutoCacheGuardEnabled(boolean e) { preferences.edit().putBoolean("feature_auto_cache_guard", e).apply(); }
 
     // 9. Smart Chat Folders (Disabled by default for Play Store compliance)
     public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, false); }

@@ -162,6 +162,48 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                         "ترجم أي رسالة بلغة أجنبية داخل الدردشة بنقرة واحدة."
                 }
         ));
+
+        // 18. Adaptive Network & Data Saver
+        features.add(new FeatureItem(
+                18,
+                0xFF059669,
+                0xFF047857,
+                R.drawable.msg2_data,
+                new String[]{"Network Data Saver", "নেটওয়ার্ক ও ডেটা সেভার", "موفّر بيانات الشبكة"},
+                new String[]{
+                        "Optimize bandwidth and reduce data consumption for roaming & slow 2G/3G networks.",
+                        "ধীরগতির নেটওয়ার্ক ও রোমিংয়ে ডেটা খরচ ও ব্যান্ডউইথ অপ্টিমাইজ করুন।",
+                        "تحسين استهلاك البيانات على الشبكات البطيئة والتجوال."
+                }
+        ));
+
+        // 19. WebRTC Acoustic Noise Suppression
+        features.add(new FeatureItem(
+                19,
+                0xFF2563EB,
+                0xFF1D4ED8,
+                R.drawable.msg_calls,
+                new String[]{"Acoustic Noise Shield", "অডিও নয়েজ সাপ্রেশন", "حاجب الضوضاء الصوتية"},
+                new String[]{
+                        "WebRTC acoustic noise cancellation for crystal clear voice and video calls.",
+                        "এইচডি কল ও লাইভ স্ট্রিমিংয়ে ব্যাকগ্রাউন্ড নয়েজ সম্পূর্ণ দূর করে।",
+                        "إلغاء الضوضاء المحيطة لإجراء مكالمات صوتية وفيديو واضحة تمامًا."
+                }
+        ));
+
+        // 20. Smart Storage & Cache Auto-Limiter
+        features.add(new FeatureItem(
+                20,
+                0xFF7C3AED,
+                0xFF6D28D9,
+                R.drawable.msg_storage,
+                new String[]{"Smart Storage Guard", "স্মার্ট স্টোরেজ গার্ড", "حارس التخزين الذكي"},
+                new String[]{
+                        "Automatically monitors media buffer to prevent memory overflow and call crashes.",
+                        "অটোমেটিক ক্যাশ ও বাফার পরিষ্কার করে অ্যাপ ক্র্যাশ প্রতিরোধ করে।",
+                        "تنظيف تلقائي لذاكرة التخزين المؤقت لمنع تعطل المكالمات."
+                }
+        ));
     }
 
     @NonNull
@@ -183,8 +225,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 3: return cfg.isSmartAutoReply();
             case 4: return cfg.isStorySaverEnabled();
             case 5: return cfg.isAnonymousStories();
-            case 7: return cfg.isForwardWithoutQuote();
-            case 8: return cfg.isVoiceTranscriptionEnabled();
+            case 18: return cfg.isDataSaverEnabled();
+            case 19: return cfg.isNoiseSuppressionEnabled();
+            case 20: return cfg.isAutoCacheGuardEnabled();
             case 9: return cfg.isSmartFoldersEnabled();
             case 11: return cfg.isShowIdAndDc();
             case 12: return cfg.isModularConfig();
@@ -268,8 +311,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 break;
             case 4: cfg.setStorySaverEnabled(newState); break;
             case 5: cfg.setAnonymousStories(newState); break;
-            case 7: cfg.setForwardWithoutQuote(newState); break;
-            case 8: cfg.setVoiceTranscriptionEnabled(newState); break;
+            case 18: cfg.setDataSaverEnabled(newState); break;
+            case 19: cfg.setNoiseSuppressionEnabled(newState); break;
+            case 20: cfg.setAutoCacheGuardEnabled(newState); break;
             case 9: cfg.setSmartFoldersEnabled(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
             case 12: cfg.setModularConfig(newState); break;

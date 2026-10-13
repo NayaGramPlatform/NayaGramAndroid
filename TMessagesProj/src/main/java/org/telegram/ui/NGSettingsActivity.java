@@ -75,8 +75,6 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowMessageScheduler;
     private int rowSmartAutoReply;
     private int rowStorySaver;
-    private int rowForwardNoQuote;
-    private int rowVoiceTranscription;
     private int rowSmartChatFolders;
 
     private int headerSecurity;
@@ -121,8 +119,6 @@ public class NGSettingsActivity extends BaseFragment {
         rowMessageScheduler = -1;
         rowSmartAutoReply = -1;
         rowStorySaver = -1;
-        rowForwardNoQuote = -1;
-        rowVoiceTranscription = -1;
         rowSmartChatFolders = rowCount++;
 
         headerSecurity = rowCount++;
@@ -228,14 +224,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setStorySaverEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowForwardNoQuote) {
-                    cfg.setForwardWithoutQuote(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Forward Without Quote: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowVoiceTranscription) {
-                    cfg.setVoiceTranscriptionEnabled(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Voice Transcription: " + (checked ? "On" : "Off")).show();
+
                 } else if (position == rowSmartChatFolders) {
                     cfg.setSmartFoldersEnabled(checked);
                     cell.setChecked(checked);
@@ -392,12 +381,7 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowStorySaver) {
             title = "Story Saver";
             body = "Preference for saving stories you are allowed to view.\n\nDownload only content you have permission to save.";
-        } else if (position == rowForwardNoQuote) {
-            title = "Forward Without Quote";
-            body = "Stores a preference used by the chat menu.\n\nForwarding still follows Telegram's rules. The original author is not secretly removed from the server.";
-        } else if (position == rowVoiceTranscription) {
-            title = "Voice Transcription";
-            body = "Uses Telegram's own voice-to-text when your account supports it.\n\nIf Telegram does not offer transcription, this switch cannot create it.";
+
         } else if (position == rowSmartChatFolders) {
             title = "Smart Chat Folders";
             body = "Preference for organizing chats into Users, Groups, Channels and Bots.\n\nFolders still use Telegram's folder system.";
@@ -671,10 +655,7 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
                 } else if (position == rowStorySaver) {
                     c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
-                } else if (position == rowForwardNoQuote) {
-                    c.setFeature(R.drawable.ic_naya_forward, 0xFF6366F1, "Forward Without Quote", "Forward messages without sender author tag", cfg.isForwardWithoutQuote(), true);
-                } else if (position == rowVoiceTranscription) {
-                    c.setFeature(R.drawable.ic_naya_voice, 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
+
                 } else if (position == rowSmartChatFolders) {
                     c.setFeature(R.drawable.outline_groups_24, 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
 
