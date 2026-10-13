@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.widget.EditText;
 import org.nayagram.platform.NayaConfig;
-import org.nayagram.platform.storage.SmartStorageDoctor;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -223,8 +222,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         switch (item.number) {
             case 2: return cfg.isMessageScheduler();
             case 3: return cfg.isSmartAutoReply();
-            case 4: return cfg.isStorySaverEnabled();
-            case 5: return cfg.isAnonymousStories();
             case 18: return cfg.isDataSaverEnabled();
             case 19: return cfg.isNoiseSuppressionEnabled();
             case 20: return cfg.isAutoCacheGuardEnabled();
@@ -241,9 +238,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private String getActionLabel(FeatureItem item) {
-        if (item.number == 14) {
-            return currentLang == LANG_BN ? "ক্লিন" : (currentLang == LANG_AR ? "تنظيف" : "CLEAN");
-        }
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) {
             return currentLang == LANG_BN ? "সেট" : (currentLang == LANG_AR ? "ضبط" : "CONFIG");
@@ -256,14 +250,12 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private int getLabelTextColor(FeatureItem item) {
-        if (item.number == 14) return 0xFF7C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0xFF0284C7;
         return enabled ? 0xFF10B981 : 0xFF0284C7; // ON = Emerald Green, OFF = Royal Blue
     }
 
     private int getLabelBgColor(FeatureItem item) {
-        if (item.number == 14) return 0x227C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0x200EA5E9;
         return enabled ? 0x2410B981 : 0x240284C7; // ON = Green Tint, OFF = Blue Tint
@@ -292,11 +284,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         NayaConfig cfg = NayaConfig.getInstance();
         if (cfg == null) return;
 
-        if (item.number == 14) {
-            showStorageDoctorScanDialog();
-            return;
-        }
-
         if (item.number == 3 && cfg.isSmartAutoReply()) {
             showAutoReplyConfigDialog();
             return;
@@ -309,8 +296,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 cfg.setSmartAutoReply(newState);
                 if (newState) showAutoReplyConfigDialog();
                 break;
-            case 4: cfg.setStorySaverEnabled(newState); break;
-            case 5: cfg.setAnonymousStories(newState); break;
             case 18: cfg.setDataSaverEnabled(newState); break;
             case 19: cfg.setNoiseSuppressionEnabled(newState); break;
             case 20: cfg.setAutoCacheGuardEnabled(newState); break;
@@ -332,48 +317,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                     item.getCatchyTitle(currentLang) + ": " + status
             ).show();
         }
-    }
-
-    private void showStorageDoctorScanDialog() {
-        if (context == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("⚡ Smart Storage Doctor");
-        builder.setMessage("Scanning cache & temporary files...");
-
-        AlertDialog progressDialog = builder.create();
-        progressDialog.show();
-
-        SmartStorageDoctor.getInstance().scanStorage(context, report -> {
-            try {
-                progressDialog.dismiss();
-            } catch (Throwable ignored) {
-            }
-
-            if (report == null || report.totalReclaimableBytes <= 0) {
-                AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
-                cleanBldr.setTitle("✨ Storage Clean");
-                cleanBldr.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
-                cleanBldr.setPositiveButton("OK", null);
-                cleanBldr.show();
-                return;
-            }
-
-            AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
-            cleanBldr.setTitle("🧹 Storage Analysis");
-            cleanBldr.setMessage("Found reclaimable cache:\n- Total Cache: " + report.getFormattedTotal() + "\n- Cached Files: " + report.fileCount + "\nClean cache now to boost NayaGram speed?");
-            cleanBldr.setPositiveButton("Clean Now", (d, w) -> {
-                SmartStorageDoctor.getInstance().cleanCache(context, (freed, success) -> {
-                    if (fragment != null) {
-                        BulletinFactory.of(fragment).createSimpleBulletin(
-                                R.raw.done,
-                                "Cleaned " + SmartStorageDoctor.formatSize(freed) + " cache!"
-                        ).show();
-                    }
-                });
-            });
-            cleanBldr.setNegativeButton("Cancel", null);
-            cleanBldr.show();
-        });
     }
 
     private void showAutoReplyConfigDialog() {
@@ -419,11 +362,10 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("PRIVACY & CONTROL PIPELINE\n");
         sb.append("• Focus Mode → Quiet hours with VIP bypass\n");
         sb.append("• Biometric Chat Locker → Fingerprint-locked chats\n");
-        sb.append("• Anonymous Stories → Local preference only\n\n");
+        sb.append("\n");
         sb.append("MESSAGING & TOOLS\n");
         sb.append("• Message Scheduler → Timed delivery\n");
         sb.append("• Auto-Reply → Keyword based replies\n");
-        sb.append("• Story Saver → HD download\n");
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
         sb.append("• User ID & DC Display → See your DC\n");
