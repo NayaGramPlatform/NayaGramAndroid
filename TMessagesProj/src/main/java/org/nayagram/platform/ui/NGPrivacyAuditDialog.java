@@ -92,11 +92,6 @@ public class NGPrivacyAuditDialog {
         statusContainer.addView(createStatusRow(context, R.drawable.ic_naya_fingerprint, 0xFF10B981,
                 "Biometric Chat Locker", "Passkey & biometric protection", bioActive, bioActive ? "ACTIVE" : "OFF", true));
 
-        // 3. Anonymous Stories
-        boolean storiesActive = cfg.isAnonymousStories();
-        statusContainer.addView(createStatusRow(context, R.drawable.ic_naya_eye_off, 0xFF6366F1,
-                "Private Story Viewing", "View receipt suppression", storiesActive, storiesActive ? "ACTIVE" : "OFF", true));
-
         // 4. Focus Mode
         boolean focusActive = cfg.isFocusModeEnabled();
         statusContainer.addView(createStatusRow(context, R.drawable.outline_profile_mute_24, 0xFF8E24AA,

@@ -109,7 +109,7 @@ public class NGSettingsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
         headerStealth = rowCount++;
-        rowAnonymousStories = rowCount++;
+        rowAnonymousStories = -1; // removed for policy compliance
         rowGhostMode = -1;
         rowApkBlock = -1;
         if (NayaConfig.SHOW_EXPERIMENTAL) {
@@ -120,7 +120,7 @@ public class NGSettingsActivity extends BaseFragment {
         headerMessaging = rowCount++;
         rowMessageScheduler = rowCount++;
         rowSmartAutoReply = rowCount++;
-        rowStorySaver = rowCount++;
+        rowStorySaver = -1; // removed for policy compliance
         rowForwardNoQuote = rowCount++;
         rowVoiceTranscription = rowCount++;
         rowSmartChatFolders = rowCount++;
@@ -153,7 +153,6 @@ public class NGSettingsActivity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase");
-        overflowItem.addSubItem(2, R.drawable.msg_help, "All Features Pipeline");
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit");
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support");
         overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram");
@@ -178,7 +177,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
-                    NayaConfig.getInstance().setAnonymousStories(false);
+                    NayaConfig.getInstance().resetToDefaults();
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Restored Defaults").show();
                 }

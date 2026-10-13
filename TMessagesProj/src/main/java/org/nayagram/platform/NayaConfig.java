@@ -123,12 +123,14 @@ public class NayaConfig {
     public void setAutoReplyText(String t) { preferences.edit().putString(KEY_AUTO_REPLY_TEXT, t).apply(); }
 
     // 4. Story Saver
-    public boolean isStorySaverEnabled() { return preferences.getBoolean(KEY_STORY_SAVER, true); }
-    public void setStorySaverEnabled(boolean e) { preferences.edit().putBoolean(KEY_STORY_SAVER, e).apply(); }
+    /** Removed for policy compliance: downloads other users' stories. Always off. */
+    public boolean isStorySaverEnabled() { return false; }
+    public void setStorySaverEnabled(boolean e) { /* removed for policy compliance */ }
 
     // 5. Anonymous Story Viewer
-    public boolean isAnonymousStories() { return preferences.getBoolean(KEY_ANONYMOUS_STORIES, false); }
-    public void setAnonymousStories(boolean e) { preferences.edit().putBoolean(KEY_ANONYMOUS_STORIES, e).apply(); }
+    /** Removed for policy compliance: hides story views from view receipts. Always off. */
+    public boolean isAnonymousStories() { return false; }
+    public void setAnonymousStories(boolean e) { /* removed for policy compliance */ }
 
     // 6. Anti-Delete Recovery
 
