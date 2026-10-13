@@ -40,6 +40,10 @@ public class NayaConfig {
     private static final String KEY_BATTERY_SAVER = "feature_15_battery_saver";
     private static final String KEY_BIOMETRIC_LOCKER = "feature_16_biometric_locker";
     private static final String KEY_INSTANT_TRANSLATOR = "feature_17_instant_translator";
+    private static final String KEY_INTL_CLOCK = "feature_18_intl_clock_24";
+    private static final String KEY_LINK_GUARD = "feature_19_link_guard";
+    private static final String KEY_READABLE_TEXT = "feature_20_readable_text";
+    private static final String KEY_READABLE_TEXT_PREV = "feature_20_readable_text_prev";
 
     private static NayaConfig instance;
     private final SharedPreferences preferences;
@@ -172,6 +176,61 @@ public class NayaConfig {
     public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, true); }
     public void setInstantTranslatorEnabled(boolean e) { preferences.edit().putBoolean(KEY_INSTANT_TRANSLATOR, e).apply(); }
 
+    /** Forces 24-hour times for people who travel or work across countries. Local display only. */
+    public boolean isInternationalClock() { return preferences.getBoolean(KEY_INTL_CLOCK, false); }
+    public void setInternationalClock(boolean enabled) {
+        preferences.edit().putBoolean(KEY_INTL_CLOCK, enabled).apply();
+        applyInternationalClock(enabled);
+    }
+
+    public static void applyInternationalClock(boolean enabled) {
+        try {
+            if (enabled) {
+                org.telegram.messenger.LocaleController.is24HourFormat = true;
+            } else if (ApplicationLoader.applicationContext != null) {
+                org.telegram.messenger.LocaleController.is24HourFormat =
+                        android.text.format.DateFormat.is24HourFormat(ApplicationLoader.applicationContext);
+            }
+            org.telegram.messenger.LocaleController.getInstance().recreateFormatters();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** Asks before opening http(s) links that are not Telegram. Does not block Telegram links. */
+    public boolean isLinkGuardEnabled() { return preferences.getBoolean(KEY_LINK_GUARD, true); }
+    public void setLinkGuardEnabled(boolean e) { preferences.edit().putBoolean(KEY_LINK_GUARD, e).apply(); }
+
+    /** Slightly larger chat text. Uses Telegram's own font-size setting. */
+    public boolean isReadableTextEnabled() { return preferences.getBoolean(KEY_READABLE_TEXT, false); }
+    public void setReadableTextEnabled(boolean enabled) {
+        preferences.edit().putBoolean(KEY_READABLE_TEXT, enabled).apply();
+        applyReadableText(enabled);
+    }
+
+    public void applyReadableText(boolean enabled) {
+        try {
+            int current = org.telegram.messenger.SharedConfig.fontSize;
+            int target;
+            if (enabled) {
+                if (!preferences.contains(KEY_READABLE_TEXT_PREV)) {
+                    preferences.edit().putInt(KEY_READABLE_TEXT_PREV, current).apply();
+                }
+                target = Math.max(current, 18);
+            } else {
+                target = preferences.getInt(KEY_READABLE_TEXT_PREV, current);
+            }
+            if (target < 12) target = 12;
+            if (target > 30) target = 30;
+            if (target == current) return;
+            org.telegram.messenger.SharedConfig.fontSize = target;
+            org.telegram.messenger.SharedConfig.fontSizeIsDefault = false;
+            android.content.SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Context.MODE_PRIVATE);
+            prefs.edit().putInt("fons_size", target).apply();
+            org.telegram.ui.ActionBar.Theme.createCommonMessageResources();
+        } catch (Throwable ignored) {
+        }
+    }
+
     // Reset all features to default values
     public void resetToDefaults() {
         preferences.edit()
@@ -195,6 +254,10 @@ public class NayaConfig {
             .putBoolean(KEY_BATTERY_SAVER, true)
             .putBoolean(KEY_BIOMETRIC_LOCKER, false)
             .putBoolean(KEY_INSTANT_TRANSLATOR, true)
+            .putBoolean(KEY_INTL_CLOCK, false)
+            .putBoolean(KEY_LINK_GUARD, true)
+            .putBoolean(KEY_READABLE_TEXT, false)
+            .remove(KEY_READABLE_TEXT_PREV)
             .apply();
     }
 }

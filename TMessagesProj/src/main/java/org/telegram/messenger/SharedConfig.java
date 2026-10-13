@@ -602,6 +602,14 @@ public class SharedConfig {
             repeatMode = preferences.getInt("repeatMode", 0);
             fontSize = preferences.getInt("fons_size", AndroidUtilities.isTablet() && !AndroidUtilities.isFold() ? 18 : 16);
             fontSizeIsDefault = !preferences.contains("fons_size");
+            try {
+                if (org.nayagram.platform.NayaConfig.getInstance().isReadableTextEnabled() && fontSize < 18) {
+                    fontSize = 18;
+                    fontSizeIsDefault = false;
+                    preferences.edit().putInt("fons_size", fontSize).apply();
+                }
+            } catch (Throwable ignored) {
+            }
             bubbleRadius = preferences.getInt("bubbleRadius", 17);
             ivFontSize = preferences.getInt("iv_font_size", fontSize);
             allowBigEmoji = preferences.getBoolean("allowBigEmoji", true);

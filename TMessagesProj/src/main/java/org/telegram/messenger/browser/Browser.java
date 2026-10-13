@@ -288,9 +288,71 @@ public class Browser {
         openUrl(context, uri, allowCustom, tryTelegraph, false, inCaseLoading, null, false, true, false);
     }
 
+    private static boolean ngLinkGuardPass;
+
+    private static boolean isTrustedExternalHost(String host) {
+        if (host == null) return true;
+        String h = host.toLowerCase(java.util.Locale.US);
+        return h.equals("t.me") || h.endsWith(".t.me")
+                || h.equals("telegram.me") || h.endsWith(".telegram.me")
+                || h.equals("telegram.org") || h.endsWith(".telegram.org")
+                || h.equals("telegram.dog") || h.endsWith(".telegram.dog")
+                || h.equals("telegra.ph") || h.endsWith(".telegra.ph")
+                || h.equals("fragment.com") || h.endsWith(".fragment.com")
+                || h.equals("nayagram.pro") || h.endsWith(".nayagram.pro");
+    }
+
     public static void openUrl(final Context context, Uri uri, boolean _allowCustom, boolean tryTelegraph, boolean forceNotInternalForApps, Progress inCaseLoading, String browser, boolean allowIntent, boolean allowInAppBrowser, boolean forceRequest) {
         if (context == null || uri == null) {
             return;
+        }
+        if (!ngLinkGuardPass) {
+            try {
+                String scheme = uri.getScheme();
+                boolean web = scheme != null && (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"));
+                boolean[] forceBrowser = new boolean[]{false};
+                boolean internal = isInternalUri(uri, forceBrowser);
+                if (web && !internal && !isTrustedExternalHost(uri.getHost())
+                        && org.nayagram.platform.NayaConfig.getInstance().isLinkGuardEnabled()
+                        && context instanceof Activity && !((Activity) context).isFinishing()) {
+                    final Context openContext = context;
+                    final Uri openUri = uri;
+                    final boolean allowCustomFinal = _allowCustom;
+                    final boolean tryTelegraphFinal = tryTelegraph;
+                    final boolean forceNotInternalFinal = forceNotInternalForApps;
+                    final Progress progressFinal = inCaseLoading;
+                    final String browserFinal = browser;
+                    final boolean allowIntentFinal = allowIntent;
+                    final boolean allowInAppFinal = allowInAppBrowser;
+                    final boolean forceRequestFinal = forceRequest;
+                    AndroidUtilities.runOnUIThread(() -> {
+                        try {
+                            new org.telegram.ui.ActionBar.AlertDialog.Builder(openContext)
+                                    .setTitle("Open this link?")
+                                    .setMessage(openUri.toString())
+                                    .setPositiveButton("Open", (dialog, which) -> {
+                                        ngLinkGuardPass = true;
+                                        try {
+                                            openUrl(openContext, openUri, allowCustomFinal, tryTelegraphFinal, forceNotInternalFinal, progressFinal, browserFinal, allowIntentFinal, allowInAppFinal, forceRequestFinal);
+                                        } finally {
+                                            ngLinkGuardPass = false;
+                                        }
+                                    })
+                                    .setNegativeButton("Cancel", null)
+                                    .show();
+                        } catch (Throwable ignored) {
+                            ngLinkGuardPass = true;
+                            try {
+                                openUrl(openContext, openUri, allowCustomFinal, tryTelegraphFinal, forceNotInternalFinal, progressFinal, browserFinal, allowIntentFinal, allowInAppFinal, forceRequestFinal);
+                            } finally {
+                                ngLinkGuardPass = false;
+                            }
+                        }
+                    });
+                    return;
+                }
+            } catch (Throwable ignored) {
+            }
         }
         final int currentAccount = UserConfig.selectedAccount;
         boolean[] forceBrowser = new boolean[]{false};

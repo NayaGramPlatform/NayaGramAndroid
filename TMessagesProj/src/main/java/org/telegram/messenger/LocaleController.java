@@ -733,6 +733,12 @@ public class LocaleController {
 
         systemDefaultLocale = Locale.getDefault();
         is24HourFormat = DateFormat.is24HourFormat(ApplicationLoader.applicationContext);
+        try {
+            if (org.nayagram.platform.NayaConfig.getInstance().isInternationalClock()) {
+                is24HourFormat = true;
+            }
+        } catch (Throwable ignored) {
+        }
         LocaleInfo currentInfo = null;
         boolean override = false;
 
@@ -2135,6 +2141,12 @@ public class LocaleController {
             return;
         }
         is24HourFormat = DateFormat.is24HourFormat(ApplicationLoader.applicationContext);
+        try {
+            if (org.nayagram.platform.NayaConfig.getInstance().isInternationalClock()) {
+                is24HourFormat = true;
+            }
+        } catch (Throwable ignored) {
+        }
         systemDefaultLocale = newConfig.locale;
         if (languageOverride != null) {
             LocaleInfo toSet = currentLocaleInfo;

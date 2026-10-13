@@ -89,6 +89,11 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowBatterySaver;
     private int rowInstantTranslator;
 
+    private int headerInternational;
+    private int rowIntlClock;
+    private int rowLinkGuard;
+    private int rowReadableText;
+
     private int headerSystem;
     private int rowResetDefaults;
     private int footerCopyrightRow;
@@ -129,6 +134,11 @@ public class NGSettingsActivity extends BaseFragment {
         rowStorageDoctor = rowCount++;
         rowBatterySaver = rowCount++;
         rowInstantTranslator = rowCount++;
+
+        headerInternational = rowCount++;
+        rowIntlClock = rowCount++;
+        rowLinkGuard = rowCount++;
+        rowReadableText = rowCount++;
 
         headerSystem = rowCount++;
         rowResetDefaults = rowCount++;
@@ -248,6 +258,18 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setInstantTranslatorEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Instant Translator: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowIntlClock) {
+                    cfg.setInternationalClock(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "24-hour clock: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowLinkGuard) {
+                    cfg.setLinkGuardEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Link check: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowReadableText) {
+                    cfg.setReadableTextEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Larger text: " + (checked ? "On" : "Off")).show();
                 }
             } else if (position == rowStorageDoctor) {
                 runStorageDoctorScan();
@@ -379,6 +401,15 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowInstantTranslator) {
             title = "In-Chat Instant Translator";
             body = "Uses Telegram's translate action when translation is available for that message.\n\nIt does not send your chats to a private NayaGram server.";
+        } else if (position == rowIntlClock) {
+            title = "24-hour clock";
+            body = "Shows times as 13:45 instead of 1:45 PM. Useful when you travel or talk to people in other countries.\n\nThis only changes how times look on your phone. Telegram is not contacted.";
+        } else if (position == rowLinkGuard) {
+            title = "Check unknown links";
+            body = "Asks before opening a website that is not Telegram.\n\nTelegram links such as t.me still open normally. You can cancel a suspicious link.";
+        } else if (position == rowReadableText) {
+            title = "Larger text";
+            body = "Raises the chat text size to at least 18. Turning it off restores your previous size.\n\nThis uses Telegram's own text-size setting.";
         } else if (position == rowResetDefaults) {
             title = "Restore Defaults";
             body = "Resets NayaGram feature switches to their original values. Your Telegram chats are not deleted.";
@@ -548,7 +579,7 @@ public class NGSettingsActivity extends BaseFragment {
         @Override
         public int getItemViewType(int position) {
             if (position == headerStealth || position == headerMessaging || position == headerSecurity ||
-                position == headerOptimization || position == headerSystem) {
+                position == headerOptimization || position == headerInternational || position == headerSystem) {
                 return 0; // Header
             } else if (position == rowStorageDoctor || position == rowResetDefaults) {
                 return 2; // TextSettingsCell
@@ -593,6 +624,7 @@ public class NGSettingsActivity extends BaseFragment {
                 else if (position == headerMessaging) h.setText("Messaging & Tools");
                 else if (position == headerSecurity) h.setText("Security & Protection");
                 else if (position == headerOptimization) h.setText("Optimization");
+                else if (position == headerInternational) h.setText("International");
                 else if (position == headerSystem) h.setText("System");
             } else if (type == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
@@ -625,6 +657,12 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.outline_profile_stop_24, 0xFF43A047, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
                 } else if (position == rowInstantTranslator) {
                     c.setFeature(R.drawable.outline_ai_translate2, 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
+                } else if (position == rowIntlClock) {
+                    c.setFeature(R.drawable.outline_message_time_24, 0xFF0288D1, "24-hour clock", "Show 13:45 instead of 1:45 PM", cfg.isInternationalClock(), true);
+                } else if (position == rowLinkGuard) {
+                    c.setFeature(R.drawable.media_link_24, 0xFFD32F2F, "Check unknown links", "Ask before opening a website that is not Telegram", cfg.isLinkGuardEnabled(), true);
+                } else if (position == rowReadableText) {
+                    c.setFeature(R.drawable.settings_language, 0xFF5E35B1, "Larger text", "Easier reading for mixed languages", cfg.isReadableTextEnabled(), false);
                 }
             } else if (type == 2) {
                 TextSettingsCell t = (TextSettingsCell) holder.itemView;
