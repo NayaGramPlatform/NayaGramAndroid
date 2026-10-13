@@ -9,6 +9,12 @@ import org.telegram.messenger.ApplicationLoader;
 /**
  * NayaConfig - Global configuration & preferences for NayaGram client features.
  * Houses state for all exclusive NayaGram Messenger features.
+ *
+ * Policy notes (keep in sync with Tools/test_voip_fgs_android14.py):
+ * - Call & Voice Protection (feature_10 / confirm-actions) is permanently removed.
+ *   It caused VoIP signaling timeouts and "NayaGram keeps stopping".
+ * - Instant Translator (feature_17) stays enabled by default.
+ * - Client premium gates are unlocked in UserConfig; free pin limit is 10.
  */
 public class NayaConfig {
     private static final String PREF_NAME = "nayagram_config_prefs";
@@ -25,7 +31,7 @@ public class NayaConfig {
     private static final String KEY_FORWARD_NO_QUOTE = "feature_07_forward_without_quote";
     private static final String KEY_VOICE_TRANSCRIPTION = "feature_08_voice_transcribe";
     private static final String KEY_SMART_CHAT_FOLDERS = "feature_09_smart_chat_folders";
-    // Feature 10 (Call & Voice Protection) removed to prevent VoIP signaling timeout/crashes
+    /** Legacy only: Call & Voice Protection / confirm-actions. Never reintroduce as active API. */
     private static final String LEGACY_KEY_CONFIRM_ACTIONS = "feature_10_confirm_actions";
     private static final String KEY_SHOW_ID_DC = "feature_11_show_id_and_dc";
     private static final String KEY_MODULAR_CONFIG = "feature_12_modular_config";
@@ -43,9 +49,35 @@ public class NayaConfig {
         migrateLegacyPreferences();
     }
 
+    /**
+     * One-time cleanup: drop unused confirm-actions key after Call & Voice Protection removal.
+     * Safe to call repeatedly; no public isConfirmActions() remains.
+     */
     private void migrateLegacyPreferences() {
-        if (preferences != null && preferences.contains(LEGACY_KEY_CONFIRM_ACTIONS)) {
-            preferences.edit().remove(LEGACY_KEY_CONFIRM_ACTIONS).apply();
+        if (preferences == null) {
+            return;
+        }
+        SharedPreferences.Editor editor = preferences.edit();
+        boolean changed = false;
+        if (preferences.contains(LEGACY_KEY_CONFIRM_ACTIONS)) {
+            editor.remove(LEGACY_KEY_CONFIRM_ACTIONS);
+            changed = true;
+        }
+        // Older aliases that may have been written by experimental builds
+        for (String obsolete : new String[]{
+                "enable_call_protection",
+                "enable_voice_protection",
+                "call_voice_protection",
+                "confirm_call_actions",
+                "feature_10_call_voice_protection"
+        }) {
+            if (preferences.contains(obsolete)) {
+                editor.remove(obsolete);
+                changed = true;
+            }
+        }
+        if (changed) {
+            editor.apply();
         }
     }
 
@@ -108,7 +140,7 @@ public class NayaConfig {
     public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, false); }
     public void setSmartFoldersEnabled(boolean e) { preferences.edit().putBoolean(KEY_SMART_CHAT_FOLDERS, e).apply(); }
 
-    // 10. Call & Voice Protection (Removed to avoid call crashes & timeouts)
+    // 10. Call & Voice Protection — permanently removed (do not re-add isConfirmActions)
 
     // 11. User ID & DC Display
     public boolean isShowIdAndDc() { return preferences.getBoolean(KEY_SHOW_ID_DC, true); }
@@ -136,7 +168,7 @@ public class NayaConfig {
     public boolean isBiometricChatLockerEnabled() { return preferences.getBoolean(KEY_BIOMETRIC_LOCKER, false); }
     public void setBiometricChatLockerEnabled(boolean e) { preferences.edit().putBoolean(KEY_BIOMETRIC_LOCKER, e).apply(); }
 
-    // 17. In-Chat Instant Translator
+    // 17. In-Chat Instant Translator (language meaning / translation — kept)
     public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, true); }
     public void setInstantTranslatorEnabled(boolean e) { preferences.edit().putBoolean(KEY_INSTANT_TRANSLATOR, e).apply(); }
 
@@ -151,6 +183,11 @@ public class NayaConfig {
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
             .remove(LEGACY_KEY_CONFIRM_ACTIONS)
+            .remove("enable_call_protection")
+            .remove("enable_voice_protection")
+            .remove("call_voice_protection")
+            .remove("confirm_call_actions")
+            .remove("feature_10_call_voice_protection")
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_MODULAR_CONFIG, true)
             .putBoolean(KEY_FOCUS_MODE, false)
