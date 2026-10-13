@@ -1321,9 +1321,24 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	public void createCaptureDevice(boolean screencast) {
 		if (screencast) {
 			gotMediaProjection = true;
-			updateCurrentForegroundType();
+			// Android 14+ refuses MediaProjection capture unless a mediaProjection-type foreground service is running.
+			if (!updateCurrentForegroundType() || !hasMediaProjectionForeground()) {
+				gotMediaProjection = false;
+				android.util.Log.e("NayaGramCall", "screen capture skipped: mediaProjection foreground not started");
+				return;
+			}
 		}
+		try {
+			createCaptureDeviceInternal(screencast);
+		} catch (Throwable t) {
+			android.util.Log.e("NayaGramCall", "createCaptureDevice", t);
+			if (screencast) {
+				gotMediaProjection = false;
+			}
+		}
+	}
 
+	private void createCaptureDeviceInternal(boolean screencast) {
 		int index = screencast ? CAPTURE_DEVICE_SCREEN : CAPTURE_DEVICE_CAMERA;
 		int deviceType;
 		if (screencast) {
@@ -4139,23 +4154,14 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			builder.setLargeIcon(photo);
 		}
 		try {
-			if (foregroundStarted) {
-				try {
-					stopForeground(true);
-				} catch (Exception e) {
-					FileLog.e(e);
-				}
-			}
+			// Update the running foreground service in place. Stopping it first drops it from
+			// foreground, and the restart is rejected when called from background on Android 12+.
 			foregroundStarted = true;
-			if (Build.VERSION.SDK_INT >= 33) {
-				startForeground(foregroundId = ID_ONGOING_CALL_NOTIFICATION, foregroundNotification = builder.getNotification(), lastForegroundType = getCurrentForegroundType());
-			} else {
-				startForeground(foregroundId = ID_ONGOING_CALL_NOTIFICATION, foregroundNotification = builder.getNotification());
-			}
-		} catch (Exception e) {
-			if (photo != null && e instanceof IllegalArgumentException) {
+			if (!startForegroundSafe(ID_ONGOING_CALL_NOTIFICATION, builder.getNotification()) && photo != null) {
 				showNotification(name, null);
 			}
+		} catch (Exception e) {
+			FileLog.e(e);
 		}
 	}
 
@@ -5459,24 +5465,42 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	private int lastForegroundType;
 	private boolean gotMediaProjection;
 
-	private void startForegroundSafe(int id, Notification notification) {
+	private boolean startForegroundSafe(int id, Notification notification) {
 		foregroundId = id;
 		foregroundNotification = notification;
-		try {
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-				lastForegroundType = getCurrentForegroundType();
-				startForeground(id, notification, lastForegroundType);
-			} else {
-				startForeground(id, notification);
-			}
-		} catch (Throwable t) {
-			android.util.Log.e("NayaGramCall", "startForegroundSafe", t);
+		if (notification == null) {
+			return false;
+		}
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
 			try {
 				startForeground(id, notification);
-			} catch (Throwable t2) {
-				android.util.Log.e("NayaGramCall", "startForegroundSafe fallback", t2);
+				return true;
+			} catch (Throwable t) {
+				android.util.Log.e("NayaGramCall", "startForegroundSafe", t);
+				return false;
 			}
 		}
+		int type = getCurrentForegroundType();
+		try {
+			startForeground(id, notification, type);
+			lastForegroundType = type;
+			return true;
+		} catch (Throwable t) {
+			android.util.Log.e("NayaGramCall", "startForegroundSafe typed", t);
+		}
+		// MEDIA_PLAYBACK is the least restricted type; keeps the call service alive if the richer type is refused.
+		try {
+			startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+			lastForegroundType = ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK;
+			return true;
+		} catch (Throwable t2) {
+			android.util.Log.e("NayaGramCall", "startForegroundSafe fallback", t2);
+			return false;
+		}
+	}
+
+	private boolean hasMediaProjectionForeground() {
+		return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || (lastForegroundType & ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION) != 0;
 	}
 
 	private int getCurrentForegroundType() {
@@ -5506,17 +5530,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		return type;
 	}
 
-	public void updateCurrentForegroundType() {
-		if (lastForegroundType != getCurrentForegroundType() && foregroundStarted) {
-			try {
-				stopForeground(true);
-			} catch (Throwable e) {
-				android.util.Log.e("NayaGramCall", "stopForeground", e);
-			}
-			if (foregroundNotification != null) {
-				startForegroundSafe(foregroundId, foregroundNotification);
-			}
+	public boolean updateCurrentForegroundType() {
+		if (!foregroundStarted || foregroundNotification == null || lastForegroundType == getCurrentForegroundType()) {
+			return true;
 		}
+		return startForegroundSafe(foregroundId, foregroundNotification);
 	}
 
 	private void callFailed(String error) {
