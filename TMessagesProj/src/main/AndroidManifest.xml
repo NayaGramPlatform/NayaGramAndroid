@@ -28,7 +28,6 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.MANAGE_OWN_CALLS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -516,7 +515,7 @@
             android:name=".voip.VoIPService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="phoneCall|camera|microphone|mediaPlayback|mediaProjection"
+            android:foregroundServiceType="camera|microphone|mediaPlayback|mediaProjection"
         />
         <service
             android:name=".MusicPlayerService"
