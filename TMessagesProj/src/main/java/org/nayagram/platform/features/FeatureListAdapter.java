@@ -91,34 +91,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 }
         ));
 
-        // 4. Story Saver
-        features.add(new FeatureItem(
-                4,
-                0xFF8B5CF6,
-                0xFF6D28D9,
-                R.drawable.msg_download,
-                new String[]{"Story Saver", "স্টোরি সেভার", "حفظ القصص"},
-                new String[]{
-                        "Download stories (photos & HD videos) in original quality with 1 click.",
-                        "এক ক্লিকে মূল কোয়ালিটিতে স্টোরি (ছবি ও HD ভিডিও) ডাউনলোড করুন।",
-                        "قم بتنزيل القصص (صور ومقاطع فيديو عالية الدقة) بالجودة الأصلية بنقرة واحدة."
-                }
-        ));
-
-        // 5. Anonymous Stories (local preference only)
-        features.add(new FeatureItem(
-                5,
-                0xFF6366F1,
-                0xFF4338CA,
-                R.drawable.msg_view_file,
-                new String[]{"Anonymous Stories", "অ্যানোনিমাস স্টোরিজ", "قصص مجهولة"},
-                new String[]{
-                        "View friends' stories privately without appearing on viewer lists (local preference).",
-                        "বন্ধুদের স্টোরি ব্যক্তিগতভাবে দেখুন (লোকাল সেটিং)।",
-                        "اعرض قصص الأصدقاء بشكل خاص دون الظهور في قوائم المشاهدين (إعداد محلي)."
-                }
-        ));
-
         // 7. Clean Forward
         features.add(new FeatureItem(
                 7,

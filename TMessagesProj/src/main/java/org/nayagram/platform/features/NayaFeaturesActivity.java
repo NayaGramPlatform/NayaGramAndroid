@@ -47,9 +47,6 @@ public class NayaFeaturesActivity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem item = menu.addItem(0, R.drawable.ic_ab_other);
         item.addSubItem(MENU_ALL_DETAILS, R.drawable.msg_help, "All Features Pipeline");
-        item.addSubItem(MENU_PRIVACY_AUDIT, R.drawable.outline_shield_check, "Privacy & Security Audit");
-        item.addSubItem(MENU_SUPPORT, R.drawable.msg_send, "Contact Support");
-        item.addSubItem(MENU_RESTORE, R.drawable.msg_delete, "Restore Defaults");
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
