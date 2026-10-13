@@ -5449,11 +5449,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			incomingNotification = builder.getNotification();
 		}
 		foregroundStarted = true;
-		if (Build.VERSION.SDK_INT >= 33) {
-			startForeground(foregroundId = ID_INCOMING_CALL_NOTIFICATION, foregroundNotification = incomingNotification, lastForegroundType = getCurrentForegroundType());
-		} else {
-			startForeground(foregroundId = ID_INCOMING_CALL_NOTIFICATION, foregroundNotification = incomingNotification);
-		}
+		startForegroundSafe(ID_INCOMING_CALL_NOTIFICATION, incomingNotification);
 		startRingtoneAndVibration();
 	}
 
@@ -5462,6 +5458,26 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	private Notification foregroundNotification;
 	private int lastForegroundType;
 	private boolean gotMediaProjection;
+
+	private void startForegroundSafe(int id, Notification notification) {
+		foregroundId = id;
+		foregroundNotification = notification;
+		try {
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+				lastForegroundType = getCurrentForegroundType();
+				startForeground(id, notification, lastForegroundType);
+			} else {
+				startForeground(id, notification);
+			}
+		} catch (Throwable t) {
+			android.util.Log.e("NayaGramCall", "startForegroundSafe", t);
+			try {
+				startForeground(id, notification);
+			} catch (Throwable t2) {
+				android.util.Log.e("NayaGramCall", "startForegroundSafe fallback", t2);
+			}
+		}
+	}
 
 	private int getCurrentForegroundType() {
 		return getCurrentForegroundType(this, gotMediaProjection);
@@ -5492,11 +5508,13 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	public void updateCurrentForegroundType() {
 		if (lastForegroundType != getCurrentForegroundType() && foregroundStarted) {
-			stopForeground(true);
-			if (Build.VERSION.SDK_INT >= 33) {
-				startForeground(foregroundId, foregroundNotification, lastForegroundType = getCurrentForegroundType());
-			} else {
-				startForeground(foregroundId, foregroundNotification);
+			try {
+				stopForeground(true);
+			} catch (Throwable e) {
+				android.util.Log.e("NayaGramCall", "stopForeground", e);
+			}
+			if (foregroundNotification != null) {
+				startForegroundSafe(foregroundId, foregroundNotification);
 			}
 		}
 	}
