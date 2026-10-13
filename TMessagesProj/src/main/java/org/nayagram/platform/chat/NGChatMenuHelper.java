@@ -30,18 +30,14 @@ import org.telegram.ui.ChatActivity;
  * NGChatMenuHelper - In-Chat 3-Dots Menu & In-Chat Settings for NayaGram.
  * Matches Novagram & NayaGram in-chat features:
  * 1. Chat ID display & copy
- * 2. Forward Without Quote (Clean Forward) toggle
- * 3. NayaGram In-Chat Settings (One-time voice & video, Auto-add text signature, Lock chat)
- * 4. Voice to text (Speech transcription)
- * 5. Auto-translate (28+ languages dialog)
+ * 2. NayaGram In-Chat Settings
+ * 3. Auto-translate
  */
 public final class NGChatMenuHelper {
 
     public static final int ITEM_CHAT_ID = 29001;
     public static final int ITEM_NG_SETTINGS = 29002;
-    public static final int ITEM_VOICE_TO_TEXT = 29003;
     public static final int ITEM_AUTO_TRANSLATE = 29004;
-    public static final int ITEM_FORWARD_WITHOUT_QUOTE = 29005;
 
     private static final String PREFS_CHAT = "nayagram_chat_prefs_";
 
@@ -56,20 +52,12 @@ public final class NGChatMenuHelper {
         if (chatActivity == null || chatActivity.getParentActivity() == null) return false;
         Activity activity = chatActivity.getParentActivity();
 
-        if (id == ITEM_FORWARD_WITHOUT_QUOTE) {
-            boolean current = NayaConfig.getInstance().isForwardWithoutQuote();
-            NayaConfig.getInstance().setForwardWithoutQuote(!current);
-            Toast.makeText(activity, "Forward Without Quote: " + (!current ? "Enabled" : "Disabled"), Toast.LENGTH_SHORT).show();
-            return true;
-        } else if (id == ITEM_CHAT_ID) {
+        if (id == ITEM_CHAT_ID) {
             AndroidUtilities.addToClipboard(String.valueOf(dialogId));
             Toast.makeText(activity, "Chat ID copied: " + dialogId, Toast.LENGTH_SHORT).show();
             return true;
         } else if (id == ITEM_AUTO_TRANSLATE) {
             showAutoTranslatePicker(activity, dialogId);
-            return true;
-        } else if (id == ITEM_VOICE_TO_TEXT) {
-            showVoiceToTextDialog(activity);
             return true;
         } else if (id == ITEM_NG_SETTINGS) {
             showInChatSettings(activity, dialogId);
@@ -101,14 +89,6 @@ public final class NGChatMenuHelper {
             }
         });
         b.setNegativeButton("Cancel", null);
-        b.show();
-    }
-
-    private static void showVoiceToTextDialog(Activity activity) {
-        AlertDialog.Builder b = new AlertDialog.Builder(activity);
-        b.setTitle("Voice to text 🎙️");
-        b.setMessage("Voice transcription is active for incoming and outgoing voice notes in this chat.\n\nSupported languages: Bengali (বাংলা), English, Arabic, Hindi, Urdu and 25+ global languages.");
-        b.setPositiveButton("OK", null);
         b.show();
     }
 

@@ -19,10 +19,7 @@ public class ChatActivitySecurityAndMenuTest {
     }
 
     @Test
-    public void testForwardWithoutQuoteAvailability() {
-        // Verify real forward without quote menu item ID constant and logic
-        int forwardNoQuoteId = NGChatMenuHelper.ITEM_FORWARD_WITHOUT_QUOTE;
-        Assert.assertEquals(29005, forwardNoQuoteId);
-        Assert.assertTrue("Forward Without Quote action ID must be valid", forwardNoQuoteId > 0);
+    public void testAutoTranslateMenuRemains() {
+        Assert.assertEquals(29004, NGChatMenuHelper.ITEM_AUTO_TRANSLATE);
     }
 }

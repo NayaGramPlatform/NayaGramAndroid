@@ -93,6 +93,10 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowIntlClock;
     private int rowLinkGuard;
     private int rowReadableText;
+    private int rowReduceMotion;
+    private int rowChatListDetails;
+    private int rowPauseGifs;
+    private int rowSaveData;
 
     private int headerSystem;
     private int rowResetDefaults;
@@ -135,6 +139,10 @@ public class NGSettingsActivity extends BaseFragment {
         rowIntlClock = rowCount++;
         rowLinkGuard = rowCount++;
         rowReadableText = rowCount++;
+        rowReduceMotion = rowCount++;
+        rowChatListDetails = rowCount++;
+        rowPauseGifs = rowCount++;
+        rowSaveData = rowCount++;
 
         headerSystem = rowCount++;
         rowResetDefaults = rowCount++;
@@ -265,6 +273,22 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setReadableTextEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Larger text: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowReduceMotion) {
+                    cfg.setReduceMotion(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Reduce motion: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowChatListDetails) {
+                    cfg.setChatListDetails(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Chat list details: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowPauseGifs) {
+                    cfg.setPauseGifAutoplay(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Pause GIFs: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowSaveData) {
+                    cfg.setSaveMobileData(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Save mobile data: " + (checked ? "On" : "Off")).show();
                 }
             } else if (position == rowStorageDoctor) {
                 runStorageDoctorScan();
@@ -405,6 +429,18 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowReadableText) {
             title = "Larger text";
             body = "Raises the chat text size to at least 18. Turning it off restores your previous size.\n\nThis uses Telegram's own text-size setting.";
+        } else if (position == rowReduceMotion) {
+            title = "Reduce motion";
+            body = "Turns off extra interface animations on this phone. Messages, calls, and accounts are unchanged.";
+        } else if (position == rowChatListDetails) {
+            title = "Chat list details";
+            body = "Shows three lines in the chat list so names and last messages are easier to scan.";
+        } else if (position == rowPauseGifs) {
+            title = "Pause GIFs";
+            body = "Stops GIFs from playing by themselves in chats. You can still open them. This uses Telegram's own autoplay setting.";
+        } else if (position == rowSaveData) {
+            title = "Save mobile data";
+            body = "Does not download media until you open it. Useful on limited mobile plans. This uses Telegram's stream-media setting.";
         } else if (position == rowResetDefaults) {
             title = "Restore Defaults";
             body = "Resets NayaGram feature switches to their original values. Your Telegram chats are not deleted.";
@@ -657,7 +693,15 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowLinkGuard) {
                     c.setFeature(R.drawable.media_link_24, 0xFFD32F2F, "Check unknown links", "Ask before opening a website that is not Telegram", cfg.isLinkGuardEnabled(), true);
                 } else if (position == rowReadableText) {
-                    c.setFeature(R.drawable.settings_language, 0xFF5E35B1, "Larger text", "Easier reading for mixed languages", cfg.isReadableTextEnabled(), false);
+                    c.setFeature(R.drawable.settings_language, 0xFF5E35B1, "Larger text", "Easier reading for mixed languages", cfg.isReadableTextEnabled(), true);
+                } else if (position == rowReduceMotion) {
+                    c.setFeature(R.drawable.settings_power, 0xFF64748B, "Reduce motion", "Fewer animations, easier on the eyes", cfg.isReduceMotion(), true);
+                } else if (position == rowChatListDetails) {
+                    c.setFeature(R.drawable.settings_chat, 0xFF0284C7, "Chat list details", "Three lines so chats are easier to scan", cfg.isChatListDetails(), true);
+                } else if (position == rowPauseGifs) {
+                    c.setFeature(R.drawable.settings_data, 0xFF7C3AED, "Pause GIFs", "GIFs stay still until you open them", cfg.isPauseGifAutoplay(), true);
+                } else if (position == rowSaveData) {
+                    c.setFeature(R.drawable.settings_data, 0xFF059669, "Save mobile data", "Download photos and videos only when opened", cfg.isSaveMobileData(), false);
                 }
             } else if (type == 2) {
                 TextSettingsCell t = (TextSettingsCell) holder.itemView;

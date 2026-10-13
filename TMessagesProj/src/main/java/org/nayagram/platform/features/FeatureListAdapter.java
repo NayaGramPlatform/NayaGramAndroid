@@ -380,8 +380,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("• Message Scheduler → Timed delivery\n");
         sb.append("• Auto-Reply → Keyword based replies\n");
         sb.append("• Story Saver → HD download\n");
-        sb.append("• Clean Forward → No sender tag\n");
-        sb.append("• Voice Transcription → Speech to text\n");
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
         sb.append("• User ID & DC Display → See your DC\n");

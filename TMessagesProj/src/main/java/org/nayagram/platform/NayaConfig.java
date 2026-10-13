@@ -235,6 +235,48 @@ public class NayaConfig {
         }
     }
 
+    public boolean isReduceMotion() {
+        return preferences.getBoolean("feature_reduce_motion", false);
+    }
+
+    public void setReduceMotion(boolean enabled) {
+        preferences.edit().putBoolean("feature_reduce_motion", enabled).apply();
+        try {
+            org.telegram.messenger.SharedConfig.setAnimationsEnabled(!enabled);
+            org.telegram.messenger.MessagesController.getGlobalMainSettings().edit().putBoolean("view_animations", !enabled).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public boolean isChatListDetails() {
+        return org.telegram.messenger.SharedConfig.useThreeLinesLayout;
+    }
+
+    public void setChatListDetails(boolean enabled) {
+        org.telegram.messenger.SharedConfig.setUseThreeLinesLayout(enabled);
+    }
+
+    public boolean isPauseGifAutoplay() {
+        return !org.telegram.messenger.LiteMode.isEnabled(org.telegram.messenger.LiteMode.FLAG_AUTOPLAY_GIFS);
+    }
+
+    public void setPauseGifAutoplay(boolean pause) {
+        boolean playing = org.telegram.messenger.LiteMode.isEnabled(org.telegram.messenger.LiteMode.FLAG_AUTOPLAY_GIFS);
+        if (playing == pause) {
+            org.telegram.messenger.SharedConfig.toggleAutoplayGifs();
+        }
+    }
+
+    public boolean isSaveMobileData() {
+        return !org.telegram.messenger.SharedConfig.streamMedia;
+    }
+
+    public void setSaveMobileData(boolean save) {
+        if (org.telegram.messenger.SharedConfig.streamMedia == save) {
+            org.telegram.messenger.SharedConfig.toggleStreamMedia();
+        }
+    }
+
     // Reset all features to default values
     public void resetToDefaults() {
         preferences.edit()
