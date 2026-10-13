@@ -161,19 +161,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 }
         ));
 
-        // 10. Call & Voice Protection
-        features.add(new FeatureItem(
-                10,
-                0xFFF97316,
-                0xFFC2410C,
-                R.drawable.msg_calls,
-                new String[]{"Call & Voice Protection", "কল ও ভয়েস সুরক্ষা", "حماية المكالمات والصوت"},
-                new String[]{
-                        "Confirmation prompt before calls & voice notes to prevent accidental taps.",
-                        "ভুল করে কল বা ভয়েস নোট পাঠানোর আগে নিশ্চিতকরণ।",
-                        "تأكيد قبل المكالمات والملاحظات الصوتية لتجنب النقرات العرضية."
-                }
-        ));
+
 
         // 11. User ID & DC Display
         features.add(new FeatureItem(
@@ -296,7 +284,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 7: return cfg.isForwardWithoutQuote();
             case 8: return cfg.isVoiceTranscriptionEnabled();
             case 9: return cfg.isSmartFoldersEnabled();
-            case 10: return cfg.isConfirmActions();
             case 11: return cfg.isShowIdAndDc();
             case 12: return cfg.isModularConfig();
             case 13: return cfg.isFocusModeEnabled();
@@ -382,7 +369,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 7: cfg.setForwardWithoutQuote(newState); break;
             case 8: cfg.setVoiceTranscriptionEnabled(newState); break;
             case 9: cfg.setSmartFoldersEnabled(newState); break;
-            case 10: cfg.setConfirmActions(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
             case 12: cfg.setModularConfig(newState); break;
             case 13: cfg.setFocusModeEnabled(newState); break;
@@ -496,7 +482,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("• Voice Transcription → Speech to text\n");
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
-        sb.append("• Call & Voice Protection → Confirm before call\n");
         sb.append("• User ID & DC Display → See your DC\n");
         sb.append("• Storage Doctor → One-tap clean\n");
         sb.append("• Battery Saver → Low battery mode\n");

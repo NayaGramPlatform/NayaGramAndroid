@@ -80,7 +80,6 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowSmartChatFolders;
 
     private int headerSecurity;
-    private int rowConfirmActions;
     private int rowShowIdDc;
     private int rowBiometricLocker;
 
@@ -122,7 +121,6 @@ public class NGSettingsActivity extends BaseFragment {
         rowSmartChatFolders = rowCount++;
 
         headerSecurity = rowCount++;
-        rowConfirmActions = rowCount++;
         rowShowIdDc = rowCount++;
         rowBiometricLocker = rowCount++;
 
@@ -229,10 +227,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setSmartFoldersEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Chat Folders: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowConfirmActions) {
-                    cfg.setConfirmActions(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Call Protection: " + (checked ? "On" : "Off")).show();
+
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
@@ -365,9 +360,7 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowSmartChatFolders) {
             title = "Smart Chat Folders";
             body = "Preference for organizing chats into Users, Groups, Channels and Bots.\n\nFolders still use Telegram's folder system.";
-        } else if (position == rowConfirmActions) {
-            title = "Call & Voice Protection";
-            body = "When on, NayaGram asks you to confirm before starting a call.\n\nThis reduces accidental calls. It does not block calls from other people.";
+
         } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
             body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
@@ -621,8 +614,7 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_voice, 0xFFEC407A, "Voice Transcription", "Transcribe voice notes to text instantly", cfg.isVoiceTranscriptionEnabled(), true);
                 } else if (position == rowSmartChatFolders) {
                     c.setFeature(R.drawable.outline_groups_24, 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
-                } else if (position == rowConfirmActions) {
-                    c.setFeature(R.drawable.outline_profile_call_24, 0xFFF59E0B, "Call & Voice Protection", "Confirmation prompt before calls & voice notes", cfg.isConfirmActions(), true);
+
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {

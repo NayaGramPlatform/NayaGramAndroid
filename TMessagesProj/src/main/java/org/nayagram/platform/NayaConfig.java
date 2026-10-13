@@ -97,13 +97,13 @@ public class NayaConfig {
     public boolean isVoiceTranscriptionEnabled() { return preferences.getBoolean(KEY_VOICE_TRANSCRIPTION, true); }
     public void setVoiceTranscriptionEnabled(boolean e) { preferences.edit().putBoolean(KEY_VOICE_TRANSCRIPTION, e).apply(); }
 
-    // 9. Smart Chat Folders
-    public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, true); }
+    // 9. Smart Chat Folders (Disabled by default for Play Store compliance)
+    public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, false); }
     public void setSmartFoldersEnabled(boolean e) { preferences.edit().putBoolean(KEY_SMART_CHAT_FOLDERS, e).apply(); }
 
-    // 10. Call & Voice Protection
-    public boolean isConfirmActions() { return preferences.getBoolean(KEY_CONFIRM_ACTIONS, false); }
-    public void setConfirmActions(boolean e) { preferences.edit().putBoolean(KEY_CONFIRM_ACTIONS, e).apply(); }
+    // 10. Call & Voice Protection (Removed / Always false)
+    public boolean isConfirmActions() { return false; }
+    public void setConfirmActions(boolean e) { preferences.edit().putBoolean(KEY_CONFIRM_ACTIONS, false).apply(); }
 
     // 11. User ID & DC Display
     public boolean isShowIdAndDc() { return preferences.getBoolean(KEY_SHOW_ID_DC, true); }
@@ -144,7 +144,7 @@ public class NayaConfig {
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
             .putBoolean(KEY_FORWARD_NO_QUOTE, false)
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
-            .putBoolean(KEY_SMART_CHAT_FOLDERS, true)
+            .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
             .putBoolean(KEY_CONFIRM_ACTIONS, false)
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_MODULAR_CONFIG, true)
