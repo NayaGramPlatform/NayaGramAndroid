@@ -1,0 +1,46 @@
+name: Strip VoIP phoneCall FGS type
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - .github/workflows/strip-voip-phonecall.yml
+      - TMessagesProj/src/main/AndroidManifest.xml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Drop dialer foreground type from VoIPService
+        run: |
+          set -euo pipefail
+          f=TMessagesProj/src/main/AndroidManifest.xml
+          python3 - << 'PY'
+          from pathlib import Path
+          p = Path("TMessagesProj/src/main/AndroidManifest.xml")
+          t = p.read_text(encoding="utf-8")
+          t2 = t.replace(
+              'android:foregroundServiceType="phoneCall|camera|microphone|mediaPlayback|mediaProjection"',
+              'android:foregroundServiceType="camera|microphone|mediaPlayback|mediaProjection"',
+          )
+          t2 = t2.replace('    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />\n', '')
+          if t2 == t:
+              print("manifest already clean")
+          else:
+              p.write_text(t2, encoding="utf-8")
+              print("manifest patched")
+          PY
+          if git diff --quiet -- "$f"; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git config user.name "NayaGramPlatform"
+          git config user.email "287420619+NayaGramPlatform@users.noreply.github.com"
+          git add "$f"
+          git commit -m "fix(voip): VoIPService FGS types are camera|microphone|mediaPlayback|mediaProjection only"
+          git push
