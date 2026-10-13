@@ -85,7 +85,6 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerOptimization;
     private int rowFocusMode;
-    private int rowStorageDoctor;
     private int rowBatterySaver;
     private int rowInstantTranslator;
 
@@ -131,7 +130,6 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerOptimization = rowCount++;
         rowFocusMode = rowCount++;
-        rowStorageDoctor = rowCount++;
         rowBatterySaver = rowCount++;
         rowInstantTranslator = rowCount++;
 
@@ -270,8 +268,6 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Larger text: " + (checked ? "On" : "Off")).show();
                 }
-            } else if (position == rowStorageDoctor) {
-                runStorageDoctorScan();
             } else if (position == rowResetDefaults) {
                 showResetDialog();
             }
@@ -283,48 +279,6 @@ public class NGSettingsActivity extends BaseFragment {
         });
 
         return fragmentView;
-    }
-
-    private void runStorageDoctorScan() {
-        if (getParentActivity() == null) return;
-        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
-        b.setTitle("⚡ Smart Storage Doctor");
-        b.setMessage("Scanning cache & temporary files...");
-        AlertDialog progressDialog = b.create();
-        showDialog(progressDialog);
-
-        org.nayagram.platform.storage.SmartStorageDoctor.getInstance().scanStorage(getParentActivity(), report -> {
-            try {
-                progressDialog.dismiss();
-            } catch (Throwable ignored) {
-            }
-
-            if (report == null || report.totalReclaimableBytes <= 0) {
-                AlertDialog.Builder cleanB = new AlertDialog.Builder(getParentActivity());
-                cleanB.setTitle("✨ Storage Clean");
-                cleanB.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
-                cleanB.setPositiveButton("OK", null);
-                showDialog(cleanB.create());
-                return;
-            }
-
-            AlertDialog.Builder cleanB = new AlertDialog.Builder(getParentActivity());
-            cleanB.setTitle("🧹 Storage Analysis");
-            cleanB.setMessage("Found reclaimable cache:\n\n" +
-                    "• Total Cache: " + report.getFormattedTotal() + "\n" +
-                    "• Cached Files: " + report.fileCount + "\n\n" +
-                    "Clean cache now to boost NayaGram speed?");
-            cleanB.setPositiveButton("Clean Now", (d, w) -> {
-                org.nayagram.platform.storage.SmartStorageDoctor.getInstance().cleanCache(getParentActivity(), (freed, success) -> {
-                    BulletinFactory.of(this).createSimpleBulletin(
-                            R.raw.done,
-                            "Cleaned " + org.nayagram.platform.storage.SmartStorageDoctor.formatSize(freed) + " cache!"
-                    ).show();
-                });
-            });
-            cleanB.setNegativeButton("Cancel", null);
-            showDialog(cleanB.create());
-        });
     }
 
     private void showAutoReplyConfigDialog() {
@@ -391,9 +345,6 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowFocusMode) {
             title = "Focus & Wellbeing Mode";
             body = "Quiet-hours preference for study and meetings.\n\nIt does not mute Telegram notifications by itself unless you also change notification settings.";
-        } else if (position == rowStorageDoctor) {
-            title = "Smart Storage Doctor";
-            body = "Opens a storage summary and a cleanup confirmation.\n\nThe numbers are an estimate. Chats and media you sent are not deleted.";
         } else if (position == rowBatterySaver) {
             title = "Ultra Battery Saver";
             body = "Preference to reduce extra animations and background work added by NayaGram.\n\nTelegram's own sync still runs so messages arrive.";
@@ -580,7 +531,7 @@ public class NGSettingsActivity extends BaseFragment {
             if (position == headerStealth || position == headerMessaging || position == headerSecurity ||
                 position == headerOptimization || position == headerInternational || position == headerSystem) {
                 return 0; // Header
-            } else if (position == rowStorageDoctor || position == rowResetDefaults) {
+            } else if (position == rowResetDefaults) {
                 return 2; // TextSettingsCell
             } else if (position == footerCopyrightRow) {
                 return 3; // Footer Info
@@ -665,9 +616,7 @@ public class NGSettingsActivity extends BaseFragment {
                 }
             } else if (type == 2) {
                 TextSettingsCell t = (TextSettingsCell) holder.itemView;
-                if (position == rowStorageDoctor) {
-                    t.setText("🧹 Smart Storage Doctor", true);
-                } else if (position == rowResetDefaults) {
+                if (position == rowResetDefaults) {
                     t.setText("Restore Defaults", true);
                 }
             } else if (type == 3) {

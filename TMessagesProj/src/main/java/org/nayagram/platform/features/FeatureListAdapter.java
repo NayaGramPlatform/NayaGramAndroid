@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.widget.EditText;
 import org.nayagram.platform.NayaConfig;
-import org.nayagram.platform.storage.SmartStorageDoctor;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.AlertDialog;
@@ -177,20 +176,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 }
         ));
 
-        // 14. Storage Doctor
-        features.add(new FeatureItem(
-                14,
-                0xFF7C3AED,
-                0xFF5B21B6,
-                R.drawable.msg_delete,
-                new String[]{"Storage Doctor", "স্টোরেজ ডক্টর", "طبيب التخزين"},
-                new String[]{
-                        "Scan & clean Telegram cache and duplicate media with one tap.",
-                        "এক ট্যাপে টেলিগ্রাম ক্যাশ ও ডুপ্লিকেট মিডিয়া পরিষ্কার করুন।",
-                        "امسح ونظف ذاكرة التخزين المؤقت والوسائط المكررة بنقرة واحدة."
-                }
-        ));
-
         // 15. Battery Saver
         features.add(new FeatureItem(
                 15,
@@ -319,11 +304,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         NayaConfig cfg = NayaConfig.getInstance();
         if (cfg == null) return;
 
-        if (item.number == 14) {
-            showStorageDoctorScanDialog();
-            return;
-        }
-
         if (item.number == 3 && cfg.isSmartAutoReply()) {
             showAutoReplyConfigDialog();
             return;
@@ -358,48 +338,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                     item.getCatchyTitle(currentLang) + ": " + status
             ).show();
         }
-    }
-
-    private void showStorageDoctorScanDialog() {
-        if (context == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("⚡ Smart Storage Doctor");
-        builder.setMessage("Scanning cache & temporary files...");
-
-        AlertDialog progressDialog = builder.create();
-        progressDialog.show();
-
-        SmartStorageDoctor.getInstance().scanStorage(context, report -> {
-            try {
-                progressDialog.dismiss();
-            } catch (Throwable ignored) {
-            }
-
-            if (report == null || report.totalReclaimableBytes <= 0) {
-                AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
-                cleanBldr.setTitle("✨ Storage Clean");
-                cleanBldr.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
-                cleanBldr.setPositiveButton("OK", null);
-                cleanBldr.show();
-                return;
-            }
-
-            AlertDialog.Builder cleanBldr = new AlertDialog.Builder(context);
-            cleanBldr.setTitle("🧹 Storage Analysis");
-            cleanBldr.setMessage("Found reclaimable cache:\n- Total Cache: " + report.getFormattedTotal() + "\n- Cached Files: " + report.fileCount + "\nClean cache now to boost NayaGram speed?");
-            cleanBldr.setPositiveButton("Clean Now", (d, w) -> {
-                SmartStorageDoctor.getInstance().cleanCache(context, (freed, success) -> {
-                    if (fragment != null) {
-                        BulletinFactory.of(fragment).createSimpleBulletin(
-                                R.raw.done,
-                                "Cleaned " + SmartStorageDoctor.formatSize(freed) + " cache!"
-                        ).show();
-                    }
-                });
-            });
-            cleanBldr.setNegativeButton("Cancel", null);
-            cleanBldr.show();
-        });
     }
 
     private void showAutoReplyConfigDialog() {
@@ -455,7 +393,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
         sb.append("• User ID & DC Display → See your DC\n");
-        sb.append("• Storage Doctor → One-tap clean\n");
         sb.append("• Battery Saver → Low battery mode\n");
         sb.append("• Instant Translator → In-chat translate\n\n");
         sb.append("Total: 15 active exclusive features\n");

@@ -36,7 +36,6 @@ public class NayaConfig {
     private static final String KEY_SHOW_ID_DC = "feature_11_show_id_and_dc";
     private static final String KEY_MODULAR_CONFIG = "feature_12_modular_config";
     private static final String KEY_FOCUS_MODE = "feature_13_focus_mode";
-    private static final String KEY_STORAGE_DOCTOR = "feature_14_storage_doctor";
     private static final String KEY_BATTERY_SAVER = "feature_15_battery_saver";
     private static final String KEY_BIOMETRIC_LOCKER = "feature_16_biometric_locker";
     private static final String KEY_INSTANT_TRANSLATOR = "feature_17_instant_translator";
@@ -162,9 +161,6 @@ public class NayaConfig {
     public boolean isFocusModeEnabled() { return preferences.getBoolean(KEY_FOCUS_MODE, false); }
     public void setFocusModeEnabled(boolean e) { preferences.edit().putBoolean(KEY_FOCUS_MODE, e).apply(); }
 
-    // 14. Smart Storage Doctor
-    public boolean isStorageDoctorEnabled() { return preferences.getBoolean(KEY_STORAGE_DOCTOR, true); }
-    public void setStorageDoctorEnabled(boolean e) { preferences.edit().putBoolean(KEY_STORAGE_DOCTOR, e).apply(); }
 
     // 15. Ultra Battery & Low-Data Saver
     public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, true); }
@@ -238,8 +234,6 @@ public class NayaConfig {
         preferences.edit()
             .putBoolean(KEY_MESSAGE_SCHEDULER, true)
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
-            .putBoolean(KEY_STORY_SAVER, true)
-            .putBoolean(KEY_ANONYMOUS_STORIES, false)
             .putBoolean(KEY_FORWARD_NO_QUOTE, false)
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
@@ -252,7 +246,6 @@ public class NayaConfig {
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_MODULAR_CONFIG, true)
             .putBoolean(KEY_FOCUS_MODE, false)
-            .putBoolean(KEY_STORAGE_DOCTOR, true)
             .putBoolean(KEY_BATTERY_SAVER, true)
             .putBoolean(KEY_BIOMETRIC_LOCKER, false)
             .putBoolean(KEY_INSTANT_TRANSLATOR, true)
