@@ -286,8 +286,6 @@ public class NayaConfig {
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
             .putBoolean(KEY_STORY_SAVER, true)
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
-            .putBoolean(KEY_FORWARD_NO_QUOTE, false)
-            .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
             .remove(LEGACY_KEY_CONFIRM_ACTIONS)
             .remove("enable_call_protection")

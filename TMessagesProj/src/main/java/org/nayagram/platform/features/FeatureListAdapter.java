@@ -196,7 +196,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 20,
                 0xFF7C3AED,
                 0xFF6D28D9,
-                R.drawable.msg_storage,
+                R.drawable.settings_data,
                 new String[]{"Smart Storage Guard", "স্মার্ট স্টোরেজ গার্ড", "حارس التخزين الذكي"},
                 new String[]{
                         "Automatically monitors media buffer to prevent memory overflow and call crashes.",
