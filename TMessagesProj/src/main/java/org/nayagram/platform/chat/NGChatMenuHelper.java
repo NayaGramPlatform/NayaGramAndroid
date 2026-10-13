@@ -37,11 +37,8 @@ public final class NGChatMenuHelper {
 
     public static void addItems(ActionBarMenuItem headerItem, long dialogId) {
         if (headerItem == null) return;
-        boolean isForwardClean = NayaConfig.getInstance().isForwardWithoutQuote();
-        headerItem.lazilyAddSubItem(ITEM_FORWARD_WITHOUT_QUOTE, R.drawable.msg_forward, "Forward Without Quote: " + (isForwardClean ? "ON" : "OFF"));
         headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId);
         headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings");
-        headerItem.lazilyAddSubItem(ITEM_VOICE_TO_TEXT, R.drawable.settings_power, "Voice to text");
         headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate");
     }
 

@@ -63,62 +63,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     private void initializeFeatures() {
         features.clear();
 
-        // 2. Message Scheduler
-        features.add(new FeatureItem(
-                2,
-                0xFF3B82F6,
-                0xFF1D4ED8,
-                R.drawable.msg_calendar,
-                new String[]{"Message Scheduler", "মেসেজ শিডিউলার", "جدولة الرسائل"},
-                new String[]{
-                        "Send messages at a specific date & time automatically.",
-                        "নির্দিষ্ট তারিখ ও সময়ে স্বয়ংক্রিয়ভাবে মেসেজ পাঠান।",
-                        "أرسل الرسائل في تاريخ ووقت محددين تلقائيًا."
-                }
-        ));
-
-        // 3. Auto-Reply
-        features.add(new FeatureItem(
-                3,
-                0xFF10B981,
-                0xFF047857,
-                R.drawable.msg_bot,
-                new String[]{"Auto-Reply", "অটো-রিপ্লাই", "الرد التلقائي"},
-                new String[]{
-                        "Keyword-based auto-reply with spam filtering & self-reply guard.",
-                        "কীওয়ার্ড ভিত্তিক অটো-রিপ্লাই, স্প্যাম ফিল্টার সহ।",
-                        "رد تلقائي قائم على الكلمات المفتاحية مع فلترة الرسائل المزعجة."
-                }
-        ));
-
-        // 7. Clean Forward
-        features.add(new FeatureItem(
-                7,
-                0xFFEC4899,
-                0xFFBE185D,
-                R.drawable.msg_forward,
-                new String[]{"Clean Forward", "ক্লিন ফরওয়ার্ড", "إعادة توجيه نظيفة"},
-                new String[]{
-                        "Forward media or messages without the original sender name tag.",
-                        "মূল প্রেরকের নাম ছাড়াই মিডিয়া বা মেসেজ ফরওয়ার্ড করুন।",
-                        "أعد توجيه الوسائط أو الرسائل بدون اسم المرسل الأصلي."
-                }
-        ));
-
-        // 8. Voice Transcription
-        features.add(new FeatureItem(
-                8,
-                0xFFF59E0B,
-                0xFFD97706,
-                R.drawable.msg_voice_headphones,
-                new String[]{"Voice Transcription", "ভয়েস ট্রান্সক্রিপশন", "تحويل الصوت إلى نص"},
-                new String[]{
-                        "Transcribe voice notes to text instantly in multiple languages.",
-                        "ভয়েস নোট তাৎক্ষণিকভাবে টেক্সটে রূপান্তর করুন।",
-                        "حوّل الملاحظات الصوتية إلى نص فورًا بعدة لغات."
-                }
-        ));
-
         // 9. Smart Chat Folders
         features.add(new FeatureItem(
                 9,
@@ -174,20 +118,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                         "Silence non-urgent notifications. VIP contacts bypass (family & important).",
                         "অপ্রয়োজনীয় নোটিফিকেশন বন্ধ করুন। VIP কন্টাক্ট বাইপাস করতে পারে।",
                         "كتم الإشعارات غير العاجلة. جهات الاتصال المهمة تتجاوز الوضع."
-                }
-        ));
-
-        // 14. Storage Doctor
-        features.add(new FeatureItem(
-                14,
-                0xFF7C3AED,
-                0xFF5B21B6,
-                R.drawable.msg_delete,
-                new String[]{"Storage Doctor", "স্টোরেজ ডক্টর", "طبيب التخزين"},
-                new String[]{
-                        "Scan & clean Telegram cache and duplicate media with one tap.",
-                        "এক ট্যাপে টেলিগ্রাম ক্যাশ ও ডুপ্লিকেট মিডিয়া পরিষ্কার করুন।",
-                        "امسح ونظف ذاكرة التخزين المؤقت والوسائط المكررة بنقرة واحدة."
                 }
         ));
 
@@ -455,7 +385,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
         sb.append("• User ID & DC Display → See your DC\n");
-        sb.append("• Storage Doctor → One-tap clean\n");
         sb.append("• Battery Saver → Low battery mode\n");
         sb.append("• Instant Translator → In-chat translate\n\n");
         sb.append("Total: 15 active exclusive features\n");

@@ -108,21 +108,17 @@ public class NGSettingsActivity extends BaseFragment {
 
     private void updateRows() {
         rowCount = 0;
-        headerStealth = rowCount++;
-        rowAnonymousStories = -1; // removed for policy compliance
+        headerStealth = -1;
+        rowAnonymousStories = -1;
         rowGhostMode = -1;
         rowApkBlock = -1;
-        if (NayaConfig.SHOW_EXPERIMENTAL) {
-            rowGhostMode = rowCount++;
-            rowApkBlock = rowCount++;
-        }
 
         headerMessaging = rowCount++;
-        rowMessageScheduler = rowCount++;
-        rowSmartAutoReply = rowCount++;
-        rowStorySaver = -1; // removed for policy compliance
-        rowForwardNoQuote = rowCount++;
-        rowVoiceTranscription = rowCount++;
+        rowMessageScheduler = -1;
+        rowSmartAutoReply = -1;
+        rowStorySaver = -1;
+        rowForwardNoQuote = -1;
+        rowVoiceTranscription = -1;
         rowSmartChatFolders = rowCount++;
 
         headerSecurity = rowCount++;
@@ -131,7 +127,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerOptimization = rowCount++;
         rowFocusMode = rowCount++;
-        rowStorageDoctor = rowCount++;
+        rowStorageDoctor = -1;
         rowBatterySaver = rowCount++;
         rowInstantTranslator = rowCount++;
 

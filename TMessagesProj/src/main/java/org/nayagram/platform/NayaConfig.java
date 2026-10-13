@@ -14,7 +14,9 @@ import org.telegram.messenger.ApplicationLoader;
  * - Call & Voice Protection (feature_10 / confirm-actions) is permanently removed.
  *   It caused VoIP signaling timeouts and "NayaGram keeps stopping".
  * - Instant Translator (feature_17) stays enabled by default.
- * - Client premium gates are unlocked in UserConfig; free pin limit is 10.
+ * - Telegram Premium follows the real account. Free pin limit stays 10.
+ * - Analytics, Smart Storage Doctor, scheduler, auto-reply, story saver,
+ *   anonymous stories, forward-without-quote and voice transcription are removed from the UI.
  */
 public class NayaConfig {
     private static final String PREF_NAME = "nayagram_config_prefs";
@@ -113,12 +115,12 @@ public class NayaConfig {
     // 1. Ghost Mode
 
     // 2. Message Scheduler
-    public boolean isMessageScheduler() { return preferences.getBoolean(KEY_MESSAGE_SCHEDULER, true); }
-    public void setMessageScheduler(boolean e) { preferences.edit().putBoolean(KEY_MESSAGE_SCHEDULER, e).apply(); }
+    public boolean isMessageScheduler() { return false; }
+    public void setMessageScheduler(boolean e) { }
 
     // 3. Smart Auto-Reply
-    public boolean isSmartAutoReply() { return preferences.getBoolean(KEY_SMART_AUTO_REPLY, false); }
-    public void setSmartAutoReply(boolean e) { preferences.edit().putBoolean(KEY_SMART_AUTO_REPLY, e).apply(); }
+    public boolean isSmartAutoReply() { return false; }
+    public void setSmartAutoReply(boolean e) { }
     public String getAutoReplyText() { return preferences.getString(KEY_AUTO_REPLY_TEXT, "Hello! I am currently busy. I will get back to you soon. (Sent via NayaGram Auto-Reply)"); }
     public void setAutoReplyText(String t) { preferences.edit().putString(KEY_AUTO_REPLY_TEXT, t).apply(); }
 
@@ -135,12 +137,12 @@ public class NayaConfig {
     // 6. Anti-Delete Recovery
 
     // 7. Forward Without Quote
-    public boolean isForwardWithoutQuote() { return preferences.getBoolean(KEY_FORWARD_NO_QUOTE, false); }
-    public void setForwardWithoutQuote(boolean e) { preferences.edit().putBoolean(KEY_FORWARD_NO_QUOTE, e).apply(); }
+    public boolean isForwardWithoutQuote() { return false; }
+    public void setForwardWithoutQuote(boolean e) { }
 
     // 8. Voice Transcription
-    public boolean isVoiceTranscriptionEnabled() { return preferences.getBoolean(KEY_VOICE_TRANSCRIPTION, true); }
-    public void setVoiceTranscriptionEnabled(boolean e) { preferences.edit().putBoolean(KEY_VOICE_TRANSCRIPTION, e).apply(); }
+    public boolean isVoiceTranscriptionEnabled() { return false; }
+    public void setVoiceTranscriptionEnabled(boolean e) { }
 
     // 9. Smart Chat Folders (Disabled by default for Play Store compliance)
     public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, false); }
@@ -163,8 +165,8 @@ public class NayaConfig {
     public void setFocusModeEnabled(boolean e) { preferences.edit().putBoolean(KEY_FOCUS_MODE, e).apply(); }
 
     // 14. Smart Storage Doctor
-    public boolean isStorageDoctorEnabled() { return preferences.getBoolean(KEY_STORAGE_DOCTOR, true); }
-    public void setStorageDoctorEnabled(boolean e) { preferences.edit().putBoolean(KEY_STORAGE_DOCTOR, e).apply(); }
+    public boolean isStorageDoctorEnabled() { return false; }
+    public void setStorageDoctorEnabled(boolean e) { }
 
     // 15. Ultra Battery & Low-Data Saver
     public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, true); }

@@ -573,11 +573,7 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-        // NayaGram: client premium gates are free. Telegram servers can still reject premium-only requests.
-        if (currentUser != null) {
-            return true;
-        }
-        return false;
+        return currentUser != null && currentUser.premium;
     }
 
     public Long getEmojiStatus() {
