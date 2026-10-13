@@ -8,16 +8,15 @@ import org.telegram.messenger.ApplicationLoader;
 
 /**
  * NayaConfig - Global configuration & preferences for NayaGram client features.
- * Houses state for all 17 exclusive NayaGram Messenger features.
+ * Houses state for all exclusive NayaGram Messenger features.
  */
 public class NayaConfig {
-    public static final boolean CALL_VOICE_PROTECTION_DEFAULT = false;
     private static final String PREF_NAME = "nayagram_config_prefs";
 
     /** Experimental rows (Ghost Mode, APK Block) stay in code but are hidden. */
     public static final boolean SHOW_EXPERIMENTAL = false;
 
-    // The 17 Exclusive Features Keys
+    // The Exclusive Features Keys
     private static final String KEY_MESSAGE_SCHEDULER = "feature_02_msg_scheduler";
     private static final String KEY_SMART_AUTO_REPLY = "feature_03_auto_reply";
     private static final String KEY_AUTO_REPLY_TEXT = "feature_03_auto_reply_text";
@@ -26,7 +25,8 @@ public class NayaConfig {
     private static final String KEY_FORWARD_NO_QUOTE = "feature_07_forward_without_quote";
     private static final String KEY_VOICE_TRANSCRIPTION = "feature_08_voice_transcribe";
     private static final String KEY_SMART_CHAT_FOLDERS = "feature_09_smart_chat_folders";
-    private static final String KEY_CONFIRM_ACTIONS = "feature_10_confirm_actions";
+    // Feature 10 (Call & Voice Protection) removed to prevent VoIP signaling timeout/crashes
+    private static final String LEGACY_KEY_CONFIRM_ACTIONS = "feature_10_confirm_actions";
     private static final String KEY_SHOW_ID_DC = "feature_11_show_id_and_dc";
     private static final String KEY_MODULAR_CONFIG = "feature_12_modular_config";
     private static final String KEY_FOCUS_MODE = "feature_13_focus_mode";
@@ -40,6 +40,13 @@ public class NayaConfig {
 
     private NayaConfig(Context context) {
         this.preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        migrateLegacyPreferences();
+    }
+
+    private void migrateLegacyPreferences() {
+        if (preferences != null && preferences.contains(LEGACY_KEY_CONFIRM_ACTIONS)) {
+            preferences.edit().remove(LEGACY_KEY_CONFIRM_ACTIONS).apply();
+        }
     }
 
     public static synchronized NayaConfig getInstance() {
@@ -101,9 +108,7 @@ public class NayaConfig {
     public boolean isSmartFoldersEnabled() { return preferences.getBoolean(KEY_SMART_CHAT_FOLDERS, false); }
     public void setSmartFoldersEnabled(boolean e) { preferences.edit().putBoolean(KEY_SMART_CHAT_FOLDERS, e).apply(); }
 
-    // 10. Call & Voice Protection (Removed / Always false)
-    public boolean isConfirmActions() { return false; }
-    public void setConfirmActions(boolean e) { preferences.edit().putBoolean(KEY_CONFIRM_ACTIONS, false).apply(); }
+    // 10. Call & Voice Protection (Removed to avoid call crashes & timeouts)
 
     // 11. User ID & DC Display
     public boolean isShowIdAndDc() { return preferences.getBoolean(KEY_SHOW_ID_DC, true); }
@@ -145,7 +150,7 @@ public class NayaConfig {
             .putBoolean(KEY_FORWARD_NO_QUOTE, false)
             .putBoolean(KEY_VOICE_TRANSCRIPTION, true)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
-            .putBoolean(KEY_CONFIRM_ACTIONS, false)
+            .remove(LEGACY_KEY_CONFIRM_ACTIONS)
             .putBoolean(KEY_SHOW_ID_DC, true)
             .putBoolean(KEY_MODULAR_CONFIG, true)
             .putBoolean(KEY_FOCUS_MODE, false)

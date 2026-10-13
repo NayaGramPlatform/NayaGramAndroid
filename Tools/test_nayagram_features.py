@@ -32,7 +32,6 @@ def test_stealth_defaults_off():
         'anonymous_stories': False,
         'story_saver_enabled': False,
         'forward_without_quote': False,
-        'confirm_actions_send_calls': True,
         'show_id_and_dc': True
     }
     
@@ -49,7 +48,7 @@ def test_public_hub_cleared_of_risky_features():
     public_hub_features = [
         "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
         "Anonymous Stories", "Forward Without Quote",
-        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
+        "Show ID & Datacenter", "Reset All Features"
     ]
     # Ensure Anti-Delete and Story Saver are NOT in public hub list
     assert "Anti-Delete Messages" not in public_hub_features, "Risky Anti-Delete found in public hub!"
@@ -79,8 +78,9 @@ def test_search_and_hub_naming():
     features = [
         "Hide Typing Status", "Hide Online Status", "Hide Read Receipts",
         "Anonymous Stories", "Forward Without Quote",
-        "Confirm Actions", "Show ID & Datacenter", "Reset All Features"
+        "Show ID & Datacenter", "Reset All Features"
     ]
+    q = "feature"
     matches = [f for f in features if q in f.lower()]
     print("PASS")
 
