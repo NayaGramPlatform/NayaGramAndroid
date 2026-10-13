@@ -991,7 +991,8 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	public static boolean hasRtmpStream() {
-		return getSharedInstance() != null && getSharedInstance().groupCall != null && getSharedInstance().groupCall.call.rtmp_stream;
+		VoIPService svc = getSharedInstance();
+		return svc != null && svc.groupCall != null && svc.groupCall.call != null && svc.groupCall.call.rtmp_stream;
 	}
 
     public static VoIPServiceState getSharedState() {
@@ -1056,7 +1057,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 					if (chatFull != null) {
 						chatFull.flags &= ~2097152;
 						chatFull.call = null;
-						NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.groupCallUpdated, chat.id, groupCall.call.id, false);
+						if (groupCall.call != null) NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.groupCallUpdated, chat.id, groupCall.call.id, false);
 					}
 				}
 				final TL_phone.discardGroupCall req = new TL_phone.discardGroupCall();
@@ -1609,7 +1610,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	public void onGroupCallParticipantsUpdate(TL_update.TL_updateGroupCallParticipants update) {
-		if (groupCall == null || groupCall.call.id != update.call.id) {
+		if (groupCall == null || groupCall.call == null || update.call == null || groupCall.call.id != update.call.id) {
 			return;
 		}
 		groupCall.shadyLeftParticipants.clear();
@@ -1664,7 +1665,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 
 	private TLRPC.GroupCall lastGroupCallUpdate;
 	public void onGroupCallUpdated(TLRPC.GroupCall call) {
-		if (groupCall == null || groupCall.call.id != call.id) {
+		if (groupCall == null || groupCall.call == null || call == null || groupCall.call.id != call.id) {
 			lastGroupCallUpdate = call;
 			return;
 		}
@@ -3023,7 +3024,7 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 			created = true;
 			final String logId;
 			if (groupCall != null) {
-				logId = "" + groupCall.call.id;
+				logId = groupCall.call != null ? "" + groupCall.call.id : "0";
 			} else if (joinConference instanceof TLRPC.TL_inputGroupCallSlug) {
 				logId = joinConference.slug;
 			} else if (joinConference instanceof TLRPC.TL_inputGroupCall) {

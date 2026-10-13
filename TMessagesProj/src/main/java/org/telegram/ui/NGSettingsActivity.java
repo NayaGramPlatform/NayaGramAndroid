@@ -148,11 +148,11 @@ public class NGSettingsActivity extends BaseFragment {
         actionBar.setTitle("NayaGram Settings");
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
-        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase");
-        overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit");
-        overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support");
-        overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram");
-        overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults");
+        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase").setIconColor(0xFF7C3AED);
+        overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
+        overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);
+        overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram").setIconColor(0xFFEA580C);
+        overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults").setIconColor(0xFFDB2777);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
