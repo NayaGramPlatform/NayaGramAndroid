@@ -2,17 +2,27 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 apply plugin: 'com.android.library'
 apply plugin: 'org.telegram.build-plugin'
-apply plugin: 'org.telegram.lottie-meta'
 apply plugin: 'idea'
 
 idea {
     module {
         excludeDirs += [
-            file('jni/td'), file('jni/third_party/absl'), file('jni/third_party/boringssl'),
-            file('jni/third_party/dav1d'), file('jni/third_party/ffmpeg'), file('jni/third_party/libvpx'),
-            file('jni/third_party/libyuv'), file('jni/third_party/openh264'), file('jni/third_party/wamr'),
-            file('jni/third_party/xiph/ogg'), file('jni/third_party/xiph/opus'),
-            file('jni/third_party/xiph/opusfile'), file('jni/tlottie')
+            file('jni/td'),
+            file('jni/third_party/absl'),
+            file('jni/third_party/boringssl'),
+            file('jni/third_party/dav1d'),
+            file('jni/third_party/ffmpeg'),
+            file('jni/third_party/libvpx'),
+            file('jni/third_party/libyuv'),
+            file('jni/third_party/openh264'),
+            file('jni/third_party/xiph'),
+            file('jni/third_party/wamr'),
+            file('jni/third_party/libprisma'),
+            file('jni/third_party/boost-regex'),
+            file('jni/tgcalls'),
+            file('jni/tlottie'),
+            file('jni/voip/webrtc'),
+            file('jni/sqlite')
         ]
     }
 }
@@ -40,6 +50,8 @@ dependencies {
     implementation 'com.google.android.gms:play-services-cast-framework:21.4.0'
     implementation "androidx.mediarouter:mediarouter:1.7.0"
     implementation 'com.google.zxing:core:3.5.4'
+    implementation 'com.neovisionaries:nv-websocket-client:2.14'
+
     implementation 'androidx.car.app:app:1.4.0'
     implementation 'androidx.car.app:app-projected:1.4.0'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
@@ -103,28 +115,111 @@ android {
     buildToolsVersion '36.0.0'
     ndkVersion "27.2.12479018"
     sourceSets.main.jniLibs.srcDirs = ['./jni/']
-    externalNativeBuild { cmake { path 'jni/CMakeLists.txt' } }
-    lintOptions { disable 'MissingTranslation'; disable 'ExtraTranslation'; disable 'BlockedPrivateApi' }
-    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8; coreLibraryDesugaringEnabled true }
+    externalNativeBuild {
+        cmake {
+            path 'jni/CMakeLists.txt'
+        }
+    }
+
+    lintOptions {
+        disable 'MissingTranslation'
+        disable 'ExtraTranslation'
+        disable 'BlockedPrivateApi'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+
+        coreLibraryDesugaringEnabled true
+    }
+
     defaultConfig {
-        buildConfigField "boolean", "BUNDLE", "false"
-        buildConfigField "boolean", "DEBUG_VERSION", "false"
-        buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
-        buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
-        buildConfigField "int", "VERSION_NUM", APP_VERSION_CODE
-        minSdkVersion 21; targetSdkVersion 36
+        minSdkVersion 23
+        targetSdkVersion 36
+
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         multiDexEnabled true
         externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
     }
     buildTypes {
-        buildTypes.all { it.buildConfigField "boolean", "BUNDLE", "false" }
-        debug { jniDebuggable true; minifyEnabled false; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro' }
-        HA_private { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "1" }
-        HA_public { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "4" }
-        HA_hardcore { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "true"; buildConfigField "int", "VERSION_NUM", "5" }
-        standalone { matchingFallbacks = ['release']; minifyEnabled true; buildConfigField "boolean", "DEBUG_VERSION", "false"; buildConfigField "int", "VERSION_NUM", "6" }
-        release { minifyEnabled true; shrinkResources false; multiDexEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), '../TMessagesProj/proguard-rules.pro'; ndk.debugSymbolLevel = 'FULL'; buildConfigField "boolean", "BUNDLE", "false" }
+        debug {
+            jniDebuggable true
+            shrinkResources false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"" + getProps("BETA_PRIVATE_URL") + "\""
+            buildConfigField "boolean", "DEBUG_VERSION", "true"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "0"
+        }
+
+        HA_private {
+            matchingFallbacks = ['release']
+            jniDebuggable false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"" + getProps("BETA_PRIVATE_URL") + "\""
+            buildConfigField "boolean", "DEBUG_VERSION", "true"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "1"
+        }
+
+        HA_public {
+            matchingFallbacks = ['release']
+            jniDebuggable false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"" + getProps("BETA_PUBLIC_URL") + "\""
+            buildConfigField "boolean", "DEBUG_VERSION", "true"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "4"
+        }
+
+        HA_hardcore {
+            matchingFallbacks = ['release']
+            jniDebuggable false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"" + getProps("BETA_HARDCORE_URL") + "\""
+            buildConfigField "boolean", "DEBUG_VERSION", "true"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "5"
+        }
+
+        standalone {
+            matchingFallbacks = ['release']
+            jniDebuggable false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"\""
+            buildConfigField "boolean", "DEBUG_VERSION", "false"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "6"
+        }
+
+        release {
+            jniDebuggable false
+            shrinkResources false
+            multiDexEnabled true
+            ndk.debugSymbolLevel = 'FULL'
+            buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
+            buildConfigField "String", "BETA_URL", "\"\""
+            buildConfigField "boolean", "DEBUG_VERSION", "false"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUNDLE", "false"
+            buildConfigField "int", "VERSION_NUM", "7"
+        }
     }
     buildFeatures {
         androidResources = true

@@ -17,7 +17,7 @@ public class TLClassStore {
         TLObject create();
     }
 
-    private SparseArray<TLObjectFactory> classStore;
+    private final SparseArray<TLObjectFactory> classStore;
 
     public TLClassStore() {
         classStore = new SparseArray<>();

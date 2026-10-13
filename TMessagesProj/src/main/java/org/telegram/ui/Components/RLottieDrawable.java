@@ -93,10 +93,10 @@ public class RLottieDrawable extends BitmapDrawable implements Animatable, Bitma
     protected volatile boolean nextFrameIsLast;
 
     private Runnable cacheGenerateTask;
-    public Runnable loadFrameTask;
-    public volatile Bitmap renderingBitmap;
-    public volatile Bitmap nextRenderingBitmap;
-    public volatile Bitmap backgroundBitmap;
+    protected Runnable loadFrameTask;
+    private volatile Bitmap renderingBitmap;
+    private volatile Bitmap nextRenderingBitmap;
+    private volatile Bitmap backgroundBitmap;
 
     protected boolean waitingForNextTask;
 
@@ -629,26 +629,6 @@ public class RLottieDrawable extends BitmapDrawable implements Animatable, Bitma
 
     public final void setOnAnimationEndListener(Runnable onAnimationEndListener) {
         this.onAnimationEndListener = onAnimationEndListener;
-    }
-
-    public RLottieDrawable(@RawRes int rawRes, String name, int w, int h) {
-        this(rawRes, w, h, true, null);
-    }
-
-    public RLottieDrawable(@RawRes int rawRes, String name, int w, int h, boolean startDecode, int[] colorReplacement) {
-        this(rawRes, w, h, startDecode, colorReplacement);
-    }
-
-    public RLottieDrawable(File file, int w, int h) {
-        this(file, null, w, h, null, false, null, 0, false);
-    }
-
-    public RLottieDrawable(File file, int w, int h, boolean precache, boolean limitFps) {
-        this(file, null, w, h, null, limitFps, null, 0, false);
-    }
-
-    public RLottieDrawable(File file, int w, int h, boolean precache, boolean limitFps, int[] colorReplacement) {
-        this(file, null, w, h, null, limitFps, colorReplacement, 0, false);
     }
 
     public RLottieDrawable(@RawRes int rawRes, int w, int h) {

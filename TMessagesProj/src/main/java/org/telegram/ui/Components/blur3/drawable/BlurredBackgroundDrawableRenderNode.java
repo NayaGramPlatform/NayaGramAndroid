@@ -94,6 +94,7 @@ public class BlurredBackgroundDrawableRenderNode extends BlurredBackgroundDrawab
         renderNodeInvalidated = true;
     }
 
+    @Override
     public boolean hasDisplayList() {
         return renderNode.hasDisplayList();
     }
