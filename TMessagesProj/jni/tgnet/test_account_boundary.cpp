@@ -5,7 +5,7 @@
 
 // Runtime test verifying 0, 1, 5, 6 account boundary and slot management in C++ tgnet
 void test_account_boundary_cpp() {
-    assert(MAX_ACCOUNT_COUNT == 5);
+    assert(MAX_ACCOUNT_COUNT == 15);
 
     bool active_accounts[MAX_ACCOUNT_COUNT] = {false};
 

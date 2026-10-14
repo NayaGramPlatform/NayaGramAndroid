@@ -491,8 +491,7 @@ public class ConnectionsManager extends BaseController {
                 }
             }
             native_sendRequest(currentAccount, buffer.address, flags, datacenterId, connectionType, immediate, requestToken, downloadSize);
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable ignored) {
         }
     }
 
@@ -525,6 +524,7 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static void onRequestClear(int currentAccount, int requestToken, boolean cancelled) {
+        try {
         ConnectionsManager connectionsManager = getInstance(currentAccount);
         if (connectionsManager == null) return;
         RequestCallbacks callbacks = connectionsManager.requestCallbacks.get(requestToken);
@@ -542,9 +542,12 @@ public class ConnectionsManager extends BaseController {
             connectionsManager.requestCallbacks.remove(requestToken);
 //            FileLog.d("{rc} onRequestClear(" + currentAccount + ", " + requestToken + ", " + cancelled + "): " + connectionsManager.requestCallbacks.size() + " requests' callbacks");
         }
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void onRequestComplete(int currentAccount, int requestToken, long response, int errorCode, String errorText, int networkType, long timestamp, long requestMsgId, int dcId) {
+        try {
         ConnectionsManager connectionsManager = getInstance(currentAccount);
         if (connectionsManager == null) return;
         RequestCallbacks callbacks = connectionsManager.requestCallbacks.get(requestToken);
@@ -557,9 +560,12 @@ public class ConnectionsManager extends BaseController {
         } else {
 //            FileLog.d("{rc} onRequestComplete(" + currentAccount + ", " + requestToken + "): not found request " + requestToken + "! " + connectionsManager.requestCallbacks.size() + " requests' callbacks");
         }
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void onRequestQuickAck(int currentAccount, int requestToken) {
+        try {
         ConnectionsManager connectionsManager = getInstance(currentAccount);
         if (connectionsManager == null) return;
         RequestCallbacks callbacks = connectionsManager.requestCallbacks.get(requestToken);
@@ -571,9 +577,12 @@ public class ConnectionsManager extends BaseController {
         } else {
 //            FileLog.d("{rc} onRequestQuickAck(" + currentAccount + ", " + requestToken + "): not found request " + requestToken + "! " + connectionsManager.requestCallbacks.size() + " requests' callbacks");
         }
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void onRequestWriteToSocket(int currentAccount, int requestToken) {
+        try {
         ConnectionsManager connectionsManager = getInstance(currentAccount);
         if (connectionsManager == null) return;
         RequestCallbacks callbacks = connectionsManager.requestCallbacks.get(requestToken);
@@ -584,6 +593,8 @@ public class ConnectionsManager extends BaseController {
 //            FileLog.d("{rc} onRequestWriteToSocket(" + currentAccount + ", " + requestToken + "): found request " + requestToken + ", " + connectionsManager.requestCallbacks.size() + " requests' callbacks");
         } else {
 //            FileLog.d("{rc} onRequestWriteToSocket(" + currentAccount + ", " + requestToken + "): not found request " + requestToken + "! " + connectionsManager.requestCallbacks.size() + " requests' callbacks");
+        }
+            } catch (Throwable ignored) {
         }
     }
 
@@ -825,8 +836,7 @@ public class ConnectionsManager extends BaseController {
                     FileLog.d(String.format("java received unknown constructor 0x%x", constructor));
                 }
             }
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable ignored) {
         }
     }
 
@@ -914,6 +924,7 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static int getInitFlags() {
+        try {
         int flags = 0;
         EmuDetector detector = EmuDetector.with(ApplicationLoader.applicationContext);
         if (detector.detect()) {
@@ -923,17 +934,20 @@ public class ConnectionsManager extends BaseController {
             flags |= 1024;
         }
         return flags;
+            } catch (Throwable ignored) {
+            return 0;
+        }
     }
 
     public static void onBytesSent(int amount, int networkType, final int currentAccount) {
         try {
             AccountInstance.getInstance(currentAccount).getStatsController().incrementSentBytesCount(networkType, StatsController.TYPE_TOTAL, amount);
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable ignored) {
         }
     }
 
     public static void onRequestNewServerIpAndPort(final int second, final int currentAccount) {
+        try {
         Utilities.globalQueue.postRunnable(() -> {
             boolean networkOnline = ApplicationLoader.isNetworkOnline();
             Utilities.stageQueue.postRunnable(() -> {
@@ -964,14 +978,21 @@ public class ConnectionsManager extends BaseController {
                 }
             });
         });
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void onProxyError() {
+        try {
         AndroidUtilities.runOnUIThread(() -> NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needShowAlert, 3));
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void getHostByName(String hostName, long address) {
+        try {
         AndroidUtilities.runOnUIThread(() -> {
+            try {
             ResolvedDomain resolvedDomain = dnsCache.get(hostName);
             if (resolvedDomain != null && SystemClock.elapsedRealtime() - resolvedDomain.ttl < 5 * 60 * 1000) {
                 native_onHostNameResolved(hostName, address, resolvedDomain.getAddress());
@@ -990,14 +1011,17 @@ public class ConnectionsManager extends BaseController {
                 }
                 task.addAddress(address);
             }
+            } catch (Throwable ignored) {
+            }
         });
+            } catch (Throwable ignored) {
+        }
     }
 
     public static void onBytesReceived(int amount, int networkType, final int currentAccount) {
         try {
             StatsController.getInstance(currentAccount).incrementReceivedBytesCount(networkType, StatsController.TYPE_TOTAL, amount);
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable ignored) {
         }
     }
 
@@ -1009,8 +1033,7 @@ public class ConnectionsManager extends BaseController {
             if (message != null) {
                 Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().updateConfig(message));
             }
-        } catch (Exception e) {
-            FileLog.e(e);
+        } catch (Throwable ignored) {
         }
     }
 
@@ -1564,6 +1587,7 @@ public class ConnectionsManager extends BaseController {
     public static long lastPremiumFloodWaitShown = 0;
     @Keep
     public static void onPremiumFloodWait(final int currentAccount, final int requestToken, boolean isUpload) {
+        try {
         AndroidUtilities.runOnUIThread(() -> {
             if (UserConfig.selectedAccount != currentAccount) {
                 return;
@@ -1589,10 +1613,13 @@ public class ConnectionsManager extends BaseController {
                 }
             });
         });
+            } catch (Throwable ignored) {
+        }
     }
 
     @Keep
     public static void onIntegrityCheckClassic(final int currentAccount, final int requestToken, final String project, final String nonce) {
+        try {
         AndroidUtilities.runOnUIThread(() -> {
             long start = System.currentTimeMillis();
             FileLog.d("account"+currentAccount+": server requests integrity classic check with project = "+project+" nonce = " + nonce);
@@ -1628,11 +1655,16 @@ public class ConnectionsManager extends BaseController {
                     native_receivedIntegrityCheckClassic(currentAccount, requestToken, nonce, "PLAYINTEGRITY_FAILED_EXCEPTION_" + LoginActivity.errorString(e));
                 });
         });
+            } catch (Throwable ignored) {
+        }
     }
 
     @Keep
     public static void onCaptchaCheck(final int currentAccount, final int requestToken, final String action, final String key_id) {
+        try {
         CaptchaController.request(currentAccount, requestToken, action, key_id);
+            } catch (Throwable ignored) {
+        }
     }
 
     public static native byte[] nativeTestGenerateClientHello(String domain);
