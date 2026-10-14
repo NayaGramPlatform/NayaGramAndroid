@@ -144,3 +144,4 @@ public class VoipAudioManager {
         return (AudioManager) ApplicationLoader.applicationContext.getSystemService(AUDIO_SERVICE);
     }
 }
+
