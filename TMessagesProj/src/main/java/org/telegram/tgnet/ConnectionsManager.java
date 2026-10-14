@@ -830,22 +830,39 @@ public class ConnectionsManager extends BaseController {
         }
     }
 
-    @Keep
-    public static void onUpdate(final int currentAccount) {
-        // Android 11: an exception leaving this JNI callback SIGSEGVs (top_shadow_frame_ == null).
-        try {
-            if (Utilities.stageQueue == null || currentAccount < 0) {
-                return;
-            }
-            Utilities.stageQueue.postRunnable(() -> {
+    private static final Runnable[] nativeUpdateRunnables = new Runnable[UserConfig.MAX_ACCOUNT_COUNT];
+    private static final Runnable[] nativeSessionRunnables = new Runnable[UserConfig.MAX_ACCOUNT_COUNT];
+    static {
+        for (int i = 0; i < UserConfig.MAX_ACCOUNT_COUNT; i++) {
+            final int account = i;
+            nativeUpdateRunnables[i] = () -> {
                 try {
-                    MessagesController controller = AccountInstance.getInstance(currentAccount).getMessagesController();
+                    MessagesController controller = AccountInstance.getInstance(account).getMessagesController();
                     if (controller != null) {
                         controller.updateTimerProc();
                     }
                 } catch (Throwable ignored) {
                 }
-            });
+            };
+            nativeSessionRunnables[i] = () -> {
+                try {
+                    MessagesController controller = AccountInstance.getInstance(account).getMessagesController();
+                    if (controller != null) {
+                        controller.getDifference();
+                    }
+                } catch (Throwable ignored) {
+                }
+            };
+        }
+    }
+
+    @Keep
+    public static void onUpdate(final int currentAccount) {
+        try {
+            if (Utilities.stageQueue == null || currentAccount < 0 || currentAccount >= nativeUpdateRunnables.length) {
+                return;
+            }
+            Utilities.stageQueue.postRunnable(nativeUpdateRunnables[currentAccount]);
         } catch (Throwable ignored) {
         }
     }
@@ -853,18 +870,10 @@ public class ConnectionsManager extends BaseController {
     @Keep
     public static void onSessionCreated(final int currentAccount) {
         try {
-            if (Utilities.stageQueue == null || currentAccount < 0) {
+            if (Utilities.stageQueue == null || currentAccount < 0 || currentAccount >= nativeSessionRunnables.length) {
                 return;
             }
-            Utilities.stageQueue.postRunnable(() -> {
-                try {
-                    MessagesController controller = AccountInstance.getInstance(currentAccount).getMessagesController();
-                    if (controller != null) {
-                        controller.getDifference();
-                    }
-                } catch (Throwable ignored) {
-                }
-            });
+            Utilities.stageQueue.postRunnable(nativeSessionRunnables[currentAccount]);
         } catch (Throwable ignored) {
         }
     }
