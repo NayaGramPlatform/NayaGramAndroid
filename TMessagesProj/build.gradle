@@ -233,3 +233,9 @@ def getProps(String propName) {
     if (propsFile.exists()) { def props = new Properties(); props.load(new FileInputStream(propsFile)); return props[propName] } else { return "" }
 }
 apply plugin: 'com.google.gms.google-services'
+
+// CI compatibility: the build workflow runs :TMessagesProj:assembleAfatRelease before the AAB step.
+// This library has no flavors, so expose that task name as an alias of the release library build.
+tasks.register('assembleAfatRelease') {
+    dependsOn 'assembleRelease'
+}
