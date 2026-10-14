@@ -830,29 +830,78 @@ public class ConnectionsManager extends BaseController {
         }
     }
 
+    @Keep
     public static void onUpdate(final int currentAccount) {
-        Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().updateTimerProc());
-    }
-
-    public static void onSessionCreated(final int currentAccount) {
-        Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().getDifference());
-    }
-
-    public static void onConnectionStateChanged(final int state, final int currentAccount) {
-        AndroidUtilities.runOnUIThread(() -> {
-            getInstance(currentAccount).connectionState = state;
-            AccountInstance.getInstance(currentAccount).getNotificationCenter().postNotificationName(NotificationCenter.didUpdateConnectionState);
-        });
-    }
-
-    public static void onLogout(final int currentAccount) {
-        AndroidUtilities.runOnUIThread(() -> {
-            AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
-            if (accountInstance.getUserConfig().getClientUserId() != 0) {
-                accountInstance.getUserConfig().clearConfig();
-                accountInstance.getMessagesController().performLogout(0);
+        // Android 11: an exception leaving this JNI callback SIGSEGVs (top_shadow_frame_ == null).
+        try {
+            if (Utilities.stageQueue == null || currentAccount < 0) {
+                return;
             }
-        });
+            Utilities.stageQueue.postRunnable(() -> {
+                try {
+                    MessagesController controller = AccountInstance.getInstance(currentAccount).getMessagesController();
+                    if (controller != null) {
+                        controller.updateTimerProc();
+                    }
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Keep
+    public static void onSessionCreated(final int currentAccount) {
+        try {
+            if (Utilities.stageQueue == null || currentAccount < 0) {
+                return;
+            }
+            Utilities.stageQueue.postRunnable(() -> {
+                try {
+                    MessagesController controller = AccountInstance.getInstance(currentAccount).getMessagesController();
+                    if (controller != null) {
+                        controller.getDifference();
+                    }
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Keep
+    public static void onConnectionStateChanged(final int state, final int currentAccount) {
+        try {
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    ConnectionsManager manager = getInstance(currentAccount);
+                    if (manager == null) {
+                        return;
+                    }
+                    manager.connectionState = state;
+                    AccountInstance.getInstance(currentAccount).getNotificationCenter().postNotificationName(NotificationCenter.didUpdateConnectionState);
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Keep
+    public static void onLogout(final int currentAccount) {
+        try {
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    AccountInstance accountInstance = AccountInstance.getInstance(currentAccount);
+                    if (accountInstance != null && accountInstance.getUserConfig().getClientUserId() != 0) {
+                        accountInstance.getUserConfig().clearConfig();
+                        accountInstance.getMessagesController().performLogout(0);
+                    }
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+        }
     }
 
     public static int getInitFlags() {
@@ -956,8 +1005,12 @@ public class ConnectionsManager extends BaseController {
         }
     }
 
+    @Keep
     public static void onInternalPushReceived(final int currentAccount) {
-        KeepAliveJob.startJob();
+        try {
+            KeepAliveJob.startJob();
+        } catch (Throwable ignored) {
+        }
     }
 
     
