@@ -13,13 +13,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Guard JNI startup crash
+      - name: Install prebuilt JNI runnables
         run: |
           set -e
-          python3 Tools/patch_startup_crash.py
+          python3 Tools/patch_jni_runnables.py
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git diff --stat
-          git commit -m "fix(startup): guard ConnectionsManager JNI callbacks and disable R8 full mode" || echo nochange
+          git commit -m "fix(startup): do not allocate inside ConnectionsManager.onUpdate" || echo nochange
           git push origin master
