@@ -832,6 +832,10 @@ public class FileLoader extends BaseController {
         } else {
             fileName = null;
         }
+        if (NayoGramFeatures.shouldBlockFile(fileName) || (document != null && NayoGramFeatures.shouldBlockFile(getDocumentFileName(document)))) {
+            FileLog.d("Blocked download of blocked file type: " + fileName);
+            return null;
+        }
         if (fileName == null || fileName.contains("" + Integer.MIN_VALUE)) {
             return null;
         }
