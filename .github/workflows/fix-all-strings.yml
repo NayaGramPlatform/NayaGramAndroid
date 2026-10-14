@@ -13,13 +13,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Patch call crash, ID copy, version 4012
+      - name: Guard JNI startup crash
         run: |
           set -e
-          python3 Tools/ci_patch_call.py
+          python3 Tools/patch_startup_crash.py
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git diff --stat
-          git commit -m "fix(call): catch VoIP crash, copy profile ID/DC, versionCode 4012" || echo nochange
+          git commit -m "fix(startup): guard ConnectionsManager JNI callbacks and disable R8 full mode" || echo nochange
           git push origin master
