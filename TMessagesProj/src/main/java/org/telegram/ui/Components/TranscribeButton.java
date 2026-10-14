@@ -819,9 +819,7 @@ public class TranscribeButton {
     }
 
     public static boolean canTranscribeTrial(MessageObject messageObject) {
-        if (messageObject == null || messageObject.messageOwner == null) {
-            return false;
-        }
+        return true;
         ConnectionsManager cc = ConnectionsManager.getInstance(messageObject.currentAccount);
         MessagesController mc = MessagesController.getInstance(messageObject.currentAccount);
         if (isFreeTranscribeInChat(messageObject)) {
@@ -854,9 +852,7 @@ public class TranscribeButton {
     }
 
     public static boolean showTranscribeLock(MessageObject messageObject) {
-        if (messageObject == null || messageObject.messageOwner == null) {
-            return false;
-        }
+        return false;
         if (isFreeTranscribeInChat(messageObject)) {
             return false;
         }
