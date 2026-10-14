@@ -15,6 +15,10 @@
 
 JavaVM *java;
 
+// Forward declarations: callback implementations below use these helpers.
+static JNIEnv *ngEnvFor(int32_t instanceNum);
+static void ngClear(JNIEnv *env);
+
 jclass jclass_RequestTimeDelegate;
 jmethodID jclass_RequestTimeDelegate_run;
 
