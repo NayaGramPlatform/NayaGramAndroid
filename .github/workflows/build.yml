@@ -91,7 +91,7 @@ jobs:
           print('\n'.join(libs) if libs else 'NONE')
           if not libs:
               raise SystemExit('ERROR: AAB does not contain libtmessages.49.so')
-          abis = {n.split('/')[1] for n in libs if n.startswith('base/lib/')}
+          abis = {n.split('/')[2] for n in libs if n.startswith('base/lib/') and len(n.split('/')) > 3}
           if 'arm64-v8a' not in abis:
               raise SystemExit('ERROR: arm64-v8a libtmessages.49.so missing')
           print('Verified ABIs:', ', '.join(sorted(abis)))
