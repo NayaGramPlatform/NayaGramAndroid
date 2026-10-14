@@ -124,6 +124,7 @@ public class NGSettingsActivity extends BaseFragment {
         headerSecurity = rowCount++;
         rowShowIdDc = rowCount++;
         rowBiometricLocker = rowCount++;
+        rowApkBlock = rowCount++;
 
         headerOptimization = rowCount++;
         rowFocusMode = rowCount++;
@@ -209,8 +210,9 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(false);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
                 } else if (position == rowApkBlock) {
-                    cell.setChecked(false);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK Block is hidden").show();
+                    cfg.setApkBlockEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "Enabled" : "Disabled")).show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
@@ -648,7 +650,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowApkBlock) {
-                    c.setFeature(R.drawable.outline_shield_check, 0xFF64748B, "APK Block", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
+                    c.setFeature(R.drawable.outline_shield_check, 0xFFEF4444, "APK & ZIP Security Shield", "Block downloading or receiving malicious .apk, .zip, .exe files", cfg.isApkBlockEnabled(), true);
                 } else if (position == rowMessageScheduler) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {

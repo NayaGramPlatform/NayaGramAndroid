@@ -16,6 +16,7 @@ import org.telegram.tgnet.TLObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.tgnet.tl.TL_stories;
 import org.telegram.ui.LaunchActivity;
+import org.nayagram.platform.NayaGram;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -832,7 +833,7 @@ public class FileLoader extends BaseController {
         } else {
             fileName = null;
         }
-        if (NayoGramFeatures.shouldBlockFile(fileName) || (document != null && NayoGramFeatures.shouldBlockFile(getDocumentFileName(document)))) {
+        if (NayaGram.shouldBlockFile(fileName) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document)))) {
             FileLog.d("Blocked download of blocked file type: " + fileName);
             return null;
         }

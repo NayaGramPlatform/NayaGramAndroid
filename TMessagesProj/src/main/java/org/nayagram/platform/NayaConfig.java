@@ -44,6 +44,7 @@ public class NayaConfig {
     private static final String KEY_LINK_GUARD = "feature_19_link_guard";
     private static final String KEY_READABLE_TEXT = "feature_20_readable_text";
     private static final String KEY_READABLE_TEXT_PREV = "feature_20_readable_text_prev";
+    private static final String KEY_APK_BLOCK = "feature_apk_block";
 
     private static NayaConfig instance;
     private final SharedPreferences preferences;
@@ -278,6 +279,10 @@ public class NayaConfig {
             org.telegram.messenger.SharedConfig.toggleStreamMedia();
         }
     }
+
+    // APK & ZIP File Security Shield
+    public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
+    public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
 
     // Reset all features to default values
     public void resetToDefaults() {
