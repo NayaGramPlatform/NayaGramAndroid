@@ -815,7 +815,16 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static void onUpdate(final int currentAccount) {
-        Utilities.stageQueue.postRunnable(() -> AccountInstance.getInstance(currentAccount).getMessagesController().updateTimerProc());
+        Utilities.stageQueue.postRunnable(() -> {
+            try {
+                AccountInstance instance = AccountInstance.getInstance(currentAccount);
+                if (instance != null && instance.getMessagesController() != null) {
+                    instance.getMessagesController().updateTimerProc();
+                }
+            } catch (Throwable t) {
+                FileLog.e(t);
+            }
+        });
     }
 
     public static void onSessionCreated(final int currentAccount) {
