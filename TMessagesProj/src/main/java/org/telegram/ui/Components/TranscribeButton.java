@@ -819,16 +819,8 @@ public class TranscribeButton {
     }
 
     public static boolean canTranscribeTrial(MessageObject messageObject) {
+        // Voice transcription is currently available without trial limits.
         return true;
-        ConnectionsManager cc = ConnectionsManager.getInstance(messageObject.currentAccount);
-        MessagesController mc = MessagesController.getInstance(messageObject.currentAccount);
-        if (isFreeTranscribeInChat(messageObject)) {
-            return true;
-        }
-        if (mc.transcribeAudioTrialWeeklyNumber <= 0 || messageObject.getDuration() > mc.transcribeAudioTrialDurationMax) {
-            return false;
-        }
-        return mc.transcribeAudioTrialCooldownUntil == 0 || cc.getCurrentTime() > mc.transcribeAudioTrialCooldownUntil || mc.transcribeAudioTrialCurrentNumber > 0;
     }
 
     public static boolean isFreeTranscribeInChat(MessageObject messageObject) {
@@ -852,18 +844,7 @@ public class TranscribeButton {
     }
 
     public static boolean showTranscribeLock(MessageObject messageObject) {
+        // Do not show a premium/trial lock for voice transcription.
         return false;
-        if (isFreeTranscribeInChat(messageObject)) {
-            return false;
-        }
-        if (!TextUtils.isEmpty(messageObject.messageOwner.voiceTranscription)) {
-            return false;
-        }
-        ConnectionsManager cc = ConnectionsManager.getInstance(messageObject.currentAccount);
-        MessagesController mc = MessagesController.getInstance(messageObject.currentAccount);
-        if (UserConfig.getInstance(messageObject.currentAccount).isPremium()) {
-            return false;
-        }
-        return mc.transcribeAudioTrialCooldownUntil != 0 && cc.getCurrentTime() <= mc.transcribeAudioTrialCooldownUntil && mc.transcribeAudioTrialCurrentNumber <= 0;
     }
 }
