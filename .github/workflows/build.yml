@@ -22,6 +22,15 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
+      - name: Verify recursive native submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+          git submodule status --recursive
+          test -f TMessagesProj/jni/CMakeLists.txt
+          test -f TMessagesProj/jni/tgnet/ConnectionsManager.cpp
+          test -f TMessagesProj/jni/TgNetWrapper.cpp
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
@@ -47,11 +56,16 @@ jobs:
             -keypass 'NayaGramCI@Test2026' \
             -dname "CN=NayaGram CI Test, OU=CI, O=NayaGram Platform, L=Rangpur, ST=Rangpur, C=BD"
 
-      - name: Assemble VoIP Native Libs (Fat Release)
+      - name: Clean Gradle and native build outputs
         run: |
           chmod +x gradlew
+          ./gradlew --stop
+          ./gradlew clean --no-build-cache --stacktrace
+
+      - name: Assemble VoIP Native Libs (Fat Release, no cache)
+        run: |
           ./gradlew :TMessagesProj:assembleAfatRelease \
-            --stacktrace
+            --no-build-cache --rerun-tasks --stacktrace
 
       - name: Build Release AAB
         run: |
@@ -61,7 +75,27 @@ jobs:
             -PRELEASE_KEY_PASSWORD="NayaGramCI@Test2026" \
             -PRELEASE_KEY_ALIAS="nayagrampro_key" \
             -PRELEASE_KEYSTORE_PATH="$(pwd)/TMessagesProj/config/nayagrampro.jks" \
-            --stacktrace
+            --no-build-cache --rerun-tasks --stacktrace
+
+      - name: Verify freshly built native libraries in AAB
+        run: |
+          AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
+          test -n "$AAB_FILE"
+          python3 - "$AAB_FILE" << 'PY'
+          import sys, zipfile
+          path = sys.argv[1]
+          with zipfile.ZipFile(path) as z:
+              names = z.namelist()
+          libs = sorted(n for n in names if n.endswith('/libtmessages.49.so'))
+          print('Native tgnet libraries included in AAB:')
+          print('\n'.join(libs) if libs else 'NONE')
+          if not libs:
+              raise SystemExit('ERROR: AAB does not contain libtmessages.49.so')
+          abis = {n.split('/')[1] for n in libs if n.startswith('base/lib/')}
+          if 'arm64-v8a' not in abis:
+              raise SystemExit('ERROR: arm64-v8a libtmessages.49.so missing')
+          print('Verified ABIs:', ', '.join(sorted(abis)))
+          PY
 
       - name: Generate Signed Universal APK from AAB
         run: |
