@@ -1,0 +1,6 @@
+{
+  "name": "NayaGram Pro",
+  "description": "NayaGram messenger platform for Android featuring ultra-fast secure messaging, custom themes, channels, and privacy settings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

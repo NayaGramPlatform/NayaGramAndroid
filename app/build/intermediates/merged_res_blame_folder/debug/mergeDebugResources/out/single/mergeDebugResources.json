@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "org.nayagram.pro.app-debug-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "org.nayagram.pro.app-main-6:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "org.nayagram.pro.app-debug-4:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "org.nayagram.pro.app-main-6:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "org.nayagram.pro.app-debug-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "org.nayagram.pro.app-main-6:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "org.nayagram.pro.app-debug-4:/drawable_ic_launcher_background.xml.flat",
+        "source": "org.nayagram.pro.app-main-6:/drawable/ic_launcher_background.xml"
+    }
+]
