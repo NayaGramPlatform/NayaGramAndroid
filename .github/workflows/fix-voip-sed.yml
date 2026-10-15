@@ -26,12 +26,12 @@ jobs:
                 fragment.showDialog(new PremiumFeatureBottomSheet(fragment, PremiumPreviewFragment.PREMIUM_FEATURE_APPLICATION_ICONS, true));
                 return;
             }
-"""
+          """
           new_click = """            // NayaGram: all icons free; isIconAvailable always true. Premium flag is badge only.
             if (!LauncherIconController.isIconAvailable(icon)) {
                 return;
             }
-"""
+          """
           if old_click in t:
               t = t.replace(old_click, new_click, 1)
               print("Click paywall removed")
@@ -50,9 +50,9 @@ jobs:
                 }
             }
         }
-"""
+          """
           new_vis = """        // NayaGram: keep all icons visible (including premium-badge icon)
-"""
+          """
           if old_vis in t:
               t = t.replace(old_vis, new_vis, 1)
               print("Visibility filter removed")
