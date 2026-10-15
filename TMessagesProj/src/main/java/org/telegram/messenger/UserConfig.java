@@ -236,7 +236,7 @@ public class UserConfig extends BaseController {
 
     public boolean isClientActivated() {
         synchronized (sync) {
-            return currentUser != null && currentUser.premium;
+            return currentUser != null;
         }
     }
 
