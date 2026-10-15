@@ -573,8 +573,7 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-        // Client gates stay open. The premium star is drawn separately for the account logo.
-        return currentUser != null;
+        return currentUser != null && currentUser.premium;
     }
 
     public Long getEmojiStatus() {

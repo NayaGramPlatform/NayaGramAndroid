@@ -391,8 +391,17 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         switchLanguageTextView.setGravity(Gravity.CENTER);
         switchLanguageTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
         frameContainerView.addView(switchLanguageTextView, LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, 30, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 20));
+        switchLanguageTextView.setText(LocaleController.getString("ContinueOnThisLanguage", R.string.ContinueOnThisLanguage));
+        switchLanguageTextView.setOnLongClickListener(v -> {
+            presentFragment(new LanguageSelectActivity());
+            return true;
+        });
         switchLanguageTextView.setOnClickListener(v -> {
-            if (startPressed || localeInfo == null) {
+            if (startPressed) {
+                return;
+            }
+            if (localeInfo == null) {
+                presentFragment(new LanguageSelectActivity());
                 return;
             }
             startPressed = true;

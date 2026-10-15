@@ -10617,6 +10617,7 @@
     <string name="SettingsPowerSaving">Power Saving</string>
     <string name="SettingsPowerSavingInfo">Reduce power usage on low charge</string>
     <string name="SettingsLanguage">Language</string>
+    <string name="SettingsLanguageInfo">Change language of NayaGram</string>
     <string name="AddAccountInfo1_one">You can add %d additional account.</string>
     <string name="AddAccountInfo1_other">You can add %d additional accounts.</string>
     <string name="AddAccountInfo2_one">Subscribe to **NayaGram Premium** to use up to %d account.</string>
