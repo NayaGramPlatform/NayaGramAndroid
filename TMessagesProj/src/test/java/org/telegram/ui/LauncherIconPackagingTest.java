@@ -36,11 +36,11 @@ public class LauncherIconPackagingTest {
 
     private static final Map<String, Integer> FOREGROUND_SIZES = new HashMap<>();
     static {
-        FOREGROUND_SIZES.put("mipmap-mdpi", 108);
-        FOREGROUND_SIZES.put("mipmap-hdpi", 162);
-        FOREGROUND_SIZES.put("mipmap-xhdpi", 216);
-        FOREGROUND_SIZES.put("mipmap-xxhdpi", 324);
-        FOREGROUND_SIZES.put("mipmap-xxxhdpi", 432);
+        FOREGROUND_SIZES.put("mipmap-mdpi", 48);
+        FOREGROUND_SIZES.put("mipmap-hdpi", 72);
+        FOREGROUND_SIZES.put("mipmap-xhdpi", 96);
+        FOREGROUND_SIZES.put("mipmap-xxhdpi", 144);
+        FOREGROUND_SIZES.put("mipmap-xxxhdpi", 192);
     }
 
     @Test
