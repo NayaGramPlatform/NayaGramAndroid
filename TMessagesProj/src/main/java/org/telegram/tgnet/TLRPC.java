@@ -18,6 +18,7 @@ import android.util.SparseArray;
 import androidx.annotation.Keep;
 import androidx.annotation.Nullable;
 
+import org.nayagram.platform.NayaGramLinkPreview;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.BuildVars;
@@ -19458,7 +19459,9 @@ public class TLRPC {
                     result = new TL_webPage_layer58();
                     break;
             }
-            return TLdeserialize(WebPage.class, result, stream, constructor, exception);
+            result = TLdeserialize(WebPage.class, result, stream, constructor, exception);
+            NayaGramLinkPreview.apply(result);
+            return result;
         }
     }
 

@@ -497,6 +497,7 @@ public class WebInstantView {
             webpage.cached_page = parsePage(url, root);
         }
 
+        org.nayagram.platform.NayaGramLinkPreview.apply(webpage);
         return webpage;
     }
 
