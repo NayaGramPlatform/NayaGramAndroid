@@ -88,8 +88,8 @@ public class LauncherIconController {
     public enum LauncherIcon {
         DEFAULT("NGSky", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa, R.string.AppIconDefault),
         VINTAGE("NGBlue", R.mipmap.icon_2_background_sa, R.mipmap.icon_2_foreground_sa, R.string.AppIconVintage),
-        AQUA("NGPurple", R.drawable.icon_4_background_sa, R.mipmap.icon_4_foreground_sa, R.string.AppIconAqua),
-        PREMIUM("PremiumIcon", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconPremium, false),
+        AQUA("NGPurple", R.drawable.icon_3_background_sa, R.mipmap.icon_3_foreground_sa, R.string.AppIconAqua),
+        PREMIUM("PremiumIcon", R.drawable.icon_4_background_sa, R.mipmap.icon_4_foreground_sa, R.string.AppIconPremium, false),
         TURBO("NGNeon", R.drawable.icon_5_background_sa, R.mipmap.icon_5_foreground_sa, R.string.AppIconTurbo, false),
         NOX("NGCrystal", R.drawable.icon_6_background_sa, R.mipmap.icon_6_foreground_sa, R.string.AppIconNox, true);
 

@@ -15,7 +15,8 @@ class IconRules(unittest.TestCase):
   aliases={x.get(a+'name'):x.get(a+'icon') for x in doc.findall('.//activity-alias')}
   self.assertEqual(aliases['org.nayagram.platform.NGBlue'],'@mipmap/icon_2_launcher')
   self.assertEqual(aliases['org.nayagram.platform.NGCrystal'],'@mipmap/icon_6_launcher')
-  self.assertEqual(aliases['org.nayagram.platform.NGPurple'],'@mipmap/icon_4_launcher')
+  self.assertEqual(aliases['org.nayagram.platform.NGPurple'],'@mipmap/icon_3_launcher')
+  self.assertEqual(aliases['org.nayagram.platform.PremiumIcon'],'@mipmap/icon_4_launcher')
  def test_neon_remains_default(self):
   text=(ROOT/'java/org/telegram/ui/LauncherIconController.java').read_text()
   self.assertRegex(text,r'DEFAULT\("NGSky", R.drawable.icon_background_sa, R.mipmap.icon_foreground_sa')

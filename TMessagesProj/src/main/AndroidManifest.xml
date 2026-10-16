@@ -154,8 +154,8 @@
             android:enabled="false"
             android:name="org.nayagram.platform.NGPurple"
             android:targetActivity="org.telegram.ui.LaunchActivity"
-            android:icon="@mipmap/icon_4_launcher"
-            android:roundIcon="@mipmap/icon_4_launcher_round"
+            android:icon="@mipmap/icon_3_launcher"
+            android:roundIcon="@mipmap/icon_3_launcher_round"
             android:exported="true">
 
             <intent-filter>
@@ -166,14 +166,14 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity-alias>
 
-        <!-- Premium Icon - Telegram এর (লাল/গোলাপী) -->
+        <!-- Premium Icon - NG Cyan (সায়ান) -->
         <activity-alias
             android:label="@string/AppName"
             android:enabled="false"
             android:name="org.nayagram.platform.PremiumIcon"
             android:targetActivity="org.telegram.ui.LaunchActivity"
-            android:icon="@mipmap/icon_3_launcher"
-            android:roundIcon="@mipmap/icon_3_launcher_round"
+            android:icon="@mipmap/icon_4_launcher"
+            android:roundIcon="@mipmap/icon_4_launcher_round"
             android:exported="true">
 
             <intent-filter>

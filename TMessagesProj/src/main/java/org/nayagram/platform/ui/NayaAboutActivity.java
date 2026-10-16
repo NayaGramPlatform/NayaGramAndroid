@@ -112,9 +112,9 @@ public class NayaAboutActivity extends BaseFragment {
         ImageView logo = new ImageView(context);
         logo.setImageResource(R.drawable.nayagram_intro_logo);
         logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        logoInner.addView(logo, LayoutHelper.createFrame(96, 96, Gravity.CENTER));
-        logoOuter.addView(logoInner, LayoutHelper.createFrame(132, 132, Gravity.CENTER));
-        hero.addView(logoOuter, LayoutHelper.createLinear(148, 148, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 16));
+        logoInner.addView(logo, LayoutHelper.createFrame(126, 126, Gravity.CENTER));
+        logoOuter.addView(logoInner, LayoutHelper.createFrame(138, 138, Gravity.CENTER));
+        hero.addView(logoOuter, LayoutHelper.createLinear(154, 154, Gravity.CENTER_HORIZONTAL, 0, 0, 0, 16));
 
         TextView name = new TextView(context);
         name.setText("NayaGram");
@@ -202,13 +202,13 @@ public class NayaAboutActivity extends BaseFragment {
         // ════════ COMMUNITY ════════
         root.addView(section(context, "Community & updates"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
         LinearLayout community = whiteCard(context);
-        community.addView(row(context, R.drawable.msg_channel, C_TG, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)));
+        community.addView(row(context, R.drawable.ic_social_telegram, C_TG, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(row(context, R.drawable.msg_link, 0xFF1DA1F2, "Twitter / X", "@" + X_HANDLE, v -> openUrl("https://x.com/" + X_HANDLE)));
+        community.addView(row(context, R.drawable.ic_social_x, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), "Twitter / X", "@" + X_HANDLE, v -> openUrl("https://x.com/" + X_HANDLE)));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(row(context, R.drawable.msg_link, C_RED, "YouTube", "@" + YT_HANDLE, v -> openUrl("https://youtube.com/@" + YT_HANDLE)));
+        community.addView(row(context, R.drawable.ic_social_youtube, C_RED, "YouTube", "@" + YT_HANDLE, v -> openUrl("https://youtube.com/@" + YT_HANDLE)));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-        community.addView(row(context, R.drawable.msg_link, 0xFF1877F2, "Facebook", "@" + FB_HANDLE, v -> openUrl("https://facebook.com/" + FB_HANDLE)));
+        community.addView(row(context, R.drawable.ic_social_facebook, 0xFF1877F2, "Facebook", "@" + FB_HANDLE, v -> openUrl("https://facebook.com/" + FB_HANDLE)));
         root.addView(community, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
         // ════════ SUPPORT CTA ════════
