@@ -13,13 +13,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install prebuilt JNI runnables
+      - name: Apply call backdrop colors
         run: |
           set -e
-          python3 Tools/patch_jni_runnables.py
+          python3 Tools/patch_call_colors.py
           git config user.name "NayaGram CI"
           git config user.email "ci@nayagram.platform"
           git add -A
           git diff --stat
-          git commit -m "fix(startup): do not allocate inside ConnectionsManager.onUpdate" || echo nochange
+          git commit -m "ui(call): purple blue cyan gradient behind group and private calls" || echo nochange
           git push origin master
