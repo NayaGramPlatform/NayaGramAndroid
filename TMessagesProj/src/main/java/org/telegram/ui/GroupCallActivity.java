@@ -588,6 +588,8 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
     private final View buttonsBackgroundGradientView2;
     private GradientDrawable buttonsBackgroundGradient;
     private final int[] gradientColors = new int[2];
+    private final Paint callBackdropPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private int callBackdropKey;
     private final DefaultItemAnimator fullscreenListItemAnimator;
     private boolean previewTextureTransitionEnabled;
     private boolean listViewVideoVisibility = true;
@@ -1916,7 +1918,7 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
         drawDoubleNavigationBar = true;
         drawNavigationBar = true;
         if (Build.VERSION.SDK_INT >= 30) {
-            getWindow().setNavigationBarColor(0xff000000);
+            getWindow().setNavigationBarColor(0xff145C4A);
         }
         scrollNavBar = true;
         navBarColorKey = -1;
@@ -2879,6 +2881,14 @@ public class GroupCallActivity extends BottomSheet implements NotificationCenter
                 if (renderersContainer.progressToFullscreenMode != 1f) {
                     shadowDrawable.setBounds(0, (int) top, getMeasuredWidth(), height);
                     shadowDrawable.draw(canvas);
+                    int backdropW = getMeasuredWidth();
+                    int backdropKey = backdropW * 31 + getMeasuredHeight();
+                    if (callBackdropPaint.getShader() == null || callBackdropKey != backdropKey) {
+                        callBackdropKey = backdropKey;
+                        callBackdropPaint.setShader(new LinearGradient(0, top, backdropW, height, new int[]{0xFF24145C, 0xFF123A86, 0xFF0B6A86, 0xFF145C4A}, new float[]{0f, 0.42f, 0.74f, 1f}, Shader.TileMode.CLAMP));
+                    }
+                    callBackdropPaint.setAlpha((int) (255 * (1f - renderersContainer.progressToFullscreenMode)));
+                    canvas.drawRect(0, top, backdropW, height, callBackdropPaint);
 
                     if (rad != 1.0f) {
                         Theme.dialogs_onlineCirclePaint.setColor(backgroundColor);

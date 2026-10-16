@@ -835,7 +835,7 @@ public class VoIPFragment implements
         };
         frameLayout.setClipToPadding(false);
         frameLayout.setClipChildren(false);
-        frameLayout.setBackgroundColor(0xff000000);
+        frameLayout.setBackground(new android.graphics.drawable.GradientDrawable(android.graphics.drawable.GradientDrawable.Orientation.TL_BR, new int[]{0xFF1A1464, 0xFF0E4C92, 0xFF0B6E86, 0xFF145C4A}));
         updateSystemBarColors();
         fragmentView = frameLayout;
 
