@@ -199,9 +199,51 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.settings_data,
                 new String[]{"Smart Storage Guard", "স্মার্ট স্টোরেজ গার্ড", "حارس التخزين الذكي"},
                 new String[]{
-                        "Automatically monitors media buffer to prevent memory overflow and call crashes.",
-                        "অটোমেটিক ক্যাশ ও বাফার পরিষ্কার করে অ্যাপ ক্র্যাশ প্রতিরোধ করে।",
-                        "تنظيف تلقائي لذاكرة التخزين المؤقت لمنع تعطل المكالمات."
+                        "Scan and safely clear app cache after reviewing the storage report.",
+                        "স্টোরেজ রিপোর্ট দেখে অ্যাপের ক্যাশ নিরাপদে স্ক্যান ও পরিষ্কার করুন।",
+                        "افحص ذاكرة التخزين المؤقت وامسحها بأمان بعد مراجعة التقرير."
+                }
+        ));
+
+        // 21. External Link Guard (functional: Browser.java checks this preference)
+        features.add(new FeatureItem(
+                21,
+                0xFFDC2626,
+                0xFFB91C1C,
+                R.drawable.media_link_24,
+                new String[]{"External Link Guard", "বাহ্যিক লিংক সুরক্ষা", "حماية الروابط الخارجية"},
+                new String[]{
+                        "Ask before opening unfamiliar external websites.",
+                        "অপরিচিত বাহ্যিক ওয়েবসাইট খোলার আগে নিশ্চিতকরণ নিন।",
+                        "اطلب التأكيد قبل فتح مواقع خارجية غير مألوفة."
+                }
+        ));
+
+        // 22. Readable Text (functional: applies Telegram's native message font size)
+        features.add(new FeatureItem(
+                22,
+                0xFF7C3AED,
+                0xFF6D28D9,
+                R.drawable.settings_language,
+                new String[]{"Readable Text", "সহজপাঠ্য লেখা", "نص أسهل للقراءة"},
+                new String[]{
+                        "Increase message text size for comfortable reading.",
+                        "আরামদায়কভাবে পড়তে মেসেজের লেখা বড় করুন।",
+                        "كبّر نص الرسائل لقراءة أكثر راحة."
+                }
+        ));
+
+        // 23. Reduce Motion (functional: applies Telegram's animation preference)
+        features.add(new FeatureItem(
+                23,
+                0xFF64748B,
+                0xFF475569,
+                R.drawable.settings_power,
+                new String[]{"Reduce Motion", "অ্যানিমেশন কমান", "تقليل الحركة"},
+                new String[]{
+                        "Reduce interface animations while keeping messaging and calls available.",
+                        "মেসেজিং ও কল চালু রেখেই ইন্টারফেসের অ্যানিমেশন কমান।",
+                        "قلل حركات الواجهة مع استمرار الرسائل والمكالمات."
                 }
         ));
     }
@@ -228,6 +270,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 18: return cfg.isDataSaverEnabled();
             case 19: return cfg.isNoiseSuppressionEnabled();
             case 20: return cfg.isAutoCacheGuardEnabled();
+            case 21: return cfg.isLinkGuardEnabled();
+            case 22: return cfg.isReadableTextEnabled();
+            case 23: return cfg.isReduceMotion();
             case 9: return cfg.isSmartFoldersEnabled();
             case 11: return cfg.isShowIdAndDc();
             case 12: return cfg.isModularConfig();
@@ -314,6 +359,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 18: cfg.setDataSaverEnabled(newState); break;
             case 19: cfg.setNoiseSuppressionEnabled(newState); break;
             case 20: cfg.setAutoCacheGuardEnabled(newState); break;
+            case 21: cfg.setLinkGuardEnabled(newState); break;
+            case 22: cfg.setReadableTextEnabled(newState); break;
+            case 23: cfg.setReduceMotion(newState); break;
             case 9: cfg.setSmartFoldersEnabled(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
             case 12: cfg.setModularConfig(newState); break;
@@ -427,10 +475,12 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         sb.append("• Smart Chat Folders → Auto organize\n\n");
         sb.append("SECURITY & OPTIMIZATION\n");
         sb.append("• User ID & DC Display → See your DC\n");
-        sb.append("• Battery Saver → Low battery mode\n");
-        sb.append("• Instant Translator → In-chat translate\n\n");
-        sb.append("Total: 15 active exclusive features\n");
-        sb.append("Policy-compliant • No Anti-Delete • No Ghost Mode");
+        sb.append("• Native Data Saver → Uses Telegram's media-streaming preference\n");
+        sb.append("• External Link Guard → Confirmation before unfamiliar websites\n");
+        sb.append("• Readable Text → Native message font-size control\n");
+        sb.append("• Reduce Motion → Native interface animation control\n\n");
+        sb.append("This showcase includes preferences and tools; availability depends on each feature's implementation.\n");
+        sb.append("Policy-aware • No anti-delete or anonymous-view bypass");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("All Features Pipeline");
