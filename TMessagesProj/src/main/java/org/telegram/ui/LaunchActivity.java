@@ -94,6 +94,7 @@ import com.google.firebase.appindexing.builders.AssistActionBuilder;
 
 import org.nayagram.platform.ads.AdManager;
 import org.nayagram.platform.security.NayaGramGuard;
+import org.nayagram.platform.security.NayaGramGuardActivity;
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.PhoneFormat.PhoneFormat;
@@ -7006,6 +7007,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         onPasscodeResume();
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
+            // Also gate restored chats/deep links when the app returns from the background.
+            if (NayaGramGuard.isEnabled(this) && !NayaGramGuard.isSessionVerified()) {
+                BaseFragment topFragment = getActionBarLayout().getLastFragment();
+                if (!(topFragment instanceof NayaGramGuardActivity)) {
+                    presentFragment(new NayaGramGuardActivity(true));
+                }
+            }
             if (AndroidUtilities.isTablet()) {
                 if (rightActionBarLayout != null) {
                     rightActionBarLayout.onResume();
