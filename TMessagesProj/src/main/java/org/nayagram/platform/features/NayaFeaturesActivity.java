@@ -8,14 +8,17 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Gravity;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.nayagram.platform.NayaConfig;
+import org.nayagram.platform.translator.InstantTranslatorManager;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -32,7 +35,6 @@ import org.telegram.ui.Components.BulletinFactory;
  */
 public class NayaFeaturesActivity extends BaseFragment {
 
-    private static final int MENU_ALL_DETAILS = 1;
     private static final int MENU_PRIVACY_AUDIT = 2;
     private static final int MENU_SUPPORT = 3;
     private static final int MENU_RESTORE = 4;
@@ -53,7 +55,6 @@ public class NayaFeaturesActivity extends BaseFragment {
         // 3-dots overflow menu
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem item = menu.addItem(0, R.drawable.ic_ab_other);
-        item.addSubItem(MENU_ALL_DETAILS, R.drawable.msg_help, "Feature Pipeline · Tutorial");
         item.addSubItem(MENU_HEALTH_CHECK, R.drawable.outline_shield_check, "Feature Health Check");
         item.addSubItem(MENU_EXPORT_SETTINGS, R.drawable.settings_data, "Export Settings Backup");
 
@@ -62,9 +63,6 @@ public class NayaFeaturesActivity extends BaseFragment {
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
-                } else if (id == MENU_ALL_DETAILS) {
-                    // Open the documentation-only guide directly; it is not a feature engine.
-                    FeatureTutorialDialog.show(context);
                 } else if (id == MENU_PRIVACY_AUDIT) {
                     showPrivacyAuditDialog(context);
                 } else if (id == MENU_SUPPORT) {
@@ -98,6 +96,27 @@ public class NayaFeaturesActivity extends BaseFragment {
         searchParams.setMargins(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
         root.addView(searchField, searchParams);
 
+        // The tutorial is a separate documentation panel, never a live feature card.
+        root.addView(buildTutorialBanner(context), new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView sectionTitle = new TextView(context);
+        sectionTitle.setText("Verified Feature Controls");
+        sectionTitle.setTextColor(0xFF075985);
+        sectionTitle.setTextSize(16);
+        sectionTitle.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        sectionTitle.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(5), AndroidUtilities.dp(18), AndroidUtilities.dp(2));
+        root.addView(sectionTitle, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView sectionDescription = new TextView(context);
+        sectionDescription.setText("Only features with a verified behavior path appear below.");
+        sectionDescription.setTextColor(0xFF64748B);
+        sectionDescription.setTextSize(12);
+        sectionDescription.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), AndroidUtilities.dp(5));
+        root.addView(sectionDescription, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         recyclerView = new RecyclerView(context);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.setVerticalScrollBarEnabled(false);
@@ -118,6 +137,81 @@ public class NayaFeaturesActivity extends BaseFragment {
         });
 
         return fragmentView;
+    }
+
+    /**
+     * A bright tutorial banner kept separate from the actual feature controls.
+     * The Details action opens the language picker and never toggles a feature.
+     */
+    private View buildTutorialBanner(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(12),
+                AndroidUtilities.dp(15), AndroidUtilities.dp(12));
+        GradientDrawable background = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFFE0F2FE, 0xFFDCFCE7});
+        background.setCornerRadius(AndroidUtilities.dp(17));
+        background.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        card.setBackground(background);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        cardParams.setMargins(AndroidUtilities.dp(16), AndroidUtilities.dp(3),
+                AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        card.setLayoutParams(cardParams);
+
+        TextView title = new TextView(context);
+        title.setText("📚 Feature Pipeline · Tutorial");
+        title.setTextColor(0xFF075985);
+        title.setTextSize(16);
+        title.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        card.addView(title, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView description = new TextView(context);
+        description.setText("A step-by-step guide to NayaGram features. Tutorial only — it does not activate feature engines.");
+        description.setTextColor(0xFF334155);
+        description.setTextSize(12);
+        description.setLineSpacing(AndroidUtilities.dp(1), 1.08f);
+        LinearLayout.LayoutParams descriptionParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        descriptionParams.topMargin = AndroidUtilities.dp(4);
+        card.addView(description, descriptionParams);
+
+        LinearLayout footer = new LinearLayout(context);
+        footer.setOrientation(LinearLayout.HORIZONTAL);
+        footer.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams footerParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        footerParams.topMargin = AndroidUtilities.dp(8);
+        card.addView(footer, footerParams);
+
+        TextView languages = new TextView(context);
+        languages.setText("🌐 " + InstantTranslatorManager.SUPPORTED_LANGUAGES.length + " languages");
+        languages.setTextColor(0xFF166534);
+        languages.setTextSize(12);
+        languages.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        footer.addView(languages, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView details = new TextView(context);
+        details.setText("Details  ›");
+        details.setTextColor(0xFFFFFFFF);
+        details.setTextSize(13);
+        details.setGravity(Gravity.CENTER);
+        details.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        details.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(8),
+                AndroidUtilities.dp(15), AndroidUtilities.dp(8));
+        GradientDrawable buttonBackground = new GradientDrawable();
+        buttonBackground.setColor(0xFF0284C7);
+        buttonBackground.setCornerRadius(AndroidUtilities.dp(12));
+        details.setBackground(buttonBackground);
+        details.setContentDescription("Details: open the multilingual Feature Pipeline tutorial");
+        details.setOnClickListener(v -> FeatureTutorialDialog.show(context));
+        footer.addView(details, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
     }
 
     private void showFeatureHealthCheck(Context context) {

@@ -122,6 +122,12 @@ def test_advanced_feature_wiring():
     assert 'FeatureTutorialDialog.show(context);' in activity
     assert 'showAllDetailsPipelineDialog' not in adapter
     assert 'Feature Pipeline · Tutorial' in activity
+    assert 'buildTutorialBanner(context)' in activity
+    assert 'Verified Feature Controls' in activity
+    assert 'Only features with a verified behavior path appear below.' in activity
+    assert 'setText("Details  ›")' in activity
+    assert 'item.addSubItem(MENU_ALL_DETAILS' not in activity
+    assert 'InstantTranslatorManager.SUPPORTED_LANGUAGES.length' in activity
     assert 'private boolean isMainPageFeature(FeatureItem item)' in adapter
     assert 'if (isMainPageFeature(item) && (normalized.isEmpty() || matchesFeature(item, normalized)))' in adapter
     assert 'case 11: // User ID & active data-center ID on profile' in adapter
