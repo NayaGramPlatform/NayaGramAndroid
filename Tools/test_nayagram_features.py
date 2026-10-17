@@ -10,6 +10,7 @@ Tests:
 """
 
 import sys
+import re
 
 def test_access_control():
     print("[TEST 1] Access Control (NG_STUDIO_ACCESS_IDS)...", end=" ")
@@ -116,13 +117,18 @@ def test_advanced_feature_wiring():
     assert '.putBoolean("feature_noise_suppression", false)' in config
     assert 'Instant Translator (feature_17) remains disabled until a translation engine is implemented.' in config
     assert 'stays enabled by default' not in config
-    assert 'IMPLEMENTATION STATUS — VERIFIED' in adapter
-    assert 'Focus Mode: NOT IMPLEMENTED' in adapter
-    assert 'Chat Locker: NOT IMPLEMENTED' in adapter
-    assert 'Message Scheduler and Auto-Reply: DISABLED' in adapter
-    assert 'Story Saver and Anonymous Stories: DISABLED' in adapter
-    assert 'Data Saver: toggles Telegram\'s native media-streaming preference; it is not a full network optimizer.' in adapter
-    assert 'A saved preference is not proof of an active engine.' in adapter
+    tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
+    translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
+    assert 'FeatureTutorialDialog.show(context);' in adapter
+    assert '📚 Feature Tutorials · Details' in adapter
+    assert 'Feature Tutorials' in activity
+    assert '.setPositiveButton("Details"' in tutorial
+    assert 'This page is a tutorial, not an active feature switchboard.' in tutorial
+    assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial
+    assert 'Only this public tutorial text is sent for translation' in tutorial
+    assert len(re.findall(r'^\\s*\\{"', translator, re.MULTILINE)) >= 28
+    assert '"🇧🇩"' in tutorial and '"🇬🇧"' in tutorial and '"🇸🇦"' in tutorial
+    assert 'IMPLEMENTATION STATUS — VERIFIED' not in adapter
     assert 'Quiet hours with VIP bypass' not in adapter
     assert 'Keyword based replies' not in adapter
     assert 'Story Saver → HD download' not in adapter

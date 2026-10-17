@@ -501,32 +501,10 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         builder.show();
     }
 
+    /** Feature Pipeline is a tutorial entry point, not a second source of live feature claims. */
     public void showAllDetailsPipelineDialog() {
         if (context == null) return;
-        StringBuilder sb = new StringBuilder();
-        sb.append("✦ NayaGram Exclusive Features Pipeline ✦\n\n");
-        sb.append("IMPLEMENTATION STATUS — VERIFIED\n");
-        sb.append("• Focus Mode: NOT IMPLEMENTED — no quiet-hours or VIP notification engine.\n");
-        sb.append("• Chat Locker: NOT IMPLEMENTED — no biometric gate protects chats.\n");
-        sb.append("• Smart Chat Folders: NOT IMPLEMENTED — no native folder automation.\n");
-        sb.append("• Message Scheduler and Auto-Reply: DISABLED — no message delivery engine.\n");
-        sb.append("• Story Saver and Anonymous Stories: DISABLED — no story download or view-bypass behavior.\n");
-        sb.append("• Instant Translator and Noise Suppression: NOT IMPLEMENTED — no translation or call-audio pipeline.\n");
-        sb.append("• Modular Config and Battery Saver: NOT IMPLEMENTED — stored preferences alone do not activate behavior.\n\n");
-        sb.append("AVAILABLE / NATIVE-BACKED TOOLS\n");
-        sb.append("• User ID & DC Display: shown only where the profile UI integration is available.\n");
-        sb.append("• Data Saver: toggles Telegram's native media-streaming preference; it is not a full network optimizer.\n");
-        sb.append("• External Link Guard: asks before opening non-internal, untrusted HTTP(S) links when enabled.\n");
-        sb.append("• Readable Text: uses Telegram's native message font-size setting.\n");
-        sb.append("• Reduce Motion: uses Telegram's interface animation preference.\n");
-        sb.append("• Smart Storage Guard: scans app cache and offers cache cleanup on demand.\n\n");
-        sb.append("A saved preference is not proof of an active engine. Unimplemented features remain unavailable.");
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("All Features Pipeline");
-        builder.setMessage(sb.toString());
-        builder.setPositiveButton("OK", null);
-        builder.show();
+        FeatureTutorialDialog.show(context);
     }
 
     /**
