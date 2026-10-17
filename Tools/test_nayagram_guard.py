@@ -62,6 +62,7 @@ def main() -> None:
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
     assert "NayaGramGuard.isEnabled" in tabs and "new NayaGramGuardActivity(true)" in tabs
     assert "NayaGramGuard.lockSession();" in launch
+    assert "topFragment instanceof NayaGramGuardActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
     print("PASS: Guard storage, UI, settings, login-gate and dependency guardrails")
