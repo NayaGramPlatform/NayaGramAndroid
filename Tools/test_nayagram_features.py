@@ -70,6 +70,23 @@ def test_dynamic_footer_and_branding():
     assert "NayaGram" in "NayaGram for Android v1.0.0 (1)"
     print("PASS")
 
+def test_advanced_feature_wiring():
+    print("[TEST 6] Advanced feature wiring...", end=" ")
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    adapter = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureListAdapter.java").read_text(encoding="utf-8")
+    config = (root / "TMessagesProj/src/main/java/org/nayagram/platform/NayaConfig.java").read_text(encoding="utf-8")
+    browser = (root / "TMessagesProj/src/main/java/org/telegram/messenger/browser/Browser.java").read_text(encoding="utf-8")
+    assert 'case 21: return cfg.isLinkGuardEnabled();' in adapter
+    assert 'case 22: return cfg.isReadableTextEnabled();' in adapter
+    assert 'case 23: return cfg.isReduceMotion();' in adapter
+    assert 'case 21: cfg.setLinkGuardEnabled(newState); break;' in adapter
+    assert 'case 22: cfg.setReadableTextEnabled(newState); break;' in adapter
+    assert 'case 23: cfg.setReduceMotion(newState); break;' in adapter
+    assert 'return isSaveMobileData();' in config
+    assert 'isLinkGuardEnabled()' in browser
+    print("PASS")
+
 def test_search_and_hub_naming():
     print("[TEST 5] Hub Naming (𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞) & Search Query Index...", end=" ")
     hub_name = "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
@@ -91,4 +108,5 @@ if __name__ == '__main__':
     test_public_hub_cleared_of_risky_features()
     test_dynamic_footer_and_branding()
     test_search_and_hub_naming()
-    print("--- ALL 5 TESTS PASSED SUCCESSFULLY ---")
+    test_advanced_feature_wiring()
+    print("--- ALL 6 TESTS PASSED SUCCESSFULLY ---")
