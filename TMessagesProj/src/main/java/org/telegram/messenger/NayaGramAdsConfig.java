@@ -23,7 +23,7 @@ public final class NayaGramAdsConfig {
     public static final long INTERSTITIAL_COOLDOWN_MS = 20 * 60 * 1000L;
 
     /** Require meaningful app usage before an interstitial becomes eligible. */
-    public static final int ACTIONS_BEFORE_INTERSTITIAL = 10;
+    public static final int ACTIONS_BEFORE_INTERSTITIAL = 15;
 
     /** Never put banners or full-screen ads inside active chats or calls. */
     public static final boolean SHOW_BANNER_INSIDE_CHATS = false;
