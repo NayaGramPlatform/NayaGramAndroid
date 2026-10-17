@@ -36,17 +36,23 @@ import java.util.List;
 /** Settings, enrollment and verification UI for the optional local-only NayaGram Guard. */
 public class NayaGramGuardActivity extends BaseFragment {
     private final boolean gateMode;
+    private final boolean startSetup;
     private LinearLayout content;
     private EditText codeInput;
     private String pendingSecret;
     private boolean suppressToggleCallback;
 
     public NayaGramGuardActivity() {
-        this(false);
+        this(false, false);
     }
 
     public NayaGramGuardActivity(boolean gateMode) {
+        this(gateMode, false);
+    }
+
+    public NayaGramGuardActivity(boolean gateMode, boolean startSetup) {
         this.gateMode = gateMode;
+        this.startSetup = startSetup;
     }
 
     @Override
@@ -71,6 +77,14 @@ public class NayaGramGuardActivity extends BaseFragment {
 
         if (gateMode) {
             buildVerification(context, true);
+        } else if (startSetup) {
+            try {
+                pendingSecret = NayaGramGuard.beginSetup(context);
+                showSetup(context, pendingSecret);
+            } catch (Exception e) {
+                toast(context, "Secure storage is unavailable. Guard was not enabled.");
+                finishFragment();
+            }
         } else {
             buildSettings(context);
         }
