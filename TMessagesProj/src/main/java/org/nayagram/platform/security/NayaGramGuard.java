@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
 
-import dev.samstevens.totp.code.CodeVerifier;
 import dev.samstevens.totp.code.DefaultCodeGenerator;
 import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
@@ -101,7 +100,7 @@ public final class NayaGramGuard {
             return false;
         }
         try {
-            CodeVerifier verifier = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
+            DefaultCodeVerifier verifier = new DefaultCodeVerifier(new DefaultCodeGenerator(), new SystemTimeProvider());
             verifier.setTimePeriod(30);
             verifier.setAllowedTimePeriodDiscrepancy(1);
             return verifier.isValidCode(secret, code);
