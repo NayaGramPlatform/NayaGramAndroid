@@ -91,6 +91,8 @@ def test_advanced_feature_wiring():
     assert 'confirmExportSettings(context)' in activity
     assert 'public String exportSettingsJson()' in config
     assert 'Custom auto-reply text and account/chat data are excluded.' in activity
+    assert 'cfg.setDataSaverEnabled(checked);' in legacy_hub
+    assert 'Are you sure you want to reset all NayaGram feature settings to their factory defaults?' in activity
 
     # Preference-only cards must never pretend to be functional ON/OFF toggles.
     assert 'private boolean isImplementationPending(FeatureItem item)' in adapter
@@ -105,6 +107,14 @@ def test_advanced_feature_wiring():
     assert 'case 16: cfg.setBiometricChatLockerEnabled(newState); break;' not in adapter
     assert 'case 17: cfg.setInstantTranslatorEnabled(newState); break;' not in adapter
     assert 'case 19: cfg.setNoiseSuppressionEnabled(newState); break;' not in adapter
+    assert 'preferences.getBoolean(KEY_MODULAR_CONFIG, false)' in config
+    assert 'preferences.getBoolean(KEY_BATTERY_SAVER, false)' in config
+    assert 'preferences.getBoolean(KEY_INSTANT_TRANSLATOR, false)' in config
+    assert 'preferences.getBoolean("feature_noise_suppression", false)' in config
+    assert '.putBoolean(KEY_MODULAR_CONFIG, false)' in config
+    assert '.putBoolean(KEY_BATTERY_SAVER, false)' in config
+    assert '.putBoolean(KEY_INSTANT_TRANSLATOR, false)' in config
+    assert '.putBoolean("feature_noise_suppression", false)' in config
 
     # The legacy settings hub must not expose the same inactive preferences as live toggles.
     legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
