@@ -12,7 +12,6 @@ import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
