@@ -30,9 +30,6 @@ jobs:
       - name: Run NayaGram Guard RFC 6238 tests
         run: python3 Tools/test_nayagram_guard.py
 
-      - name: Test TOTP library against RFC 6238 vectors
-        run: ./gradlew --no-daemon --stacktrace --max-workers=2 :TMessagesProj:testReleaseUnitTest
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -54,6 +51,9 @@ jobs:
           test -f gradlew
           test -f gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
+
+      - name: Test TOTP library against RFC 6238 vectors
+        run: ./gradlew --no-daemon --stacktrace --max-workers=2 :TMessagesProj:testReleaseUnitTest
 
       - name: Assemble debug APK
         env:
