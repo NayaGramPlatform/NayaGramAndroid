@@ -119,8 +119,15 @@ def test_advanced_feature_wiring():
     assert 'stays enabled by default' not in config
     tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
     translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
-    assert 'FeatureTutorialDialog.show(context);' in adapter
+    assert 'FeatureTutorialDialog.show(context);' in activity
+    assert 'showAllDetailsPipelineDialog' not in adapter
     assert 'Feature Pipeline · Tutorial' in activity
+    assert 'private boolean isMainPageFeature(FeatureItem item)' in adapter
+    assert 'if (isMainPageFeature(item) && (normalized.isEmpty() || matchesFeature(item, normalized)))' in adapter
+    assert 'case 11: // User ID & active data-center ID on profile' in adapter
+    assert 'case 23: // Telegram interface animation preference' in adapter
+    assert 'case 2:  // Message Scheduler has no delivery engine' in adapter
+    assert 'case 5:  // Anonymous Stories is disabled' in adapter
     assert '.setPositiveButton("Details"' in tutorial
     assert 'This page only explains features; it never turns them on or off.' in tutorial
     assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial

@@ -63,9 +63,8 @@ public class NayaFeaturesActivity extends BaseFragment {
                 if (id == -1) {
                     finishFragment();
                 } else if (id == MENU_ALL_DETAILS) {
-                    if (adapter != null) {
-                        adapter.showAllDetailsPipelineDialog();
-                    }
+                    // Open the documentation-only guide directly; it is not a feature engine.
+                    FeatureTutorialDialog.show(context);
                 } else if (id == MENU_PRIVACY_AUDIT) {
                     showPrivacyAuditDialog(context);
                 } else if (id == MENU_SUPPORT) {

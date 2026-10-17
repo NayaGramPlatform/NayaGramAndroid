@@ -248,7 +248,13 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                         "قلل حركات الواجهة مع استمرار الرسائل والمكالمات."
                 }
         ));
-        features.addAll(allFeatures);
+        // Only verified, native-backed features belong on the main feature page.
+        // Planned or tutorial-only items stay documented in FeatureTutorialDialog.
+        for (FeatureItem item : allFeatures) {
+            if (isMainPageFeature(item)) {
+                features.add(item);
+            }
+        }
     }
 
     /** Filters the showcase across English, Bengali and Arabic titles/descriptions. */
@@ -256,7 +262,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         String normalized = query == null ? "" : query.trim().toLowerCase(java.util.Locale.ROOT);
         features.clear();
         for (FeatureItem item : allFeatures) {
-            if (normalized.isEmpty() || matchesFeature(item, normalized)) {
+            if (isMainPageFeature(item) && (normalized.isEmpty() || matchesFeature(item, normalized))) {
                 features.add(item);
             }
         }
@@ -303,11 +309,32 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         }
     }
 
+    /**
+     * The main page only exposes features with a verified behavior path.
+     * Feature Pipeline is documentation and never contributes feature cards.
+     */
+    private boolean isMainPageFeature(FeatureItem item) {
+        switch (item.number) {
+            case 11: // User ID & active data-center ID on profile
+            case 18: // Telegram native media-streaming preference
+            case 20: // On-demand storage scan and reviewed cache cleanup
+            case 21: // External Link Guard
+            case 22: // Telegram native message font size
+            case 23: // Telegram interface animation preference
+                return true;
+            default:
+                return false;
+        }
+    }
+
     /** Features whose UI is present but whose native behavior is not implemented yet. */
     private boolean isImplementationPending(FeatureItem item) {
         switch (item.number) {
+            case 2:  // Message Scheduler has no delivery engine
+            case 3:  // Auto-Reply has no sending engine
+            case 4:  // Story Saver is disabled
+            case 5:  // Anonymous Stories is disabled
             case 9:  // Smart Chat Folders
-            case 12: // Modular Config has no behavior wired to this toggle
             case 13: // Focus Mode
             case 15: // Battery Saver
             case 16: // Chat Locker
@@ -499,12 +526,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 "Feature #" + displayNumber + " • NayaGram Exclusive");
         builder.setPositiveButton("OK", null);
         builder.show();
-    }
-
-    /** Feature Pipeline is a tutorial entry point, not a second source of live feature claims. */
-    public void showAllDetailsPipelineDialog() {
-        if (context == null) return;
-        FeatureTutorialDialog.show(context);
     }
 
     /**
