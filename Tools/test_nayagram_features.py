@@ -97,6 +97,8 @@ def test_advanced_feature_wiring():
     assert 'if (cfg == null || isImplementationPending(item)) return false;' in adapter
     assert 'Not active yet. No chat is protected by this preference alone.' in adapter
     assert 'Not active yet. No translation service or in-chat action is connected.' in adapter
+    assert 'The toggle does not change how settings are stored or isolated.' in adapter
+    assert 'case 12: cfg.setModularConfig(newState); break;' not in adapter
     assert 'currentLang == LANG_AR ? "لاحقًا" : "SOON"' in adapter
     assert 'case 13: cfg.setFocusModeEnabled(newState); break;' not in adapter
     assert 'case 15: cfg.setBatterySaverEnabled(newState); break;' not in adapter
