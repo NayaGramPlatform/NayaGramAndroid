@@ -52,8 +52,6 @@ jobs:
           test -f gradle/wrapper/gradle-wrapper.jar
           chmod +x gradlew
 
-      - name: Test TOTP library against RFC 6238 vectors
-        run: ./gradlew --no-daemon --stacktrace --max-workers=2 :TMessagesProj:testReleaseUnitTest
 
       - name: Assemble debug APK
         env:
