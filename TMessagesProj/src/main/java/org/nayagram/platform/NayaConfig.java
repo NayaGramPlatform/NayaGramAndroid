@@ -136,8 +136,12 @@ public class NayaConfig {
     // 6. Anti-Delete Recovery
 
     // 18. Adaptive Network & Data Saver
-    public boolean isDataSaverEnabled() { return preferences.getBoolean("feature_data_saver", true); }
-    public void setDataSaverEnabled(boolean e) { preferences.edit().putBoolean("feature_data_saver", e).apply(); }
+    /** Mirrors Telegram's native stream-media preference so the toggle changes real download behavior. */
+    public boolean isDataSaverEnabled() { return isSaveMobileData(); }
+    public void setDataSaverEnabled(boolean enabled) {
+        preferences.edit().putBoolean("feature_data_saver", enabled).apply();
+        setSaveMobileData(enabled);
+    }
 
     // 19. WebRTC Acoustic Noise Suppression
     public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", true); }
@@ -287,9 +291,9 @@ public class NayaConfig {
     // Reset all features to default values
     public void resetToDefaults() {
         preferences.edit()
-            .putBoolean(KEY_MESSAGE_SCHEDULER, true)
+            .putBoolean(KEY_MESSAGE_SCHEDULER, false)
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
-            .putBoolean(KEY_STORY_SAVER, true)
+            .putBoolean(KEY_STORY_SAVER, false)
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
             .remove(LEGACY_KEY_CONFIRM_ACTIONS)
@@ -308,7 +312,14 @@ public class NayaConfig {
             .putBoolean(KEY_INTL_CLOCK, false)
             .putBoolean(KEY_LINK_GUARD, true)
             .putBoolean(KEY_READABLE_TEXT, false)
+            .putBoolean("feature_data_saver", false)
+            .putBoolean("feature_noise_suppression", true)
+            .putBoolean("feature_auto_cache_guard", false)
             .remove(KEY_READABLE_TEXT_PREV)
             .apply();
+        setSaveMobileData(false);
+        setInternationalClock(false);
+        setReadableTextEnabled(false);
+        setReduceMotion(false);
     }
 }
