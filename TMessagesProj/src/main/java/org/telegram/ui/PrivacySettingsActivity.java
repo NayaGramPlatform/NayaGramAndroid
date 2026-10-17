@@ -496,25 +496,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == guardRow) {
-                Context guardContext = getParentActivity();
-                if (guardContext == null) return;
-                if (NayaGramGuard.isEnabled(guardContext)) {
-                    AlertDialog.Builder guardDialog = new AlertDialog.Builder(guardContext);
-                    guardDialog.setTitle("Disable NayaGram Guard?");
-                    guardDialog.setMessage("This removes the local authenticator secret and unused backup codes. Telegram login is not changed.");
-                    guardDialog.setNegativeButton("Cancel", (dialog, which) -> listAdapter.notifyItemChanged(guardRow));
-                    guardDialog.setPositiveButton("Disable", (dialog, which) -> {
-                        try {
-                            NayaGramGuard.disable(guardContext);
-                        } catch (Exception e) {
-                            Toast.makeText(guardContext, "Could not clear secure Guard storage.", Toast.LENGTH_SHORT).show();
-                        }
-                        listAdapter.notifyItemChanged(guardRow);
-                    });
-                    showDialog(guardDialog.create());
-                } else {
-                    presentFragment(new NayaGramGuardActivity(false, true));
-                }
+                presentFragment(new NayaGramGuardActivity());
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
