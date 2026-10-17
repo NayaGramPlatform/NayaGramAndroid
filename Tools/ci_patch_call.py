@@ -4,10 +4,10 @@ import pathlib
 def patch_gradle():
     p = pathlib.Path("gradle.properties")
     t = p.read_text(encoding="utf-8")
-    t2 = t.replace("APP_VERSION_CODE=1000", "APP_VERSION_CODE=4012", 1)
-    t2 = t2.replace("APP_VERSION_NAME=1.0.0", "APP_VERSION_NAME=4.0.12 (NayaGram)", 1)
-    if t2 == t and "APP_VERSION_CODE=4012" in t:
-        print("gradle already 4012")
+    t2 = t.replace("APP_VERSION_CODE=1000", "APP_VERSION_CODE=4013", 1)
+    t2 = t2.replace("APP_VERSION_NAME=1.0.0", "APP_VERSION_NAME=1.0.1 NG", 1)
+    if t2 == t and "APP_VERSION_CODE=4013" in t:
+        print("gradle already 4013")
     else:
         p.write_text(t2, encoding="utf-8")
         print("gradle version updated")
