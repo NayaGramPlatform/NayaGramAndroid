@@ -35,6 +35,7 @@ object AdManager {
     const val DISPLAY_INTERVAL_MS: Long = NayaGramAdsConfig.INTERSTITIAL_COOLDOWN_MS
     const val MINIMUM_ACTIONS_BEFORE_AD: Int = NayaGramAdsConfig.ACTIONS_BEFORE_INTERSTITIAL
 
+    private val appSessionStartedWallTime: Long = System.currentTimeMillis()
     private var lastAdShownWallTime: Long = -1L
     private var actionCounter: Int = 0
 
@@ -78,6 +79,8 @@ object AdManager {
 
         val nowWall = System.currentTimeMillis()
         val lastShown = lastShownWallTime()
+        // Do not show an interstitial immediately after a fresh install or app start.
+        if (lastShown == 0L && nowWall - appSessionStartedWallTime < DISPLAY_INTERVAL_MS) return false
         // A clock change backwards must not cause ads to appear more frequently.
         if (nowWall < lastShown) return false
         return nowWall - lastShown >= DISPLAY_INTERVAL_MS
