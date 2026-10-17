@@ -165,6 +165,26 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
     }
 
 
+
+    /** Present Google's privacy choices form from the app's Privacy & Security screen. */
+    public void showPrivacyOptionsForm(Activity activity) {
+        if (activity == null || activity.isFinishing()
+                || (android.os.Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) {
+            return;
+        }
+        ConsentInformation consentInformation = UserMessagingPlatform.getConsentInformation(activity);
+        if (consentInformation.getPrivacyOptionsRequirementStatus()
+                != ConsentInformation.PrivacyOptionsRequirementStatus.REQUIRED) {
+            Log.i(TAG, "Privacy options form is not required for the current consent state.");
+            return;
+        }
+        UserMessagingPlatform.showPrivacyOptionsForm(activity, formError -> {
+            if (formError != null) {
+                Log.w(TAG, "Privacy options form failed: " + formError.getMessage());
+            }
+        });
+    }
+
     /**
      * Attach a banner to an explicitly supplied home/dialogs-screen container.
      * Containers are queued while UMP consent or SDK initialization is pending.
