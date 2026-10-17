@@ -16,7 +16,7 @@ import org.telegram.messenger.ApplicationLoader;
  * Policy notes (keep in sync with Tools/test_voip_fgs_android14.py):
  * - Call & Voice Protection (feature_10 / confirm-actions) is permanently removed.
  *   It caused VoIP signaling timeouts and "NayaGram keeps stopping".
- * - Instant Translator (feature_17) stays enabled by default.
+ * - Instant Translator (feature_17) remains disabled until a translation engine is implemented.
  * - Telegram Premium follows the real account. Free pin limit stays 10.
  * - Analytics, Smart Storage Doctor, scheduler, auto-reply, story saver,
  *   anonymous stories, forward-without-quote and voice transcription are removed from the UI.
