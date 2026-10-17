@@ -28,7 +28,7 @@ public final class FeatureTutorialDialog {
             "5. Reduce Motion follows Telegram's interface-animation preference.\n" +
             "6. Data Saver changes Telegram's native media-streaming preference. It is not a complete network optimizer.\n" +
             "7. Smart Storage Guard runs a cache scan on demand and offers cache cleanup after you review the report.\n" +
-            "8. User ID & DC information is shown only where the profile screen has the required integration.\n\n" +
+            "8. When enabled, your own profile shows your Telegram ID and current account data-center ID; long-press the line to copy.\n\n" +
             "FEATURES THAT ARE NOT READY\n" +
             "Cards marked SOON are unavailable. A saved preference alone does not make an engine work. Smart Chat Folders, Modular Config, Focus Mode, Battery Saver, Chat Locker, Instant Translator, and Noise Suppression do not currently have their promised native behavior connected. Message Scheduler, Auto-Reply, Story Saver, and Anonymous Stories are disabled and must not be relied on.\n\n" +
             "CHECKS AND BACKUPS\n" +

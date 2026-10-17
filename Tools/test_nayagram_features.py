@@ -131,6 +131,11 @@ def test_advanced_feature_wiring():
     assert 'Quiet hours with VIP bypass' not in adapter
     assert 'Keyword based replies' not in adapter
     assert 'Story Saver → HD download' not in adapter
+    profile = (root / "TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java").read_text(encoding="utf-8")
+    assert 'ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId()' in profile
+    assert 'NayaConfig.getInstance().isShowIdAndDc() && user.id > 0' in profile
+    assert 'onlineTextView[2].setOnLongClickListener' in profile
+    assert 'long-press the line to copy' in tutorial
 
     # The legacy settings hub must not expose the same inactive preferences as live toggles.
     legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")

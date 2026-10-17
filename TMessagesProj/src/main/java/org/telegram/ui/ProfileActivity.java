@@ -11647,6 +11647,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
                 onlineTextView[2].setText(LocaleController.getString(R.string.FallbackTooltip));
+                if (org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && user.id > 0) {
+                    int nayaCurrentDc = org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId();
+                    String nayaIdDcText = "ID " + user.id
+                            + (nayaCurrentDc > 0 && nayaCurrentDc < Integer.MAX_VALUE ? " · DC" + nayaCurrentDc : "");
+                    onlineTextView[2].setText(nayaIdDcText);
+                    onlineTextView[2].setOnLongClickListener(v -> {
+                        AndroidUtilities.addToClipboard(nayaIdDcText);
+                        Toast.makeText(getContext(), "Copied ID/DC", Toast.LENGTH_SHORT).show();
+                        return true;
+                    });
+                } else {
+                    onlineTextView[2].setOnLongClickListener(null);
+                }
                 if (userInfo != null && userInfo.stars_rating != null && userInfo.stars_rating.stars < 0) {
                     onlineTextView[3].setText(newString2 = getString(R.string.StarRatingLevelNegative).toLowerCase(Locale.ROOT));
                 } else {

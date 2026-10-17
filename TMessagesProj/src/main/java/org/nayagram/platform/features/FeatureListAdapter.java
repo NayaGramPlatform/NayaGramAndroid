@@ -89,9 +89,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_info,
                 new String[]{"User ID & DC", "ইউজার আইডি ও ডিসি", "معرف المستخدم ومركز البيانات"},
                 new String[]{
-                        "See your Telegram numeric ID and which data center (DC1-DC5) you're on.",
-                        "আপনার টেলিগ্রাম নম্বরিক আইডি এবং ডেটা সেন্টার (DC1-DC5) দেখুন।",
-                        "اطلع على معرفك الرقمي ومركز البيانات (DC1-DC5) الذي تتصل به."
+                        "Show your Telegram ID and current account data-center ID on your own profile. Long-press to copy.",
+                        "নিজের প্রোফাইলে টেলিগ্রাম আইডি ও বর্তমান অ্যাকাউন্টের ডেটা-সেন্টার আইডি দেখুন। কপি করতে চেপে ধরুন।",
+                        "اعرض معرف تيليجرام ومعرف مركز بيانات الحساب الحالي في ملفك الشخصي. اضغط مطولًا للنسخ."
                 }
         ));
 
