@@ -652,6 +652,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     public static boolean[] dialogsLoaded = new boolean[UserConfig.MAX_ACCOUNT_COUNT];
     private boolean searching;
+    private FrameLayout nayaGramBannerContainer;
     private boolean searchWas;
     private boolean onlySelect;
     private boolean canSelectTopics;
@@ -3084,6 +3085,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (shareTopView != null) {
             shareTopView.stopHintRotation();
         }
+        if (nayaGramBannerContainer != null) {
+            AdMobIntegrationManager.getInstance().destroyBanner(nayaGramBannerContainer);
+            nayaGramBannerContainer = null;
+        }
         if (shareLinkSearchRunnable != null) {
             AndroidUtilities.cancelRunOnUIThread(shareLinkSearchRunnable);
             shareLinkSearchRunnable = null;
@@ -4756,6 +4761,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         topBubblesFadeView.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         if (showNayaGramBanner) {
             FrameLayout bannerContainer = new FrameLayout(context);
+            nayaGramBannerContainer = bannerContainer;
             bannerContainer.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
             bannerContainer.setVisibility(View.GONE);
             contentView.addView(bannerContainer, LayoutHelper.createFrame(
