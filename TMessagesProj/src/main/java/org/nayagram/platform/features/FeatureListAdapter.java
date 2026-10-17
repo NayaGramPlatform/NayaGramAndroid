@@ -427,7 +427,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 4: cfg.setStorySaverEnabled(newState); break;
             case 5: cfg.setAnonymousStories(newState); break;
             case 18: cfg.setDataSaverEnabled(newState); break;
-            case 20: cfg.setAutoCacheGuardEnabled(newState); break;
             case 21: cfg.setLinkGuardEnabled(newState); break;
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
@@ -518,7 +517,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(item.getCatchyTitle(currentLang));
         String availability = isImplementationPending(item)
-                ? (currentLang == LANG_BN ? "\n\nএই ফিচারটি এখনো কার্যকর নয়। নেটিভ বাস্তবায়ন ও পরীক্ষা শেষ না হওয়া পর্যন্ত এটি চালু করা যাবে না."
+                ? (currentLang == LANG_BN ? "\n\nএই ফিচারটি এখনো কার্যকর নয়। নেটিভ বাস্তবায়ন ও পরীক্ষা শেষ না হওয়া পর্যন্ত এটি চালু করা যাবে না।"
                 : (currentLang == LANG_AR ? "\n\nهذه الميزة غير نشطة بعد. لن يتم تفعيلها قبل اكتمال التنفيذ والاختبار."
                 : "\n\nNot available yet. It will remain inactive until native implementation and testing are complete."))
                 : "";
