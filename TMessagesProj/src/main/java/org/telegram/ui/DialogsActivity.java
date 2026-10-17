@@ -125,6 +125,8 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.nayagram.platform.monetization.AdMobIntegrationManager;
+import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
@@ -4078,6 +4080,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
         };
 
+        final boolean showNayaGramBanner = NayaGramAdsConfig.shouldShowBanner()
+            && !onlySelect && searchString == null && folderId == 0 && communityId == 0
+            && initialDialogsType == DIALOGS_TYPE_DEFAULT
+            && !UserConfig.getInstance(currentAccount).isPremium();
+
         int pagesCount = folderId == 0 && communityId == 0 && (initialDialogsType == DIALOGS_TYPE_DEFAULT && !onlySelect || initialDialogsType == DIALOGS_TYPE_FORWARD) ? 2 : 1;
         viewPages = new ViewPage[pagesCount];
         for (int a = 0; a < pagesCount; a++) {
@@ -4098,6 +4105,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             viewPage.listView.setAccessibilityEnabled(false);
             viewPage.listView.setAnimateEmptyView(true, RecyclerListView.EMPTY_VIEW_ANIMATION_TYPE_ALPHA);
             viewPage.listView.setClipToPadding(false);
+            if (showNayaGramBanner) {
+                viewPage.listView.setPadding(
+                    viewPage.listView.getPaddingLeft(),
+                    viewPage.listView.getPaddingTop(),
+                    viewPage.listView.getPaddingRight(),
+                    dp(64)
+                );
+            }
             viewPage.listView.setPivotY(0);
             if (initialDialogsType == DIALOGS_TYPE_BOT_REQUEST_PEER) {
                 viewPage.listView.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundGray));
@@ -4738,6 +4753,18 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         topBubblesFadeView = new DialogsActivityTopBubblesFadeView(context);
         topBubblesFadeView.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        if (showNayaGramBanner) {
+            FrameLayout bannerContainer = new FrameLayout(context);
+            bannerContainer.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
+            bannerContainer.setVisibility(View.GONE);
+            contentView.addView(bannerContainer, LayoutHelper.createFrame(
+                LayoutHelper.MATCH_PARENT, 56, Gravity.BOTTOM
+            ));
+            if (getParentActivity() != null) {
+                AdMobIntegrationManager.getInstance().attachBanner(getParentActivity(), bannerContainer);
+            }
+        }
+
         contentView.addView(topBubblesFadeView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, 100, Gravity.TOP));
 
         searchViewPagerIndex = contentView.getChildCount();
