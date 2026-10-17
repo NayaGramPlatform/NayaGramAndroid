@@ -91,7 +91,6 @@ def test_advanced_feature_wiring():
     assert 'confirmExportSettings(context)' in activity
     assert 'public String exportSettingsJson()' in config
     assert 'Custom auto-reply text and account/chat data are excluded.' in activity
-    assert 'cfg.setDataSaverEnabled(checked);' in legacy_hub
     assert 'Are you sure you want to reset all NayaGram feature settings to their factory defaults?' in activity
 
     # Preference-only cards must never pretend to be functional ON/OFF toggles.
@@ -118,6 +117,7 @@ def test_advanced_feature_wiring():
 
     # The legacy settings hub must not expose the same inactive preferences as live toggles.
     legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    assert 'cfg.setDataSaverEnabled(checked);' in legacy_hub
     assert 'if (isPendingFeaturePosition(position))' in legacy_hub
     assert 'private boolean isPendingFeaturePosition(int position)' in legacy_hub
     assert 'Smart Chat Folders · SOON' in legacy_hub
