@@ -209,14 +209,18 @@ public final class FeatureTutorialDialog {
                 .setTitle("🌐 Translating tutorial")
                 .setMessage("Preparing the tutorial in your selected language…")
                 .create();
+        final boolean[] requestCancelled = {false};
+        loading.setOnCancelListener(dialog -> requestCancelled[0] = true);
         loading.show();
         translator.translate(TUTORIAL_EN, languageCode, new InstantTranslatorManager.TranslationCallback() {
             @Override public void onTranslationSuccess(String originalText, String translatedText, String targetLang) {
+                if (requestCancelled[0]) return;
                 try { loading.dismiss(); } catch (Throwable ignored) {}
                 boolean fallback = translatedText == null || translatedText.trim().isEmpty() || translatedText.equals(originalText);
                 showTranslatedText(context, fallback ? originalText : translatedText, getLanguageName(targetLang), fallback);
             }
             @Override public void onTranslationFailed(String originalText, String errorMessage) {
+                if (requestCancelled[0]) return;
                 try { loading.dismiss(); } catch (Throwable ignored) {}
                 showTranslatedText(context, originalText, getLanguageName(languageCode), true);
             }
