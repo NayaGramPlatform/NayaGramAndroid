@@ -30,6 +30,9 @@ jobs:
       - name: Run NayaGram Guard RFC 6238 tests
         run: python3 Tools/test_nayagram_guard.py
 
+      - name: Test production TOTP library against RFC 6238 vectors
+        run: ./gradlew --no-daemon -p Tools/totp-rfc-test rfc6238Test
+
       - name: Verify recursive native submodules
         run: |
           git submodule sync --recursive
