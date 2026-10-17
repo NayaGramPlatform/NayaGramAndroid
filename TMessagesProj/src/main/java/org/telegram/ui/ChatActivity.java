@@ -8645,7 +8645,7 @@ public class ChatActivity extends BaseFragment implements
                             showBottomOverlayProgress(true, true);
                             bottomOverlayChatText.setText(LocaleController.getString(R.string.SupportedChannelGroup));
                             try {
-                                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.ic_star_active, LocaleController.getString(R.string.SupportedChannelGroup)).show();
+                                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.star_premium_2, LocaleController.getString(R.string.SupportedChannelGroup)).show();
                             } catch (Throwable ignore) {
                             }
                             getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, ChatActivity.this, null);
