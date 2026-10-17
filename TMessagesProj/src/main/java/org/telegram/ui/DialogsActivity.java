@@ -3268,7 +3268,19 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 .setDuration(120)
                                 .start())
                         .start();
-                Toast.makeText(context, "NG Hub: Channels and Groups screen is coming in the next step.", Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(context)
+                        .setTitle("NG Hub")
+                        .setItems(new CharSequence[] {
+                                getString(R.string.NewGroup),
+                                getString(R.string.NewChannel)
+                        }, (dialog, which) -> {
+                            if (which == 0) {
+                                presentFragment(new GroupCreateActivity(new Bundle()), false);
+                            } else if (which == 1) {
+                                presentFragment(new ChannelCreateActivity(new Bundle()), false);
+                            }
+                        })
+                        .show();
             });
         }
 
