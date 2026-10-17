@@ -496,8 +496,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == guardRow) {
-                presentFragment(new NayaGramGuardActivity());
-            } else if (position == guardRow) {
                 Context guardContext = getParentActivity();
                 if (guardContext == null) return;
                 if (NayaGramGuard.isEnabled(guardContext)) {
