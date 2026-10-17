@@ -3250,6 +3250,28 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         searchItem.setVisibility(View.GONE);
 
+        // NG Hub: step 1 entry point. Keep this limited to the main dialogs screen.
+        // The actual Channels/Groups screen will be implemented in a separate step.
+        if (!onlySelect && searchString == null && folderId == 0 && communityId == 0
+                && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
+            ActionBarMenuItem ngHubItem = menu.addItem(9910, R.drawable.msg_add);
+            ngHubItem.setContentDescription("NG Hub");
+            ngHubItem.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                v.animate()
+                        .scaleX(0.92f)
+                        .scaleY(0.92f)
+                        .setDuration(90)
+                        .withEndAction(() -> v.animate()
+                                .scaleX(1.0f)
+                                .scaleY(1.0f)
+                                .setDuration(120)
+                                .start())
+                        .start();
+                Toast.makeText(context, "NG Hub: Channels and Groups screen is coming in the next step.", Toast.LENGTH_SHORT).show();
+            });
+        }
+
         if (!onlySelect && searchString == null && folderId == 0 && communityId == 0) {
             doneItem = new ActionBarMenuItem(context, null, getThemedColor(Theme.key_actionBarDefaultSelector), getThemedColor(Theme.key_actionBarDefaultIcon), true);
             doneItem.setText(LocaleController.getString(R.string.Done).toUpperCase());
