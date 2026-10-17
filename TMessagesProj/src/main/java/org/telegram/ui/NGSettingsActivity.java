@@ -200,6 +200,10 @@ public class NGSettingsActivity extends BaseFragment {
             NayaConfig cfg = NayaConfig.getInstance();
             if (view instanceof NGFeatureCell) {
                 NGFeatureCell cell = (NGFeatureCell) view;
+                if (isPendingFeaturePosition(position)) {
+                    showFeatureDetailSheet(position);
+                    return;
+                }
                 boolean checked = !cell.isChecked();
 
                 if (position == rowAnonymousStories) {
@@ -277,7 +281,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Pause GIFs: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSaveData) {
-                    cfg.setSaveMobileData(checked);
+                    cfg.setDataSaverEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Save mobile data: " + (checked ? "On" : "Off")).show();
                 }
@@ -367,6 +371,14 @@ public class NGSettingsActivity extends BaseFragment {
     }
 
 
+    private boolean isPendingFeaturePosition(int position) {
+        return position == rowSmartChatFolders
+                || position == rowBiometricLocker
+                || position == rowFocusMode
+                || position == rowBatterySaver
+                || position == rowInstantTranslator;
+    }
+
     private void showFeatureDetailSheet(int position) {
         if (getParentActivity() == null) return;
         String title;
@@ -386,26 +398,26 @@ public class NGSettingsActivity extends BaseFragment {
 
         } else if (position == rowSmartChatFolders) {
             title = "Smart Chat Folders";
-            body = "Preference for organizing chats into Users, Groups, Channels and Bots.\n\nFolders still use Telegram's folder system.";
+            body = "Not active yet. Native Telegram folder integration is not implemented, so this feature cannot organize chats.";
 
         } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
             body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
         } else if (position == rowBiometricLocker) {
             title = "Biometric Chat Locker";
-            body = "Stores the locker preference.\n\nFull chat lock uses your device screen lock. A separate hidden vault is not included.";
+            body = "Not active yet. No chat is protected by this setting; biometric authentication and chat-entry enforcement are not connected.\n\nFull chat lock uses your device screen lock. A separate hidden vault is not included.";
         } else if (position == rowFocusMode) {
             title = "Focus & Wellbeing Mode";
-            body = "Quiet-hours preference for study and meetings.\n\nIt does not mute Telegram notifications by itself unless you also change notification settings.";
+            body = "Not active yet. Quiet hours, notification scheduling and exceptions are not connected.\n\nIt does not mute Telegram notifications by itself unless you also change notification settings.";
         } else if (position == rowStorageDoctor) {
             title = "Smart Storage Doctor";
             body = "Opens a storage summary and a cleanup confirmation.\n\nThe numbers are an estimate. Chats and media you sent are not deleted.";
         } else if (position == rowBatterySaver) {
             title = "Ultra Battery Saver";
-            body = "Preference to reduce extra animations and background work added by NayaGram.\n\nTelegram's own sync still runs so messages arrive.";
+            body = "Not active yet. Low-battery detection and automatic playback or background-work controls are not connected.\n\nTelegram's own sync still runs so messages arrive.";
         } else if (position == rowInstantTranslator) {
             title = "In-Chat Instant Translator";
-            body = "Uses Telegram's translate action when translation is available for that message.\n\nIt does not send your chats to a private NayaGram server.";
+            body = "Not active yet. This screen is not connected to a translation service or an in-chat translate action.\n\nIt does not send your chats to a private NayaGram server.";
         } else if (position == rowIntlClock) {
             title = "24-hour clock";
             body = "Shows times as 13:45 instead of 1:45 PM. Useful when you travel or talk to people in other countries.\n\nThis only changes how times look on your phone. Telegram is not contacted.";
@@ -495,7 +507,9 @@ public class NGSettingsActivity extends BaseFragment {
             badgeView.setData(iconRes, badgeColor);
             titleView.setText(title);
             subtitleView.setText(subtitle);
-            switchView.setChecked(checked, false);
+            boolean unavailable = title.contains("· SOON");
+            switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE);
+            switchView.setChecked(unavailable ? false : checked, false);
             this.needDivider = divider;
             updateAccessibilityLabel();
             invalidate();
@@ -513,7 +527,7 @@ public class NGSettingsActivity extends BaseFragment {
         private void updateAccessibilityLabel() {
             String title = titleView.getText() != null ? titleView.getText().toString() : "";
             String subtitle = subtitleView.getText() != null ? subtitleView.getText().toString() : "";
-            String status = switchView.isChecked() ? "Enabled" : "Disabled";
+            String status = title.contains("· SOON") ? "Unavailable" : (switchView.isChecked() ? "Enabled" : "Disabled");
             setContentDescription(title + ", " + subtitle + ", " + status);
         }
 
@@ -659,18 +673,18 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
 
                 } else if (position == rowSmartChatFolders) {
-                    c.setFeature(R.drawable.outline_groups_24, 0xFF00ACC1, "Smart Chat Folders", "Auto-separate Users, Groups, Channels & Bots", cfg.isSmartFoldersEnabled(), false);
+                    c.setFeature(R.drawable.outline_groups_24, 0xFF64748B, "Smart Chat Folders · SOON", "Not active yet · Native folder integration is pending", false, false);
 
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
-                    c.setFeature(R.drawable.ic_naya_fingerprint, 0xFF2E7D32, "Biometric Chat Locker", "Lock secret & private chats with passcode", cfg.isBiometricChatLockerEnabled(), false);
+                    c.setFeature(R.drawable.ic_naya_fingerprint, 0xFF64748B, "Biometric Chat Locker · SOON", "Not active yet · No chats are protected by this preference", false, false);
                 } else if (position == rowFocusMode) {
-                    c.setFeature(R.drawable.outline_profile_mute_24, 0xFF8E24AA, "Focus & Wellbeing Mode", "Quiet hours during meetings & study", cfg.isFocusModeEnabled(), true);
+                    c.setFeature(R.drawable.outline_profile_mute_24, 0xFF64748B, "Focus & Wellbeing Mode · SOON", "Not active yet · Notification scheduling is not connected", false, true);
                 } else if (position == rowBatterySaver) {
-                    c.setFeature(R.drawable.outline_profile_stop_24, 0xFF43A047, "Ultra Battery Saver", "Optimize CPU, reduce background animations", cfg.isBatterySaverEnabled(), true);
+                    c.setFeature(R.drawable.outline_profile_stop_24, 0xFF64748B, "Ultra Battery Saver · SOON", "Not active yet · Battery-aware controls are not connected", false, true);
                 } else if (position == rowInstantTranslator) {
-                    c.setFeature(R.drawable.outline_ai_translate2, 0xFFFB8C00, "In-Chat Instant Translator", "Translate incoming & outgoing foreign text", cfg.isInstantTranslatorEnabled(), false);
+                    c.setFeature(R.drawable.outline_ai_translate2, 0xFF64748B, "In-Chat Instant Translator · SOON", "Not active yet · No translation action is connected", false, false);
                 } else if (position == rowIntlClock) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF0288D1, "24-hour clock", "Show 13:45 instead of 1:45 PM", cfg.isInternationalClock(), true);
                 } else if (position == rowLinkGuard) {

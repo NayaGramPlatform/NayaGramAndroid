@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
+import org.json.JSONObject;
+import org.json.JSONException;
+import java.util.Map;
 import org.telegram.messenger.ApplicationLoader;
 
 /**
@@ -13,7 +16,7 @@ import org.telegram.messenger.ApplicationLoader;
  * Policy notes (keep in sync with Tools/test_voip_fgs_android14.py):
  * - Call & Voice Protection (feature_10 / confirm-actions) is permanently removed.
  *   It caused VoIP signaling timeouts and "NayaGram keeps stopping".
- * - Instant Translator (feature_17) stays enabled by default.
+ * - Instant Translator (feature_17) remains disabled until a translation engine is implemented.
  * - Telegram Premium follows the real account. Free pin limit stays 10.
  * - Analytics, Smart Storage Doctor, scheduler, auto-reply, story saver,
  *   anonymous stories, forward-without-quote and voice transcription are removed from the UI.
@@ -136,11 +139,15 @@ public class NayaConfig {
     // 6. Anti-Delete Recovery
 
     // 18. Adaptive Network & Data Saver
-    public boolean isDataSaverEnabled() { return preferences.getBoolean("feature_data_saver", true); }
-    public void setDataSaverEnabled(boolean e) { preferences.edit().putBoolean("feature_data_saver", e).apply(); }
+    /** Mirrors Telegram's native stream-media preference so the toggle changes real download behavior. */
+    public boolean isDataSaverEnabled() { return isSaveMobileData(); }
+    public void setDataSaverEnabled(boolean enabled) {
+        preferences.edit().putBoolean("feature_data_saver", enabled).apply();
+        setSaveMobileData(enabled);
+    }
 
     // 19. WebRTC Acoustic Noise Suppression
-    public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", true); }
+    public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", false); }
     public void setNoiseSuppressionEnabled(boolean e) { preferences.edit().putBoolean("feature_noise_suppression", e).apply(); }
 
     // 20. Smart Storage & Cache Auto-Limiter
@@ -158,7 +165,7 @@ public class NayaConfig {
     public void setShowIdAndDc(boolean e) { preferences.edit().putBoolean(KEY_SHOW_ID_DC, e).apply(); }
 
     // 12. Modular NayaConfig
-    public boolean isModularConfigActive() { return preferences.getBoolean(KEY_MODULAR_CONFIG, true); }
+    public boolean isModularConfigActive() { return preferences.getBoolean(KEY_MODULAR_CONFIG, false); }
     public boolean isModularConfig() { return isModularConfigActive(); }
     public void setModularConfig(boolean e) { setModularConfigActive(e); }
     public void setModularConfigActive(boolean e) { preferences.edit().putBoolean(KEY_MODULAR_CONFIG, e).apply(); }
@@ -172,7 +179,7 @@ public class NayaConfig {
     public void setStorageDoctorEnabled(boolean e) { }
 
     // 15. Ultra Battery & Low-Data Saver
-    public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, true); }
+    public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, false); }
     public void setBatterySaverEnabled(boolean e) { preferences.edit().putBoolean(KEY_BATTERY_SAVER, e).apply(); }
 
     // 16. Biometric Chat Locker
@@ -180,7 +187,7 @@ public class NayaConfig {
     public void setBiometricChatLockerEnabled(boolean e) { preferences.edit().putBoolean(KEY_BIOMETRIC_LOCKER, e).apply(); }
 
     // 17. In-Chat Instant Translator (language meaning / translation — kept)
-    public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, true); }
+    public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, false); }
     public void setInstantTranslatorEnabled(boolean e) { preferences.edit().putBoolean(KEY_INSTANT_TRANSLATOR, e).apply(); }
 
     /** Forces 24-hour times for people who travel or work across countries. Local display only. */
@@ -284,12 +291,44 @@ public class NayaConfig {
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
 
+    /**
+     * Export only NayaGram feature preference primitives. User-written auto-reply text,
+     * account identifiers, chats, and credentials are intentionally excluded.
+     */
+    public String exportSettingsJson() {
+        JSONObject root = new JSONObject();
+        JSONObject settings = new JSONObject();
+        try {
+            root.put("format", "nayagram-settings");
+            root.put("schemaVersion", 1);
+            for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (!key.startsWith("feature_") || KEY_AUTO_REPLY_TEXT.equals(key)) {
+                    continue;
+                }
+                if (value instanceof Boolean || value instanceof Integer || value instanceof Long) {
+                    settings.put(key, value);
+                }
+            }
+            root.put("settings", settings);
+            return root.toString(2);
+        } catch (JSONException ignored) {
+            return "{\"format\":\"nayagram-settings\",\"schemaVersion\":1,\"settings\":{}}";
+        }
+    }
+
     // Reset all features to default values
     public void resetToDefaults() {
+        // Apply native-backed defaults before clearing the saved previous-font snapshot.
+        setSaveMobileData(false);
+        setInternationalClock(false);
+        setReadableTextEnabled(false);
+        setReduceMotion(false);
         preferences.edit()
-            .putBoolean(KEY_MESSAGE_SCHEDULER, true)
+            .putBoolean(KEY_MESSAGE_SCHEDULER, false)
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
-            .putBoolean(KEY_STORY_SAVER, true)
+            .putBoolean(KEY_STORY_SAVER, false)
             .putBoolean(KEY_ANONYMOUS_STORIES, false)
             .putBoolean(KEY_SMART_CHAT_FOLDERS, false)
             .remove(LEGACY_KEY_CONFIRM_ACTIONS)
@@ -299,15 +338,19 @@ public class NayaConfig {
             .remove("confirm_call_actions")
             .remove("feature_10_call_voice_protection")
             .putBoolean(KEY_SHOW_ID_DC, true)
-            .putBoolean(KEY_MODULAR_CONFIG, true)
+            .putBoolean(KEY_MODULAR_CONFIG, false)
             .putBoolean(KEY_FOCUS_MODE, false)
             .putBoolean(KEY_STORAGE_DOCTOR, true)
-            .putBoolean(KEY_BATTERY_SAVER, true)
+            .putBoolean(KEY_BATTERY_SAVER, false)
             .putBoolean(KEY_BIOMETRIC_LOCKER, false)
-            .putBoolean(KEY_INSTANT_TRANSLATOR, true)
+            .putBoolean(KEY_INSTANT_TRANSLATOR, false)
             .putBoolean(KEY_INTL_CLOCK, false)
             .putBoolean(KEY_LINK_GUARD, true)
             .putBoolean(KEY_READABLE_TEXT, false)
+            .putBoolean("feature_data_saver", false)
+            .putBoolean("feature_noise_suppression", false)
+            .putBoolean("feature_auto_cache_guard", false)
+            .putBoolean("feature_reduce_motion", false)
             .remove(KEY_READABLE_TEXT_PREV)
             .apply();
     }

@@ -18,9 +18,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * InstantTranslatorManager - In-Chat Dual-Language Instant Translator for NayaGram.
- * Supports 28+ world languages across private chats, groups, and channels.
- * 100% Google Play Store Compliant. Includes LRU Cache to preserve battery and mobile data.
+ * Tutorial-only translation helper used by the Feature Pipeline language guide.
+ * It is not wired into private chats, groups, channels, or the main feature toggle.
+ * Supports the public tutorial in 28 languages and caches translations in memory.
  */
 public final class InstantTranslatorManager {
     private static final String PREFS_NAME = "nayagram_translator_prefs";
@@ -38,7 +38,7 @@ public final class InstantTranslatorManager {
         {"de", "Deutsch (German)"},
         {"ru", "Русский (Russian)"},
         {"tr", "Türkçe (Turkish)"},
-        {"fa", "فারসি (Persian)"},
+        {"fa", "فارسی (Persian)"},
         {"id", "Bahasa Indonesia"},
         {"ms", "Bahasa Melayu"},
         {"zh-CN", "简体中文 (Chinese)"},

@@ -10,6 +10,7 @@ Tests:
 """
 
 import sys
+import re
 
 def test_access_control():
     print("[TEST 1] Access Control (NG_STUDIO_ACCESS_IDS)...", end=" ")
@@ -70,6 +71,111 @@ def test_dynamic_footer_and_branding():
     assert "NayaGram" in "NayaGram for Android v1.0.0 (1)"
     print("PASS")
 
+def test_advanced_feature_wiring():
+    print("[TEST 6] Advanced feature wiring...", end=" ")
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    adapter = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureListAdapter.java").read_text(encoding="utf-8")
+    config = (root / "TMessagesProj/src/main/java/org/nayagram/platform/NayaConfig.java").read_text(encoding="utf-8")
+    browser = (root / "TMessagesProj/src/main/java/org/telegram/messenger/browser/Browser.java").read_text(encoding="utf-8")
+    assert 'case 21: return cfg.isLinkGuardEnabled();' in adapter
+    assert 'case 22: return cfg.isReadableTextEnabled();' in adapter
+    assert 'case 23: return cfg.isReduceMotion();' in adapter
+    assert 'case 21: cfg.setLinkGuardEnabled(newState); break;' in adapter
+    assert 'case 22: cfg.setReadableTextEnabled(newState); break;' in adapter
+    assert 'case 23: cfg.setReduceMotion(newState); break;' in adapter
+    assert 'return isSaveMobileData();' in config
+    assert 'isLinkGuardEnabled()' in browser
+    activity = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/NayaFeaturesActivity.java").read_text(encoding="utf-8")
+    assert 'setSearchQuery(s == null ? "" : s.toString())' in activity
+    assert 'showFeatureHealthCheck(context)' in activity
+    assert 'confirmExportSettings(context)' in activity
+    assert 'public String exportSettingsJson()' in config
+    assert 'Custom auto-reply text and account/chat data are excluded.' in activity
+    assert 'Are you sure you want to reset all NayaGram feature settings to their factory defaults?' in activity
+
+    # Preference-only cards must never pretend to be functional ON/OFF toggles.
+    assert 'private boolean isImplementationPending(FeatureItem item)' in adapter
+    assert 'if (cfg == null || isImplementationPending(item)) return false;' in adapter
+    assert 'Not active yet. No chat is protected by this preference alone.' in adapter
+    assert 'Not active yet. No translation service or in-chat action is connected.' in adapter
+    assert 'The toggle does not change how settings are stored or isolated.' in adapter
+    assert 'cfg.setModularConfig(' not in adapter
+    assert 'currentLang == LANG_AR ? "لاحقًا" : "SOON"' in adapter
+    assert 'cfg.setFocusModeEnabled(' not in adapter
+    assert 'cfg.setBatterySaverEnabled(' not in adapter
+    assert 'cfg.setBiometricChatLockerEnabled(' not in adapter
+    assert 'cfg.setInstantTranslatorEnabled(' not in adapter
+    assert 'cfg.setNoiseSuppressionEnabled(' not in adapter
+    assert 'cfg.setAutoCacheGuardEnabled(' not in adapter
+    assert 'preferences.getBoolean(KEY_MODULAR_CONFIG, false)' in config
+    assert 'preferences.getBoolean(KEY_BATTERY_SAVER, false)' in config
+    assert 'preferences.getBoolean(KEY_INSTANT_TRANSLATOR, false)' in config
+    assert 'preferences.getBoolean("feature_noise_suppression", false)' in config
+    assert '.putBoolean(KEY_MODULAR_CONFIG, false)' in config
+    assert '.putBoolean(KEY_BATTERY_SAVER, false)' in config
+    assert '.putBoolean(KEY_INSTANT_TRANSLATOR, false)' in config
+    assert '.putBoolean("feature_noise_suppression", false)' in config
+    assert 'Instant Translator (feature_17) remains disabled until a translation engine is implemented.' in config
+    assert 'stays enabled by default' not in config
+    tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
+    translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
+    assert 'FeatureTutorialDialog.show(context)' in activity
+    assert 'showAllDetailsPipelineDialog' not in adapter
+    assert 'Feature Pipeline · Tutorial' in activity
+    assert 'buildTutorialBanner(context)' in activity
+    assert 'Verified Feature Controls' in activity
+    assert 'Only features with a verified behavior path appear below.' in activity
+    assert 'setText("Details  ›")' in activity
+    assert 'item.addSubItem(MENU_ALL_DETAILS' not in activity
+    assert 'InstantTranslatorManager.SUPPORTED_LANGUAGES.length' in activity
+    assert 'private boolean isMainPageFeature(FeatureItem item)' in adapter
+    assert 'if (isMainPageFeature(item) && (normalized.isEmpty() || matchesFeature(item, normalized)))' in adapter
+    assert 'case 11: // User ID & active data-center ID on profile' in adapter
+    assert 'case 23: // Telegram interface animation preference' in adapter
+    assert 'case 2:  // Message Scheduler has no delivery engine' in adapter
+    assert 'case 5:  // Anonymous Stories is disabled' in adapter
+    assert '.setPositiveButton("Details"' in tutorial
+    assert 'This page only explains features; it never turns them on or off.' in tutorial
+    assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial
+    assert 'getFlagForLanguage(languages[i][0])' in tutorial
+    assert 'case "ta":' in tutorial and 'case "te": return "🇮🇳";' in tutorial
+    assert 'languages.length + " tutorial languages' in tutorial
+    assert 'Feature Pipeline · Details' in tutorial
+    assert 'never turns them on or off' in tutorial
+    assert 'Only this public tutorial text is sent for translation' in tutorial
+    assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
+    assert '"🇧🇩"' in tutorial and '"🇬🇧"' in tutorial and '"🇸🇦"' in tutorial
+    assert '"fa", "فارسی (Persian)"' in translator
+    assert 'IMPLEMENTATION STATUS — VERIFIED' not in adapter
+    assert 'Quiet hours with VIP bypass' not in adapter
+    assert 'Keyword based replies' not in adapter
+    assert 'Story Saver → HD download' not in adapter
+    profile = (root / "TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java").read_text(encoding="utf-8")
+    assert 'ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId()' in profile
+    assert 'NayaConfig.getInstance().isShowIdAndDc() && user.id > 0' in profile
+    assert 'onlineTextView[2].setOnLongClickListener' in profile
+    assert 'long-press the line to copy' in tutorial
+    assert 'Tutorial-only translation helper used by the Feature Pipeline language guide.' in translator
+    assert 'It is not wired into private chats, groups, channels, or the main feature toggle.' in translator
+    assert "Uses Telegram's native media-streaming preference. It is not a full network optimizer." in adapter
+    assert 'No automatic storage limiter runs.' in adapter
+
+    # The legacy settings hub must not expose the same inactive preferences as live toggles.
+    legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    assert 'cfg.setDataSaverEnabled(checked);' in legacy_hub
+    assert 'if (isPendingFeaturePosition(position))' in legacy_hub
+    assert 'private boolean isPendingFeaturePosition(int position)' in legacy_hub
+    assert 'Smart Chat Folders · SOON' in legacy_hub
+    assert 'Biometric Chat Locker · SOON' in legacy_hub
+    assert 'Focus & Wellbeing Mode · SOON' in legacy_hub
+    assert 'Ultra Battery Saver · SOON' in legacy_hub
+    assert 'In-Chat Instant Translator · SOON' in legacy_hub
+    assert 'No chat is protected by this setting' in legacy_hub
+    assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
+    assert 'title.contains("· SOON") ? "Unavailable"' in legacy_hub
+    print("PASS")
+
 def test_search_and_hub_naming():
     print("[TEST 5] Hub Naming (𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞) & Search Query Index...", end=" ")
     hub_name = "𝐍𝐆 𝐅𝐞𝐚𝐭𝐮𝐫𝐞"
@@ -91,4 +197,5 @@ if __name__ == '__main__':
     test_public_hub_cleared_of_risky_features()
     test_dynamic_footer_and_branding()
     test_search_and_hub_naming()
-    print("--- ALL 5 TESTS PASSED SUCCESSFULLY ---")
+    test_advanced_feature_wiring()
+    print("--- ALL 6 TESTS PASSED SUCCESSFULLY ---")
