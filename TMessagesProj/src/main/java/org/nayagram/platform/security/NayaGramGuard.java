@@ -2,7 +2,6 @@ package org.nayagram.platform.security;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Base64;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
@@ -17,8 +16,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Local-only RFC 6238 TOTP guard. No Google API or network request is used.
@@ -32,6 +33,7 @@ public final class NayaGramGuard {
     private static final String PENDING_SECRET = "pending_secret";
     private static final String BACKUP_PREFIX = "backup_hash_";
     private static final int BACKUP_COUNT = 10;
+    private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static volatile boolean sessionVerified;
 
     private NayaGramGuard() {}
@@ -121,14 +123,18 @@ public final class NayaGramGuard {
         ArrayList<String> backupCodes = new ArrayList<>(BACKUP_COUNT);
         SharedPreferences.Editor editor = secure.edit().putString(SECRET, secret).remove(PENDING_SECRET);
         SecureRandom random = new SecureRandom();
-        for (int i = 0; i < BACKUP_COUNT; i++) {
-            byte[] bytes = new byte[5];
-            random.nextBytes(bytes);
-            String raw = Base64.encodeToString(bytes, Base64.NO_WRAP | Base64.NO_PADDING)
-                    .replace("+", "A").replace("/", "B").toUpperCase(Locale.US);
-            String display = raw.substring(0, Math.min(8, raw.length()));
+        Set<String> uniqueCodes = new HashSet<>();
+        while (uniqueCodes.size() < BACKUP_COUNT) {
+            StringBuilder raw = new StringBuilder(10);
+            for (int j = 0; j < 10; j++) {
+                raw.append(BACKUP_ALPHABET.charAt(random.nextInt(BACKUP_ALPHABET.length())));
+            }
+            uniqueCodes.add(raw.toString());
+        }
+        int index = 0;
+        for (String display : uniqueCodes) {
             backupCodes.add(display);
-            editor.putString(BACKUP_PREFIX + i, sha256(display));
+            editor.putString(BACKUP_PREFIX + index++, sha256(display));
         }
         editor.putBoolean(ENABLED, true).apply();
         markSessionVerified();
