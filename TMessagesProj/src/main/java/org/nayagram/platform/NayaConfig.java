@@ -290,6 +290,11 @@ public class NayaConfig {
 
     // Reset all features to default values
     public void resetToDefaults() {
+        // Apply native-backed defaults before clearing the saved previous-font snapshot.
+        setSaveMobileData(false);
+        setInternationalClock(false);
+        setReadableTextEnabled(false);
+        setReduceMotion(false);
         preferences.edit()
             .putBoolean(KEY_MESSAGE_SCHEDULER, false)
             .putBoolean(KEY_SMART_AUTO_REPLY, false)
@@ -315,11 +320,8 @@ public class NayaConfig {
             .putBoolean("feature_data_saver", false)
             .putBoolean("feature_noise_suppression", true)
             .putBoolean("feature_auto_cache_guard", false)
+            .putBoolean("feature_reduce_motion", false)
             .remove(KEY_READABLE_TEXT_PREV)
             .apply();
-        setSaveMobileData(false);
-        setInternationalClock(false);
-        setReadableTextEnabled(false);
-        setReduceMotion(false);
     }
 }
