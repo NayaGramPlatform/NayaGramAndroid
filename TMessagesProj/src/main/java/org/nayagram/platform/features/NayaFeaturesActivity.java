@@ -124,12 +124,12 @@ public class NayaFeaturesActivity extends BaseFragment {
     private void showFeatureHealthCheck(Context context) {
         NayaConfig config = NayaConfig.getInstance();
         StringBuilder report = new StringBuilder();
-        report.append("NayaGram feature readiness\\n\\n");
-        report.append("External Link Guard: ").append(config.isLinkGuardEnabled() ? "ON" : "OFF").append('\\n');
-        report.append("Readable Text: ").append(config.isReadableTextEnabled() ? "ON" : "OFF").append('\\n');
-        report.append("Reduce Motion: ").append(config.isReduceMotion() ? "ON" : "OFF").append('\\n');
-        report.append("Data Saver: ").append(config.isDataSaverEnabled() ? "ON" : "OFF").append('\\n');
-        report.append("Storage Scan: AVAILABLE (on demand)").append("\\n\\n");
+        report.append("NayaGram feature readiness\n\n");
+        report.append("External Link Guard: ").append(config.isLinkGuardEnabled() ? "ON" : "OFF").append('\n');
+        report.append("Readable Text: ").append(config.isReadableTextEnabled() ? "ON" : "OFF").append('\n');
+        report.append("Reduce Motion: ").append(config.isReduceMotion() ? "ON" : "OFF").append('\n');
+        report.append("Data Saver: ").append(config.isDataSaverEnabled() ? "ON" : "OFF").append('\n');
+        report.append("Storage Scan: AVAILABLE (on demand)").append("\n\n");
         report.append("This report shows local setting state, not a security certification or a guarantee that every optional feature is active.");
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Feature Health Check");
@@ -159,17 +159,6 @@ public class NayaFeaturesActivity extends BaseFragment {
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
-    }
-
-    private void showPrivacyAuditDialog(Context context) {        adapter = new FeatureListAdapter(context, this);
-        recyclerView.setAdapter(adapter);
-
-        container.addView(recyclerView, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-
-        return fragmentView;
     }
 
     private void showPrivacyAuditDialog(Context context) {
