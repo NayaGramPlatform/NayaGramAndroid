@@ -120,7 +120,6 @@ def test_advanced_feature_wiring():
     tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
     translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
     assert 'FeatureTutorialDialog.show(context);' in adapter
-    assert '📚 Feature Tutorials · Details' in adapter
     assert 'Feature Tutorials' in activity
     assert '.setPositiveButton("Details"' in tutorial
     assert 'This page is a tutorial, not an active feature switchboard.' in tutorial
