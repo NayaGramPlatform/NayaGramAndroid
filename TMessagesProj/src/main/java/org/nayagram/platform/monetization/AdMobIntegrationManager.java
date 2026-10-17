@@ -183,6 +183,21 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
         mainHandler.post(() -> attachBannerNow(container));
     }
 
+
+    /** Release banner resources when the owning dialogs fragment is destroyed. */
+    public void destroyBanner(FrameLayout container) {
+        if (container == null) return;
+        mainHandler.post(() -> {
+            for (int i = container.getChildCount() - 1; i >= 0; i--) {
+                View child = container.getChildAt(i);
+                if (child instanceof AdView) {
+                    ((AdView) child).destroy();
+                }
+            }
+            container.removeAllViews();
+        });
+    }
+
     private void attachPendingBanners() {
         synchronized (pendingBannerContainers) {
             for (WeakReference<FrameLayout> reference : pendingBannerContainers) {
