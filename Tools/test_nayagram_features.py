@@ -105,6 +105,17 @@ def test_advanced_feature_wiring():
     assert 'case 16: cfg.setBiometricChatLockerEnabled(newState); break;' not in adapter
     assert 'case 17: cfg.setInstantTranslatorEnabled(newState); break;' not in adapter
     assert 'case 19: cfg.setNoiseSuppressionEnabled(newState); break;' not in adapter
+
+    # The legacy settings hub must not expose the same inactive preferences as live toggles.
+    legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    assert 'if (isPendingFeaturePosition(position))' in legacy_hub
+    assert 'private boolean isPendingFeaturePosition(int position)' in legacy_hub
+    assert 'Smart Chat Folders · SOON' in legacy_hub
+    assert 'Biometric Chat Locker · SOON' in legacy_hub
+    assert 'Focus & Wellbeing Mode · SOON' in legacy_hub
+    assert 'Ultra Battery Saver · SOON' in legacy_hub
+    assert 'In-Chat Instant Translator · SOON' in legacy_hub
+    assert 'No chat is protected by this setting' in legacy_hub
     print("PASS")
 
 def test_search_and_hub_naming():
