@@ -125,6 +125,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.NotificationsController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.nayagram.platform.ads.AdManager;
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.UserConfig;
@@ -7268,6 +7269,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         }
+        // Full-screen ads are only considered on return to the main dialogs screen.
+        // AdManager enforces Premium exclusion, a 20-minute cap, and minimum usage.
+        if (NayaGramAdsConfig.ENABLE_ADS && !onlySelect && folderId == 0 && communityId == 0
+                && initialDialogsType == DIALOGS_TYPE_DEFAULT && !searchIsShowed) {
+            Activity activity = getParentActivity();
+            if (activity != null) {
+                AdManager.showInterstitialIfReady(activity);
+            }
+        }
     }
 
     @Override
@@ -8108,6 +8118,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 });
                 return;
             }
+            AdManager.recordUserAction();
             Bundle args = new Bundle();
             if (DialogObject.isEncryptedDialog(dialogId)) {
                 args.putInt("enc_id", DialogObject.getEncryptedChatId(dialogId));
