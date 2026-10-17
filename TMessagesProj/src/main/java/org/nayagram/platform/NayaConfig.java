@@ -314,7 +314,7 @@ public class NayaConfig {
             root.put("settings", settings);
             return root.toString(2);
         } catch (JSONException ignored) {
-            return "{\\"format\\":\\"nayagram-settings\\",\\"schemaVersion\\":1,\\"settings\\":{}}";
+            return "{\"format\":\"nayagram-settings\",\"schemaVersion\":1,\"settings\":{}}";
         }
     }
 
