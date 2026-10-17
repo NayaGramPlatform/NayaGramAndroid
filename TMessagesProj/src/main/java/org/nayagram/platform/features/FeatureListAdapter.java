@@ -281,10 +281,10 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         holder.setListeners(
                 v -> handleFeatureClick(item, position),
                 v -> {
-                    showFeatureDetailsDialog(item);
+                    showFeatureDetailsDialog(item, position + 1);
                     return true;
                 },
-                v -> showFeatureDetailsDialog(item)
+                v -> showFeatureDetailsDialog(item, position + 1)
         );
     }
 
@@ -402,12 +402,12 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         return features.size();
     }
 
-    private void showFeatureDetailsDialog(FeatureItem item) {
+    private void showFeatureDetailsDialog(FeatureItem item, int displayNumber) {
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(item.getCatchyTitle(currentLang));
         builder.setMessage(item.getDesc(currentLang) + "\n\n" +
-                "Feature #" + item.number + " • NayaGram Exclusive");
+                "Feature #" + displayNumber + " • NayaGram Exclusive");
         builder.setPositiveButton("OK", null);
         builder.show();
     }
