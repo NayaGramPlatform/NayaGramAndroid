@@ -5,11 +5,17 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.util.DisplayMetrics;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.FullScreenContentCallback;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
@@ -21,6 +27,10 @@ import com.google.android.ump.UserMessagingPlatform;
 
 import org.telegram.messenger.NayaGramAdsConfig;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,6 +50,8 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
     private volatile Context appContext;
     private volatile boolean sdkInitialized;
     private volatile InterstitialAd interstitialAd;
+    private final List<WeakReference<FrameLayout>> pendingBannerContainers =
+        Collections.synchronizedList(new ArrayList<>());
 
     private AdMobIntegrationManager() { }
 
@@ -108,6 +120,7 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
                 MobileAds.initialize(context, initializationStatus -> {
                     sdkInitialized = true;
                     loadInterstitial();
+                    attachPendingBanners();
                     Log.i(TAG, "Google Mobile Ads SDK initialized.");
                 });
             } catch (RuntimeException error) {
@@ -147,6 +160,68 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
         } catch (RuntimeException error) {
             interstitialAd = null;
             Log.e(TAG, "Could not request an interstitial ad.", error);
+        }
+    }
+
+
+    /**
+     * Attach a banner to an explicitly supplied home/dialogs-screen container.
+     * Containers are queued while UMP consent or SDK initialization is pending.
+     */
+    public void attachBanner(Activity activity, FrameLayout container) {
+        if (!NayaGramAdsConfig.shouldShowBanner() || activity == null || container == null) {
+            return;
+        }
+        if (activity.isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && activity.isDestroyed())) {
+            return;
+        }
+        if (!sdkInitialized) {
+            pendingBannerContainers.add(new WeakReference<>(container));
+            return;
+        }
+        mainHandler.post(() -> attachBannerNow(container));
+    }
+
+    private void attachPendingBanners() {
+        synchronized (pendingBannerContainers) {
+            for (WeakReference<FrameLayout> reference : pendingBannerContainers) {
+                FrameLayout container = reference.get();
+                if (container != null) {
+                    mainHandler.post(() -> attachBannerNow(container));
+                }
+            }
+            pendingBannerContainers.clear();
+        }
+    }
+
+    private void attachBannerNow(FrameLayout container) {
+        if (!NayaGramAdsConfig.shouldShowBanner() || container == null) return;
+        if (container.getChildCount() > 0) return;
+        Context context = container.getContext();
+        try {
+            DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+            int widthDp = Math.max(1, (int) (metrics.widthPixels / metrics.density));
+            AdView banner = new AdView(context);
+            banner.setAdUnitId(NayaGramAdsConfig.BANNER_AD_UNIT_ID);
+            banner.setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp));
+            banner.setAdListener(new com.google.android.gms.ads.AdListener() {
+                @Override
+                public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                    Log.w(TAG, "Dialogs banner failed to load: " + error.getMessage());
+                    container.removeView(banner);
+                    container.setVisibility(View.GONE);
+                }
+            });
+            container.setVisibility(View.VISIBLE);
+            container.addView(banner, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            ));
+            banner.loadAd(new AdRequest.Builder().build());
+        } catch (RuntimeException error) {
+            Log.e(TAG, "Could not attach dialogs banner.", error);
+            container.setVisibility(View.GONE);
         }
     }
 
