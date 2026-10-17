@@ -37,6 +37,8 @@ import androidx.annotation.Keep;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.nayagram.platform.monetization.AdMobIntegrationManager;
+import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BuildVars;
@@ -116,6 +118,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     @Keep
     private int emailLoginRow;
     private int privacyShadowRow;
+    private int adPrivacyRow = -1;
     private int groupsRow;
     private int groupsDetailRow;
     private int securitySectionRow;
@@ -316,7 +319,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             if (!view.isEnabled()) {
                 return;
             }
-            if (position == autoDeleteMesages) {
+            if (position == adPrivacyRow) {
+                AdMobIntegrationManager.getInstance().showPrivacyOptionsForm(getParentActivity());
+            } else if (position == autoDeleteMesages) {
                 if (getUserConfig().getGlobalTTl() >= 0) {
                     presentFragment(new AutoDeleteMessagesActivity());
                 }
@@ -752,6 +757,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         musicRow = rowCount++;
         groupsRow = rowCount++;
         privacyShadowRow = rowCount++;
+        adPrivacyRow = NayaGramAdsConfig.ENABLE_ADS ? rowCount++ : -1;
 
         if (getMessagesController().autoarchiveAvailable || getUserConfig().isPremium()) {
             newChatsHeaderRow = rowCount++;
@@ -1037,7 +1043,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     position == newChatsRow && !getContactsController().getLoadingGlobalSettings() ||
                     position == emailLoginRow || position == paymentsClearRow || position == secretMapRow ||
                     position == contactsSyncRow || position == passportRow || position == contactsDeleteRow ||
-                    position == contactsSuggestRow || position == autoDeleteMesages || position == botsBiometryRow;
+                    position == contactsSuggestRow || position == autoDeleteMesages || position == botsBiometryRow ||
+                    position == adPrivacyRow;
         }
 
         @Override
@@ -1227,6 +1234,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         secretMapUpdate = false;
                     } else if (position == contactsDeleteRow) {
                         textCell.setText(getString("SyncContactsDelete", R.string.SyncContactsDelete), true);
+                    } else if (position == adPrivacyRow) {
+                        textCell.setText("Advertising privacy choices", true);
                     }
                     textCell.setDrawLoading(showLoading, loadingLen, animated);
                     break;
@@ -1391,7 +1400,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         public int getItemViewType(int position) {
             if (position == passportRow || position == lastSeenRow || position == phoneNumberRow ||
                     position == deleteAccountRow || position == webSessionsRow || position == groupsRow || position == paymentsClearRow ||
-                    position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow) {
+                    position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow || position == adPrivacyRow) {
                 return 0;
             } else if (position == privacyShadowRow || position == deleteAccountDetailRow || position == groupsDetailRow || position == sessionsDetailRow || position == secretDetailRow || position == botsDetailRow || position == contactsDetailRow || position == newChatsSectionRow) {
                 return 1;

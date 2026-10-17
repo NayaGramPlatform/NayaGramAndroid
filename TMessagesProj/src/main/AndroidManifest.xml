@@ -110,6 +110,11 @@
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
     >
+        <!-- Google test App ID; replace with NayaGram's production AdMob App ID before monetization. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 
         <!-- NG Sky - ডিফল্ট আইকন (স্কাই ব্লু) -->
