@@ -126,7 +126,7 @@ def test_advanced_feature_wiring():
     assert 'This page is a tutorial, not an active feature switchboard.' in tutorial
     assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial
     assert 'Only this public tutorial text is sent for translation' in tutorial
-    assert len(re.findall(r'^\\s*\\{"', translator, re.MULTILINE)) >= 28
+    assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
     assert '"🇧🇩"' in tutorial and '"🇬🇧"' in tutorial and '"🇸🇦"' in tutorial
     assert 'IMPLEMENTATION STATUS — VERIFIED' not in adapter
     assert 'Quiet hours with VIP bypass' not in adapter
