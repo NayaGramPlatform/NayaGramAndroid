@@ -73,9 +73,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_folders,
                 new String[]{"Smart Chat Folders", "স্মার্ট চ্যাট ফোল্ডার", "مجلدات الدردشة الذكية"},
                 new String[]{
-                        "Auto-separate Users, Groups, Channels & Bots into smart folders.",
-                        "ইউজার, গ্রুপ, চ্যানেল ও বট স্বয়ংক্রিয়ভাবে আলাদা ফোল্ডারে সাজান।",
-                        "افصل تلقائيًا المستخدمين والمجموعات والقنوات والبوتات في مجلدات ذكية."
+                        "Not active yet. This card will be enabled after native Telegram folder integration is implemented.",
+                        "এখনো চালু নয়। টেলিগ্রামের নেটিভ ফোল্ডার সংযোগ সম্পন্ন হলে ফিচারটি চালু হবে।",
+                        "غير نشط حاليًا. سيتم تفعيله بعد تنفيذ تكامل مجلدات تيليجرام الأصلي."
                 }
         ));
 
@@ -117,9 +117,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_mute,
                 new String[]{"Focus Mode", "ফোকাস মোড", "وضع التركيز"},
                 new String[]{
-                        "Silence non-urgent notifications. VIP contacts bypass (family & important).",
-                        "অপ্রয়োজনীয় নোটিফিকেশন বন্ধ করুন। VIP কন্টাক্ট বাইপাস করতে পারে।",
-                        "كتم الإشعارات غير العاجلة. جهات الاتصال المهمة تتجاوز الوضع."
+                        "Not active yet. Notification scheduling and VIP bypass are not connected.",
+                        "এখনো চালু নয়। নোটিফিকেশন সময়সূচি ও VIP ব্যতিক্রম সংযুক্ত হয়নি।",
+                        "غير نشط حاليًا. لم يتم ربط جدولة الإشعارات واستثناء جهات VIP."
                 }
         ));
 
@@ -131,9 +131,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg2_battery,
                 new String[]{"Battery Saver", "ব্যাটারি সেভার", "توفير البطارية"},
                 new String[]{
-                        "Below 20% charge, auto-pause video & heavy animations. Save 30-40% battery.",
-                        "২০% এর নিচে চার্জ থাকলে ভিডিও ও অ্যানিমেশন অটো-পজ। ৩০-৪০% ব্যাটারি বাঁচান।",
-                        "عند أقل من 20% شحن، أوقف الفيديو والرسوم المتحركة تلقائيًا. وفر 30-40% بطارية."
+                        "Not active yet. Low-battery detection and automatic playback controls are not connected.",
+                        "এখনো চালু নয়। কম ব্যাটারি শনাক্তকরণ ও স্বয়ংক্রিয় প্লেব্যাক নিয়ন্ত্রণ সংযুক্ত হয়নি।",
+                        "غير نشط حاليًا. لم يتم ربط اكتشاف انخفاض البطارية والتحكم التلقائي بالتشغيل."
                 }
         ));
 
@@ -145,9 +145,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_secret,
                 new String[]{"Chat Locker", "চ্যাট লকার", "قفل الدردشة"},
                 new String[]{
-                        "Lock only sensitive chats with fingerprint & passcode. Keep privacy safe.",
-                        "শুধু সংবেদনশীল চ্যাট ফিঙ্গারপ্রিন্ট ও পাসকোড দিয়ে লক করুন।",
-                        "اقفل الدردشات الحساسة فقط ببصمة الإصبع ورمز المرور."
+                        "Not active yet. No chat is protected by this preference alone.",
+                        "এখনো চালু নয়। শুধু এই সেটিং দিয়ে কোনো চ্যাট সুরক্ষিত হয় না।",
+                        "غير نشط حاليًا. هذا الإعداد وحده لا يحمي أي محادثة."
                 }
         ));
 
@@ -159,9 +159,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_translate,
                 new String[]{"Instant Translator", "ইনস্ট্যান্ট ট্রান্সলেটর", "المترجم الفوري"},
                 new String[]{
-                        "Translate any foreign language message inside the chat in one tap.",
-                        "চ্যাটের ভিতরে যেকোনো বিদেশি ভাষার মেসেজ এক ট্যাপে অনুবাদ করুন।",
-                        "ترجم أي رسالة بلغة أجنبية داخل الدردشة بنقرة واحدة."
+                        "Not active yet. No translation service or in-chat action is connected.",
+                        "এখনো চালু নয়। অনুবাদ সেবা বা চ্যাটের ভেতরের অ্যাকশন সংযুক্ত হয়নি।",
+                        "غير نشط حاليًا. لم يتم ربط خدمة ترجمة أو إجراء داخل المحادثة."
                 }
         ));
 
@@ -187,9 +187,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_calls,
                 new String[]{"Acoustic Noise Shield", "অডিও নয়েজ সাপ্রেশন", "حاجب الضوضاء الصوتية"},
                 new String[]{
-                        "WebRTC acoustic noise cancellation for crystal clear voice and video calls.",
-                        "এইচডি কল ও লাইভ স্ট্রিমিংয়ে ব্যাকগ্রাউন্ড নয়েজ সম্পূর্ণ দূর করে।",
-                        "إلغاء الضوضاء المحيطة لإجراء مكالمات صوتية وفيديو واضحة تمامًا."
+                        "Not active yet. The call audio pipeline has no verified noise-suppression wiring.",
+                        "এখনো চালু নয়। কলের অডিও পাইপলাইনে নয়েজ সাপ্রেশন সংযুক্ত থাকার নিশ্চয়তা নেই।",
+                        "غير نشط حاليًا. لم يتم التحقق من ربط تقليل الضوضاء بمسار صوت المكالمة."
                 }
         ));
 
@@ -286,33 +286,45 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     public boolean isFeatureEnabled(FeatureItem item) {
         NayaConfig cfg = NayaConfig.getInstance();
-        if (cfg == null) return false;
+        if (cfg == null || isImplementationPending(item)) return false;
         switch (item.number) {
             case 2: return cfg.isMessageScheduler();
             case 3: return cfg.isSmartAutoReply();
             case 4: return cfg.isStorySaverEnabled();
             case 5: return cfg.isAnonymousStories();
             case 18: return cfg.isDataSaverEnabled();
-            case 19: return cfg.isNoiseSuppressionEnabled();
             case 20: return false; // Action card: runs a scan instead of representing a toggle
             case 21: return cfg.isLinkGuardEnabled();
             case 22: return cfg.isReadableTextEnabled();
             case 23: return cfg.isReduceMotion();
-            case 9: return cfg.isSmartFoldersEnabled();
             case 11: return cfg.isShowIdAndDc();
             case 12: return cfg.isModularConfig();
-            case 13: return cfg.isFocusModeEnabled();
             case 14: return true;
-            case 15: return cfg.isBatterySaverEnabled();
-            case 16: return cfg.isBiometricChatLockerEnabled();
-            case 17: return cfg.isInstantTranslatorEnabled();
             default: return false;
+        }
+    }
+
+    /** Features whose UI is present but whose native behavior is not implemented yet. */
+    private boolean isImplementationPending(FeatureItem item) {
+        switch (item.number) {
+            case 9:  // Smart Chat Folders
+            case 13: // Focus Mode
+            case 15: // Battery Saver
+            case 16: // Chat Locker
+            case 17: // Instant Translator
+            case 19: // Noise Suppression
+                return true;
+            default:
+                return false;
         }
     }
 
     private String getActionLabel(FeatureItem item) {
         if (item.number == 20) {
             return currentLang == LANG_BN ? "স্ক্যান" : (currentLang == LANG_AR ? "فحص" : "SCAN");
+        }
+        if (isImplementationPending(item)) {
+            return currentLang == LANG_BN ? "পরে" : (currentLang == LANG_AR ? "لاحقًا" : "SOON");
         }
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) {
@@ -327,6 +339,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     private int getLabelTextColor(FeatureItem item) {
         if (item.number == 20) return 0xFF7C3AED;
+        if (isImplementationPending(item)) return 0xFF64748B;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0xFF0284C7;
         return enabled ? 0xFF10B981 : 0xFF0284C7; // ON = Emerald Green, OFF = Royal Blue
@@ -334,6 +347,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     private int getLabelBgColor(FeatureItem item) {
         if (item.number == 20) return 0x227C3AED;
+        if (isImplementationPending(item)) return 0x2264748B;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0x200EA5E9;
         return enabled ? 0x2410B981 : 0x240284C7; // ON = Green Tint, OFF = Blue Tint
@@ -366,6 +380,10 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             showStorageDoctorScanDialog();
             return;
         }
+        if (isImplementationPending(item)) {
+            showFeatureDetailsDialog(item, position + 1);
+            return;
+        }
 
         if (item.number == 3 && cfg.isSmartAutoReply()) {
             showAutoReplyConfigDialog();
@@ -382,18 +400,12 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 4: cfg.setStorySaverEnabled(newState); break;
             case 5: cfg.setAnonymousStories(newState); break;
             case 18: cfg.setDataSaverEnabled(newState); break;
-            case 19: cfg.setNoiseSuppressionEnabled(newState); break;
             case 20: cfg.setAutoCacheGuardEnabled(newState); break;
             case 21: cfg.setLinkGuardEnabled(newState); break;
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
-            case 9: cfg.setSmartFoldersEnabled(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
             case 12: cfg.setModularConfig(newState); break;
-            case 13: cfg.setFocusModeEnabled(newState); break;
-            case 15: cfg.setBatterySaverEnabled(newState); break;
-            case 16: cfg.setBiometricChatLockerEnabled(newState); break;
-            case 17: cfg.setInstantTranslatorEnabled(newState); break;
         }
 
         notifyItemChanged(position);
@@ -479,7 +491,12 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(item.getCatchyTitle(currentLang));
-        builder.setMessage(item.getDesc(currentLang) + "\n\n" +
+        String availability = isImplementationPending(item)
+                ? (currentLang == LANG_BN ? "\n\nএই ফিচারটি এখনো কার্যকর নয়। নেটিভ বাস্তবায়ন ও পরীক্ষা শেষ না হওয়া পর্যন্ত এটি চালু করা যাবে না."
+                : (currentLang == LANG_AR ? "\n\nهذه الميزة غير نشطة بعد. لن يتم تفعيلها قبل اكتمال التنفيذ والاختبار."
+                : "\n\nNot available yet. It will remain inactive until native implementation and testing are complete."))
+                : "";
+        builder.setMessage(item.getDesc(currentLang) + availability + "\n\n" +
                 "Feature #" + displayNumber + " • NayaGram Exclusive");
         builder.setPositiveButton("OK", null);
         builder.show();
