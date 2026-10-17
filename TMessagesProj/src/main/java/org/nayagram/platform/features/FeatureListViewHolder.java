@@ -163,11 +163,13 @@ public class FeatureListViewHolder extends RecyclerView.ViewHolder {
     public void bind(FeatureListAdapter.FeatureItem feature, int position, int lang, boolean isEnabled, String actionLabel, int labelColor, int labelBgColor) {
         if (feature == null) return;
 
+        int displayNumber = position + 1;
         titleView.setText(feature.getCatchyTitle(lang));
         descView.setText(feature.getDesc(lang));
-        numberView.setText(String.valueOf(feature.number));
+        // Badge is the visible list order. feature.number stays the stable config id.
+        numberView.setText(String.valueOf(displayNumber));
 
-        cardView.setContentDescription("Feature " + feature.number + ": " + feature.getCatchyTitle(lang) + ". Status: " + actionLabel + ". Tap to toggle or configure, long press for details.");
+        cardView.setContentDescription("Feature " + displayNumber + ": " + feature.getCatchyTitle(lang) + ". Status: " + actionLabel + ". Tap to toggle or configure, long press for details.");
         cardView.setFocusable(true);
         iconBadgeWrapper.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         detailsBtn.setContentDescription(actionLabel + " for " + feature.getCatchyTitle(lang));
