@@ -92,6 +92,9 @@ import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.AssistActionBuilder;
 
+import org.nayagram.platform.ads.AdManager;
+import org.nayagram.platform.monetization.AdMobIntegrationManager;
+import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -461,6 +464,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         frameLayout.setClipToPadding(false);
         frameLayout.setClipChildren(false);
         setContentView(frameLayout);
+        if (NayaGramAdsConfig.ENABLE_ADS) {
+            // Register only from a foreground Activity so UMP can present required consent UI.
+            AdManager.registerProvider(AdMobIntegrationManager.getInstance());
+            AdMobIntegrationManager.getInstance().initialize(this);
+        }
         rootAnimatedInsetsListener = new WindowAnimatedInsetsProvider(frameLayout);
         pipActivityController.addPipListener(new IPipActivityListener() {
             final ActivityVisibilityController activityVisibilityController = createActivityVisibilityController(false);
