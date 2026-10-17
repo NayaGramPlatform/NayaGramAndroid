@@ -122,7 +122,7 @@ def test_advanced_feature_wiring():
     assert 'FeatureTutorialDialog.show(context);' in adapter
     assert 'Feature Pipeline · Tutorial' in activity
     assert '.setPositiveButton("Details"' in tutorial
-    assert 'This page is a tutorial, not an active feature switchboard.' in tutorial
+    assert 'This page only explains features; it never turns them on or off.' in tutorial
     assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial
     assert 'getFlagForLanguage(languages[i][0])' in tutorial
     assert 'case "ta":' in tutorial and 'case "te": return "🇮🇳";' in tutorial
