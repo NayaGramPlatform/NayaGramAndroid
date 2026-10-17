@@ -70,8 +70,8 @@ public final class NayaGramGuard {
     }
 
     public static String beginSetup(Context context) throws Exception {
-        // 160-bit secret, compatible with Google Authenticator and RFC 6238.
-        String secret = new DefaultSecretGenerator(160).generate();
+        // 32 Base32 characters encode 160 bits of entropy.
+        String secret = new DefaultSecretGenerator(32).generate();
         prefs(context).edit().putString(PENDING_SECRET, secret).apply();
         return secret;
     }
