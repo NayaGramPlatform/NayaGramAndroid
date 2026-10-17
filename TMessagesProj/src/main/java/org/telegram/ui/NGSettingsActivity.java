@@ -281,7 +281,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Pause GIFs: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSaveData) {
-                    cfg.setSaveMobileData(checked);
+                    cfg.setDataSaverEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Save mobile data: " + (checked ? "On" : "Off")).show();
                 }
