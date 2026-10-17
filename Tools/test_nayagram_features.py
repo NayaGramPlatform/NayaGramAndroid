@@ -85,6 +85,12 @@ def test_advanced_feature_wiring():
     assert 'case 23: cfg.setReduceMotion(newState); break;' in adapter
     assert 'return isSaveMobileData();' in config
     assert 'isLinkGuardEnabled()' in browser
+    activity = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/NayaFeaturesActivity.java").read_text(encoding="utf-8")
+    assert 'setSearchQuery(s == null ? "" : s.toString())' in activity
+    assert 'showFeatureHealthCheck(context)' in activity
+    assert 'confirmExportSettings(context)' in activity
+    assert 'public String exportSettingsJson()' in config
+    assert 'Custom auto-reply text and account/chat data are excluded.' in activity
     print("PASS")
 
 def test_search_and_hub_naming():
