@@ -147,7 +147,7 @@ public class NayaConfig {
     }
 
     // 19. WebRTC Acoustic Noise Suppression
-    public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", true); }
+    public boolean isNoiseSuppressionEnabled() { return preferences.getBoolean("feature_noise_suppression", false); }
     public void setNoiseSuppressionEnabled(boolean e) { preferences.edit().putBoolean("feature_noise_suppression", e).apply(); }
 
     // 20. Smart Storage & Cache Auto-Limiter
@@ -165,7 +165,7 @@ public class NayaConfig {
     public void setShowIdAndDc(boolean e) { preferences.edit().putBoolean(KEY_SHOW_ID_DC, e).apply(); }
 
     // 12. Modular NayaConfig
-    public boolean isModularConfigActive() { return preferences.getBoolean(KEY_MODULAR_CONFIG, true); }
+    public boolean isModularConfigActive() { return preferences.getBoolean(KEY_MODULAR_CONFIG, false); }
     public boolean isModularConfig() { return isModularConfigActive(); }
     public void setModularConfig(boolean e) { setModularConfigActive(e); }
     public void setModularConfigActive(boolean e) { preferences.edit().putBoolean(KEY_MODULAR_CONFIG, e).apply(); }
@@ -179,7 +179,7 @@ public class NayaConfig {
     public void setStorageDoctorEnabled(boolean e) { }
 
     // 15. Ultra Battery & Low-Data Saver
-    public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, true); }
+    public boolean isBatterySaverEnabled() { return preferences.getBoolean(KEY_BATTERY_SAVER, false); }
     public void setBatterySaverEnabled(boolean e) { preferences.edit().putBoolean(KEY_BATTERY_SAVER, e).apply(); }
 
     // 16. Biometric Chat Locker
@@ -187,7 +187,7 @@ public class NayaConfig {
     public void setBiometricChatLockerEnabled(boolean e) { preferences.edit().putBoolean(KEY_BIOMETRIC_LOCKER, e).apply(); }
 
     // 17. In-Chat Instant Translator (language meaning / translation — kept)
-    public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, true); }
+    public boolean isInstantTranslatorEnabled() { return preferences.getBoolean(KEY_INSTANT_TRANSLATOR, false); }
     public void setInstantTranslatorEnabled(boolean e) { preferences.edit().putBoolean(KEY_INSTANT_TRANSLATOR, e).apply(); }
 
     /** Forces 24-hour times for people who travel or work across countries. Local display only. */
@@ -338,17 +338,17 @@ public class NayaConfig {
             .remove("confirm_call_actions")
             .remove("feature_10_call_voice_protection")
             .putBoolean(KEY_SHOW_ID_DC, true)
-            .putBoolean(KEY_MODULAR_CONFIG, true)
+            .putBoolean(KEY_MODULAR_CONFIG, false)
             .putBoolean(KEY_FOCUS_MODE, false)
             .putBoolean(KEY_STORAGE_DOCTOR, true)
-            .putBoolean(KEY_BATTERY_SAVER, true)
+            .putBoolean(KEY_BATTERY_SAVER, false)
             .putBoolean(KEY_BIOMETRIC_LOCKER, false)
-            .putBoolean(KEY_INSTANT_TRANSLATOR, true)
+            .putBoolean(KEY_INSTANT_TRANSLATOR, false)
             .putBoolean(KEY_INTL_CLOCK, false)
             .putBoolean(KEY_LINK_GUARD, true)
             .putBoolean(KEY_READABLE_TEXT, false)
             .putBoolean("feature_data_saver", false)
-            .putBoolean("feature_noise_suppression", true)
+            .putBoolean("feature_noise_suppression", false)
             .putBoolean("feature_auto_cache_guard", false)
             .putBoolean("feature_reduce_motion", false)
             .remove(KEY_READABLE_TEXT_PREV)
