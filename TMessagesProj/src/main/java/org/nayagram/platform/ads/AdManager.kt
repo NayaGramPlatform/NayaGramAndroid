@@ -35,7 +35,6 @@ object AdManager {
     const val DISPLAY_INTERVAL_MS: Long = NayaGramAdsConfig.INTERSTITIAL_COOLDOWN_MS
     const val MINIMUM_ACTIONS_BEFORE_AD: Int = NayaGramAdsConfig.ACTIONS_BEFORE_INTERSTITIAL
 
-    private var lastAdShownElapsedTime: Long = 0L
     private var lastAdShownWallTime: Long = -1L
     private var actionCounter: Int = 0
 
@@ -88,7 +87,6 @@ object AdManager {
     @Synchronized
     fun onAdDisplayed() {
         val nowWall = System.currentTimeMillis()
-        lastAdShownElapsedTime = SystemClock.elapsedRealtime()
         lastAdShownWallTime = nowWall
         actionCounter = 0
         try {
@@ -114,9 +112,7 @@ object AdManager {
         if (!provider.isMonetizationEnabled) return false
 
         return try {
-            provider.showInterstitialIfAvailable(activity)
-            onAdDisplayed()
-            true
+            provider.showInterstitialIfAvailable(activity) { onAdDisplayed() }
         } catch (error: Exception) {
             Log.e(TAG, "Interstitial display failed; user flow will continue without an ad.", error)
             false
@@ -132,7 +128,6 @@ object AdManager {
     @JvmStatic
     @Synchronized
     fun resetTimer() {
-        lastAdShownElapsedTime = SystemClock.elapsedRealtime()
         lastAdShownWallTime = System.currentTimeMillis()
         actionCounter = 0
     }
