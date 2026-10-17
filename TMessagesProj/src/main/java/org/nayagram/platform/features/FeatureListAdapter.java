@@ -286,8 +286,8 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private String getActionLabel(FeatureItem item) {
-        if (item.number == 14) {
-            return currentLang == LANG_BN ? "ক্লিন" : (currentLang == LANG_AR ? "تنظيف" : "CLEAN");
+        if (item.number == 20) {
+            return currentLang == LANG_BN ? "স্ক্যান" : (currentLang == LANG_AR ? "فحص" : "SCAN");
         }
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) {
@@ -301,14 +301,14 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private int getLabelTextColor(FeatureItem item) {
-        if (item.number == 14) return 0xFF7C3AED;
+        if (item.number == 20) return 0xFF7C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0xFF0284C7;
         return enabled ? 0xFF10B981 : 0xFF0284C7; // ON = Emerald Green, OFF = Royal Blue
     }
 
     private int getLabelBgColor(FeatureItem item) {
-        if (item.number == 14) return 0x227C3AED;
+        if (item.number == 20) return 0x227C3AED;
         boolean enabled = isFeatureEnabled(item);
         if (item.number == 3 && enabled) return 0x200EA5E9;
         return enabled ? 0x2410B981 : 0x240284C7; // ON = Green Tint, OFF = Blue Tint
@@ -337,7 +337,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         NayaConfig cfg = NayaConfig.getInstance();
         if (cfg == null) return;
 
-        if (item.number == 14) {
+        if (item.number == 20) {
             showStorageDoctorScanDialog();
             return;
         }
