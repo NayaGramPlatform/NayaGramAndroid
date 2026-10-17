@@ -38,6 +38,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
+import org.nayagram.platform.security.NayaGramGuard;
+import org.nayagram.platform.security.NayaGramGuardActivity;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -124,6 +126,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private int securitySectionRow;
     @Keep
     private int passwordRow;
+    private int guardRow;
     private int sessionsRow;
     @Keep
     private int passcodeRow;
@@ -492,6 +495,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     }
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
+            } else if (position == guardRow) {
+                presentFragment(new NayaGramGuardActivity());
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -716,6 +721,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         securitySectionRow = rowCount++;
         passwordRow = rowCount++;
+        guardRow = rowCount++;
         autoDeleteMesages = rowCount++;
         passcodeRow = rowCount++;
         if (getMessagesController().config.settingsDisplayPasskeys.get() && Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS) {
@@ -1026,7 +1032,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == passwordRow || position == passkeysRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
+            return position == passcodeRow || position == passwordRow || position == guardRow || position == passkeysRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
                     position == groupsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_INVITE) ||
                     position == lastSeenRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_LASTSEEN) ||
                     position == callsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_CALLS) ||
@@ -1357,6 +1363,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             value = getString(R.string.PasswordOff);
                         }
                         textCell2.setTextAndValueAndIcon(getString(R.string.TwoStepVerification), value, true, icon, true);
+                    } else if (position == guardRow) {
+                        value = NayaGramGuard.isEnabled(mContext) ? "On" : "Off";
+                        textCell2.setTextAndValueAndIcon("NayaGram Guard (Google Authenticator)", value, true, R.drawable.outline_shield_check, true);
                     } else if (position == passkeysRow) {
                         value = "";
                         if (currentPasskeys == null) {
@@ -1410,7 +1419,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 return 3;
             } else if (position == botsAndWebsitesShadowRow) {
                 return 4;
-            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == passkeysRow || position == passcodeRow || position == blockedRow) {
+            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == guardRow || position == passkeysRow || position == passcodeRow || position == blockedRow) {
                 return 5;
             }
             return 0;
