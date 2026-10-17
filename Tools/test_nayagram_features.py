@@ -70,10 +70,12 @@ def test_dynamic_footer_and_branding():
     settings_source = Path("TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java").read_text(encoding="utf-8")
     about_source = Path("TMessagesProj/src/main/java/org/nayagram/platform/ui/NayaAboutActivity.java").read_text(encoding="utf-8")
     props_source = Path("gradle.properties").read_text(encoding="utf-8")
+    app_gradle_source = Path("TMessagesProj_App/build.gradle").read_text(encoding="utf-8")
     buildvars_source = Path("TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java").read_text(encoding="utf-8")
     assert "APP_VERSION_CODE=4013" in props_source
     assert "APP_VERSION_NAME=1.0.1 NG" in props_source
     assert "BUILD_VERSION = 4013" in buildvars_source
+    assert "internal code 4013" in app_gradle_source
     assert "getInstalledAppVersionName()" in settings_source
     assert 'String nayaGramInfo = "NayaGram for Android v" + getInstalledAppVersionName() + " (" + code + ")";' in settings_source
     assert 'footer.setText("NayaGram v" + getAppVersion() + " • Build " + getInternalBuildCode()' in about_source
