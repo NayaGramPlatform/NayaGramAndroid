@@ -100,13 +100,14 @@ def test_advanced_feature_wiring():
     assert 'Not active yet. No chat is protected by this preference alone.' in adapter
     assert 'Not active yet. No translation service or in-chat action is connected.' in adapter
     assert 'The toggle does not change how settings are stored or isolated.' in adapter
-    assert 'case 12: cfg.setModularConfig(newState); break;' not in adapter
+    assert 'cfg.setModularConfig(' not in adapter
     assert 'currentLang == LANG_AR ? "لاحقًا" : "SOON"' in adapter
-    assert 'case 13: cfg.setFocusModeEnabled(newState); break;' not in adapter
-    assert 'case 15: cfg.setBatterySaverEnabled(newState); break;' not in adapter
-    assert 'case 16: cfg.setBiometricChatLockerEnabled(newState); break;' not in adapter
-    assert 'case 17: cfg.setInstantTranslatorEnabled(newState); break;' not in adapter
-    assert 'case 19: cfg.setNoiseSuppressionEnabled(newState); break;' not in adapter
+    assert 'cfg.setFocusModeEnabled(' not in adapter
+    assert 'cfg.setBatterySaverEnabled(' not in adapter
+    assert 'cfg.setBiometricChatLockerEnabled(' not in adapter
+    assert 'cfg.setInstantTranslatorEnabled(' not in adapter
+    assert 'cfg.setNoiseSuppressionEnabled(' not in adapter
+    assert 'cfg.setAutoCacheGuardEnabled(' not in adapter
     assert 'preferences.getBoolean(KEY_MODULAR_CONFIG, false)' in config
     assert 'preferences.getBoolean(KEY_BATTERY_SAVER, false)' in config
     assert 'preferences.getBoolean(KEY_INSTANT_TRANSLATOR, false)' in config
