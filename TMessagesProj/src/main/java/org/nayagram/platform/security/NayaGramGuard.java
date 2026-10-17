@@ -22,6 +22,7 @@ import java.util.Locale;
 
 /**
  * Local-only RFC 6238 TOTP guard. No Google API or network request is used.
+ * Privacy Policy: Local TOTP only, no data sent to Google server.
  * The TOTP secret and one-time backup-code hashes are stored in encrypted preferences.
  */
 public final class NayaGramGuard {
