@@ -27,6 +27,9 @@ jobs:
       - name: Run NG Hub regression checks
         run: python3 Tools/test_ng_hub.py
 
+      - name: Run NayaGram Guard RFC 6238 tests
+        run: python3 Tools/test_nayagram_guard.py
+
       - name: Verify recursive native submodules
         run: |
           git submodule sync --recursive
