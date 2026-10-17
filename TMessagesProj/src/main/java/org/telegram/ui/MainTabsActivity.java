@@ -37,6 +37,8 @@ import androidx.core.math.MathUtils;
 import androidx.core.view.WindowInsetsCompat;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.nayagram.platform.security.NayaGramGuard;
+import org.nayagram.platform.security.NayaGramGuardActivity;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildConfig;
 import org.telegram.messenger.ContactsController;
@@ -272,6 +274,14 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     @Override
     public void onResume() {
         super.onResume();
+        if (getParentActivity() != null && NayaGramGuard.isEnabled(getParentActivity()) && !NayaGramGuard.isSessionVerified()) {
+            // Avoid stacking duplicate gates when returning from the authenticator app.
+            BaseFragment topFragment = getParentLayout() == null ? null : getParentLayout().getLastFragment();
+            if (!(topFragment instanceof NayaGramGuardActivity)) {
+                // The gate is app-local; Telegram OTP and two-step login remain untouched.
+                presentFragment(new NayaGramGuardActivity(true));
+            }
+        }
         blur3_updateColors();
         checkContactsTabBadge();
         checkUnreadCount(true);

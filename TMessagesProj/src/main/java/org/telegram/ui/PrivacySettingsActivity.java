@@ -38,6 +38,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
+import org.nayagram.platform.security.NayaGramGuard;
+import org.nayagram.platform.security.NayaGramGuardActivity;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -124,6 +126,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private int securitySectionRow;
     @Keep
     private int passwordRow;
+    private int guardRow;
     private int sessionsRow;
     @Keep
     private int passcodeRow;
@@ -492,6 +495,26 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     }
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
+            } else if (position == guardRow) {
+                Context guardContext = getParentActivity();
+                if (guardContext == null) return;
+                if (NayaGramGuard.isEnabled(guardContext)) {
+                    AlertDialog.Builder guardDialog = new AlertDialog.Builder(guardContext);
+                    guardDialog.setTitle("Disable NayaGram Guard?");
+                    guardDialog.setMessage("This removes the local authenticator secret and unused backup codes. Telegram login is not changed.");
+                    guardDialog.setNegativeButton("Cancel", (dialog, which) -> listAdapter.notifyItemChanged(guardRow));
+                    guardDialog.setPositiveButton("Disable", (dialog, which) -> {
+                        try {
+                            NayaGramGuard.disable(guardContext);
+                        } catch (Exception e) {
+                            Toast.makeText(guardContext, "Could not clear secure Guard storage.", Toast.LENGTH_SHORT).show();
+                        }
+                        listAdapter.notifyItemChanged(guardRow);
+                    });
+                    showDialog(guardDialog.create());
+                } else {
+                    presentFragment(new NayaGramGuardActivity(false, true));
+                }
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -716,6 +739,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         securitySectionRow = rowCount++;
         passwordRow = rowCount++;
+        guardRow = rowCount++;
         autoDeleteMesages = rowCount++;
         passcodeRow = rowCount++;
         if (getMessagesController().config.settingsDisplayPasskeys.get() && Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS) {
@@ -1026,7 +1050,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == passwordRow || position == passkeysRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
+            return position == passcodeRow || position == passwordRow || position == guardRow || position == passkeysRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
                     position == groupsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_INVITE) ||
                     position == lastSeenRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_LASTSEEN) ||
                     position == callsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_CALLS) ||
@@ -1285,7 +1309,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     break;
                 case 3:
                     TextCheckCell textCheckCell = (TextCheckCell) holder.itemView;
-                    if (position == secretWebpageRow) {
+                    if (position == guardRow) {
+                        textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true);
+                    } else if (position == secretWebpageRow) {
                         textCheckCell.setTextAndCheck(getString("SecretWebPage", R.string.SecretWebPage), getMessagesController().secretWebpagePreview == 1, false);
                     } else if (position == contactsSyncRow) {
                         textCheckCell.setTextAndCheck(getString("SyncContacts", R.string.SyncContacts), newSync, true);
@@ -1398,6 +1424,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         @Override
         public int getItemViewType(int position) {
+            if (position == guardRow) {
+                return 3;
+            }
             if (position == passportRow || position == lastSeenRow || position == phoneNumberRow ||
                     position == deleteAccountRow || position == webSessionsRow || position == groupsRow || position == paymentsClearRow ||
                     position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow || position == adPrivacyRow) {
