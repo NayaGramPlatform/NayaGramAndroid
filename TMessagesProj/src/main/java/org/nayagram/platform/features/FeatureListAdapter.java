@@ -35,6 +35,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     private final Context context;
     private BaseFragment fragment;
     private final List<FeatureItem> features = new ArrayList<>();
+    private final List<FeatureItem> allFeatures = new ArrayList<>();
     private int currentLang = LANG_EN;
 
     public FeatureListAdapter(Context context) {
@@ -62,9 +63,10 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     private void initializeFeatures() {
         features.clear();
+        allFeatures.clear();
 
         // 9. Smart Chat Folders
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 9,
                 0xFF14B8A6,
                 0xFF0F766E,
@@ -80,7 +82,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
 
         // 11. User ID & DC Display
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 11,
                 0xFFA855F7,
                 0xFF7E22CE,
@@ -94,7 +96,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 12. Modular Config
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 12,
                 0xFF22C55E,
                 0xFF15803D,
@@ -108,7 +110,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 13. Focus Mode
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 13,
                 0xFF0EA5E9,
                 0xFF0369A1,
@@ -122,7 +124,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 15. Battery Saver
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 15,
                 0xFF16A34A,
                 0xFF166534,
@@ -136,7 +138,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 16. Chat Locker
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 16,
                 0xFF2563EB,
                 0xFF1E40AF,
@@ -150,7 +152,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 17. Instant Translator
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 17,
                 0xFFDB2777,
                 0xFF9D174D,
@@ -164,7 +166,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 18. Adaptive Network & Data Saver
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 18,
                 0xFF059669,
                 0xFF047857,
@@ -178,7 +180,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 19. WebRTC Acoustic Noise Suppression
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 19,
                 0xFF2563EB,
                 0xFF1D4ED8,
@@ -192,7 +194,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 20. Smart Storage & Cache Auto-Limiter
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 20,
                 0xFF7C3AED,
                 0xFF6D28D9,
@@ -206,7 +208,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 21. External Link Guard (functional: Browser.java checks this preference)
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 21,
                 0xFFDC2626,
                 0xFFB91C1C,
@@ -220,7 +222,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 22. Readable Text (functional: applies Telegram's native message font size)
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 22,
                 0xFF7C3AED,
                 0xFF6D28D9,
@@ -234,7 +236,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         ));
 
         // 23. Reduce Motion (functional: applies Telegram's animation preference)
-        features.add(new FeatureItem(
+        allFeatures.add(new FeatureItem(
                 23,
                 0xFF64748B,
                 0xFF475569,
@@ -246,6 +248,29 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                         "قلل حركات الواجهة مع استمرار الرسائل والمكالمات."
                 }
         ));
+        features.addAll(allFeatures);
+    }
+
+    /** Filters the showcase across English, Bengali and Arabic titles/descriptions. */
+    public void setSearchQuery(String query) {
+        String normalized = query == null ? "" : query.trim().toLowerCase(java.util.Locale.ROOT);
+        features.clear();
+        for (FeatureItem item : allFeatures) {
+            if (normalized.isEmpty() || matchesFeature(item, normalized)) {
+                features.add(item);
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    private boolean matchesFeature(FeatureItem item, String query) {
+        for (int lang = 0; lang < 3; lang++) {
+            if (item.getCatchyTitle(lang).toLowerCase(java.util.Locale.ROOT).contains(query)
+                    || item.getDesc(lang).toLowerCase(java.util.Locale.ROOT).contains(query)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @NonNull
