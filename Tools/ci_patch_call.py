@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 import pathlib
+import re
 
 def patch_gradle():
     p = pathlib.Path("gradle.properties")
     t = p.read_text(encoding="utf-8")
-    t2 = t.replace("APP_VERSION_CODE=1000", "APP_VERSION_CODE=4013", 1)
-    t2 = t2.replace("APP_VERSION_NAME=1.0.0", "APP_VERSION_NAME=1.0.1 NG", 1)
-    if t2 == t and "APP_VERSION_CODE=4013" in t:
-        print("gradle already 4013")
+    t2, code_count = re.subn(r"(?m)^APP_VERSION_CODE=.*$", "APP_VERSION_CODE=4013", t, count=1)
+    t2, name_count = re.subn(r"(?m)^APP_VERSION_NAME=.*$", "APP_VERSION_NAME=1.0.1 NG", t2, count=1)
+    if code_count != 1 or name_count != 1:
+        raise SystemExit("APP_VERSION_CODE / APP_VERSION_NAME setting missing or duplicated")
+    if t2 == t:
+        print("gradle already 4013 / 1.0.1 NG")
     else:
         p.write_text(t2, encoding="utf-8")
-        print("gradle version updated")
+        print("gradle version updated to 4013 / 1.0.1 NG")
 
 def patch_profile():
     p = pathlib.Path("TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java")
