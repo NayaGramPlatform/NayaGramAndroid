@@ -38,7 +38,7 @@ public final class InstantTranslatorManager {
         {"de", "Deutsch (German)"},
         {"ru", "Русский (Russian)"},
         {"tr", "Türkçe (Turkish)"},
-        {"fa", "فারসি (Persian)"},
+        {"fa", "فارسی (Persian)"},
         {"id", "Bahasa Indonesia"},
         {"ms", "Bahasa Melayu"},
         {"zh-CN", "简体中文 (Chinese)"},

@@ -145,6 +145,7 @@ def test_advanced_feature_wiring():
     assert 'Only this public tutorial text is sent for translation' in tutorial
     assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
     assert '"🇧🇩"' in tutorial and '"🇬🇧"' in tutorial and '"🇸🇦"' in tutorial
+    assert '"fa", "فارسی (Persian)"' in translator
     assert 'IMPLEMENTATION STATUS — VERIFIED' not in adapter
     assert 'Quiet hours with VIP bypass' not in adapter
     assert 'Keyword based replies' not in adapter
