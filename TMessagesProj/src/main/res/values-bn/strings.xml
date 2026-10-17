@@ -278,11 +278,24 @@
     <string name="BotTokenDialogTitle">বট টোকেন দিয়ে লগইন</string>
     <string name="BotTokenDialogDescription">@BotFather থেকে প্রাপ্ত বট টোকেনটি লিখুন।</string>
 <string name="SettingsLanguage">ভাষা</string><string name="SettingsLanguageInfo">NayaGram-এর ভাষা পরিবর্তন করুন</string>    <string name="AppIcon">এনজি অ্যাপ আইকন</string>
-    <string name="AppIconDefault">এনজি নিয়ন (NG Neon)</string>
+    <string name="AppIconDefault">এনজি সায়ান (NG Cyan)</string>
     <string name="AppIconVintage">এনজি ব্লু (NG Blue)</string>
     <string name="AppIconAqua">এনজি পার্পল (NG Purple)</string>
     <string name="AppIconPremium">এনজি সায়ান (NG Cyan)</string>
     <string name="AppIconTurbo">এনজি নিয়ন (NG Neon)</string>
     <string name="AppIconNox">এনজি ক্রিস্টাল (NG Crystal)</string>
     <string name="AppIconChangedTo">অ্যাপ আইকন পরিবর্তন করে %1 করা হয়েছে</string>
+    <string name="ChannelJoin">সাপোর্ট</string>
+    <string name="ChannelJoinNoCaps">সাপোর্ট</string>
+    <string name="ChannelJoinRequest">চ্যানেল সাপোর্টের আবেদন করুন</string>
+    <string name="ChannelJoinRequestNoCaps">চ্যানেল সাপোর্টের আবেদন করুন</string>
+    <string name="ChannelJoinRequestSent">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
+    <string name="ChannelJoinRequestSentNoCaps">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
+    <string name="GroupJoin">সাপোর্ট</string>
+    <string name="GroupJoinNoCaps">সাপোর্ট</string>
+    <string name="GroupJoinRequest">গ্রুপ সাপোর্টের আবেদন করুন</string>
+    <string name="GroupJoinRequestNoCaps">গ্রুপ সাপোর্টের আবেদন করুন</string>
+    <string name="GroupJoinRequestSent">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
+    <string name="GroupJoinRequestSentNoCaps">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
+    <string name="SupportedChannelGroup">সাপোর্টেড</string>
 </resources>

@@ -8643,6 +8643,11 @@ public class ChatActivity extends BaseFragment implements
                                 chatInviteRunnable = null;
                             }
                             showBottomOverlayProgress(true, true);
+                            bottomOverlayChatText.setText(LocaleController.getString(R.string.SupportedChannelGroup));
+                            try {
+                                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.ic_star_active, LocaleController.getString(R.string.SupportedChannelGroup)).show();
+                            } catch (Throwable ignore) {
+                            }
                             getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, ChatActivity.this, null);
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.closeSearchByActiveAction);
 
