@@ -275,8 +275,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     public void onResume() {
         super.onResume();
         if (getParentActivity() != null && NayaGramGuard.isEnabled(getParentActivity()) && !NayaGramGuard.isSessionVerified()) {
-            // The gate is an app-local fragment; Telegram's OTP and two-step login flow is untouched.
-            presentFragment(new NayaGramGuardActivity(true));
+            // Avoid stacking duplicate gates when returning from the authenticator app.
+            BaseFragment topFragment = getParentLayout() == null ? null : getParentLayout().getLastFragment();
+            if (!(topFragment instanceof NayaGramGuardActivity)) {
+                // The gate is app-local; Telegram OTP and two-step login remain untouched.
+                presentFragment(new NayaGramGuardActivity(true));
+            }
         }
         blur3_updateColors();
         checkContactsTabBadge();
