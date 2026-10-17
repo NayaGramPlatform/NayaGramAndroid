@@ -3266,21 +3266,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 .scaleX(1.0f)
                                 .scaleY(1.0f)
                                 .setDuration(120)
+                                .withEndAction(() -> presentFragment(new NGHubActivity()))
                                 .start())
                         .start();
-                new AlertDialog.Builder(context)
-                        .setTitle("NG Hub")
-                        .setItems(new CharSequence[] {
-                                getString(R.string.NewGroup),
-                                getString(R.string.NewChannel)
-                        }, (dialog, which) -> {
-                            if (which == 0) {
-                                presentFragment(new GroupCreateActivity(new Bundle()), false);
-                            } else if (which == 1) {
-                                presentFragment(new ChannelCreateActivity(new Bundle()), false);
-                            }
-                        })
-                        .show();
             });
         }
 

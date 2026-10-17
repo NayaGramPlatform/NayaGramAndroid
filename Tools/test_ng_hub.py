@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""Regression guards for NG Hub's real dialog-backed UI."""
+from pathlib import Path
+
+source = Path("TMessagesProj/src/main/java/org/telegram/ui/NGHubActivity.java").read_text()
+checks = {
+    "three sections": all(x in source for x in ("SECTION_CHANNELS", "SECTION_GROUPS", "SECTION_BOTS")),
+    "loaded dialogs with fallback": "controller.getDialogs(0)" in source and "controller.getAllDialogs()" in source,
+    "bot accounts filtered from real dialogs": "user.bot" in source and "DialogObject.isUserDialog(dialog.id)" in source,
+    "real last-message preview": "controller.dialogMessage.get(dialog.id)" in source and "lastMessage.messageText" in source,
+    "real avatars": "BackupImageView" in source and "avatar.setForUserOrChat" in source,
+    "search includes preview": "preview.toLowerCase(Locale.ROOT).contains(query)" in source,
+    "list and card layouts": "horizontalCards" in source and "Layout: Cards" in source,
+    "existing create flows": "new GroupCreateActivity(new Bundle())" in source and "ACTION_TYPE_CHANNEL_CREATE" in source,
+    "open chats using actual peer ids": 'args.putLong("chat_id", chat.id)' in source and 'args.putLong("user_id", user.id)' in source,
+    "swipe navigation can be disabled": "swipeNavigationEnabled" in source and "showSection(Math.max" in source,
+}
+failed = [name for name, passed in checks.items() if not passed]
+for name, passed in checks.items():
+    print(f'{"PASS" if passed else "FAIL"}: {name}')
+if failed:
+    raise SystemExit("NG Hub regression checks failed: " + ", ".join(failed))

@@ -2,6 +2,8 @@ name: Build NayaGram AAB & APK
 
 on:
   push:
+    branches: [ master, feature/nayagram-hub-step1 ]
+  pull_request:
     branches: [ master ]
   workflow_dispatch:
 
@@ -21,6 +23,9 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - name: Run NG Hub regression checks
+        run: python3 Tools/test_ng_hub.py
 
       - name: Verify recursive native submodules
         run: |
