@@ -39,6 +39,10 @@ public class NayaGramGuardActivity extends BaseFragment {
     private final boolean startSetup;
     private LinearLayout content;
     private EditText codeInput;
+    private FrameLayout codeFrame;
+    private LinearLayout digitBoxes;
+    private TextView backupModeToggle;
+    private boolean backupEntryMode;
     private String pendingSecret;
     private boolean suppressToggleCallback;
 
@@ -248,17 +252,92 @@ public class NayaGramGuardActivity extends BaseFragment {
     }
 
     private void buildCodeEntry(Context context, boolean allowBackup) {
+        backupEntryMode = false;
+        codeFrame = new FrameLayout(context);
+        codeFrame.setBackground(round(Color.WHITE, 0xFF06B6D4));
+
+        digitBoxes = new LinearLayout(context);
+        digitBoxes.setOrientation(LinearLayout.HORIZONTAL);
+        digitBoxes.setGravity(Gravity.CENTER);
+        digitBoxes.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6), AndroidUtilities.dp(6));
+        for (int i = 0; i < 6; i++) {
+            TextView box = text(context, "", 22, 0xFF075985, true);
+            box.setGravity(Gravity.CENTER);
+            box.setBackground(round(Color.WHITE, 0xFF06B6D4));
+            LinearLayout.LayoutParams boxParams = new LinearLayout.LayoutParams(0, AndroidUtilities.dp(44), 1f);
+            boxParams.setMargins(AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3), 0);
+            digitBoxes.addView(box, boxParams);
+        }
+        codeFrame.addView(digitBoxes, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(58), Gravity.CENTER));
+
         codeInput = new EditText(context);
         codeInput.setSingleLine(true);
         codeInput.setTextSize(22);
         codeInput.setLetterSpacing(0.22f);
         codeInput.setGravity(Gravity.CENTER);
-        codeInput.setHint(allowBackup ? "000000 / backup code" : "000000");
-        codeInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
-        codeInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(allowBackup ? 10 : 6)});
-        codeInput.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
-        codeInput.setBackground(round(Color.WHITE, 0xFF06B6D4));
-        content.addView(codeInput, params(0, 8));
+        codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        codeInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
+        codeInput.setTextColor(Color.TRANSPARENT);
+        codeInput.setHintTextColor(Color.TRANSPARENT);
+        codeInput.setCursorVisible(false);
+        codeInput.setBackgroundColor(Color.TRANSPARENT);
+        codeInput.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+        codeFrame.addView(codeInput, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(58), Gravity.CENTER));
+        codeInput.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!backupEntryMode && digitBoxes != null) {
+                    for (int i = 0; i < digitBoxes.getChildCount(); i++) {
+                        TextView box = (TextView) digitBoxes.getChildAt(i);
+                        box.setText(i < s.length() ? String.valueOf(s.charAt(i)) : "");
+                    }
+                }
+            }
+            @Override public void afterTextChanged(android.text.Editable s) { }
+        });
+        content.addView(codeFrame, params(0, 8));
+
+        if (allowBackup) {
+            backupModeToggle = text(context, "Use a one-time backup code", 13, 0xFF0284C7, true);
+            backupModeToggle.setGravity(Gravity.CENTER);
+            backupModeToggle.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
+            content.addView(backupModeToggle, params(0, 8));
+            backupModeToggle.setOnClickListener(v -> {
+                backupEntryMode = !backupEntryMode;
+                codeInput.setText("");
+                if (backupEntryMode) {
+                    digitBoxes.setVisibility(View.GONE);
+                    codeInput.setAlpha(1f);
+                    codeInput.setTextColor(0xFF075985);
+                    codeInput.setHintTextColor(0xFF94A3B8);
+                    codeInput.setCursorVisible(true);
+                    codeInput.setHint("Enter backup code");
+                    codeInput.setGravity(Gravity.CENTER);
+                    codeInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+                    codeInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(10)});
+                    codeInput.setBackground(round(Color.WHITE, 0xFF06B6D4));
+                    backupModeToggle.setText("Use authenticator code");
+                } else {
+                    digitBoxes.setVisibility(View.VISIBLE);
+                    codeInput.setAlpha(0.01f);
+                    codeInput.setTextColor(Color.TRANSPARENT);
+                    codeInput.setHintTextColor(Color.TRANSPARENT);
+                    codeInput.setCursorVisible(false);
+                    codeInput.setHint("");
+                    codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                    codeInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(6)});
+                    codeInput.setBackgroundColor(Color.TRANSPARENT);
+                    backupModeToggle.setText("Use a one-time backup code");
+                }
+                codeInput.requestFocus();
+            });
+        }
+        codeFrame.setOnClickListener(v -> {
+            codeInput.requestFocus();
+            codeInput.setSelection(codeInput.length());
+        });
     }
 
     private void addTitle(Context context, String value) {
