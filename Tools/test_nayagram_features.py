@@ -116,6 +116,8 @@ def test_advanced_feature_wiring():
     assert 'Ultra Battery Saver · SOON' in legacy_hub
     assert 'In-Chat Instant Translator · SOON' in legacy_hub
     assert 'No chat is protected by this setting' in legacy_hub
+    assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
+    assert 'title.contains("· SOON") ? "Unavailable"' in legacy_hub
     print("PASS")
 
 def test_search_and_hub_naming():
