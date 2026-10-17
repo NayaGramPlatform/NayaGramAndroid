@@ -13,7 +13,6 @@ import org.nayagram.platform.translator.InstantTranslatorManager;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.AlertDialog;
 
-import java.util.ArrayList;
 
 /** Multilingual Feature Pipeline tutorial. Documentation only; it never activates feature engines. */
 public final class FeatureTutorialDialog {
@@ -38,12 +37,39 @@ public final class FeatureTutorialDialog {
             "TRANSLATION NOTE\n" +
             "The selected language is machine-translated for this tutorial. Only this public tutorial text is sent for translation; this tutorial does not send your chats or contacts.";
 
-    private static final String[] FLAGS = {
-            "🇧🇩", "🇬🇧", "🇸🇦", "🇵🇰", "🇮🇳", "🇪🇸", "🇫🇷", "🇩🇪",
-            "🇷🇺", "🇹🇷", "🇮🇷", "🇮🇩", "🇲🇾", "🇨🇳", "🇯🇵", "🇰🇷",
-            "🇮🇹", "🇵🇹", "🇳🇱", "🇵🇱", "🇺🇦", "🇹🇭", "🇻🇳", "🇱🇰",
-            "🇮🇳", "🇺🇿", "🇦🇫", "🇰🇪"
-    };
+    private static String getFlagForLanguage(String code) {
+        switch (code) {
+            case "bn": return "🇧🇩";
+            case "en": return "🇬🇧";
+            case "ar": return "🇸🇦";
+            case "ur": return "🇵🇰";
+            case "hi":
+            case "ta":
+            case "te": return "🇮🇳";
+            case "es": return "🇪🇸";
+            case "fr": return "🇫🇷";
+            case "de": return "🇩🇪";
+            case "ru": return "🇷🇺";
+            case "tr": return "🇹🇷";
+            case "fa": return "🇮🇷";
+            case "id": return "🇮🇩";
+            case "ms": return "🇲🇾";
+            case "zh-CN": return "🇨🇳";
+            case "ja": return "🇯🇵";
+            case "ko": return "🇰🇷";
+            case "it": return "🇮🇹";
+            case "pt": return "🇵🇹";
+            case "nl": return "🇳🇱";
+            case "pl": return "🇵🇱";
+            case "uk": return "🇺🇦";
+            case "th": return "🇹🇭";
+            case "vi": return "🇻🇳";
+            case "uz": return "🇺🇿";
+            case "ps": return "🇦🇫";
+            case "sw": return "🇰🇪";
+            default: return "🌐";
+        }
+    }
 
     private FeatureTutorialDialog() {}
 
@@ -54,16 +80,44 @@ public final class FeatureTutorialDialog {
         final String[] selectedCode = {translator.getTargetLanguage()};
         final LinearLayout[] selectedRows = new LinearLayout[languages.length];
         final TextView[] flagViews = new TextView[languages.length];
+        final TextView[] selectedMarks = new TextView[languages.length];
         LinearLayout panel = new LinearLayout(context);
         panel.setOrientation(LinearLayout.VERTICAL);
         panel.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(4));
 
+        LinearLayout hero = new LinearLayout(context);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        hero.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        GradientDrawable heroBackground = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFFE0F2FE, 0xFFDCFCE7});
+        heroBackground.setCornerRadius(AndroidUtilities.dp(18));
+        heroBackground.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        hero.setBackground(heroBackground);
+
+        TextView heroTitle = new TextView(context);
+        heroTitle.setText("🌐 NayaGram Feature Guide");
+        heroTitle.setTextColor(0xFF075985);
+        heroTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        heroTitle.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        hero.addView(heroTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         TextView intro = new TextView(context);
-        intro.setText("Choose a language, then tap Details to read a step-by-step guide. This page is a tutorial, not an active feature switchboard.");
+        intro.setText("Choose your language and tap Details for a step-by-step tutorial. This page only explains features; it never turns them on or off.");
         intro.setTextColor(0xFF334155);
-        intro.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        intro.setPadding(0, 0, 0, AndroidUtilities.dp(10));
-        panel.addView(intro, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        intro.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        intro.setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(8));
+        hero.addView(intro, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView languageCount = new TextView(context);
+        languageCount.setText("✨ " + languages.length + " tutorial languages · Tutorial only");
+        languageCount.setTextColor(0xFF166534);
+        languageCount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        languageCount.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        hero.addView(languageCount, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        heroParams.bottomMargin = AndroidUtilities.dp(12);
+        panel.addView(hero, heroParams);
 
         ScrollView scroll = new ScrollView(context);
         LinearLayout list = new LinearLayout(context);
@@ -83,7 +137,7 @@ public final class FeatureTutorialDialog {
             list.addView(row, rowParams);
 
             TextView flag = new TextView(context);
-            flag.setText(FLAGS[i % FLAGS.length]);
+            flag.setText(getFlagForLanguage(languages[i][0]));
             flag.setTextSize(TypedValue.COMPLEX_UNIT_SP, 21);
             flag.setGravity(Gravity.CENTER);
             row.addView(flag, new LinearLayout.LayoutParams(AndroidUtilities.dp(38), ViewGroup.LayoutParams.MATCH_PARENT));
@@ -95,6 +149,15 @@ public final class FeatureTutorialDialog {
             name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             name.setGravity(Gravity.CENTER_VERTICAL);
             row.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+
+            TextView selectedMark = new TextView(context);
+            selectedMark.setText(languages[i][0].equals(selectedCode[0]) ? "✓" : "");
+            selectedMark.setTextColor(0xFF047857);
+            selectedMark.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+            selectedMark.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+            selectedMark.setGravity(Gravity.CENTER);
+            row.addView(selectedMark, new LinearLayout.LayoutParams(AndroidUtilities.dp(24), ViewGroup.LayoutParams.MATCH_PARENT));
+            selectedMarks[i] = selectedMark;
             selectedRows[i] = row;
             row.setOnClickListener(v -> {
                 selectedCode[0] = languages[index][0];
@@ -105,6 +168,7 @@ public final class FeatureTutorialDialog {
                     flagViews[j].animate().cancel();
                     flagViews[j].setScaleX(1f);
                     flagViews[j].setScaleY(1f);
+                    selectedMarks[j].setText(selected ? "✓" : "");
                     if (selected) flagViews[j].animate().scaleX(1.18f).scaleY(1.18f).setDuration(180).start();
                 }
             });
@@ -118,7 +182,18 @@ public final class FeatureTutorialDialog {
                 .setNegativeButton("Close", null)
                 .create();
         dialog.show();
-        if (selectedIndex >= 0 && selectedIndex < flagViews.length && flagViews[selectedIndex] != null) {
+        // A gentle staggered bounce gives every language flag a visible, lightweight animation.
+        for (int i = 0; i < flagViews.length; i++) {
+            final TextView flag = flagViews[i];
+            flag.setScaleX(1f);
+            flag.setScaleY(1f);
+            flag.animate().cancel();
+            flag.animate().scaleX(1.12f).scaleY(1.12f)
+                    .setStartDelay(i * 18L).setDuration(130)
+                    .withEndAction(() -> flag.animate().scaleX(1f).scaleY(1f).setDuration(130).start())
+                    .start();
+        }
+        if (selectedIndex >= 0 && selectedIndex < flagViews.length) {
             flagViews[selectedIndex].setScaleX(1f);
             flagViews[selectedIndex].setScaleY(1f);
             flagViews[selectedIndex].animate().scaleX(1.12f).scaleY(1.12f).setDuration(220).start();
@@ -151,7 +226,7 @@ public final class FeatureTutorialDialog {
     private static void showTranslatedText(Context context, String text, String language, boolean fallback) {
         String heading = fallback ? "Translation unavailable; showing English tutorial.\n\n" : "Machine-translated tutorial · " + language + "\n\n";
         new AlertDialog.Builder(context)
-                .setTitle("📖 Feature Tutorial")
+                .setTitle("📖 Feature Pipeline · Details")
                 .setMessage(heading + text)
                 .setPositiveButton("Languages", (dialog, which) -> show(context))
                 .setNegativeButton("Close", null)

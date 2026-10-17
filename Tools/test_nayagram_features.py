@@ -120,10 +120,15 @@ def test_advanced_feature_wiring():
     tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
     translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
     assert 'FeatureTutorialDialog.show(context);' in adapter
-    assert 'Feature Tutorials' in activity
+    assert 'Feature Pipeline · Tutorial' in activity
     assert '.setPositiveButton("Details"' in tutorial
     assert 'This page is a tutorial, not an active feature switchboard.' in tutorial
     assert 'flagViews[j].animate().scaleX(1.18f)' in tutorial
+    assert 'getFlagForLanguage(languages[i][0])' in tutorial
+    assert 'case "ta":' in tutorial and 'case "te": return "🇮🇳";' in tutorial
+    assert 'languages.length + " tutorial languages' in tutorial
+    assert 'Feature Pipeline · Details' in tutorial
+    assert 'never turns them on or off' in tutorial
     assert 'Only this public tutorial text is sent for translation' in tutorial
     assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
     assert '"🇧🇩"' in tutorial and '"🇬🇧"' in tutorial and '"🇸🇦"' in tutorial
@@ -136,6 +141,10 @@ def test_advanced_feature_wiring():
     assert 'NayaConfig.getInstance().isShowIdAndDc() && user.id > 0' in profile
     assert 'onlineTextView[2].setOnLongClickListener' in profile
     assert 'long-press the line to copy' in tutorial
+    assert 'Tutorial-only translation helper used by the Feature Pipeline language guide.' in translator
+    assert 'It is not wired into private chats, groups, channels, or the main feature toggle.' in translator
+    assert "Uses Telegram's native media-streaming preference. It is not a full network optimizer." in adapter
+    assert 'No automatic storage limiter runs.' in adapter
 
     # The legacy settings hub must not expose the same inactive preferences as live toggles.
     legacy_hub = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")

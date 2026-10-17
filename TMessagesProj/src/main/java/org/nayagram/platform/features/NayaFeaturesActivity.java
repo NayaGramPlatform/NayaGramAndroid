@@ -53,7 +53,7 @@ public class NayaFeaturesActivity extends BaseFragment {
         // 3-dots overflow menu
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem item = menu.addItem(0, R.drawable.ic_ab_other);
-        item.addSubItem(MENU_ALL_DETAILS, R.drawable.msg_help, "Feature Tutorials");
+        item.addSubItem(MENU_ALL_DETAILS, R.drawable.msg_help, "Feature Pipeline · Tutorial");
         item.addSubItem(MENU_HEALTH_CHECK, R.drawable.outline_shield_check, "Feature Health Check");
         item.addSubItem(MENU_EXPORT_SETTINGS, R.drawable.settings_data, "Export Settings Backup");
 

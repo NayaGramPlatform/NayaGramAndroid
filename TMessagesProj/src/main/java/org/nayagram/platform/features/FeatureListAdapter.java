@@ -173,9 +173,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg2_data,
                 new String[]{"Network Data Saver", "নেটওয়ার্ক ও ডেটা সেভার", "موفّر بيانات الشبكة"},
                 new String[]{
-                        "Optimize bandwidth and reduce data consumption for roaming & slow 2G/3G networks.",
-                        "ধীরগতির নেটওয়ার্ক ও রোমিংয়ে ডেটা খরচ ও ব্যান্ডউইথ অপ্টিমাইজ করুন।",
-                        "تحسين استهلاك البيانات على الشبكات البطيئة والتجوال."
+                        "Uses Telegram's native media-streaming preference. It is not a full network optimizer.",
+                        "টেলিগ্রামের নিজস্ব মিডিয়া স্ট্রিমিং সেটিং ব্যবহার করে। এটি সম্পূর্ণ নেটওয়ার্ক অপ্টিমাইজার নয়।",
+                        "يستخدم إعداد تيليجرام الأصلي لبث الوسائط، وليس محسنًا شاملًا للشبكة."
                 }
         ));
 
@@ -201,9 +201,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.settings_data,
                 new String[]{"Smart Storage Guard", "স্মার্ট স্টোরেজ গার্ড", "حارس التخزين الذكي"},
                 new String[]{
-                        "Scan and safely clear app cache after reviewing the storage report.",
-                        "স্টোরেজ রিপোর্ট দেখে অ্যাপের ক্যাশ নিরাপদে স্ক্যান ও পরিষ্কার করুন।",
-                        "افحص ذاكرة التخزين المؤقت وامسحها بأمان بعد مراجعة التقرير."
+                        "Scan app cache on demand and review the report before cleaning. No automatic storage limiter runs.",
+                        "প্রয়োজনে অ্যাপের ক্যাশ স্ক্যান করুন এবং পরিষ্কারের আগে রিপোর্ট দেখুন। স্বয়ংক্রিয় স্টোরেজ লিমিটার চলে না।",
+                        "افحص ذاكرة التطبيق عند الطلب وراجع التقرير قبل التنظيف. لا يعمل محدد تخزين تلقائي."
                 }
         ));
 
