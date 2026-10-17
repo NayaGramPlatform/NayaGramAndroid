@@ -287,8 +287,8 @@ public class NayaGramGuardActivity extends BaseFragment {
     }
 
     @Override
-    public boolean onBackPressed() {
-        if (gateMode) return true;
-        return super.onBackPressed();
+    public boolean onBackPressed(boolean invoked) {
+        if (gateMode) return false;
+        return super.onBackPressed(invoked);
     }
 }
