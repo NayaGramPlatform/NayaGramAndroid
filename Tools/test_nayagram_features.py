@@ -91,6 +91,18 @@ def test_advanced_feature_wiring():
     assert 'confirmExportSettings(context)' in activity
     assert 'public String exportSettingsJson()' in config
     assert 'Custom auto-reply text and account/chat data are excluded.' in activity
+
+    # Preference-only cards must never pretend to be functional ON/OFF toggles.
+    assert 'private boolean isImplementationPending(FeatureItem item)' in adapter
+    assert 'if (cfg == null || isImplementationPending(item)) return false;' in adapter
+    assert 'Not active yet. No chat is protected by this preference alone.' in adapter
+    assert 'Not active yet. No translation service or in-chat action is connected.' in adapter
+    assert 'currentLang == LANG_AR ? "لاحقًا" : "SOON"' in adapter
+    assert 'case 13: cfg.setFocusModeEnabled(newState); break;' not in adapter
+    assert 'case 15: cfg.setBatterySaverEnabled(newState); break;' not in adapter
+    assert 'case 16: cfg.setBiometricChatLockerEnabled(newState); break;' not in adapter
+    assert 'case 17: cfg.setInstantTranslatorEnabled(newState); break;' not in adapter
+    assert 'case 19: cfg.setNoiseSuppressionEnabled(newState); break;' not in adapter
     print("PASS")
 
 def test_search_and_hub_naming():
