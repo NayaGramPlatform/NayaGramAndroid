@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
+import org.json.JSONObject;
+import org.json.JSONException;
+import java.util.Map;
 import org.telegram.messenger.ApplicationLoader;
 
 /**
@@ -287,6 +290,33 @@ public class NayaConfig {
     // APK & ZIP File Security Shield
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
+
+    /**
+     * Export only NayaGram feature preference primitives. User-written auto-reply text,
+     * account identifiers, chats, and credentials are intentionally excluded.
+     */
+    public String exportSettingsJson() {
+        JSONObject root = new JSONObject();
+        JSONObject settings = new JSONObject();
+        try {
+            root.put("format", "nayagram-settings");
+            root.put("schemaVersion", 1);
+            for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                if (!key.startsWith("feature_") || KEY_AUTO_REPLY_TEXT.equals(key)) {
+                    continue;
+                }
+                if (value instanceof Boolean || value instanceof Integer || value instanceof Long) {
+                    settings.put(key, value);
+                }
+            }
+            root.put("settings", settings);
+            return root.toString(2);
+        } catch (JSONException ignored) {
+            return "{\\"format\\":\\"nayagram-settings\\",\\"schemaVersion\\":1,\\"settings\\":{}}";
+        }
+    }
 
     // Reset all features to default values
     public void resetToDefaults() {
