@@ -185,7 +185,7 @@ public class NayaFeaturesActivity extends BaseFragment {
     private void restoreAllDefaults(Context context) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("🔄 Restore Default Settings");
-        builder.setMessage("Are you sure you want to reset all 17 exclusive features to their initial factory settings?");
+        builder.setMessage("Are you sure you want to reset all NayaGram feature settings to their factory defaults?");
         builder.setPositiveButton("Reset", (dialog, which) -> {
             NayaConfig.getInstance().resetToDefaults();
             if (adapter != null) {
