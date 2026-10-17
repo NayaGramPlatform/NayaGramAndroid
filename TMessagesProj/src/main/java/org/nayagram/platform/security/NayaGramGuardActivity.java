@@ -39,6 +39,7 @@ public class NayaGramGuardActivity extends BaseFragment {
     private LinearLayout content;
     private EditText codeInput;
     private String pendingSecret;
+    private boolean suppressToggleCallback;
 
     public NayaGramGuardActivity() {
         this(false);
@@ -96,31 +97,38 @@ public class NayaGramGuardActivity extends BaseFragment {
         toggle.setChecked(NayaGramGuard.isEnabled(context));
         card.addView(toggle);
         toggle.setOnCheckedChangeListener((button, checked) -> {
+            if (suppressToggleCallback) return;
             if (checked) {
                 try {
                     pendingSecret = NayaGramGuard.beginSetup(context);
                     showSetup(context, pendingSecret);
                 } catch (Exception e) {
-                    toggle.setChecked(false);
+                    setToggleSilently(toggle, false);
                     toast(context, "Secure storage is unavailable. Guard was not enabled.");
                 }
             } else {
                 new org.telegram.ui.ActionBar.AlertDialog.Builder(context)
                         .setTitle("Disable NayaGram Guard?")
                         .setMessage("This removes the local authenticator secret and unused backup codes. Telegram login is not changed.")
-                        .setNegativeButton("Cancel", (dialog, which) -> toggle.setChecked(true))
+                        .setNegativeButton("Cancel", (dialog, which) -> setToggleSilently(toggle, true))
                         .setPositiveButton("Disable", (dialog, which) -> {
                             try {
                                 NayaGramGuard.disable(context);
                                 status.setText("Disabled by default");
                             } catch (Exception e) {
-                                toggle.setChecked(true);
+                                setToggleSilently(toggle, true);
                                 toast(context, "Could not clear secure Guard storage.");
                             }
                         }).show();
             }
         });
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
+    }
+
+    private void setToggleSilently(Switch toggle, boolean checked) {
+        suppressToggleCallback = true;
+        toggle.setChecked(checked);
+        suppressToggleCallback = false;
     }
 
     private void showSetup(Context context, String secret) {
