@@ -15913,7 +15913,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 //            return;
 //        }
         if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
-            if (hasFallbackPhoto) {
+            // Keep the owner ID/DC tooltip visible even when the profile has no fallback photo.
+            boolean showNayaIdDc = org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && userId > 0;
+            if (hasFallbackPhoto || showNayaIdDc) {
                 customPhotoOffset = dp(28) * photoDescriptionProgress;
                 if (onlineTextView[2] != null) {
                     onlineTextView[2].setAlpha(currentExpandAnimatorValue);
