@@ -60,6 +60,8 @@ def main() -> None:
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
+    assert 'textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true)' in privacy
+    assert "presentFragment(new NayaGramGuardActivity(false, true))" in privacy
     assert privacy.count("} else if (position == guardRow) {") == 1
     assert 'setTextAndCheck("NayaGram Guard (Google Authenticator)"' in privacy
     assert "NayaGramGuard.isEnabled" in tabs and "new NayaGramGuardActivity(true)" in tabs
