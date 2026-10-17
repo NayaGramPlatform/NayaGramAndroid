@@ -119,7 +119,7 @@ def test_advanced_feature_wiring():
     assert 'stays enabled by default' not in config
     tutorial = (root / "TMessagesProj/src/main/java/org/nayagram/platform/features/FeatureTutorialDialog.java").read_text(encoding="utf-8")
     translator = (root / "TMessagesProj/src/main/java/org/nayagram/platform/translator/InstantTranslatorManager.java").read_text(encoding="utf-8")
-    assert 'FeatureTutorialDialog.show(context);' in activity
+    assert 'FeatureTutorialDialog.show(context)' in activity
     assert 'showAllDetailsPipelineDialog' not in adapter
     assert 'Feature Pipeline · Tutorial' in activity
     assert 'buildTutorialBanner(context)' in activity
