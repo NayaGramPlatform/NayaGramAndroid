@@ -10,6 +10,7 @@ JAVA = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NayaGr
 UI = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NayaGramGuardActivity.java"
 PRIVACY = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PrivacySettingsActivity.java"
 TABS = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/MainTabsActivity.java"
+LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java"
 GRADLE = ROOT / "TMessagesProj/build.gradle"
 
 
@@ -41,6 +42,7 @@ def main() -> None:
     ui = UI.read_text(encoding="utf-8")
     privacy = PRIVACY.read_text(encoding="utf-8")
     tabs = TABS.read_text(encoding="utf-8")
+    launch = LAUNCH.read_text(encoding="utf-8")
     gradle = GRADLE.read_text(encoding="utf-8")
 
     for token in (
@@ -48,7 +50,7 @@ def main() -> None:
         "MasterKey.KeyScheme.AES256_GCM",
         "PrefKeyEncryptionScheme.AES256_SIV",
         "PrefValueEncryptionScheme.AES256_GCM",
-        "new DefaultSecretGenerator(160)",
+        "new DefaultSecretGenerator(32)",
         "verifier.setTimePeriod(30)",
         "verifier.setAllowedTimePeriodDiscrepancy(1)",
         "private static final int BACKUP_COUNT = 10",
@@ -59,6 +61,7 @@ def main() -> None:
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
     assert "NayaGramGuard.isEnabled" in tabs and "new NayaGramGuardActivity(true)" in tabs
+    assert "NayaGramGuard.lockSession();" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
     print("PASS: Guard storage, UI, settings, login-gate and dependency guardrails")
