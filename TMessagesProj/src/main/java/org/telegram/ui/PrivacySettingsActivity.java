@@ -497,6 +497,26 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 }
             } else if (position == guardRow) {
                 presentFragment(new NayaGramGuardActivity());
+            } else if (position == guardRow) {
+                Context guardContext = getParentActivity();
+                if (guardContext == null) return;
+                if (NayaGramGuard.isEnabled(guardContext)) {
+                    AlertDialog.Builder guardDialog = new AlertDialog.Builder(guardContext);
+                    guardDialog.setTitle("Disable NayaGram Guard?");
+                    guardDialog.setMessage("This removes the local authenticator secret and unused backup codes. Telegram login is not changed.");
+                    guardDialog.setNegativeButton("Cancel", (dialog, which) -> listAdapter.notifyItemChanged(guardRow));
+                    guardDialog.setPositiveButton("Disable", (dialog, which) -> {
+                        try {
+                            NayaGramGuard.disable(guardContext);
+                        } catch (Exception e) {
+                            Toast.makeText(guardContext, "Could not clear secure Guard storage.", Toast.LENGTH_SHORT).show();
+                        }
+                        listAdapter.notifyItemChanged(guardRow);
+                    });
+                    showDialog(guardDialog.create());
+                } else {
+                    presentFragment(new NayaGramGuardActivity(false, true));
+                }
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -1291,7 +1311,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     break;
                 case 3:
                     TextCheckCell textCheckCell = (TextCheckCell) holder.itemView;
-                    if (position == secretWebpageRow) {
+                    if (position == guardRow) {
+                        textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true);
+                    } else if (position == secretWebpageRow) {
                         textCheckCell.setTextAndCheck(getString("SecretWebPage", R.string.SecretWebPage), getMessagesController().secretWebpagePreview == 1, false);
                     } else if (position == contactsSyncRow) {
                         textCheckCell.setTextAndCheck(getString("SyncContacts", R.string.SyncContacts), newSync, true);
@@ -1363,9 +1385,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             value = getString(R.string.PasswordOff);
                         }
                         textCell2.setTextAndValueAndIcon(getString(R.string.TwoStepVerification), value, true, icon, true);
-                    } else if (position == guardRow) {
-                        value = NayaGramGuard.isEnabled(mContext) ? "On" : "Off";
-                        textCell2.setTextAndValueAndIcon("NayaGram Guard (Google Authenticator)", value, true, R.drawable.outline_shield_check, true);
                     } else if (position == passkeysRow) {
                         value = "";
                         if (currentPasskeys == null) {
@@ -1407,6 +1426,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         @Override
         public int getItemViewType(int position) {
+            if (position == guardRow) {
+                return 3;
+            }
             if (position == passportRow || position == lastSeenRow || position == phoneNumberRow ||
                     position == deleteAccountRow || position == webSessionsRow || position == groupsRow || position == paymentsClearRow ||
                     position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow || position == adPrivacyRow) {
@@ -1419,7 +1441,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 return 3;
             } else if (position == botsAndWebsitesShadowRow) {
                 return 4;
-            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == guardRow || position == passkeysRow || position == passcodeRow || position == blockedRow) {
+            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == passkeysRow || position == passcodeRow || position == blockedRow) {
                 return 5;
             }
             return 0;
