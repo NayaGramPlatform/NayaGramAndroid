@@ -109,6 +109,7 @@ public final class AdMobIntegrationManager implements INGMonetizationProvider {
 
     private void initializeIfConsentAllows(ConsentInformation consentInformation) {
         if (!NayaGramAdsConfig.ENABLE_ADS || !consentInformation.canRequestAds()) {
+            initializationStarted.set(false);
             Log.i(TAG, "Ad requests are blocked until consent requirements are satisfied.");
             return;
         }
