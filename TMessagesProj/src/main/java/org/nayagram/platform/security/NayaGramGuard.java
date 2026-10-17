@@ -82,8 +82,10 @@ public final class NayaGramGuard {
     }
 
     public static String getOtpAuthUri(String accountLabel, String secret) {
-        String label = "NayaGram:" + (accountLabel == null || accountLabel.trim().isEmpty() ? "user" : accountLabel.trim());
-        return "otpauth://totp/" + urlEncode(label) + "?secret=" + urlEncode(secret)
+        String user = accountLabel == null || accountLabel.trim().isEmpty() ? "user" : accountLabel.trim();
+        // Keep the issuer/account separator colon literal as required by otpauth URI labels.
+        String label = "NayaGram:" + urlEncode(user);
+        return "otpauth://totp/" + label + "?secret=" + urlEncode(secret)
                 + "&issuer=" + urlEncode("NayaGram") + "&algorithm=SHA1&digits=6&period=30";
     }
 
