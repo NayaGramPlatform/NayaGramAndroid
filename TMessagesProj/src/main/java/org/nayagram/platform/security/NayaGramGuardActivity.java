@@ -221,7 +221,7 @@ public class NayaGramGuardActivity extends BaseFragment {
         content.addView(copy, params(0, 12));
         copy.setOnClickListener(v -> {
             StringBuilder all = new StringBuilder();
-            for (String code : backups) all.append(code).append('\\n');
+            for (String code : backups) all.append(code).append('\n');
             ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText("NayaGram Guard backup codes", all.toString()));
             toast(context, "Backup codes copied");
