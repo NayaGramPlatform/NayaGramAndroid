@@ -103,9 +103,9 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 R.drawable.msg_settings,
                 new String[]{"Modular Config", "মডুলার কনফিগ", "تكوين معياري"},
                 new String[]{
-                        "All custom settings isolated in an independent, safe package.",
-                        "সব কাস্টম সেটিংস আলাদা নিরাপদ প্যাকেজে সংরক্ষিত।",
-                        "جميع الإعدادات المخصصة معزولة في حزمة مستقلة وآمنة."
+                        "Not active yet. The toggle does not change how settings are stored or isolated.",
+                        "এখনো চালু নয়। এই টগল সেটিংস সংরক্ষণ বা আলাদা রাখার পদ্ধতি বদলায় না।",
+                        "غير نشط حاليًا. لا يغيّر هذا المفتاح طريقة حفظ الإعدادات أو عزلها."
                 }
         ));
 
@@ -298,7 +298,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: return cfg.isReadableTextEnabled();
             case 23: return cfg.isReduceMotion();
             case 11: return cfg.isShowIdAndDc();
-            case 12: return cfg.isModularConfig();
             case 14: return true;
             default: return false;
         }
@@ -308,6 +307,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     private boolean isImplementationPending(FeatureItem item) {
         switch (item.number) {
             case 9:  // Smart Chat Folders
+            case 12: // Modular Config has no behavior wired to this toggle
             case 13: // Focus Mode
             case 15: // Battery Saver
             case 16: // Chat Locker
@@ -405,7 +405,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
-            case 12: cfg.setModularConfig(newState); break;
         }
 
         notifyItemChanged(position);
