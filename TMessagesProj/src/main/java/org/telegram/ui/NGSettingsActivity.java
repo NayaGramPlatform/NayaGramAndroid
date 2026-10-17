@@ -398,7 +398,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         } else if (position == rowSmartChatFolders) {
             title = "Smart Chat Folders";
-            body = "Not active yet. Native Telegram folder integration is not implemented, so this switch cannot organize chats.\n\nFolders still use Telegram's folder system.";
+            body = "Not active yet. Native Telegram folder integration is not implemented, so this feature cannot organize chats.";
 
         } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
@@ -507,7 +507,9 @@ public class NGSettingsActivity extends BaseFragment {
             badgeView.setData(iconRes, badgeColor);
             titleView.setText(title);
             subtitleView.setText(subtitle);
-            switchView.setChecked(checked, false);
+            boolean unavailable = title.contains("· SOON");
+            switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE);
+            switchView.setChecked(unavailable ? false : checked, false);
             this.needDivider = divider;
             updateAccessibilityLabel();
             invalidate();
@@ -525,7 +527,7 @@ public class NGSettingsActivity extends BaseFragment {
         private void updateAccessibilityLabel() {
             String title = titleView.getText() != null ? titleView.getText().toString() : "";
             String subtitle = subtitleView.getText() != null ? subtitleView.getText().toString() : "";
-            String status = switchView.isChecked() ? "Enabled" : "Disabled";
+            String status = title.contains("· SOON") ? "Unavailable" : (switchView.isChecked() ? "Enabled" : "Disabled");
             setContentDescription(title + ", " + subtitle + ", " + status);
         }
 
