@@ -66,8 +66,8 @@ def test_dynamic_footer_and_branding():
     current_year = datetime.datetime.now().year
     footer_text = f"Built with ❤️ in Bangladesh 🇧🇩 - {current_year}"
     assert str(current_year) in footer_text
-    assert "Telegram" not in "NayaGram for Android v1.0.0 (1)"
-    assert "NayaGram" in "NayaGram for Android v1.0.0 (1)"
+    assert "Telegram" not in "NayaGram for Android v1.0.1 NG (4013)"
+    assert "NayaGram" in "NayaGram for Android v1.0.1 NG (4013)"
     print("PASS")
 
 def test_search_and_hub_naming():
