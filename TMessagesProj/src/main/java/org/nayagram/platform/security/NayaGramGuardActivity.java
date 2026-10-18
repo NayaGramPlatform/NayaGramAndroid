@@ -3,6 +3,7 @@ package org.nayagram.platform.security;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.CountDownTimer;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -48,6 +49,8 @@ public class NayaGramGuardActivity extends BaseFragment {
     private String pendingSecret;
     private boolean suppressToggleCallback;
     private boolean setupCompleted;
+    private CountDownTimer codeCountdown;
+    private TextView countdownView;
 
     public NayaGramGuardActivity() {
         this(false, false);
@@ -100,6 +103,7 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     @Override
     public void onFragmentDestroy() {
+        if (codeCountdown != null) { codeCountdown.cancel(); codeCountdown = null; }
         if (pendingSecret != null && !setupCompleted) {
             NayaGramGuard.cancelSetup(ApplicationLoader.applicationContext);
         }
@@ -378,10 +382,43 @@ public class NayaGramGuardActivity extends BaseFragment {
                 codeInput.requestFocus();
             });
         }
+        if (!allowBackup) {
+            // Large, high-contrast cyan countdown makes the 30-second TOTP window obvious.
+            countdownView = text(context, "", 16, 0xFF0369A1, true);
+            countdownView.setGravity(Gravity.CENTER);
+            countdownView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+            countdownView.setBackground(round(0xFFE0F7FF, 0xFF06B6D4));
+            content.addView(countdownView, params(0, 8));
+            startCodeCountdown();
+        }
         codeFrame.setOnClickListener(v -> {
             codeInput.requestFocus();
             codeInput.setSelection(codeInput.length());
         });
+    }
+
+    private void startCodeCountdown() {
+        if (codeCountdown != null) codeCountdown.cancel();
+        long elapsed = System.currentTimeMillis() % 30000L;
+        long remaining = 30000L - elapsed;
+        codeCountdown = new CountDownTimer(remaining, 1000L) {
+            @Override public void onTick(long millisUntilFinished) {
+                long seconds = Math.max(1L, (millisUntilFinished + 999L) / 1000L);
+                if (countdownView != null) {
+                    countdownView.setText("⏱ New code in " + seconds + "s");
+                    countdownView.setTextColor(seconds <= 5 ? 0xFFB45309 : 0xFF0369A1);
+                    countdownView.setBackground(round(seconds <= 5 ? 0xFFFFF7ED : 0xFFE0F7FF,
+                            seconds <= 5 ? 0xFFF59E0B : 0xFF06B6D4));
+                }
+            }
+            @Override public void onFinish() {
+                if (countdownView != null) {
+                    countdownView.setText("⟳ New code window");
+                    countdownView.setTextColor(0xFF0369A1);
+                }
+                startCodeCountdown();
+            }
+        }.start();
     }
 
     private void addTitle(Context context, String value) {
