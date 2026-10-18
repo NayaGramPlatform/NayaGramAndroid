@@ -62,10 +62,12 @@ def main() -> None:
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
     assert "NayaGramGuard.cancelSetup(context)" in ui
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
-    assert 'textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true)' in privacy
-    assert "presentFragment(new NayaGramGuardActivity(false, true))" in privacy
-    assert privacy.count("} else if (position == guardRow) {") == 1
-    assert 'setTextAndCheck("NayaGram Guard (Google Authenticator)"' in privacy
+    # Guard is a navigation row, not a toggle; opening its management screen must not disable it.
+    assert "presentFragment(new NayaGramGuardActivity());" in privacy
+    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), value, true, R.drawable.ic_nayagram_authenticator, true);" in privacy
+    assert "textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + \", \" + value);" in privacy
+    assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
+    assert "setTextAndCheck(\"NayaGram Guard (Google Authenticator)\"" not in privacy
     assert "NayaGramGuard.isEnabled" in tabs and "new NayaGramGuardActivity(true)" in tabs
     assert "NayaGramGuard.lockSession();" in launch
     assert "topFragment instanceof NayaGramGuardActivity" in launch
