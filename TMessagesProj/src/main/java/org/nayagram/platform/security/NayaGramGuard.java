@@ -71,7 +71,7 @@ public final class NayaGramGuard {
     }
 
     public static String beginSetup(Context context) throws Exception {
-        // The generator argument is bytes: 20 random bytes = 160 bits of entropy.
+        // The generator argument is Base32 characters: 32 characters = 160 bits of entropy.
         String secret = new DefaultSecretGenerator(32).generate();
         prefs(context).edit().putString(PENDING_SECRET, secret).apply();
         return secret;
@@ -87,10 +87,6 @@ public final class NayaGramGuard {
 
     public static String getPendingSecret(Context context) throws Exception {
         return prefs(context).getString(PENDING_SECRET, null);
-    }
-
-    public static void cancelSetup(Context context) throws Exception {
-        prefs(context).edit().remove(PENDING_SECRET).apply();
     }
 
     public static String getOtpAuthUri(String accountLabel, String secret) {
