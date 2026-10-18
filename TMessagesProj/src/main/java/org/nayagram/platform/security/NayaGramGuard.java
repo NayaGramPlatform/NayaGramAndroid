@@ -72,7 +72,7 @@ public final class NayaGramGuard {
 
     public static String beginSetup(Context context) throws Exception {
         // The generator argument is bytes: 20 random bytes = 160 bits of entropy.
-        String secret = new DefaultSecretGenerator(20).generate();
+        String secret = new DefaultSecretGenerator(32).generate();
         prefs(context).edit().putString(PENDING_SECRET, secret).apply();
         return secret;
     }
