@@ -496,25 +496,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == guardRow) {
-                Context guardContext = getParentActivity();
-                if (guardContext == null) return;
-                if (NayaGramGuard.isEnabled(guardContext)) {
-                    AlertDialog.Builder guardDialog = new AlertDialog.Builder(guardContext);
-                    guardDialog.setTitle("Disable NayaGram Guard?");
-                    guardDialog.setMessage("This removes the local authenticator secret and unused backup codes. Telegram login is not changed.");
-                    guardDialog.setNegativeButton("Cancel", (dialog, which) -> listAdapter.notifyItemChanged(guardRow));
-                    guardDialog.setPositiveButton("Disable", (dialog, which) -> {
-                        try {
-                            NayaGramGuard.disable(guardContext);
-                        } catch (Exception e) {
-                            Toast.makeText(guardContext, "Could not clear secure Guard storage.", Toast.LENGTH_SHORT).show();
-                        }
-                        listAdapter.notifyItemChanged(guardRow);
-                    });
-                    showDialog(guardDialog.create());
-                } else {
-                    presentFragment(new NayaGramGuardActivity(false, true));
-                }
+                presentFragment(new NayaGramGuardActivity());
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -1309,9 +1291,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     break;
                 case 3:
                     TextCheckCell textCheckCell = (TextCheckCell) holder.itemView;
-                    if (position == guardRow) {
-                        textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true);
-                    } else if (position == secretWebpageRow) {
+                    if (position == secretWebpageRow) {
                         textCheckCell.setTextAndCheck(getString("SecretWebPage", R.string.SecretWebPage), getMessagesController().secretWebpagePreview == 1, false);
                     } else if (position == contactsSyncRow) {
                         textCheckCell.setTextAndCheck(getString("SyncContacts", R.string.SyncContacts), newSync, true);
@@ -1371,6 +1351,14 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         }
                         textCell2.setPrioritizeTitleOverValue(true);
                         textCell2.setTextAndSpoilersValueAndIcon(getString(R.string.EmailLogin), val, R.drawable.msg2_email, true);
+                    } else if (position == guardRow) {
+                        boolean enabled = NayaGramGuard.isEnabled(mContext);
+                        String guardStatus = enabled ? getString(R.string.PasswordOn) : getString(R.string.PasswordOff);
+                        textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);
+                        if (textCell2.imageView != null) {
+                            textCell2.imageView.setColorFilter(null);
+                        }
+                        textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + ", " + guardStatus);
                     } else if (position == passwordRow) {
                         value = "";
                         int icon = R.drawable.menu_2sv;
@@ -1424,9 +1412,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         @Override
         public int getItemViewType(int position) {
-            if (position == guardRow) {
-                return 3;
-            }
             if (position == passportRow || position == lastSeenRow || position == phoneNumberRow ||
                     position == deleteAccountRow || position == webSessionsRow || position == groupsRow || position == paymentsClearRow ||
                     position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow || position == adPrivacyRow) {

@@ -92,6 +92,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.SharedPrefsHelper;
+import org.nayagram.platform.security.NayaGramGuardActivity;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Wallet.GramWallet;
 import org.telegram.ui.Wallet.WalletActivity;
@@ -633,6 +634,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         items.add(UItem.asCustomShadow(topView, 200 - 12));
 
+        // Dedicated shortcut to NayaGram's local security features, placed at the top of Settings.
+        items.add(SettingCell.Factory.of(111, 0xFF00D4FF, 0xFF7C4DFF, R.drawable.ic_nayagram_authenticator, getString(R.string.NGProtectionTitle), getString(R.string.NGProtectionTagline)));
+
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated() && currentAccount != a) {
@@ -843,6 +847,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         switch (item.id) {
             case 200:
                 presentSettingFragment(new LoginActivity());
+                break;
+            case 111:
+                presentSettingFragment(new NayaGramGuardActivity());
                 break;
             case 100:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_FEATURES_HUB));
