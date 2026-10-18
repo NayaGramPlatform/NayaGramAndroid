@@ -254,7 +254,33 @@ public class NayaGramGuardActivity extends BaseFragment {
     }
 
     private void buildVerification(Context context, boolean gate) {
-        addTitle(context, gate ? "🔐 Unlock NayaGram" : "Verify NayaGram Guard");
+        // Prominent NG Protection hero area, followed by generous spacing before code entry.
+        LinearLayout hero = new LinearLayout(context);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        hero.setGravity(Gravity.CENTER);
+        hero.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+        content.addView(hero, params(0, 24));
+
+        ImageView logo = new ImageView(context);
+        logo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(116), AndroidUtilities.dp(116));
+        logoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        hero.addView(logo, logoParams);
+
+        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 25, 0xFF075985, true);
+        heroTitle.setGravity(Gravity.CENTER);
+        heroTitle.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(4));
+        hero.addView(heroTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView heroSubtitle = text(context, "Your Security, Our Priority.", 14, 0xFF0284C7, true);
+        heroSubtitle.setGravity(Gravity.CENTER);
+        hero.addView(heroSubtitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        // Push the six-digit code entry lower to visually separate it from the brand hero.
+        View spacer = new View(context);
+        content.addView(spacer, new LinearLayout.LayoutParams(1, AndroidUtilities.dp(44)));
+
         addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
         buildCodeEntry(context, true);
         Button verify = button(context, "Verify and continue");
