@@ -31,7 +31,7 @@ public final class NayaGramGuard {
     private static final String SECRET = "totp_secret";
     private static final String PENDING_SECRET = "pending_secret";
     private static final String BACKUP_PREFIX = "backup_hash_";
-    private static final int BACKUP_COUNT = 10;
+    private static final int BACKUP_COUNT = 15;
     private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static volatile boolean sessionVerified;
 
@@ -121,7 +121,7 @@ public final class NayaGramGuard {
 
     /**
      * Completes enrollment only after a valid live TOTP code is entered.
-     * Returns ten one-time backup codes; only their SHA-256 hashes are retained.
+     * Returns fifteen one-time backup codes; only their SHA-256 hashes are retained.
      */
     public static List<String> confirmSetup(Context context, String code) throws Exception {
         SharedPreferences secure = prefs(context);
