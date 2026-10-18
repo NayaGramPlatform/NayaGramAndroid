@@ -317,6 +317,36 @@ public class NayaGramGuardActivity extends BaseFragment {
         });
         content.addView(codeFrame, params(0, 8));
 
+        Button pasteCode = button(context, "Paste code");
+        content.addView(pasteCode, params(0, 6));
+        pasteCode.setOnClickListener(v -> {
+            try {
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard == null || !clipboard.hasPrimaryClip() || clipboard.getPrimaryClip() == null
+                        || clipboard.getPrimaryClip().getItemCount() == 0) {
+                    toast(context, "Clipboard is empty.");
+                    return;
+                }
+                CharSequence pasted = clipboard.getPrimaryClip().getItemAt(0).coerceToText(context);
+                if (pasted == null) {
+                    toast(context, "No text code found in clipboard.");
+                    return;
+                }
+                String value = pasted.toString().trim();
+                if (!backupEntryMode) {
+                    value = value.replaceAll("[^0-9]", "");
+                    if (value.length() > 6) value = value.substring(0, 6);
+                } else {
+                    value = value.replaceAll("\\s+", "").toUpperCase(java.util.Locale.ROOT);
+                    if (value.length() > 10) value = value.substring(0, 10);
+                }
+                codeInput.setText(value);
+                codeInput.setSelection(codeInput.length());
+            } catch (Exception e) {
+                toast(context, "Could not paste code.");
+            }
+        });
+
         if (allowBackup) {
             backupModeToggle = text(context, "Use a one-time backup code", 13, 0xFF0284C7, true);
             backupModeToggle.setGravity(Gravity.CENTER);
