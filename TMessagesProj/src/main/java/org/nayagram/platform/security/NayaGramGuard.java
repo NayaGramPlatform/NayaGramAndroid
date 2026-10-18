@@ -121,7 +121,12 @@ public final class NayaGramGuard {
             long elapsedDelta = elapsedNow >= elapsedStart ? elapsedNow - elapsedStart : Long.MAX_VALUE;
             long wallDelta = wallNow >= wallStart ? wallNow - wallStart : Long.MAX_VALUE;
             long delta = Math.max(elapsedDelta, wallDelta);
-            return timeout == 0L || delta >= timeout;
+            if (timeout == 0L || delta >= timeout) {
+                return true;
+            }
+            // The user returned before the timeout. Start a fresh background interval next time.
+            secure.edit().remove(BACKGROUND_ELAPSED_MS).remove(BACKGROUND_WALL_MS).apply();
+            return false;
         } catch (Exception e) {
             return true;
         }
