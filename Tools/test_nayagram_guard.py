@@ -51,6 +51,7 @@ def main() -> None:
         "PrefKeyEncryptionScheme.AES256_SIV",
         "PrefValueEncryptionScheme.AES256_GCM",
         "new DefaultSecretGenerator(32)",
+        "public static void cancelSetup(Context context)",
         "verifier.setTimePeriod(30)",
         "verifier.setAllowedTimePeriodDiscrepancy(1)",
         "private static final int BACKUP_COUNT = 10",
@@ -59,6 +60,7 @@ def main() -> None:
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
+    assert "NayaGramGuard.cancelSetup(context)" in ui
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
     assert 'textCheckCell.setTextAndCheck("NayaGram Guard (Google Authenticator)", NayaGramGuard.isEnabled(mContext), true)' in privacy
     assert "presentFragment(new NayaGramGuardActivity(false, true))" in privacy
