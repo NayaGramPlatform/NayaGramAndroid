@@ -444,7 +444,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "1.0.4 NG";
+        return "1.1.4 NG";
     }
 
     private void openUrl(String url) {
