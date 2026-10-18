@@ -396,7 +396,9 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     @Override
     public boolean onBackPressed(boolean invoked) {
-        if (gateMode) return false;
+        // BaseFragment returns true to consume the back press; do not let the
+        // protected main page be exposed while the Guard gate is active.
+        if (gateMode) return true;
         return super.onBackPressed(invoked);
     }
 }
