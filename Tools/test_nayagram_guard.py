@@ -64,7 +64,7 @@ def main() -> None:
     assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
     # Guard is a navigation row, not a toggle; opening its management screen must not disable it.
     assert "presentFragment(new NayaGramGuardActivity());" in privacy
-    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), value, true, R.drawable.ic_nayagram_authenticator, true);" in privacy
+    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);" in privacy
     assert "textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + \", \" + value);" in privacy
     assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
     assert "setTextAndCheck(\"NayaGram Guard (Google Authenticator)\"" not in privacy
