@@ -1,4 +1,5 @@
 import dev.samstevens.totp.code.DefaultCodeGenerator;
+import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.time.TimeProvider;
 
@@ -10,6 +11,10 @@ public final class NayaGramGuardTotpRfcTest {
 
     public static void main(String[] args) throws Exception {
         DefaultCodeGenerator generator = new DefaultCodeGenerator();
+        String generatedSecret = new DefaultSecretGenerator(20).generate();
+        if (generatedSecret.length() != 32) {
+            throw new AssertionError("Expected 160-bit secret to encode as 32 Base32 characters, got " + generatedSecret.length());
+        }
         long[] times = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
         String[] expected = {"287082", "081804", "050471", "005924", "279037", "353130"};
         for (int i = 0; i < times.length; i++) {
@@ -36,6 +41,6 @@ public final class NayaGramGuardTotpRfcTest {
         if (verifier.isValidCode(RFC_SECRET_BASE32, generator.generate(RFC_SECRET_BASE32, 3L))) {
             throw new AssertionError("Verifier accepted a code outside the ±1 time-step window");
         }
-        System.out.println("PASS: 6 RFC 6238 TOTP vectors and verifier ±1-step window");
+        System.out.println("PASS: 160-bit secret size, 6 RFC 6238 TOTP vectors and verifier ±1-step window");
     }
 }
