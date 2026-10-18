@@ -77,6 +77,14 @@ public final class NayaGramGuard {
         return secret;
     }
 
+    public static void cancelSetup(Context context) {
+        try {
+            prefs(context).edit().remove(PENDING_SECRET).apply();
+        } catch (Exception ignored) {
+            // A pending secret is never promoted to the active secret before confirmation.
+        }
+    }
+
     public static String getPendingSecret(Context context) throws Exception {
         return prefs(context).getString(PENDING_SECRET, null);
     }
