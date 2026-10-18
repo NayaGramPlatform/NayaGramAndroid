@@ -720,7 +720,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
-        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_faq, "About", "v1.0.0 (Official Release)", ""));
+        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_faq, "About", "v" + getInstalledAppVersionName() + " • Official Release", ""));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
@@ -1027,6 +1027,18 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         return ssb;
     }
 
+    private String getInstalledAppVersionName() {
+        try {
+            PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
+            if (pInfo.versionName != null && !pInfo.versionName.isEmpty()) {
+                return pInfo.versionName;
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "1.1.4 NG";
+    }
+
     public String getVersionName() {
         try {
             PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager().getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
@@ -1047,7 +1059,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     break;
             }
             int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
-            String nayaGramInfo = "NayaGram for Android v1.0.0 (1)";
+            String nayaGramInfo = "NayaGram for Android v" + getInstalledAppVersionName() + " (" + code + ")";
             String copyrightLine = "© " + currentYear + " 𝐍𝐚𝐲𝐚𝐆𝐫𝐚𝐦 𝐏𝐥𝐚𝐭𝐟𝐨𝐫𝐦. All rights reserved.\nBuilt with ❤️ in Bangladesh 🇧🇩";
             return nayaGramInfo + "\n" + copyrightLine + "\n" + abi;
         } catch (Exception e) {

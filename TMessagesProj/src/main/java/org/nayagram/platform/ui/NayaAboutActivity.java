@@ -255,7 +255,7 @@ public class NayaAboutActivity extends BaseFragment {
 
         TextView footer = new TextView(context);
         int year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
-        footer.setText("© " + year + " NayaGram Platform\nNot affiliated with Telegram FZ-LLC\nAll rights reserved");
+        footer.setText("NayaGram v" + getAppVersion() + " • Build " + getInternalBuildCode() + "\n© " + year + " NayaGram Platform\nNot affiliated with Telegram FZ-LLC\nAll rights reserved");
         footer.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
         footer.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3));
         footer.setGravity(Gravity.CENTER);
@@ -425,6 +425,17 @@ public class NayaAboutActivity extends BaseFragment {
         return t;
     }
 
+    private String getInternalBuildCode() {
+        try {
+            PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager()
+                    .getPackageInfo(ApplicationLoader.applicationContext.getPackageName(), 0);
+            return String.valueOf(pInfo.versionCode / 10);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "4014";
+    }
+
     private String getAppVersion() {
         try {
             PackageInfo pInfo = ApplicationLoader.applicationContext.getPackageManager()
@@ -433,7 +444,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "1.0.0";
+        return "1.1.4 NG";
     }
 
     private void openUrl(String url) {

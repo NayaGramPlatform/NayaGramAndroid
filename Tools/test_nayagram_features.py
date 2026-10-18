@@ -67,8 +67,22 @@ def test_dynamic_footer_and_branding():
     current_year = datetime.datetime.now().year
     footer_text = f"Built with ❤️ in Bangladesh 🇧🇩 - {current_year}"
     assert str(current_year) in footer_text
-    assert "Telegram" not in "NayaGram for Android v1.0.0 (1)"
-    assert "NayaGram" in "NayaGram for Android v1.0.0 (1)"
+    from pathlib import Path
+    settings_source = Path("TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java").read_text(encoding="utf-8")
+    about_source = Path("TMessagesProj/src/main/java/org/nayagram/platform/ui/NayaAboutActivity.java").read_text(encoding="utf-8")
+    props_source = Path("gradle.properties").read_text(encoding="utf-8")
+    app_gradle_source = Path("TMessagesProj_App/build.gradle").read_text(encoding="utf-8")
+    buildvars_source = Path("TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java").read_text(encoding="utf-8")
+    assert "APP_VERSION_CODE=4014" in props_source
+    assert "APP_VERSION_NAME=1.1.4 NG" in props_source
+    assert "BUILD_VERSION = 4014" in buildvars_source
+    assert "internal code 4014" in app_gradle_source
+    assert "1.1.4 NG" in app_gradle_source
+    assert '"1.1.4 NG"' in about_source
+    assert '"1.1.4 NG"' in settings_source
+    assert "getInstalledAppVersionName()" in settings_source
+    assert 'String nayaGramInfo = "NayaGram for Android v" + getInstalledAppVersionName() + " (" + code + ")";' in settings_source
+    assert 'footer.setText("NayaGram v" + getAppVersion() + " • Build " + getInternalBuildCode()' in about_source
     print("PASS")
 
 def test_advanced_feature_wiring():
