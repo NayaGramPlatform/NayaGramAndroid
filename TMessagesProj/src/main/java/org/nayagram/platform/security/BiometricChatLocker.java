@@ -99,8 +99,8 @@ public final class BiometricChatLocker {
         }
 
         if (!isDeviceSecurityAvailable(activity)) {
-            grantSessionAccess(dialogId);
-            if (callback != null) callback.onUnlockSuccess();
+            Toast.makeText(activity, "Set up a device screen lock before using Chat Lock.", Toast.LENGTH_LONG).show();
+            if (callback != null) callback.onUnlockFailed();
             return;
         }
 
@@ -165,8 +165,8 @@ public final class BiometricChatLocker {
             }
         }
 
-        // Fallback for older devices: grant session access
-        grantSessionAccess(dialogId);
-        if (callback != null) callback.onUnlockSuccess();
+        // Fail closed: unsupported authentication APIs must never unlock a protected chat.
+        Toast.makeText(activity, "Secure authentication is unavailable on this device.", Toast.LENGTH_LONG).show();
+        if (callback != null) callback.onUnlockFailed();
     }
 }
