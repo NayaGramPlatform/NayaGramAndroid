@@ -166,7 +166,14 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showSetup(Context context, String secret) {
         content.removeAllViews();
-        addTitle(context, "Scan with Google Authenticator");
+        ImageView brandLogo = new ImageView(context);
+        brandLogo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        brandLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams brandLogoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(96), AndroidUtilities.dp(96));
+        brandLogoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        brandLogoParams.bottomMargin = AndroidUtilities.dp(8);
+        content.addView(brandLogo, brandLogoParams);
+        addTitle(context, "NG Authenticator");
         addText(context, "Scan this QR code, or add the secret manually. Then enter the current six-digit code to confirm setup.");
         ImageView qr = new ImageView(context);
         qr.setAdjustViewBounds(true);
@@ -176,7 +183,7 @@ public class NayaGramGuardActivity extends BaseFragment {
             BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
             Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
             for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
             }
             qr.setImageBitmap(bitmap);
             qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
