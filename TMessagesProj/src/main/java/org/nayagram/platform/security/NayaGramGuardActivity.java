@@ -368,6 +368,27 @@ public class NayaGramGuardActivity extends BaseFragment {
         });
         content.addView(codeFrame, params(0, 8));
 
+        Button pasteCode = button(context, "Paste code");
+        content.addView(pasteCode, params(0, 6));
+        pasteCode.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null || !clipboard.hasPrimaryClip()) {
+                toast(context, "Clipboard has no code to paste.");
+                return;
+            }
+            CharSequence clip = clipboard.getPrimaryClip().getItemAt(0).coerceToText(context);
+            String value = clip == null ? "" : clip.toString();
+            if (backupEntryMode) {
+                value = value.replaceAll("\\\\s+", "").toUpperCase(Locale.US);
+                if (value.length() > 10) value = value.substring(0, 10);
+            } else {
+                value = value.replaceAll("\\\\D", "");
+                if (value.length() > 6) value = value.substring(0, 6);
+            }
+            codeInput.setText(value);
+            codeInput.setSelection(value.length());
+        });
+
         if (allowBackup) {
             backupModeToggle = text(context, "Use a one-time backup code", 13, 0xFF0284C7, true);
             backupModeToggle.setGravity(Gravity.CENTER);
