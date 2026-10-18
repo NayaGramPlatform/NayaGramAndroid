@@ -11719,7 +11719,9 @@
     <string name="cut">cut</string>
     <string name="paste">paste</string>
     <string name="selectAll">selectAll</string>
-    <string name="NayaGramGuardTitle">NayaGram Guard (Google Authenticator)</string>
+    <string name="NayaGramGuardTitle">NG Protection (Google Authenticator)</string>
+    <string name="NGProtectionTitle">NG Protection</string>
+    <string name="NGProtectionTagline">Your Security, Our Priority.</string>
     <string name="SendWhenOnlineUserOnline">This user is already online right now.</string>
     <string name="SendWhenOnlinePrivacyRestricted">This user's exact online status is hidden by privacy settings, so Send When Online cannot be scheduled.</string>
 </resources>
