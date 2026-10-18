@@ -1,0 +1,22 @@
+plugins {
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'dev.samstevens.totp:totp:1.7.1'
+}
+
+application {
+    mainClass = 'NayaGramGuardTotpRfcTest'
+}
+
+tasks.register('rfc6238Test', JavaExec) {
+    group = 'verification'
+    description = 'Run RFC 6238 known-answer vectors against the production TOTP library.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'NayaGramGuardTotpRfcTest'
+}
