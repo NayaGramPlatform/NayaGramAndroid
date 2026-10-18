@@ -396,9 +396,8 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     @Override
     public boolean onBackPressed(boolean invoked) {
-        // BaseFragment returns true to consume the back press; do not let the
-        // protected main page be exposed while the Guard gate is active.
-        if (gateMode) return true;
+        // Returning false consumes the back press in Telegram's BaseFragment contract.
+        if (gateMode) return false;
         return super.onBackPressed(invoked);
     }
 }
