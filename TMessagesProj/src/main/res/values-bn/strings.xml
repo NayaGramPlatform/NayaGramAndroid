@@ -298,7 +298,7 @@
     <string name="GroupJoinRequestSent">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="GroupJoinRequestSentNoCaps">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="SupportedChannelGroup">সাপোর্টেড</string>
-    <string name="NayaGramGuardTitle">NG Protection (গুগল অথেন্টিকেটর)</string>
+    <string name="NayaGramGuardTitle">NG Authenticator (গুগল অথেন্টিকেটর)</string>
     <string name="NGProtectionTitle">NG Protection</string>
     <string name="NGProtectionTagline">আপনার নিরাপত্তাই আমাদের অগ্রাধিকার।</string>
     <string name="SendWhenOnline">অনলাইন হলে পাঠান</string>
