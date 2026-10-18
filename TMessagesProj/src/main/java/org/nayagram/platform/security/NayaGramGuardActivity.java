@@ -27,6 +27,7 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
@@ -46,6 +47,7 @@ public class NayaGramGuardActivity extends BaseFragment {
     private boolean backupEntryMode;
     private String pendingSecret;
     private boolean suppressToggleCallback;
+    private boolean setupCompleted;
 
     public NayaGramGuardActivity() {
         this(false, false);
@@ -94,6 +96,14 @@ public class NayaGramGuardActivity extends BaseFragment {
             buildSettings(context);
         }
         return fragmentView;
+    }
+
+    @Override
+    public void onFragmentDestroy() {
+        if (pendingSecret != null && !setupCompleted) {
+            NayaGramGuard.cancelSetup(ApplicationLoader.applicationContext);
+        }
+        super.onFragmentDestroy();
     }
 
     private void buildSettings(Context context) {
@@ -198,6 +208,7 @@ public class NayaGramGuardActivity extends BaseFragment {
                     codeInput.setError("Enter the current valid 6-digit code");
                     return;
                 }
+                setupCompleted = true;
                 showBackupCodes(context, backups);
             } catch (Exception e) {
                 toast(context, "Setup could not be saved securely.");
