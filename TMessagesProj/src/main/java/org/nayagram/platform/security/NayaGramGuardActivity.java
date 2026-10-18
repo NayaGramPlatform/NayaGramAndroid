@@ -230,7 +230,7 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showBackupCodes(Context context, List<String> backups) {
         content.removeAllViews();
-        addTitle(context, "Save your 10 backup codes");
+        addTitle(context, "Save your 15 backup codes");
         addText(context, "Each code works once. Store these privately; they are shown only now. Only encrypted hashes are retained on this device.");
         for (int i = 0; i < backups.size(); i++) {
             TextView code = text(context, (i + 1) + ".  " + backups.get(i), 15, 0xFF075985, true);
