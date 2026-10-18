@@ -71,8 +71,8 @@ public final class NayaGramGuard {
     }
 
     public static String beginSetup(Context context) throws Exception {
-        // 32 Base32 characters encode 160 bits of entropy.
-        String secret = new DefaultSecretGenerator(32).generate();
+        // The generator argument is bytes: 20 random bytes = 160 bits of entropy.
+        String secret = new DefaultSecretGenerator(20).generate();
         prefs(context).edit().putString(PENDING_SECRET, secret).apply();
         return secret;
     }
