@@ -54,7 +54,7 @@ def main() -> None:
         "public static void cancelSetup(Context context)",
         "verifier.setTimePeriod(30)",
         "verifier.setAllowedTimePeriodDiscrepancy(1)",
-        "private static final int BACKUP_COUNT = 10",
+        "private static final int BACKUP_COUNT = 15",
         "Local TOTP only, no data sent to Google server",
     ):
         assert token in java, f"Missing security requirement: {token}"
