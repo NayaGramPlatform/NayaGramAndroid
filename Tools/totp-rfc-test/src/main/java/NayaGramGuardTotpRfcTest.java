@@ -11,7 +11,7 @@ public final class NayaGramGuardTotpRfcTest {
 
     public static void main(String[] args) throws Exception {
         DefaultCodeGenerator generator = new DefaultCodeGenerator();
-        String generatedSecret = new DefaultSecretGenerator(20).generate();
+        String generatedSecret = new DefaultSecretGenerator(32).generate();
         if (generatedSecret.length() != 32) {
             throw new AssertionError("Expected 160-bit secret to encode as 32 Base32 characters, got " + generatedSecret.length());
         }
