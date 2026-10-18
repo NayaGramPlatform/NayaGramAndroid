@@ -263,19 +263,27 @@ public class NayaGramGuardActivity extends BaseFragment {
         } catch (Exception e) {
             addText(context, "QR could not be generated. Use the manual secret below.");
         }
-        TextView secretText = text(context, secret, 14, 0xFF075985, true);
+        TextView secretText = text(context, "•••• •••• •••• ••••", 14, 0xFF075985, true);
         secretText.setTextIsSelectable(true);
         secretText.setGravity(Gravity.CENTER);
         secretText.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
         secretText.setBackground(round(Color.WHITE, 0xFFBAE6FD));
         content.addView(secretText, params(0, 8));
+        Button reveal = button(context, "Show manual setup key");
+        content.addView(reveal, params(0, 6));
+        reveal.setOnClickListener(v -> {
+            boolean showing = secret.equals(secretText.getText().toString());
+            secretText.setText(showing ? "•••• •••• •••• ••••" : secret);
+            reveal.setText(showing ? "Show manual setup key" : "Hide manual setup key");
+        });
         Button copy = button(context, "Copy Secret");
         content.addView(copy, params(0, 8));
         copy.setOnClickListener(v -> {
             ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText("NayaGram Guard secret", secret));
-            toast(context, "Secret copied");
+            toast(context, "Secret copied. Keep it private.");
         });
+        addText(context, "Setup steps: 1) Scan the QR or reveal the manual key. 2) Add NayaGram Guard in your authenticator app. 3) Enter the current six-digit code. 4) Save the one-time backup codes shown after verification.");
         buildCodeEntry(context, false);
         Button confirm = button(context, "Verify & Enable Guard");
         content.addView(confirm, params(0, 10));
