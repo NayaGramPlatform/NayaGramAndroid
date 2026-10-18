@@ -50,7 +50,7 @@ def main() -> None:
         "MasterKey.KeyScheme.AES256_GCM",
         "PrefKeyEncryptionScheme.AES256_SIV",
         "PrefValueEncryptionScheme.AES256_GCM",
-        "new DefaultSecretGenerator(32)",
+        "new DefaultSecretGenerator(20)",
         "public static void cancelSetup(Context context)",
         "verifier.setTimePeriod(30)",
         "verifier.setAllowedTimePeriodDiscrepancy(1)",
