@@ -379,10 +379,10 @@ public class NayaGramGuardActivity extends BaseFragment {
             CharSequence clip = clipboard.getPrimaryClip().getItemAt(0).coerceToText(context);
             String value = clip == null ? "" : clip.toString();
             if (backupEntryMode) {
-                value = value.replaceAll("\\\\s+", "").toUpperCase(Locale.US);
+                value = value.replaceAll("\\s+", "").toUpperCase(Locale.US);
                 if (value.length() > 10) value = value.substring(0, 10);
             } else {
-                value = value.replaceAll("\\\\D", "");
+                value = value.replaceAll("\\D", "");
                 if (value.length() > 6) value = value.substring(0, 6);
             }
             codeInput.setText(value);
