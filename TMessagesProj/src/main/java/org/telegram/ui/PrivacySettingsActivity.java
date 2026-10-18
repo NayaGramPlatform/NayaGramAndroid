@@ -1353,12 +1353,12 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         textCell2.setTextAndSpoilersValueAndIcon(getString(R.string.EmailLogin), val, R.drawable.msg2_email, true);
                     } else if (position == guardRow) {
                         boolean enabled = NayaGramGuard.isEnabled(mContext);
-                        String value = enabled ? getString(R.string.PasswordOn) : getString(R.string.PasswordOff);
-                        textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), value, true, R.drawable.ic_nayagram_authenticator, true);
+                        String guardStatus = enabled ? getString(R.string.PasswordOn) : getString(R.string.PasswordOff);
+                        textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);
                         if (textCell2.imageView != null) {
                             textCell2.imageView.setColorFilter(null);
                         }
-                        textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + ", " + value);
+                        textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + ", " + guardStatus);
                     } else if (position == passwordRow) {
                         value = "";
                         int icon = R.drawable.menu_2sv;
