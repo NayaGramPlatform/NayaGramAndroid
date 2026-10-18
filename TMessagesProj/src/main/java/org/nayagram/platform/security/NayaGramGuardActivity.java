@@ -241,20 +241,41 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showBackupCodes(Context context, List<String> backups) {
         content.removeAllViews();
+        ImageView logo = new ImageView(context);
+        logo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(76), AndroidUtilities.dp(76));
+        logoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        content.addView(logo, logoParams);
         addTitle(context, "Save your 15 backup codes");
-        addText(context, "Each code works once. Store these privately; they are shown only now. Only encrypted hashes are retained on this device.");
+        addText(context, "Each code works once. Five codes are shown at a time; scroll to view the rest. Only encrypted hashes are retained on this device.");
+
+        ScrollView codesScroll = new ScrollView(context);
+        codesScroll.setVerticalScrollBarEnabled(true);
+        codesScroll.setBackground(round(0xFFF0FAFF, 0xFF67D7F2));
+        LinearLayout codeList = new LinearLayout(context);
+        codeList.setOrientation(LinearLayout.VERTICAL);
+        codeList.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6), AndroidUtilities.dp(8), AndroidUtilities.dp(6));
+        codesScroll.addView(codeList, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         for (int i = 0; i < backups.size(); i++) {
             TextView code = text(context, (i + 1) + ".  " + backups.get(i), 15, 0xFF075985, true);
             code.setGravity(Gravity.CENTER);
-            code.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(7), AndroidUtilities.dp(10), AndroidUtilities.dp(7));
+            code.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
             code.setBackground(round(Color.WHITE, 0xFFBAE6FD));
-            content.addView(code, params(0, 5));
+            codeList.addView(code, params(0, 5));
         }
-        Button copy = button(context, "Copy backup codes");
+        LinearLayout.LayoutParams scrollParams = params(0, 10);
+        scrollParams.height = AndroidUtilities.dp(240);
+        content.addView(codesScroll, scrollParams);
+        TextView hint = text(context, "Swipe up or down to view all 15 codes", 12, 0xFF0284C7, true);
+        hint.setGravity(Gravity.CENTER);
+        content.addView(hint, params(0, 8));
+
+        Button copy = button(context, "Copy all backup codes");
         content.addView(copy, params(0, 12));
         copy.setOnClickListener(v -> {
             StringBuilder all = new StringBuilder();
-            for (String code : backups) all.append(code).append('\n');
+            for (int i = 0; i < backups.size(); i++) all.append(i + 1).append(". ").append(backups.get(i)).append('\n');
             ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText("NayaGram Guard backup codes", all.toString()));
             toast(context, "Backup codes copied");
