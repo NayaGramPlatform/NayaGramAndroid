@@ -6741,7 +6741,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onPause() {
         super.onPause();
-        NayaGramGuard.lockSession();
+        NayaGramGuard.markAppBackgrounded(this);
         isResumed = false;
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
@@ -7007,7 +7007,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         onPasscodeResume();
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
-            // Also gate restored chats/deep links when the app returns from the background.
+            // Apply the configured Guard timeout before allowing restored chats/deep links.
+            if (NayaGramGuard.isEnabled(this) && NayaGramGuard.shouldLockOnResume(this)) {
+                NayaGramGuard.lockSession();
+            }
             if (NayaGramGuard.isEnabled(this) && !NayaGramGuard.isSessionVerified()) {
                 BaseFragment topFragment = getActionBarLayout().getLastFragment();
                 if (!(topFragment instanceof NayaGramGuardActivity)) {
