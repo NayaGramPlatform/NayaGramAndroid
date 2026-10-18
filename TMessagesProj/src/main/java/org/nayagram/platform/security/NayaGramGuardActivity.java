@@ -151,7 +151,58 @@ public class NayaGramGuardActivity extends BaseFragment {
                         }).show();
             }
         });
+        Button autoLock = button(context, "Auto-Lock timeout: " + autoLockLabel(NayaGramGuard.getAutoLockTimeoutMs(context)));
+        content.addView(autoLock, params(0, 10));
+        autoLock.setOnClickListener(v -> {
+            String[] choices = {"Immediately", "15 minutes", "45 minutes", "1 hour", "3 hours", "5 hours", "12 hours", "Custom"};
+            long[] values = {0L, 15L * 60_000L, 45L * 60_000L, 60L * 60_000L, 3L * 60L * 60_000L, 5L * 60L * 60_000L, 12L * 60L * 60_000L};
+            new org.telegram.ui.ActionBar.AlertDialog.Builder(context)
+                    .setTitle("NG Guard Auto-Lock")
+                    .setItems(choices, (dialog, which) -> {
+                        if (which < values.length) {
+                            saveAutoLockTimeout(context, autoLock, values[which]);
+                        } else {
+                            EditText custom = new EditText(context);
+                            custom.setInputType(InputType.TYPE_CLASS_NUMBER);
+                            custom.setHint("Minutes (1–10080)");
+                            new org.telegram.ui.ActionBar.AlertDialog.Builder(context)
+                                    .setTitle("Custom Auto-Lock")
+                                    .setView(custom)
+                                    .setNegativeButton("Cancel", null)
+                                    .setPositiveButton("Save", (d, w) -> {
+                                        String raw = custom.getText().toString().trim();
+                                        try {
+                                            long minutes = Long.parseLong(raw);
+                                            if (minutes < 1 || minutes > 10080) {
+                                                toast(context, "Enter 1–10080 minutes.");
+                                                return;
+                                            }
+                                            saveAutoLockTimeout(context, autoLock, minutes * 60_000L);
+                                        } catch (Exception e) {
+                                            toast(context, "Enter a valid number of minutes.");
+                                        }
+                                    }).show();
+                        }
+                    }).show();
+        });
+        addText(context, "Auto-Lock controls how long Guard stays verified while NayaGram is in the background. If secure settings cannot be read, Guard locks.");
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
+    }
+
+    private void saveAutoLockTimeout(Context context, Button button, long timeoutMs) {
+        try {
+            NayaGramGuard.setAutoLockTimeoutMs(context, timeoutMs);
+            button.setText("Auto-Lock timeout: " + autoLockLabel(timeoutMs));
+            toast(context, "Auto-Lock timeout saved.");
+        } catch (Exception e) {
+            toast(context, "Could not save Auto-Lock timeout securely.");
+        }
+    }
+
+    private String autoLockLabel(long timeoutMs) {
+        if (timeoutMs == 0L) return "Immediately";
+        if (timeoutMs % (60L * 60_000L) == 0L) return (timeoutMs / (60L * 60_000L)) + " hour" + (timeoutMs == 60L * 60_000L ? "" : "s");
+        return (timeoutMs / 60_000L) + " minutes";
     }
 
     private void setToggleSilently(Switch toggle, boolean checked) {
