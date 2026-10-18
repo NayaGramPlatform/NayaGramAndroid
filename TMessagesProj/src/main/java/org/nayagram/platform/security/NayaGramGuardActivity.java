@@ -3,6 +3,7 @@ package org.nayagram.platform.security;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.CountDownTimer;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -48,6 +49,8 @@ public class NayaGramGuardActivity extends BaseFragment {
     private String pendingSecret;
     private boolean suppressToggleCallback;
     private boolean setupCompleted;
+    private CountDownTimer codeCountdown;
+    private TextView countdownView;
 
     public NayaGramGuardActivity() {
         this(false, false);
@@ -100,6 +103,7 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     @Override
     public void onFragmentDestroy() {
+        if (codeCountdown != null) { codeCountdown.cancel(); codeCountdown = null; }
         if (pendingSecret != null && !setupCompleted) {
             NayaGramGuard.cancelSetup(ApplicationLoader.applicationContext);
         }
@@ -162,7 +166,14 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showSetup(Context context, String secret) {
         content.removeAllViews();
-        addTitle(context, "Scan with Google Authenticator");
+        ImageView brandLogo = new ImageView(context);
+        brandLogo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        brandLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams brandLogoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(96), AndroidUtilities.dp(96));
+        brandLogoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        brandLogoParams.bottomMargin = AndroidUtilities.dp(8);
+        content.addView(brandLogo, brandLogoParams);
+        addTitle(context, "NG Authenticator");
         addText(context, "Scan this QR code, or add the secret manually. Then enter the current six-digit code to confirm setup.");
         ImageView qr = new ImageView(context);
         qr.setAdjustViewBounds(true);
@@ -172,7 +183,7 @@ public class NayaGramGuardActivity extends BaseFragment {
             BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
             Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
             for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
             }
             qr.setImageBitmap(bitmap);
             qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
@@ -230,20 +241,41 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showBackupCodes(Context context, List<String> backups) {
         content.removeAllViews();
-        addTitle(context, "Save your 10 backup codes");
-        addText(context, "Each code works once. Store these privately; they are shown only now. Only encrypted hashes are retained on this device.");
+        ImageView logo = new ImageView(context);
+        logo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(76), AndroidUtilities.dp(76));
+        logoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        content.addView(logo, logoParams);
+        addTitle(context, "Save your 15 backup codes");
+        addText(context, "Each code works once. Five codes are shown at a time; scroll to view the rest. Only encrypted hashes are retained on this device.");
+
+        ScrollView codesScroll = new ScrollView(context);
+        codesScroll.setVerticalScrollBarEnabled(true);
+        codesScroll.setBackground(round(0xFFF0FAFF, 0xFF67D7F2));
+        LinearLayout codeList = new LinearLayout(context);
+        codeList.setOrientation(LinearLayout.VERTICAL);
+        codeList.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6), AndroidUtilities.dp(8), AndroidUtilities.dp(6));
+        codesScroll.addView(codeList, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         for (int i = 0; i < backups.size(); i++) {
             TextView code = text(context, (i + 1) + ".  " + backups.get(i), 15, 0xFF075985, true);
             code.setGravity(Gravity.CENTER);
-            code.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(7), AndroidUtilities.dp(10), AndroidUtilities.dp(7));
+            code.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
             code.setBackground(round(Color.WHITE, 0xFFBAE6FD));
-            content.addView(code, params(0, 5));
+            codeList.addView(code, params(0, 5));
         }
-        Button copy = button(context, "Copy backup codes");
+        LinearLayout.LayoutParams scrollParams = params(0, 10);
+        scrollParams.height = AndroidUtilities.dp(240);
+        content.addView(codesScroll, scrollParams);
+        TextView hint = text(context, "Swipe up or down to view all 15 codes", 12, 0xFF0284C7, true);
+        hint.setGravity(Gravity.CENTER);
+        content.addView(hint, params(0, 8));
+
+        Button copy = button(context, "Copy all backup codes");
         content.addView(copy, params(0, 12));
         copy.setOnClickListener(v -> {
             StringBuilder all = new StringBuilder();
-            for (String code : backups) all.append(code).append('\n');
+            for (int i = 0; i < backups.size(); i++) all.append(i + 1).append(". ").append(backups.get(i)).append('\n');
             ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText("NayaGram Guard backup codes", all.toString()));
             toast(context, "Backup codes copied");
@@ -254,7 +286,33 @@ public class NayaGramGuardActivity extends BaseFragment {
     }
 
     private void buildVerification(Context context, boolean gate) {
-        addTitle(context, gate ? "🔐 Unlock NayaGram" : "Verify NayaGram Guard");
+        // Prominent NG Protection hero area, followed by generous spacing before code entry.
+        LinearLayout hero = new LinearLayout(context);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        hero.setGravity(Gravity.CENTER);
+        hero.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+        content.addView(hero, params(0, 24));
+
+        ImageView logo = new ImageView(context);
+        logo.setImageResource(R.drawable.ic_nayagram_authenticator);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams logoParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(116), AndroidUtilities.dp(116));
+        logoParams.gravity = Gravity.CENTER_HORIZONTAL;
+        hero.addView(logo, logoParams);
+
+        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 25, 0xFF075985, true);
+        heroTitle.setGravity(Gravity.CENTER);
+        heroTitle.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(4));
+        hero.addView(heroTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView heroSubtitle = text(context, "Your Security, Our Priority.", 14, 0xFF0284C7, true);
+        heroSubtitle.setGravity(Gravity.CENTER);
+        hero.addView(heroSubtitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        // Push the six-digit code entry lower to visually separate it from the brand hero.
+        View spacer = new View(context);
+        content.addView(spacer, new LinearLayout.LayoutParams(1, AndroidUtilities.dp(44)));
+
         addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
         buildCodeEntry(context, true);
         Button verify = button(context, "Verify and continue");
@@ -352,10 +410,44 @@ public class NayaGramGuardActivity extends BaseFragment {
                 codeInput.requestFocus();
             });
         }
+        {
+            // Large, high-contrast cyan countdown makes the 30-second TOTP window obvious.
+            // allowBackup controls the backup-code fallback button, not whether TOTP is shown.
+            countdownView = text(context, "", 16, 0xFF0369A1, true);
+            countdownView.setGravity(Gravity.CENTER);
+            countdownView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+            countdownView.setBackground(round(0xFFE0F7FF, 0xFF06B6D4));
+            content.addView(countdownView, params(0, 8));
+            startCodeCountdown();
+        }
         codeFrame.setOnClickListener(v -> {
             codeInput.requestFocus();
             codeInput.setSelection(codeInput.length());
         });
+    }
+
+    private void startCodeCountdown() {
+        if (codeCountdown != null) codeCountdown.cancel();
+        long elapsed = System.currentTimeMillis() % 30000L;
+        long remaining = 30000L - elapsed;
+        codeCountdown = new CountDownTimer(remaining, 1000L) {
+            @Override public void onTick(long millisUntilFinished) {
+                long seconds = Math.max(1L, (millisUntilFinished + 999L) / 1000L);
+                if (countdownView != null) {
+                    countdownView.setText("⏱ New code in " + seconds + "s");
+                    countdownView.setTextColor(seconds <= 5 ? 0xFFB45309 : 0xFF0369A1);
+                    countdownView.setBackground(round(seconds <= 5 ? 0xFFFFF7ED : 0xFFE0F7FF,
+                            seconds <= 5 ? 0xFFF59E0B : 0xFF06B6D4));
+                }
+            }
+            @Override public void onFinish() {
+                if (countdownView != null) {
+                    countdownView.setText("⟳ New code window");
+                    countdownView.setTextColor(0xFF0369A1);
+                }
+                startCodeCountdown();
+            }
+        }.start();
     }
 
     private void addTitle(Context context, String value) {
