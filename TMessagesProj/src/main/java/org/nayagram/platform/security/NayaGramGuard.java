@@ -81,6 +81,10 @@ public final class NayaGramGuard {
         return prefs(context).getString(PENDING_SECRET, null);
     }
 
+    public static void cancelSetup(Context context) throws Exception {
+        prefs(context).edit().remove(PENDING_SECRET).apply();
+    }
+
     public static String getOtpAuthUri(String accountLabel, String secret) {
         String user = accountLabel == null || accountLabel.trim().isEmpty() ? "user" : accountLabel.trim();
         // Keep the issuer/account separator colon literal as required by otpauth URI labels.
