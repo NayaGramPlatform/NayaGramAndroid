@@ -25,6 +25,8 @@ import android.widget.Toast;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -34,6 +36,9 @@ import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Settings, enrollment and verification UI for the optional local-only NayaGram Guard. */
 public class NayaGramGuardActivity extends BaseFragment {
@@ -213,26 +218,48 @@ public class NayaGramGuardActivity extends BaseFragment {
 
     private void showSetup(Context context, String secret) {
         content.removeAllViews();
-        addTitle(context, "Scan with Google Authenticator");
-        addText(context, "Scan this QR code, or add the secret manually. Then enter the current six-digit code to confirm setup.");
+        addTitle(context, "🛡️ Set up NayaGram Guard");
+        addText(context, "Scan with Google Authenticator or another TOTP app. Then enter the current six-digit code to confirm setup.");
+        LinearLayout qrCard = new LinearLayout(context);
+        qrCard.setOrientation(LinearLayout.VERTICAL);
+        qrCard.setGravity(Gravity.CENTER_HORIZONTAL);
+        qrCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+        qrCard.setBackground(round(Color.WHITE, 0xFF00D4FF));
+        content.addView(qrCard, params(0, 14));
+        TextView qrTitle = text(context, "NayaGram · Secure verification", 15, 0xFF075985, true);
+        qrTitle.setGravity(Gravity.CENTER);
+        qrCard.addView(qrTitle, params(0, 0));
         ImageView qr = new ImageView(context);
         qr.setAdjustViewBounds(true);
         qr.setScaleType(ImageView.ScaleType.FIT_CENTER);
         try {
-            String uri = NayaGramGuard.getOtpAuthUri("user", secret);
-            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
+            String uri = NayaGramGuard.getOtpAuthUri("NayaGram", secret);
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+            hints.put(EncodeHintType.MARGIN, 2);
+            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640, hints);
             Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
             for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? Color.BLACK : Color.WHITE);
+                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
             }
             qr.setImageBitmap(bitmap);
-            qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
-            qr.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
-            LinearLayout.LayoutParams qrParams = params(0, 14);
-            qrParams.width = AndroidUtilities.dp(240);
-            qrParams.height = AndroidUtilities.dp(240);
+            FrameLayout qrFrame = new FrameLayout(context);
+            qrFrame.setBackground(round(Color.WHITE, 0xFFBAE6FD));
+            qrFrame.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+            qrFrame.addView(qr, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            TextView logoMark = text(context, "NG", 16, Color.WHITE, true);
+            logoMark.setGravity(Gravity.CENTER);
+            logoMark.setBackground(round(0xFF008FC7, 0xFF00D4FF));
+            FrameLayout.LayoutParams logoParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(44), AndroidUtilities.dp(44), Gravity.CENTER);
+            qrFrame.addView(logoMark, logoParams);
+            LinearLayout.LayoutParams qrParams = params(0, 12);
+            qrParams.width = AndroidUtilities.dp(248);
+            qrParams.height = AndroidUtilities.dp(248);
             qrParams.gravity = Gravity.CENTER_HORIZONTAL;
-            content.addView(qr, qrParams);
+            qrCard.addView(qrFrame, qrParams);
+            TextView scanHint = text(context, "Keep the QR code private", 12, 0xFF475569, false);
+            scanHint.setGravity(Gravity.CENTER);
+            qrCard.addView(scanHint, params(0, 8));
         } catch (Exception e) {
             addText(context, "QR could not be generated. Use the manual secret below.");
         }
