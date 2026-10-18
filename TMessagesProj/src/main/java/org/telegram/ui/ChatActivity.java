@@ -8645,8 +8645,22 @@ public class ChatActivity extends BaseFragment implements
                             showBottomOverlayProgress(true, true);
                             bottomOverlayChatText.setText(LocaleController.getString(R.string.SupportedChannelGroup));
                             try {
-                                BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.star_premium_2, LocaleController.getString(R.string.SupportedChannelGroup)).show();
+                                Context ctx = getParentActivity() != null ? getParentActivity() : getContext();
+                                Bulletin.LottieLayout layout = new Bulletin.LottieLayout(ctx, getResourceProvider());
+                                layout.setAnimation(R.raw.star_premium_2, 36, 36);
+                                layout.textView.setText(LocaleController.getString(R.string.SupportedChannelGroup));
+                                layout.textView.setTextColor(0xFF0F172A);
+                                android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+                                bg.setColor(0xFFFFFFFF);
+                                bg.setCornerRadius(AndroidUtilities.dp(16));
+                                bg.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);
+                                layout.setBackground(bg);
+                                BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_SHORT).show();
                             } catch (Throwable ignore) {
+                                try {
+                                    BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.star_premium_2, LocaleController.getString(R.string.SupportedChannelGroup)).show();
+                                } catch (Throwable ignored2) {
+                                }
                             }
                             getMessagesController().addUserToChat(currentChat.id, getUserConfig().getCurrentUser(), 0, null, ChatActivity.this, null);
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.closeSearchByActiveAction);

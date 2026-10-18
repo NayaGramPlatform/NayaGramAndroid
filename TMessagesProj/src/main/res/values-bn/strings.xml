@@ -298,4 +298,8 @@
     <string name="GroupJoinRequestSent">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="GroupJoinRequestSentNoCaps">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="SupportedChannelGroup">সাপোর্টেড</string>
+    <string name="NayaGramGuardTitle">নয়াগ্রাম গার্ড (গুগল অথেন্টিকেটর)</string>
+    <string name="SendWhenOnline">অনলাইন হলে পাঠান</string>
+    <string name="SendWhenOnlineUserOnline">ব্যবহারকারী বর্তমানে অনলাইন আছেন।</string>
+    <string name="SendWhenOnlinePrivacyRestricted">গোপনীয়তা সেটিংসের কারণে ব্যবহারকারীর অনলাইন স্ট্যাটাস লুকানো রয়েছে।</string>
 </resources>

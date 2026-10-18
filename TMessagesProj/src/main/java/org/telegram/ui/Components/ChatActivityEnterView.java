@@ -4777,6 +4777,27 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     private ActionBarMenuSubItem actionScheduleButton;
+    private void performSendWhenOnline() {
+        TLRPC.User recipient = parentFragment == null ? null : parentFragment.getCurrentUser();
+        if (recipient != null && recipient.status instanceof TLRPC.TL_userStatusOnline) {
+            if (parentFragment != null) {
+                try {
+                    BulletinFactory.of(parentFragment).createSimpleBulletin(R.raw.info, LocaleController.getString(R.string.SendWhenOnlineUserOnline)).show();
+                } catch (Throwable ignore) {}
+            }
+            return;
+        }
+        if (recipient != null && (recipient.status instanceof TLRPC.TL_userStatusEmpty || recipient.status instanceof TLRPC.TL_userStatusRecently || recipient.status instanceof TLRPC.TL_userStatusLastMonth || recipient.status instanceof TLRPC.TL_userStatusLastWeek)) {
+            if (parentFragment != null) {
+                try {
+                    BulletinFactory.of(parentFragment).createSimpleBulletin(R.raw.info, LocaleController.getString(R.string.SendWhenOnlinePrivacyRestricted)).show();
+                } catch (Throwable ignore) {}
+            }
+            return;
+        }
+        sendMessageInternal(true, 0x7FFFFFFE, 0, 0, true);
+    }
+
     private boolean onSendLongClick(View view) {
         if (isInScheduleMode() || parentFragment != null && parentFragment.getChatMode() == ChatActivity.MODE_QUICK_REPLIES || animatorEphemeralMessageVisibility.getValue()) {
             return false;
@@ -4844,7 +4865,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                             if (sendPopupWindow != null && sendPopupWindow.isShowing()) {
                                 sendPopupWindow.dismiss();
                             }
-                            sendMessageInternal(true, 0x7FFFFFFE, 0, 0, true);
+                            performSendWhenOnline();
                         });
                         sendPopupLayout.addView(sendWhenOnlineButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, DEFAULT_HEIGHT));
                     }
@@ -4889,7 +4910,7 @@ public class ChatActivityEnterView extends FrameLayout implements
 
             if (sendWhenOnlineButton != null) {
                 TLRPC.User user = parentFragment == null ? null : parentFragment.getCurrentUser();
-                if (user != null && !user.bot && !(user.status instanceof TLRPC.TL_userStatusEmpty) && !(user.status instanceof TLRPC.TL_userStatusOnline) && !(user.status instanceof TLRPC.TL_userStatusRecently) && !(user.status instanceof TLRPC.TL_userStatusLastMonth) && !(user.status instanceof TLRPC.TL_userStatusLastWeek)) {
+                if (user != null && !user.bot && !self && dialog_id > 0) {
                     sendWhenOnlineButton.setVisibility(VISIBLE);
                 } else {
                     sendWhenOnlineButton.setVisibility(GONE);
@@ -5085,7 +5106,7 @@ public class ChatActivityEnterView extends FrameLayout implements
 
             if (!self && dialog_id > 0) {
                 options.add(R.drawable.msg_online, getString(R.string.SendWhenOnline), () -> {
-                    sendMessageInternal(true, 0x7FFFFFFE, 0, 0, true);
+                    performSendWhenOnline();
                     if (messageSendPreview != null) {
                         messageSendPreview.dismiss(false);
                         messageSendPreview = null;
@@ -5142,7 +5163,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         options.setupSelectors();
         if (sendWhenOnlineButton != null) {
             TLRPC.User user = parentFragment == null ? null : parentFragment.getCurrentUser();
-            if (user != null && !user.bot && !(user.status instanceof TLRPC.TL_userStatusEmpty) && !(user.status instanceof TLRPC.TL_userStatusOnline) && !(user.status instanceof TLRPC.TL_userStatusRecently) && !(user.status instanceof TLRPC.TL_userStatusLastMonth) && !(user.status instanceof TLRPC.TL_userStatusLastWeek)) {
+            if (user != null && !user.bot && !self && dialog_id > 0) {
                 sendWhenOnlineButton.setVisibility(VISIBLE);
             } else {
                 sendWhenOnlineButton.setVisibility(GONE);
