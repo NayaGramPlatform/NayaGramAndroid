@@ -206,6 +206,12 @@ public class NayaGramGuardActivity extends BaseFragment {
         Button cancel = button(context, "Cancel setup");
         content.addView(cancel, params(0, 8));
         cancel.setOnClickListener(v -> {
+            try {
+                NayaGramGuard.cancelSetup(context);
+            } catch (Exception e) {
+                toast(context, "Could not clear the pending secret securely.");
+                return;
+            }
             NayaGramGuard.lockSession();
             finishFragment();
         });
