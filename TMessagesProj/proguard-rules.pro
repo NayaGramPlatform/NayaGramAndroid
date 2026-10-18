@@ -47,6 +47,9 @@
 -dontwarn org.checkerframework.**
 -dontwarn javax.annotation.**
 
+# Optional desktop-only JAI ImageIO SPI classes are not available on Android; the app uses Android graphics APIs.
+-dontwarn javax.imageio.spi.**
+
 -keep class io.nano.tex.** {*;}
 
 -keep class org.telegram.tgnet.** { *; }
