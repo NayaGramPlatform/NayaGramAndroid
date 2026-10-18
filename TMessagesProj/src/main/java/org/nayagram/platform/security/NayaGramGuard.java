@@ -2,6 +2,7 @@ package org.nayagram.platform.security;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
@@ -31,6 +32,9 @@ public final class NayaGramGuard {
     private static final String SECRET = "totp_secret";
     private static final String PENDING_SECRET = "pending_secret";
     private static final String BACKUP_PREFIX = "backup_hash_";
+    private static final String AUTO_LOCK_TIMEOUT_MS = "auto_lock_timeout_ms";
+    private static final String BACKGROUND_ELAPSED_MS = "background_elapsed_ms";
+    private static final String BACKGROUND_WALL_MS = "background_wall_ms";
     private static final int BACKUP_COUNT = 10;
     private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static volatile boolean sessionVerified;
@@ -64,10 +68,70 @@ public final class NayaGramGuard {
 
     public static void markSessionVerified() {
         sessionVerified = true;
+        try {
+            prefs(org.telegram.messenger.ApplicationLoader.applicationContext).edit()
+                    .remove(BACKGROUND_ELAPSED_MS).remove(BACKGROUND_WALL_MS).apply();
+        } catch (Exception ignored) {
+        }
     }
 
     public static void lockSession() {
         sessionVerified = false;
+    }
+
+    /** Zero means lock as soon as the app returns from background (the legacy default). */
+    public static long getAutoLockTimeoutMs(Context context) {
+        try {
+            return Math.max(0L, prefs(context).getLong(AUTO_LOCK_TIMEOUT_MS, 0L));
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public static void setAutoLockTimeoutMs(Context context, long timeoutMs) throws Exception {
+        if (timeoutMs < 0L) throw new IllegalArgumentException("Timeout must not be negative");
+        prefs(context).edit().putLong(AUTO_LOCK_TIMEOUT_MS, timeoutMs).apply();
+    }
+
+    public static void markAppBackgrounded(Context context) {
+        if (!isEnabled(context) || !sessionVerified) return;
+        try {
+            prefs(context).edit()
+                    .putLong(BACKGROUND_ELAPSED_MS, SystemClock.elapsedRealtime())
+                    .putLong(BACKGROUND_WALL_MS, System.currentTimeMillis())
+                    .apply();
+        } catch (Exception e) {
+            // Fail closed if we cannot reliably persist the background time.
+            lockSession();
+        }
+    }
+
+    /** Returns true when the configured timeout elapsed; missing/corrupt state fails closed. */
+    public static boolean shouldLockOnResume(Context context) {
+        if (!isEnabled(context)) return false;
+        if (!sessionVerified) return true;
+        try {
+            SharedPreferences secure = prefs(context);
+            long elapsedStart = secure.getLong(BACKGROUND_ELAPSED_MS, -1L);
+            long wallStart = secure.getLong(BACKGROUND_WALL_MS, -1L);
+            if (elapsedStart < 0L || wallStart < 0L) return true;
+            long timeout = getAutoLockTimeoutMs(context);
+            long elapsedNow = SystemClock.elapsedRealtime();
+            long wallNow = System.currentTimeMillis();
+            long elapsedDelta = elapsedNow >= elapsedStart ? elapsedNow - elapsedStart : Long.MAX_VALUE;
+            long wallDelta = wallNow >= wallStart ? wallNow - wallStart : Long.MAX_VALUE;
+            long delta = Math.max(elapsedDelta, wallDelta);
+            return timeout == 0L || delta >= timeout;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    public static void clearBackgroundTimestamp(Context context) {
+        try {
+            prefs(context).edit().remove(BACKGROUND_ELAPSED_MS).remove(BACKGROUND_WALL_MS).apply();
+        } catch (Exception ignored) {
+        }
     }
 
     public static String beginSetup(Context context) throws Exception {
