@@ -410,8 +410,9 @@ public class NayaGramGuardActivity extends BaseFragment {
                 codeInput.requestFocus();
             });
         }
-        if (!allowBackup) {
+        {
             // Large, high-contrast cyan countdown makes the 30-second TOTP window obvious.
+            // allowBackup controls the backup-code fallback button, not whether TOTP is shown.
             countdownView = text(context, "", 16, 0xFF0369A1, true);
             countdownView.setGravity(Gravity.CENTER);
             countdownView.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
