@@ -11,7 +11,7 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         # View type 3 (checkbox) must not be returned for guardRow
         self.assertNotIn('if (position == guardRow) {\n                return 3;\n            }', privacy_code)
         # Binds with dedicated authenticator icon in TextCell (case 5)
-        self.assertIn('textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), value, true, R.drawable.ic_nayagram_authenticator, true);', privacy_code)
+        self.assertIn('textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);', privacy_code)
         self.assertIn('textCell2.imageView.setColorFilter(null);', privacy_code)
         # OnClick opens existing NayaGramGuardActivity
         self.assertIn('presentFragment(new NayaGramGuardActivity());', privacy_code)
