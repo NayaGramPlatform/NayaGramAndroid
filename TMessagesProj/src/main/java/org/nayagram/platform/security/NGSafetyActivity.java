@@ -167,6 +167,13 @@ public class NGSafetyActivity extends BaseFragment {
             }
         });
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
+        Button details = button(context, "Details and recovery help");
+        content.addView(details, params(0, 8));
+        details.setOnClickListener(v -> new AlertDialog.Builder(context)
+                .setTitle("NG Authenticator · Help")
+                .setMessage("NG Authenticator is an optional local protection layer added after Telegram login. It does not replace Telegram OTP or Telegram Two-Step Verification.\n\nSetup: scan the QR code with an authenticator app, or enter the displayed secret manually, then verify a current six-digit code.\n\nBackup codes: save all 15 codes somewhere private and secure. Each code works once; used codes cannot be reused. Do not share your secret or backup codes.\n\nIf you disable NG Authenticator, its local secret and unused backup codes are cleared. If you lose both your authenticator and backup codes, you may lose access to this local protection flow.")
+                .setPositiveButton("Got it", null)
+                .show());
     }
 
     private void applyToggleColors(Switch toggle, boolean checked) {
