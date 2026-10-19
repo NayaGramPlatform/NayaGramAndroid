@@ -96,6 +96,13 @@ def main() -> None:
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
     assert "PasskeysActivity" in privacy
+    assert "if (Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS)" in privacy
+    assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
+    assert 'textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.msg2_permissions, true);' in privacy
+    assert '"1 device"' in privacy and '" devices"' in privacy
+    assert 'textCell2.setContentDescription("NG Passkey, Fingerprint Login, " + value);' in privacy
+    assert "presentFragment(new PasskeysActivity(currentPasskeys));" in privacy
+    print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
     print("PASS: Android Credential Manager passkey registration/login stays server-verified")
 
 if __name__ == "__main__":
