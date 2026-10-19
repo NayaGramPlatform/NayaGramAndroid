@@ -304,4 +304,5 @@
     <string name="SendWhenOnline">অনলাইন হলে পাঠান</string>
     <string name="SendWhenOnlineUserOnline">ব্যবহারকারী বর্তমানে অনলাইন আছেন।</string>
     <string name="SendWhenOnlinePrivacyRestricted">গোপনীয়তা সেটিংসের কারণে ব্যবহারকারীর অনলাইন স্ট্যাটাস লুকানো রয়েছে।</string>
+    <string name="NGAuthenticatorCreatedDate">এনজি অথেন্টিকেটর • তৈরি: ১৮ অক্টোবর ২০২৬</string>
 </resources>

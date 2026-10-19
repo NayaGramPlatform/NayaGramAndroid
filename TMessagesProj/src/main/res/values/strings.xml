@@ -11724,4 +11724,5 @@
     <string name="NGProtectionTagline">Your Security, Our Priority.</string>
     <string name="SendWhenOnlineUserOnline">This user is already online right now.</string>
     <string name="SendWhenOnlinePrivacyRestricted">Privacy settings hide this user online status. Send When Online is unavailable.</string>
+    <string name="NGAuthenticatorCreatedDate">NG Authenticator • Created October 18, 2026</string>
 </resources>

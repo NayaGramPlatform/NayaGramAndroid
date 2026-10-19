@@ -46,16 +46,37 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('0xFF00D4FF', chat_activity_code)
         self.assertIn('0xFF0F172A', chat_activity_code)
         self.assertIn('bg.setColor(0xFFFFFFFF);', chat_activity_code)
+        # Prolonged display duration (5 seconds)
+        self.assertIn('BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();', chat_activity_code)
+
+    def test_guard_unlock_hero_layout(self):
+        guard_code = (ROOT / 'java/org/nayagram/platform/security/NayaGramGuardActivity.java').read_text()
+        # Hero slogan and protection shield logo
+        self.assertIn('R.string.NGProtectionTagline', guard_code)
+        self.assertIn('R.drawable.nayagram_protection_hero', guard_code)
+        # Spacer moving code input downward
+        self.assertIn('AndroidUtilities.dp(24)', guard_code)
+        # English/localized creation date footer
+        self.assertIn('R.string.NGAuthenticatorCreatedDate', guard_code)
+
+        # Verify drawable existence
+        for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
+            drawable_path = ROOT / f'res/drawable-{density}/nayagram_protection_hero.png'
+            self.assertTrue(drawable_path.exists(), f"Missing hero logo in drawable-{density}")
 
     def test_localized_strings_present(self):
         strings_en = (ROOT / 'res/values/strings.xml').read_text()
         strings_bn = (ROOT / 'res/values-bn/strings.xml').read_text()
 
         self.assertIn('name="NayaGramGuardTitle"', strings_en)
+        self.assertIn('name="NGProtectionTagline"', strings_en)
+        self.assertIn('name="NGAuthenticatorCreatedDate"', strings_en)
         self.assertIn('name="SendWhenOnlineUserOnline"', strings_en)
         self.assertIn('name="SendWhenOnlinePrivacyRestricted"', strings_en)
 
         self.assertIn('name="NayaGramGuardTitle"', strings_bn)
+        self.assertIn('name="NGProtectionTagline"', strings_bn)
+        self.assertIn('name="NGAuthenticatorCreatedDate"', strings_bn)
         self.assertIn('name="SendWhenOnlineUserOnline"', strings_bn)
         self.assertIn('name="SendWhenOnlinePrivacyRestricted"', strings_bn)
 
