@@ -1,6 +1,7 @@
 package org.nayagram.platform.security;
 
 import android.content.ClipData;
+import android.content.ContentValues;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -9,6 +10,9 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.CountDownTimer;
+import android.os.Build;
+import android.provider.MediaStore;
+import java.io.OutputStream;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.view.Gravity;
@@ -204,6 +208,7 @@ public class NGSafetyActivity extends BaseFragment {
         ImageView qr = new ImageView(context);
         qr.setAdjustViewBounds(true);
         qr.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        final Bitmap[] qrBitmap = new Bitmap[1];
         try {
             String uri = NGSafety.getOtpAuthUri("user", secret);
             BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
@@ -211,6 +216,7 @@ public class NGSafetyActivity extends BaseFragment {
             for (int x = 0; x < 640; x++) {
                 for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
             }
+            qrBitmap[0] = bitmap;
             qr.setImageBitmap(bitmap);
             qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
             qr.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
@@ -222,12 +228,24 @@ public class NGSafetyActivity extends BaseFragment {
         } catch (Exception e) {
             addText(context, "QR could not be generated. Use the manual secret below.");
         }
+        if (qrBitmap[0] != null) {
+            Button saveQr = button(context, "Download QR code");
+            content.addView(saveQr, params(0, 8));
+            saveQr.setOnClickListener(v -> saveQrImage(context, qrBitmap[0]));
+        }
         TextView secretText = text(context, secret, 14, 0xFF075985, true);
         secretText.setTextIsSelectable(true);
         secretText.setGravity(Gravity.CENTER);
         secretText.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
         secretText.setBackground(round(Color.WHITE, 0xFFBAE6FD));
         content.addView(secretText, params(0, 8));
+        Button revealSecret = button(context, "Hide Secret");
+        content.addView(revealSecret, params(0, 6));
+        revealSecret.setOnClickListener(v -> {
+            boolean hidden = secretText.getText().toString().equals("••••••••••••••••••••••••••••••••");
+            secretText.setText(hidden ? secret : "••••••••••••••••••••••••••••••••");
+            revealSecret.setText(hidden ? "Hide Secret" : "Show Secret");
+        });
         Button copy = button(context, "Copy Secret");
         content.addView(copy, params(0, 8));
         copy.setOnClickListener(v -> {
@@ -363,6 +381,38 @@ public class NGSafetyActivity extends BaseFragment {
         footer.setGravity(Gravity.CENTER);
         footer.setPadding(0, AndroidUtilities.dp(16), 0, AndroidUtilities.dp(4));
         content.addView(footer, params(0, 8));
+    }
+
+    private void saveQrImage(Context context, Bitmap bitmap) {
+        if (Build.VERSION.SDK_INT < 29) {
+            toast(context, "QR download requires Android 10 or newer. Use the manual secret instead.");
+            return;
+        }
+        OutputStream output = null;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, "NG-Authenticator-QR.png");
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/NayaGram");
+            values.put(MediaStore.Images.Media.IS_PENDING, 1);
+            android.net.Uri imageUri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (imageUri == null) throw new IllegalStateException("Could not create image entry");
+            output = context.getContentResolver().openOutputStream(imageUri);
+            if (output == null || !bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                context.getContentResolver().delete(imageUri, null, null);
+                throw new IllegalStateException("Could not write QR image");
+            }
+            output.close();
+            output = null;
+            ContentValues ready = new ContentValues();
+            ready.put(MediaStore.Images.Media.IS_PENDING, 0);
+            context.getContentResolver().update(imageUri, ready, null, null);
+            toast(context, "QR saved to Pictures/NayaGram");
+        } catch (Exception e) {
+            toast(context, "Could not save QR code. Keep the secret private.");
+        } finally {
+            if (output != null) try { output.close(); } catch (Exception ignored) { }
+        }
     }
 
     private void pasteCodeFromClipboard(Context context) {
