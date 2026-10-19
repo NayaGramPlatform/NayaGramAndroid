@@ -12,6 +12,7 @@ PRIVACY = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PrivacySettingsAct
 TABS = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/MainTabsActivity.java"
 LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java"
 GRADLE = ROOT / "TMessagesProj/build.gradle"
+PASSKEYS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/PasskeysController.java"
 
 
 def totp(secret: bytes, timestamp: int, digits: int = 6, step: int = 30) -> str:
@@ -44,6 +45,7 @@ def main() -> None:
     tabs = TABS.read_text(encoding="utf-8")
     launch = LAUNCH.read_text(encoding="utf-8")
     gradle = GRADLE.read_text(encoding="utf-8")
+    passkeys = PASSKEYS.read_text(encoding="utf-8")
 
     for token in (
         "EncryptedSharedPreferences.create",
@@ -74,6 +76,27 @@ def main() -> None:
     assert "androidx.security:security-crypto" in gradle
     print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
 
+    # Keep passkeys on native Credential Manager and the server challenge/verification flow.
+    for token in (
+        "CredentialManager.create(context)",
+        "new TL_account.initPasskeyRegistration()",
+        "new TL_account.registerPasskey()",
+        "new TL_account.initPasskeyLogin()",
+        "new TL_account.finishPasskeyLogin()",
+        "CreatePublicKeyCredentialRequest(requestJson)",
+        "new GetPublicKeyCredentialOption(requestJson)",
+        "BUNDLE_KEY_REGISTRATION_RESPONSE_JSON",
+        "BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON",
+        "passkeyResponse.attestation_object",
+        "passkeyResponse.signature",
+        "ConnectionsManager.getInstance(currentAccount).sendRequestTyped",
+    ):
+        assert token in passkeys, f"Missing native/server-verified passkey flow: {token}"
+    assert "androidx.credentials:credentials:" in gradle
+    assert "androidx.credentials:credentials-play-services-auth:" in gradle
+    assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
+    assert "PasskeysActivity" in privacy
+    print("PASS: Android Credential Manager passkey registration/login stays server-verified")
 
 if __name__ == "__main__":
     main()
