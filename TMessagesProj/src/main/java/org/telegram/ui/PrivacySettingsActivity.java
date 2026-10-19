@@ -498,7 +498,10 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             } else if (position == guardRow) {
                 presentFragment(new NGSafetyActivity());
             } else if (position == passkeysRow) {
-                if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
+                if (Build.VERSION.SDK_INT < 23) {
+                    BulletinFactory.of(this).showForError("NG Passkey requires Android 6.0 or later.");
+                    return;
+                }
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
                     presentFragment(new PasskeysActivity(currentPasskeys));
                 } else {
@@ -722,13 +725,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         securitySectionRow = rowCount++;
         passwordRow = rowCount++;
         guardRow = rowCount++;
-        autoDeleteMesages = rowCount++;
-        passcodeRow = rowCount++;
-        // Keep the native NG Passkey entry visible on supported devices. The server-side
-        // settingsDisplayPasskeys flag may be unset even when Credential Manager is available.
-        if (Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS) {
+        // NG Passkey is a first-class NayaGram settings entry. Do not gate visibility on
+        // server config or BuildVars: availability is checked when the user opens the flow.
+        if (Build.VERSION.SDK_INT >= 23) {
             passkeysRow = rowCount++;
         }
+        autoDeleteMesages = rowCount++;
+        passcodeRow = rowCount++;
         if (currentPassword != null ? currentPassword.login_email_pattern != null : SharedConfig.hasEmailLogin) {
             emailLoginRow = rowCount++;
         } else {
@@ -1384,7 +1387,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         } else {
                             value = getString(R.string.PasswordOff);
                         }
-                        textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.msg2_permissions, true);
+                        textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.menu_face, true);
                         textCell2.setContentDescription("NG Passkey, Fingerprint Login, " + value);
                     } else if (position == passcodeRow) {
                         int icon;
