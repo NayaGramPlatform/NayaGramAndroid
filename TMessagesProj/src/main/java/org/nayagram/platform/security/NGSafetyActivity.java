@@ -1,13 +1,18 @@
 package org.nayagram.platform.security;
 
 import android.content.ClipData;
+import android.content.ContentValues;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.CountDownTimer;
+import android.os.Build;
+import android.provider.MediaStore;
+import java.io.OutputStream;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.view.Gravity;
@@ -136,8 +141,10 @@ public class NGSafetyActivity extends BaseFragment {
         labels.addView(status);
         Switch toggle = new Switch(context);
         toggle.setChecked(NGSafety.isEnabled(context));
+        applyToggleColors(toggle, toggle.isChecked());
         card.addView(toggle);
         toggle.setOnCheckedChangeListener((button, checked) -> {
+            applyToggleColors(toggle, checked);
             if (suppressToggleCallback) return;
             if (checked) {
                 try {
@@ -164,6 +171,20 @@ public class NGSafetyActivity extends BaseFragment {
             }
         });
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
+        Button details = button(context, "Details and recovery help");
+        content.addView(details, params(0, 8));
+        details.setOnClickListener(v -> new AlertDialog.Builder(context)
+                .setTitle("NG Authenticator · Help")
+                .setMessage("NG Authenticator is an optional local protection layer added after Telegram login. It does not replace Telegram OTP or Telegram Two-Step Verification.\n\nSetup: scan the QR code with an authenticator app, or enter the displayed secret manually, then verify a current six-digit code.\n\nBackup codes: save all 15 codes somewhere private and secure. Each code works once; used codes cannot be reused. Do not share your secret or backup codes.\n\nIf you disable NG Authenticator, its local secret and unused backup codes are cleared. If you lose both your authenticator and backup codes, you may lose access to this local protection flow.")
+                .setPositiveButton("Got it", null)
+                .show());
+    }
+
+    private void applyToggleColors(Switch toggle, boolean checked) {
+        int thumb = checked ? 0xFF16A34A : 0xFF7C4DFF;
+        int track = checked ? 0xFFBBF7D0 : 0xFFEDE9FE;
+        toggle.setThumbTintList(ColorStateList.valueOf(thumb));
+        toggle.setTrackTintList(ColorStateList.valueOf(track));
     }
 
     private void setToggleSilently(Switch toggle, boolean checked) {
@@ -187,6 +208,7 @@ public class NGSafetyActivity extends BaseFragment {
         ImageView qr = new ImageView(context);
         qr.setAdjustViewBounds(true);
         qr.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        final Bitmap[] qrBitmap = new Bitmap[1];
         try {
             String uri = NGSafety.getOtpAuthUri("user", secret);
             BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
@@ -194,6 +216,7 @@ public class NGSafetyActivity extends BaseFragment {
             for (int x = 0; x < 640; x++) {
                 for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
             }
+            qrBitmap[0] = bitmap;
             qr.setImageBitmap(bitmap);
             qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
             qr.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
@@ -205,12 +228,24 @@ public class NGSafetyActivity extends BaseFragment {
         } catch (Exception e) {
             addText(context, "QR could not be generated. Use the manual secret below.");
         }
+        if (qrBitmap[0] != null) {
+            Button saveQr = button(context, "Download QR code");
+            content.addView(saveQr, params(0, 8));
+            saveQr.setOnClickListener(v -> saveQrImage(context, qrBitmap[0]));
+        }
         TextView secretText = text(context, secret, 14, 0xFF075985, true);
         secretText.setTextIsSelectable(true);
         secretText.setGravity(Gravity.CENTER);
         secretText.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
         secretText.setBackground(round(Color.WHITE, 0xFFBAE6FD));
         content.addView(secretText, params(0, 8));
+        Button revealSecret = button(context, "Hide Secret");
+        content.addView(revealSecret, params(0, 6));
+        revealSecret.setOnClickListener(v -> {
+            boolean hidden = secretText.getText().toString().equals("••••••••••••••••••••••••••••••••");
+            secretText.setText(hidden ? secret : "••••••••••••••••••••••••••••••••");
+            revealSecret.setText(hidden ? "Hide Secret" : "Show Secret");
+        });
         Button copy = button(context, "Copy Secret");
         content.addView(copy, params(0, 8));
         copy.setOnClickListener(v -> {
@@ -219,6 +254,9 @@ public class NGSafetyActivity extends BaseFragment {
             toast(context, "Secret copied");
         });
         buildCodeEntry(context, false);
+        Button pasteSetup = button(context, "Paste authenticator code");
+        content.addView(pasteSetup, params(0, 6));
+        pasteSetup.setOnClickListener(v -> pasteCodeFromClipboard(context));
         Button confirm = button(context, "Verify & Enable");
         content.addView(confirm, params(0, 10));
         confirm.setOnClickListener(v -> {
@@ -325,6 +363,9 @@ public class NGSafetyActivity extends BaseFragment {
 
         addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
         buildCodeEntry(context, true);
+        Button pasteCode = button(context, "Paste code");
+        content.addView(pasteCode, params(0, 6));
+        pasteCode.setOnClickListener(v -> pasteCodeFromClipboard(context));
         Button verify = button(context, "Verify and continue");
         content.addView(verify, params(0, 10));
         verify.setOnClickListener(v -> {
@@ -340,6 +381,64 @@ public class NGSafetyActivity extends BaseFragment {
         footer.setGravity(Gravity.CENTER);
         footer.setPadding(0, AndroidUtilities.dp(16), 0, AndroidUtilities.dp(4));
         content.addView(footer, params(0, 8));
+    }
+
+    private void saveQrImage(Context context, Bitmap bitmap) {
+        if (Build.VERSION.SDK_INT < 29) {
+            toast(context, "QR download requires Android 10 or newer. Use the manual secret instead.");
+            return;
+        }
+        OutputStream output = null;
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, "NG-Authenticator-QR.png");
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/NayaGram");
+            values.put(MediaStore.Images.Media.IS_PENDING, 1);
+            android.net.Uri imageUri = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (imageUri == null) throw new IllegalStateException("Could not create image entry");
+            output = context.getContentResolver().openOutputStream(imageUri);
+            if (output == null || !bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
+                context.getContentResolver().delete(imageUri, null, null);
+                throw new IllegalStateException("Could not write QR image");
+            }
+            output.close();
+            output = null;
+            ContentValues ready = new ContentValues();
+            ready.put(MediaStore.Images.Media.IS_PENDING, 0);
+            context.getContentResolver().update(imageUri, ready, null, null);
+            toast(context, "QR saved to Pictures/NayaGram");
+        } catch (Exception e) {
+            toast(context, "Could not save QR code. Keep the secret private.");
+        } finally {
+            if (output != null) try { output.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    private void pasteCodeFromClipboard(Context context) {
+        try {
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null || !clipboard.hasPrimaryClip()) {
+                toast(context, "Clipboard is empty");
+                return;
+            }
+            ClipData clip = clipboard.getPrimaryClip();
+            if (clip == null || clip.getItemCount() == 0) {
+                toast(context, "Clipboard is empty");
+                return;
+            }
+            CharSequence value = clip.getItemAt(0).coerceToText(context);
+            if (value == null) {
+                toast(context, "No code found in clipboard");
+                return;
+            }
+            String pasted = value.toString().trim().replaceAll("\\s+", "");
+            codeInput.setText(pasted);
+            codeInput.setSelection(codeInput.length());
+            codeInput.requestFocus();
+        } catch (Exception e) {
+            toast(context, "Could not read clipboard");
+        }
     }
 
     private void buildCodeEntry(Context context, boolean allowBackup) {

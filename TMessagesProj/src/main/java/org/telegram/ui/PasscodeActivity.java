@@ -317,45 +317,74 @@ public class PasscodeActivity extends BaseFragment implements NotificationCenter
                         builder.setTitle(LocaleController.getString(R.string.AutoLock));
                         final NumberPicker numberPicker = new NumberPicker(getParentActivity());
                         numberPicker.setMinValue(0);
-                        numberPicker.setMaxValue(4);
-                        if (SharedConfig.autoLockIn == 0) {
-                            numberPicker.setValue(0);
-                        } else if (SharedConfig.autoLockIn == 60) {
-                            numberPicker.setValue(1);
-                        } else if (SharedConfig.autoLockIn == 60 * 5) {
-                            numberPicker.setValue(2);
-                        } else if (SharedConfig.autoLockIn == 60 * 60) {
-                            numberPicker.setValue(3);
-                        } else if (SharedConfig.autoLockIn == 60 * 60 * 5) {
-                            numberPicker.setValue(4);
-                        }
+                        numberPicker.setMaxValue(7);
+                        int current = SharedConfig.autoLockIn;
+                        if (current == 0) numberPicker.setValue(0);
+                        else if (current == 15 * 60) numberPicker.setValue(1);
+                        else if (current == 45 * 60) numberPicker.setValue(2);
+                        else if (current == 60 * 60) numberPicker.setValue(3);
+                        else if (current == 3 * 60 * 60) numberPicker.setValue(4);
+                        else if (current == 5 * 60 * 60) numberPicker.setValue(5);
+                        else if (current == 12 * 60 * 60) numberPicker.setValue(6);
+                        else numberPicker.setValue(7);
                         numberPicker.setFormatter(value -> {
-                            if (value == 0) {
-                                return LocaleController.getString(R.string.AutoLockDisabled);
-                            } else if (value == 1) {
-                                return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 1));
-                            } else if (value == 2) {
-                                return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Minutes", 5));
-                            } else if (value == 3) {
-                                return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 1));
-                            } else if (value == 4) {
-                                return LocaleController.formatString("AutoLockInTime", R.string.AutoLockInTime, LocaleController.formatPluralString("Hours", 5));
+                            switch (value) {
+                                case 0: return LocaleController.getString(R.string.AutoLockDisabled);
+                                case 1: return "15 minutes";
+                                case 2: return "45 minutes";
+                                case 3: return "1 hour";
+                                case 4: return "3 hours";
+                                case 5: return "5 hours";
+                                case 6: return "12 hours";
+                                case 7: return "Custom…";
+                                default: return "";
                             }
-                            return "";
                         });
                         builder.setView(numberPicker);
                         builder.setNegativeButton(LocaleController.getString(R.string.Done), (dialog, which) -> {
-                            which = numberPicker.getValue();
-                            if (which == 0) {
-                                SharedConfig.autoLockIn = 0;
-                            } else if (which == 1) {
-                                SharedConfig.autoLockIn = 60;
-                            } else if (which == 2) {
-                                SharedConfig.autoLockIn = 60 * 5;
-                            } else if (which == 3) {
-                                SharedConfig.autoLockIn = 60 * 60;
-                            } else if (which == 4) {
-                                SharedConfig.autoLockIn = 60 * 60 * 5;
+                            int selected = numberPicker.getValue();
+                            if (selected == 7) {
+                                LinearLayout customLayout = new LinearLayout(getParentActivity());
+                                customLayout.setOrientation(LinearLayout.VERTICAL);
+                                customLayout.setPadding(dp(24), dp(12), dp(24), 0);
+                                TextView help = new TextView(getParentActivity());
+                                help.setText("Enter a custom auto-lock duration in minutes (1–10080).");
+                                customLayout.addView(help, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
+                                android.widget.EditText minutesInput = new android.widget.EditText(getParentActivity());
+                                minutesInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+                                minutesInput.setSingleLine(true);
+                                minutesInput.setHint("Minutes");
+                                minutesInput.setText(String.valueOf(Math.max(1, Math.min(10080, current / 60))));
+                                customLayout.addView(minutesInput, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+                                AlertDialog.Builder customBuilder = new AlertDialog.Builder(getParentActivity());
+                                customBuilder.setTitle(LocaleController.getString(R.string.AutoLock));
+                                customBuilder.setView(customLayout);
+                                customBuilder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                                customBuilder.setPositiveButton(LocaleController.getString(R.string.Done), (customDialog, customWhich) -> {
+                                    try {
+                                        int minutes = Integer.parseInt(minutesInput.getText().toString().trim());
+                                        if (minutes < 1 || minutes > 10080) {
+                                            Toast.makeText(getParentActivity(), "Choose between 1 and 10080 minutes.", Toast.LENGTH_LONG).show();
+                                            return;
+                                        }
+                                        SharedConfig.autoLockIn = minutes * 60;
+                                        listAdapter.notifyItemChanged(position);
+                                        UserConfig.getInstance(currentAccount).saveConfig(false);
+                                    } catch (NumberFormatException e) {
+                                        Toast.makeText(getParentActivity(), "Enter a valid number of minutes.", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                                showDialog(customBuilder.create());
+                                return;
+                            }
+                            switch (selected) {
+                                case 0: SharedConfig.autoLockIn = 0; break;
+                                case 1: SharedConfig.autoLockIn = 15 * 60; break;
+                                case 2: SharedConfig.autoLockIn = 45 * 60; break;
+                                case 3: SharedConfig.autoLockIn = 60 * 60; break;
+                                case 4: SharedConfig.autoLockIn = 3 * 60 * 60; break;
+                                case 5: SharedConfig.autoLockIn = 5 * 60 * 60; break;
+                                case 6: SharedConfig.autoLockIn = 12 * 60 * 60; break;
                             }
                             listAdapter.notifyItemChanged(position);
                             UserConfig.getInstance(currentAccount).saveConfig(false);
