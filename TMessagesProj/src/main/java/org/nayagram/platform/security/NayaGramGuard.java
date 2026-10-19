@@ -28,7 +28,7 @@ import java.util.Set;
 public final class NayaGramGuard {
     private static final String PREFS = "nayagram_guard_secure";
     private static final String ENABLED = "enabled";
-    private static final String SECRET = "totp_secret";
+    private static final String KEY_TOTP_SECRET = "totp_secret";
     private static final String PENDING_SECRET = "pending_secret";
     private static final String BACKUP_PREFIX = "backup_hash_";
     private static final int BACKUP_COUNT = 10;
@@ -130,7 +130,7 @@ public final class NayaGramGuard {
             return null;
         }
         ArrayList<String> backupCodes = new ArrayList<>(BACKUP_COUNT);
-        SharedPreferences.Editor editor = secure.edit().putString(SECRET, secret).remove(PENDING_SECRET);
+        SharedPreferences.Editor editor = secure.edit().putString(KEY_TOTP_SECRET, secret).remove(PENDING_SECRET);
         SecureRandom random = new SecureRandom();
         Set<String> uniqueCodes = new HashSet<>();
         while (uniqueCodes.size() < BACKUP_COUNT) {
@@ -156,7 +156,7 @@ public final class NayaGramGuard {
             if (!secure.getBoolean(ENABLED, false)) {
                 return true;
             }
-            String secret = secure.getString(SECRET, null);
+            String secret = secure.getString(KEY_TOTP_SECRET, null);
             if (verifyCode(secret, code)) {
                 markSessionVerified();
                 return true;

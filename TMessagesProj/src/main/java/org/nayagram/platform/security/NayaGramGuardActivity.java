@@ -254,8 +254,35 @@ public class NayaGramGuardActivity extends BaseFragment {
     }
 
     private void buildVerification(Context context, boolean gate) {
-        addTitle(context, gate ? "🔐 Unlock NayaGram" : "Verify NayaGram Guard");
-        addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
+        // Prominent security tagline above the hero protection shield
+        TextView priorityTitle = text(context, LocaleController.getString(R.string.NGProtectionTagline), 20, 0xFF0284C7, true);
+        priorityTitle.setGravity(Gravity.CENTER);
+        priorityTitle.setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(12));
+        content.addView(priorityTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        // Hero protection shield logo
+        ImageView heroLogo = new ImageView(context);
+        heroLogo.setImageResource(R.drawable.nayagram_protection_hero);
+        heroLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(114), AndroidUtilities.dp(114));
+        heroParams.gravity = Gravity.CENTER_HORIZONTAL;
+        heroParams.bottomMargin = AndroidUtilities.dp(14);
+        content.addView(heroLogo, heroParams);
+
+        TextView titleView = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 22, 0xFF075985, true);
+        titleView.setGravity(Gravity.CENTER);
+        titleView.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(6));
+        content.addView(titleView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView subtitleView = text(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.", 14, 0xFF64748B, false);
+        subtitleView.setGravity(Gravity.CENTER);
+        subtitleView.setPadding(AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8), AndroidUtilities.dp(12));
+        content.addView(subtitleView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        // Vertical spacer to push the code input area comfortably downward
+        View spacer = new View(context);
+        content.addView(spacer, new LinearLayout.LayoutParams(1, AndroidUtilities.dp(24)));
+
         buildCodeEntry(context, true);
         Button verify = button(context, "Verify and continue");
         content.addView(verify, params(0, 10));
@@ -267,6 +294,12 @@ public class NayaGramGuardActivity extends BaseFragment {
                 codeInput.setText("");
             }
         });
+
+        // Clean footer at the bottom with authentication creation date
+        TextView footer = text(context, LocaleController.getString(R.string.NGAuthenticatorCreatedDate), 12, 0xFF94A3B8, false);
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, AndroidUtilities.dp(36), 0, AndroidUtilities.dp(8));
+        content.addView(footer, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     private void buildCodeEntry(Context context, boolean allowBackup) {

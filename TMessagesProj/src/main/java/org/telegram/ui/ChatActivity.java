@@ -8655,10 +8655,10 @@ public class ChatActivity extends BaseFragment implements
                                 bg.setCornerRadius(AndroidUtilities.dp(16));
                                 bg.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);
                                 layout.setBackground(bg);
-                                BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_SHORT).show();
+                                BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();
                             } catch (Throwable ignore) {
                                 try {
-                                    BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.star_premium_2, LocaleController.getString(R.string.SupportedChannelGroup)).show();
+                                    BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.raw.star_premium_2, LocaleController.getString(R.string.SupportedChannelGroup), 1, Bulletin.DURATION_PROLONG).show();
                                 } catch (Throwable ignored2) {
                                 }
                             }
