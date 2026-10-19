@@ -229,6 +229,9 @@ public class NGSafetyActivity extends BaseFragment {
             toast(context, "Secret copied");
         });
         buildCodeEntry(context, false);
+        Button pasteSetup = button(context, "Paste authenticator code");
+        content.addView(pasteSetup, params(0, 6));
+        pasteSetup.setOnClickListener(v -> pasteCodeFromClipboard(context));
         Button confirm = button(context, "Verify & Enable");
         content.addView(confirm, params(0, 10));
         confirm.setOnClickListener(v -> {
@@ -335,6 +338,9 @@ public class NGSafetyActivity extends BaseFragment {
 
         addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
         buildCodeEntry(context, true);
+        Button pasteCode = button(context, "Paste code");
+        content.addView(pasteCode, params(0, 6));
+        pasteCode.setOnClickListener(v -> pasteCodeFromClipboard(context));
         Button verify = button(context, "Verify and continue");
         content.addView(verify, params(0, 10));
         verify.setOnClickListener(v -> {
@@ -350,6 +356,32 @@ public class NGSafetyActivity extends BaseFragment {
         footer.setGravity(Gravity.CENTER);
         footer.setPadding(0, AndroidUtilities.dp(16), 0, AndroidUtilities.dp(4));
         content.addView(footer, params(0, 8));
+    }
+
+    private void pasteCodeFromClipboard(Context context) {
+        try {
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            if (clipboard == null || !clipboard.hasPrimaryClip()) {
+                toast(context, "Clipboard is empty");
+                return;
+            }
+            ClipData clip = clipboard.getPrimaryClip();
+            if (clip == null || clip.getItemCount() == 0) {
+                toast(context, "Clipboard is empty");
+                return;
+            }
+            CharSequence value = clip.getItemAt(0).coerceToText(context);
+            if (value == null) {
+                toast(context, "No code found in clipboard");
+                return;
+            }
+            String pasted = value.toString().trim().replaceAll("\\s+", "");
+            codeInput.setText(pasted);
+            codeInput.setSelection(codeInput.length());
+            codeInput.requestFocus();
+        } catch (Exception e) {
+            toast(context, "Could not read clipboard");
+        }
     }
 
     private void buildCodeEntry(Context context, boolean allowBackup) {
