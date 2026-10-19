@@ -3,6 +3,7 @@ package org.nayagram.platform.security;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -136,8 +137,10 @@ public class NGSafetyActivity extends BaseFragment {
         labels.addView(status);
         Switch toggle = new Switch(context);
         toggle.setChecked(NGSafety.isEnabled(context));
+        applyToggleColors(toggle, toggle.isChecked());
         card.addView(toggle);
         toggle.setOnCheckedChangeListener((button, checked) -> {
+            applyToggleColors(toggle, checked);
             if (suppressToggleCallback) return;
             if (checked) {
                 try {
@@ -164,6 +167,13 @@ public class NGSafetyActivity extends BaseFragment {
             }
         });
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
+    }
+
+    private void applyToggleColors(Switch toggle, boolean checked) {
+        int thumb = checked ? 0xFF16A34A : 0xFF7C4DFF;
+        int track = checked ? 0xFFBBF7D0 : 0xFFEDE9FE;
+        toggle.setThumbTintList(ColorStateList.valueOf(thumb));
+        toggle.setTrackTintList(ColorStateList.valueOf(track));
     }
 
     private void setToggleSilently(Switch toggle, boolean checked) {
