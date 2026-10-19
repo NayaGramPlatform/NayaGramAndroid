@@ -13,6 +13,7 @@ TABS = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/MainTabsActivity.java
 LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java"
 GRADLE = ROOT / "TMessagesProj/build.gradle"
 PASSKEYS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/PasskeysController.java"
+BUILD_VARS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java"
 
 
 def totp(secret: bytes, timestamp: int, digits: int = 6, step: int = 30) -> str:
@@ -46,6 +47,7 @@ def main() -> None:
     launch = LAUNCH.read_text(encoding="utf-8")
     gradle = GRADLE.read_text(encoding="utf-8")
     passkeys = PASSKEYS.read_text(encoding="utf-8")
+    build_vars = BUILD_VARS.read_text(encoding="utf-8")
 
     for token in (
         "EncryptedSharedPreferences.create",
@@ -96,6 +98,7 @@ def main() -> None:
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
     assert "PasskeysActivity" in privacy
+    assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
     assert "if (Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS)" in privacy
     assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
     assert 'textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.msg2_permissions, true);' in privacy
