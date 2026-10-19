@@ -99,8 +99,10 @@ def main() -> None:
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
     assert "PasskeysActivity" in privacy
     assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
-    assert "if (Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS)" in privacy
+    assert "if (Build.VERSION.SDK_INT >= 23)" in privacy
+    assert "Do not gate visibility on server config or BuildVars" in privacy
     assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
+    assert "if (Build.VERSION.SDK_INT < 23)" in privacy
     assert 'textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.msg2_permissions, true);' in privacy
     assert '"1 device"' in privacy and '" devices"' in privacy
     assert 'textCell2.setContentDescription("NG Passkey, Fingerprint Login, " + value);' in privacy
