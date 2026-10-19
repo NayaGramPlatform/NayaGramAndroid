@@ -14,6 +14,7 @@ LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
 GRADLE = ROOT / "TMessagesProj/build.gradle"
 PASSKEYS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/PasskeysController.java"
 BUILD_VARS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java"
+PASSKEYS_UI = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PasskeysActivity.java"
 
 
 def totp(secret: bytes, timestamp: int, digits: int = 6, step: int = 30) -> str:
@@ -48,6 +49,7 @@ def main() -> None:
     gradle = GRADLE.read_text(encoding="utf-8")
     passkeys = PASSKEYS.read_text(encoding="utf-8")
     build_vars = BUILD_VARS.read_text(encoding="utf-8")
+    passkeys_ui = PASSKEYS_UI.read_text(encoding="utf-8")
 
     for token in (
         "EncryptedSharedPreferences.create",
@@ -98,6 +100,8 @@ def main() -> None:
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
     assert "PasskeysActivity" in privacy
+    assert 'actionBar.setTitle("NG Passkey · Fingerprint Login");' in passkeys_ui
+    assert "Telegram OTP and Two-Step Verification remain unchanged." in passkeys_ui
     assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
     assert "if (Build.VERSION.SDK_INT >= 23)" in privacy
     assert "NG Passkey is a first-class NayaGram settings entry" in privacy
