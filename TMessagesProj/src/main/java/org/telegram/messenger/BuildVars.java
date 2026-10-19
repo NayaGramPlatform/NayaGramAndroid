@@ -52,8 +52,10 @@ public class BuildVars {
     }
 
 
-    // works only on official app ids, disable on your forks
-    public static boolean SUPPORTS_PASSKEYS = false;
+    // NayaGram enables the native Android Credential Manager passkey flow.
+    // The server must advertise a relying-party ID associated with org.nayagram.platform
+    // before production passkey registration can succeed.
+    public static boolean SUPPORTS_PASSKEYS = true;
 
     static {
         if (ApplicationLoader.applicationContext != null) {
