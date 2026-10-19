@@ -227,8 +227,19 @@ public class PasskeysController {
                             passkeyResponse.signature = Base64.decode(response.getString("signature"), Base64.URL_SAFE);
                             passkeyResponse.user_handle = new String(Base64.decode(response.getString("userHandle"), Base64.URL_SAFE));
 
-                            datacenterId = Integer.parseInt(passkeyResponse.user_handle.split(":")[0]);
-                            userId = Long.parseLong(passkeyResponse.user_handle.split(":")[1]);
+                            final String userHandle = passkeyResponse.user_handle;
+                            if (userHandle == null) {
+                                throw new IllegalArgumentException("Missing passkey user handle");
+                            }
+                            final String[] userHandleParts = userHandle.split(":", -1);
+                            if (userHandleParts.length != 2 || userHandleParts[0].isEmpty() || userHandleParts[1].isEmpty()) {
+                                throw new IllegalArgumentException("Invalid passkey user handle");
+                            }
+                            datacenterId = Integer.parseInt(userHandleParts[0]);
+                            userId = Long.parseLong(userHandleParts[1]);
+                            if (datacenterId <= 0 || userId <= 0) {
+                                throw new IllegalArgumentException("Invalid passkey account reference");
+                            }
 
                             req2.credential.response = passkeyResponse;
 
