@@ -13,8 +13,8 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         # Binds with dedicated authenticator icon in TextCell (case 5)
         self.assertIn('textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);', privacy_code)
         self.assertIn('textCell2.imageView.setColorFilter(null);', privacy_code)
-        # OnClick opens existing NayaGramGuardActivity
-        self.assertIn('presentFragment(new NayaGramGuardActivity());', privacy_code)
+        # OnClick opens NGSafetyActivity
+        self.assertIn('presentFragment(new NGSafetyActivity());', privacy_code)
 
         # Icon XML exists and contains cyan and purple palette
         icon_path = ROOT / 'res/drawable/ic_nayagram_authenticator.xml'
@@ -46,18 +46,46 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('0xFF00D4FF', chat_activity_code)
         self.assertIn('0xFF0F172A', chat_activity_code)
         self.assertIn('bg.setColor(0xFFFFFFFF);', chat_activity_code)
+        # Prolonged display duration (5 seconds)
+        self.assertIn('BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();', chat_activity_code)
+
+    def test_guard_unlock_hero_layout(self):
+        safety_code = (ROOT / 'java/org/nayagram/platform/security/NGSafetyActivity.java').read_text()
+        # Hero slogan and protection shield logo
+        self.assertIn('R.string.NGProtectionTagline', safety_code)
+        self.assertIn('R.drawable.nayagram_protection_hero', safety_code)
+        # 30-second TOTP countdown
+        self.assertIn('startCodeCountdown', safety_code)
+        # 15 backup codes scroll
+        self.assertIn('Save your 15 backup codes', safety_code)
+        # English creation date footer
+        self.assertIn('R.string.NGAuthenticatorCreatedDate', safety_code)
+
+        # Verify hero drawable existence across densities
+        for density in ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi']:
+            drawable_path = ROOT / f'res/drawable-{density}/nayagram_protection_hero.png'
+            self.assertTrue(drawable_path.exists(), f"Missing hero logo in drawable-{density}")
 
     def test_localized_strings_present(self):
         strings_en = (ROOT / 'res/values/strings.xml').read_text()
         strings_bn = (ROOT / 'res/values-bn/strings.xml').read_text()
 
         self.assertIn('name="NayaGramGuardTitle"', strings_en)
+        self.assertIn('name="NGProtectionTagline"', strings_en)
+        self.assertIn('name="NGAuthenticatorCreatedDate"', strings_en)
         self.assertIn('name="SendWhenOnlineUserOnline"', strings_en)
         self.assertIn('name="SendWhenOnlinePrivacyRestricted"', strings_en)
 
         self.assertIn('name="NayaGramGuardTitle"', strings_bn)
+        self.assertIn('name="NGProtectionTagline"', strings_bn)
+        self.assertIn('name="NGAuthenticatorCreatedDate"', strings_bn)
         self.assertIn('name="SendWhenOnlineUserOnline"', strings_bn)
         self.assertIn('name="SendWhenOnlinePrivacyRestricted"', strings_bn)
+
+        # Confirm no Bengali words for the NG Authenticator security feature
+        self.assertIn('<string name="NayaGramGuardTitle">NG Authenticator</string>', strings_bn)
+        self.assertIn('<string name="NGProtectionTagline">Your Security, Our Priority</string>', strings_bn)
+        self.assertIn('<string name="NGAuthenticatorCreatedDate">NG Authenticator • Created October 18, 2026</string>', strings_bn)
 
 if __name__ == '__main__':
     unittest.main()

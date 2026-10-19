@@ -38,8 +38,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
-import org.nayagram.platform.security.NayaGramGuard;
-import org.nayagram.platform.security.NayaGramGuardActivity;
+import org.nayagram.platform.security.NGSafety;
+import org.nayagram.platform.security.NGSafetyActivity;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
@@ -496,7 +496,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     presentFragment(new TwoStepVerificationSetupActivity(type, currentPassword));
                 }
             } else if (position == guardRow) {
-                presentFragment(new NayaGramGuardActivity());
+                presentFragment(new NGSafetyActivity());
             } else if (position == passkeysRow) {
                 if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -1352,7 +1352,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         textCell2.setPrioritizeTitleOverValue(true);
                         textCell2.setTextAndSpoilersValueAndIcon(getString(R.string.EmailLogin), val, R.drawable.msg2_email, true);
                     } else if (position == guardRow) {
-                        boolean enabled = NayaGramGuard.isEnabled(mContext);
+                        boolean enabled = NGSafety.isEnabled(mContext);
                         String guardStatus = enabled ? getString(R.string.PasswordOn) : getString(R.string.PasswordOff);
                         textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);
                         if (textCell2.imageView != null) {

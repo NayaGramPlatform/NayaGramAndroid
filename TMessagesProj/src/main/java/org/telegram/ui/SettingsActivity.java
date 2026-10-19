@@ -92,7 +92,7 @@ import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.messenger.SharedPrefsHelper;
-import org.nayagram.platform.security.NayaGramGuardActivity;
+import org.nayagram.platform.security.NGSafetyActivity;
 import org.telegram.ui.Cells.TextCell;
 import org.telegram.ui.Wallet.GramWallet;
 import org.telegram.ui.Wallet.WalletActivity;
@@ -849,7 +849,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 presentSettingFragment(new LoginActivity());
                 break;
             case 111:
-                presentSettingFragment(new NayaGramGuardActivity());
+                presentSettingFragment(new NGSafetyActivity());
                 break;
             case 100:
                 presentSettingFragment(new NGSettingsActivity(NGSettingsActivity.TYPE_FEATURES_HUB));

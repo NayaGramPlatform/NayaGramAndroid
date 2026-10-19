@@ -298,10 +298,11 @@
     <string name="GroupJoinRequestSent">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="GroupJoinRequestSentNoCaps">সাপোর্ট রিকোয়েস্ট পাঠানো হয়েছে</string>
     <string name="SupportedChannelGroup">সাপোর্টেড</string>
-    <string name="NayaGramGuardTitle">NG Authenticator (গুগল অথেন্টিকেটর)</string>
+    <string name="NayaGramGuardTitle">NG Authenticator</string>
     <string name="NGProtectionTitle">NG Protection</string>
-    <string name="NGProtectionTagline">আপনার নিরাপত্তাই আমাদের অগ্রাধিকার।</string>
+    <string name="NGProtectionTagline">Your Security, Our Priority</string>
     <string name="SendWhenOnline">অনলাইন হলে পাঠান</string>
     <string name="SendWhenOnlineUserOnline">ব্যবহারকারী বর্তমানে অনলাইন আছেন।</string>
     <string name="SendWhenOnlinePrivacyRestricted">গোপনীয়তা সেটিংসের কারণে ব্যবহারকারীর অনলাইন স্ট্যাটাস লুকানো রয়েছে।</string>
+    <string name="NGAuthenticatorCreatedDate">NG Authenticator • Created October 18, 2026</string>
 </resources>

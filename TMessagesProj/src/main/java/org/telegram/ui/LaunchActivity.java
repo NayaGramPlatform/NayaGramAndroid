@@ -93,8 +93,8 @@ import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.AssistActionBuilder;
 
 import org.nayagram.platform.ads.AdManager;
-import org.nayagram.platform.security.NayaGramGuard;
-import org.nayagram.platform.security.NayaGramGuardActivity;
+import org.nayagram.platform.security.NGSafety;
+import org.nayagram.platform.security.NGSafetyActivity;
 import org.nayagram.platform.monetization.AdMobIntegrationManager;
 import org.telegram.messenger.NayaGramAdsConfig;
 import org.telegram.PhoneFormat.PhoneFormat;
@@ -6741,7 +6741,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onPause() {
         super.onPause();
-        NayaGramGuard.lockSession();
+        NGSafety.lockSession();
         isResumed = false;
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
@@ -7008,10 +7008,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
             // Also gate restored chats/deep links when the app returns from the background.
-            if (NayaGramGuard.isEnabled(this) && !NayaGramGuard.isSessionVerified()) {
+            if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified()) {
                 BaseFragment topFragment = getActionBarLayout().getLastFragment();
-                if (!(topFragment instanceof NayaGramGuardActivity)) {
-                    presentFragment(new NayaGramGuardActivity(true));
+                if (!(topFragment instanceof NGSafetyActivity)) {
+                    presentFragment(new NGSafetyActivity(true));
                 }
             }
             if (AndroidUtilities.isTablet()) {

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""RFC 6238 regression vectors and NayaGram Guard integration guardrails."""
+"""RFC 6238 regression vectors and NGSafety integration guardrails."""
 import hashlib
 import hmac
 import pathlib
 import struct
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-JAVA = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NayaGramGuard.java"
-UI = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NayaGramGuardActivity.java"
+JAVA = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGSafety.java"
+UI = ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGSafetyActivity.java"
 PRIVACY = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PrivacySettingsActivity.java"
 TABS = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/MainTabsActivity.java"
 LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java"
@@ -54,26 +54,25 @@ def main() -> None:
         "public static void cancelSetup(Context context)",
         "verifier.setTimePeriod(30)",
         "verifier.setAllowedTimePeriodDiscrepancy(1)",
-        "private static final int BACKUP_COUNT = 10",
+        "private static final int BACKUP_COUNT = 15",
         "Local TOTP only, no data sent to Google server",
     ):
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
-    assert "NayaGramGuard.cancelSetup(context)" in ui
-    assert "NayaGramGuardActivity" in privacy and "guardRow = rowCount++" in privacy
-    # Guard is a navigation row, not a toggle; opening its management screen must not disable it.
-    assert "presentFragment(new NayaGramGuardActivity());" in privacy
+    assert "NGSafety.cancelSetup(context)" in ui
+    assert "NGSafetyActivity" in privacy and "guardRow = rowCount++" in privacy
+    # Authenticator is a navigation row, not a toggle; opening its management screen must not disable it.
+    assert "presentFragment(new NGSafetyActivity());" in privacy
     assert "textCell2.setTextAndValueAndIcon(getString(R.string.NayaGramGuardTitle), guardStatus, true, R.drawable.ic_nayagram_authenticator, true);" in privacy
     assert "textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + \", \" + guardStatus);" in privacy
     assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
-    assert "setTextAndCheck(\"NayaGram Guard (Google Authenticator)\"" not in privacy
-    assert "NayaGramGuard.isEnabled" in tabs and "new NayaGramGuardActivity(true)" in tabs
-    assert "NayaGramGuard.lockSession();" in launch
-    assert "topFragment instanceof NayaGramGuardActivity" in launch
+    assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
+    assert "NGSafety.lockSession();" in launch
+    assert "topFragment instanceof NGSafetyActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
-    print("PASS: Guard storage, UI, settings, login-gate and dependency guardrails")
+    print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
 
 
 if __name__ == "__main__":
