@@ -498,8 +498,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             } else if (position == guardRow) {
                 presentFragment(new NGSafetyActivity());
             } else if (position == passkeysRow) {
-                if (Build.VERSION.SDK_INT < 23) {
-                    BulletinFactory.of(this).showForError("NG Passkey requires Android 6.0 or later.");
+                if (Build.VERSION.SDK_INT < 28) {
+                    BulletinFactory.of(this).showForError(getString(R.string.NGPasskeyUnsupportedVersion));
                     return;
                 }
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
@@ -1380,15 +1380,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         value = "";
                         if (currentPasskeys == null) {
                             showLoading = true;
-                        } else if (currentPasskeys.size() == 1) {
-                            value = "1 device";
-                        } else if (currentPasskeys.size() > 1) {
-                            value = currentPasskeys.size() + " devices";
+                        } else if (currentPasskeys.size() > 0) {
+                            value = LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size());
                         } else {
                             value = getString(R.string.PasswordOff);
                         }
-                        textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.menu_face, true);
-                        textCell2.setContentDescription("NG Passkey, Fingerprint Login, " + value);
+                        textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);
+                        textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);
                     } else if (position == passcodeRow) {
                         int icon;
                         if (SharedConfig.passcodeHash.length() != 0) {
