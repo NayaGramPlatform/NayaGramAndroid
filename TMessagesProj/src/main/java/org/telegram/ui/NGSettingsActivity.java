@@ -246,9 +246,38 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "User ID & DC: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowBiometricLocker) {
-                    cfg.setBiometricChatLockerEnabled(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Biometric Locker: " + (checked ? "On" : "Off")).show();
+                    if (checked) {
+                        if (!org.nayagram.platform.security.BiometricChatLocker.isDeviceSecurityAvailable(getParentActivity())) {
+                            AlertDialog.Builder securityDialog = new AlertDialog.Builder(getParentActivity());
+                            securityDialog.setTitle("Secure your device first");
+                            securityDialog.setMessage("Set a PIN, password, or pattern in Android Security Settings before enabling Biometric Chat Locker. Face or fingerprint unlock can then be used when supported by your device.");
+                            securityDialog.setNegativeButton("Cancel", null);
+                            securityDialog.setPositiveButton("Open Settings", (dialog, which) -> {
+                                try {
+                                    getParentActivity().startActivity(new Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS));
+                                } catch (Exception ignored) {
+                                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "Open Android Settings and set a secure screen lock").show();
+                                }
+                            });
+                            showDialog(securityDialog.create());
+                            return;
+                        }
+                        cfg.setBiometricChatLockerEnabled(true);
+                        cell.setChecked(true);
+                        BulletinFactory.of(this).createSimpleBulletin(R.raw.done,
+                                "Locker enabled. Open a chat's NayaGram In-Chat Settings to protect it.").show();
+                    } else {
+                        AlertDialog.Builder disableDialog = new AlertDialog.Builder(getParentActivity());
+                        disableDialog.setTitle("Turn off Biometric Chat Locker?");
+                        disableDialog.setMessage("You will not be able to protect additional chats. Existing protected chats stay locked until you open each chat's NayaGram In-Chat Settings and unlock it. Continue?");
+                        disableDialog.setNegativeButton("Keep enabled", null);
+                        disableDialog.setPositiveButton("Turn off", (dialog, which) -> {
+                            cfg.setBiometricChatLockerEnabled(false);
+                            cell.setChecked(false);
+                            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Biometric Chat Locker disabled for new locks").show();
+                        });
+                        showDialog(disableDialog.create());
+                    }
                 } else if (position == rowFocusMode) {
                     cfg.setFocusModeEnabled(checked);
                     cell.setChecked(checked);
@@ -408,7 +437,7 @@ public class NGSettingsActivity extends BaseFragment {
             body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
         } else if (position == rowBiometricLocker) {
             title = "Biometric Chat Locker";
-            body = "Not active yet. No chat is protected by this setting; biometric authentication and chat-entry enforcement are not connected.\n\nFull chat lock uses your device screen lock. A separate hidden vault is not included.";
+            body = "Protect individual chats with your device's secure screen lock, fingerprint, or face unlock when supported. Enable this feature here, then open the chosen chat's three-dot menu → NayaGram In-Chat Settings → Biometric Chat Lock. The chat is closed immediately and authentication is required before it can be opened again.\n\nA secure PIN, password, or pattern must be configured in Android Settings first. Turning this master switch off prevents new chat locks; existing protected chats remain locked until you unlock them individually. This is a chat-entry lock, not a separate hidden vault.";
         } else if (position == rowFocusMode) {
             title = "Focus & Wellbeing Mode";
             body = "Not active yet. Quiet hours, notification scheduling and exceptions are not connected.\n\nIt does not mute Telegram notifications by itself unless you also change notification settings.";
