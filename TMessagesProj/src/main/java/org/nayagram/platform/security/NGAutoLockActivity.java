@@ -117,7 +117,7 @@ public class NGAutoLockActivity extends BaseFragment {
         root.addView(title);
 
         TextView description = new TextView(context);
-        description.setText("Set how quickly NayaGram locks when placed in the background. Requires PIN or NG Authenticator when the duration expires.");
+        description.setText("Choose when auto-lock should activate after NayaGram goes to the background. NG Authenticator must be enabled for this lock to require verification.");
         description.setTextSize(13);
         description.setTextColor(0xFF64748B);
         description.setLineSpacing(AndroidUtilities.dp(2), 1.05f);
