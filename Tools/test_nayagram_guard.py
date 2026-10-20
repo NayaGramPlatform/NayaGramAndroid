@@ -103,6 +103,10 @@ def main() -> None:
     assert 'actionBar.setTitle("NG Passkey · Device Authentication");' in passkeys_ui
     assert "FRESH_RESET_AUTHORIZATION" in passkeys_ui
     assert "biometrics available on your device (fingerprint or face)" in passkeys_ui
+    assert "NG Passkey & Biometrics" in passkeys_ui
+    assert "fingerprint unlock is enrolled in Android Settings" in passkeys_ui
+    assert "R.drawable.menu_passkey_add" in privacy_ui
+    assert "passkey and device biometrics (fingerprint or face when supported)" in privacy_ui
     assert "Telegram OTP and Two-Step Verification remain unchanged." in passkeys_ui
     assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
     assert "if (Build.VERSION.SDK_INT >= 23)" in privacy, "Keep the settings row discoverable on supported Android versions"

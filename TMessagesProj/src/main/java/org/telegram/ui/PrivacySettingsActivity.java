@@ -1385,8 +1385,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         } else {
                             value = getString(R.string.PasswordOff);
                         }
-                        textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);
-                        textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);
+                        textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_passkey_add, true);
+                        textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", passkey and device biometrics (fingerprint or face when supported), " + value);
                     } else if (position == passcodeRow) {
                         int icon;
                         if (SharedConfig.passcodeHash.length() != 0) {

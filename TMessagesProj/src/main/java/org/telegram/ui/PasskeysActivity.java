@@ -66,7 +66,7 @@ public class PasskeysActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("NG Passkey · Device Authentication");
+        actionBar.setTitle("NG Passkey & Biometrics");
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -93,7 +93,7 @@ public class PasskeysActivity extends BaseFragment {
 
     private void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         addPasskeyRow = -1;
-        items.add(UItem.asTopView("Use the screen lock or biometrics available on your device (fingerprint or face). Android and your credential provider choose the available method. Telegram OTP and Two-Step Verification remain unchanged.", R.raw.passkey));
+        items.add(UItem.asTopView("Protect your NayaGram account with a passkey. Confirm using fingerprint, face recognition, or your device screen lock—whichever your Android device and credential provider support. If fingerprint is not offered, check that fingerprint unlock is enrolled in Android Settings and that your passkey provider supports it. Telegram OTP and Two-Step Verification remain unchanged.", R.raw.passkey));
         for (int i = 0; i < passkeys.size(); ++i) {
             final TL_account.Passkey passkey = passkeys.get(i);
             items.add(PasskeyCell.Factory.of(passkey, this::openMenu));
