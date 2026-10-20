@@ -1497,6 +1497,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             } catch (Exception e) {
                 FileLog.e(e);
             }
+            // Telegram's passcode may have hidden the NG gate while the app resumed.
+            // Re-check after Telegram unlock so its passcode cannot bypass NG Authenticator.
+            if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()) {
+                BaseFragment topFragment = getActionBarLayout().getLastFragment();
+                if (!(topFragment instanceof NGSafetyActivity)) {
+                    presentFragment(new NGSafetyActivity(true));
+                }
+            }
         };
         passcodeDialog.passcodeView.setDelegate(delegate);
         for (PasscodeView overlay : overlayPasscodeViews) {
@@ -7005,9 +7013,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkFreeDiscSpace(0);
         MediaController.checkGallery();
         onPasscodeResume();
+        // Evaluate NG auto-lock even when Telegram's native passcode dialog is visible.
+        // The NG verification gate is presented after Telegram passcode dismissal below.
+        NGSafety.onAppForeground(this);
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
-            NGSafety.onAppForeground(this);
             // Also gate restored chats/deep links when the app returns from the background.
             if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified()) {
                 BaseFragment topFragment = getActionBarLayout().getLastFragment();
