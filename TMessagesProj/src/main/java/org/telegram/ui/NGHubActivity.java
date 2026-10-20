@@ -213,11 +213,13 @@ public class NGHubActivity extends BaseFragment {
         plusButton.setTextColor(0xFFF4FFF8);
         plusButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         plusButton.setContentDescription("Open create menu");
-        GradientDrawable plusBg = new GradientDrawable();
+        GradientDrawable plusBg = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF22C55E, 0xFF15803D});
         plusBg.setShape(GradientDrawable.OVAL);
-        plusBg.setColor(COLOR_GREEN);
+        plusBg.setStroke(AndroidUtilities.dp(2), 0xCCFFFFFF);
         plusButton.setBackground(plusBg);
-        plusButton.setElevation(AndroidUtilities.dp(6));
+        plusButton.setElevation(AndroidUtilities.dp(8));
         plusButton.setOnClickListener(v -> togglePlus());
         FrameLayout.LayoutParams plusParams = new FrameLayout.LayoutParams(AndroidUtilities.dp(58), AndroidUtilities.dp(58), Gravity.BOTTOM | Gravity.END);
         plusParams.rightMargin = AndroidUtilities.dp(16);
@@ -388,7 +390,12 @@ public class NGHubActivity extends BaseFragment {
 
     private void togglePlus() {
         plusOpen = !plusOpen;
-        plusButton.animate().rotation(plusOpen ? 45f : 0f).setDuration(220).start();
+        plusButton.animate()
+                .rotation(plusOpen ? 45f : 0f)
+                .scaleX(plusOpen ? 1.08f : 1f)
+                .scaleY(plusOpen ? 1.08f : 1f)
+                .setDuration(220)
+                .start();
         plusButton.setContentDescription(plusOpen ? "Close create menu" : "Open create menu");
         plusSheet.setVisibility(View.VISIBLE);
         plusSheet.setPivotX(plusSheet.getWidth());
