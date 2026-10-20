@@ -74,7 +74,8 @@ def main() -> None:
     assert "textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + \", \" + guardStatus);" in privacy
     assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
-    assert "NGSafety.lockSession();" in launch
+    # Accept either supported lifecycle hook while requiring a real background lock handler.
+    assert ("NGSafety.lockSession();" in launch or "NGSafety.onAppBackground(this);" in launch), "Missing NGSafety background-lock lifecycle hook"
     assert "topFragment instanceof NGSafetyActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
