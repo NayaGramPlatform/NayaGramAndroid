@@ -235,9 +235,11 @@ public class NGSettingsActivity extends BaseFragment {
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
 
                 } else if (position == rowSmartChatFolders) {
-                    cfg.setSmartFoldersEnabled(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Chat Folders: " + (checked ? "On" : "Off")).show();
+                    // Use Telegram's existing folder editor instead of a preference-only fake toggle.
+                    cfg.setSmartFoldersEnabled(true);
+                    cell.setChecked(true);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Opening native chat folder management").show();
+                    presentFragment(new FiltersSetupActivity());
 
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
@@ -401,7 +403,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         } else if (position == rowSmartChatFolders) {
             title = "Smart Chat Folders";
-            body = "Not active yet. Native Telegram folder integration is not implemented, so this feature cannot organize chats.";
+            body = "Opens Telegram's native chat-folder manager so you can create, edit, and organize your own folders using Telegram's existing filter system. Folder membership and chat filtering remain managed by Telegram.";
 
         } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
