@@ -4,8 +4,10 @@ from pathlib import Path
 
 source = Path("TMessagesProj/src/main/java/org/telegram/ui/NGHubActivity.java").read_text()
 checks = {
-    "three sections": all(x in source for x in ("SECTION_CHANNELS", "SECTION_GROUPS", "SECTION_BOTS")),
+    "four sections including Telegram Communities": all(x in source for x in ("SECTION_CHANNELS", "SECTION_GROUPS", "SECTION_BOTS", "SECTION_COMMUNITIES")),
     "loaded dialogs with fallback": "controller.getDialogs(0)" in source and "controller.getAllDialogs()" in source,
+    "community dialog explicitly classified": "dialog instanceof TLRPC.TL_dialogCommunity" in source and "((TLRPC.TL_dialogCommunity) dialog).community_id" in source,
+    "community tab distinct from linked chats": '"Communities"' in source and "linked chats remain in their own sections" in source,
     "bot accounts filtered from real dialogs": "user.bot" in source and "DialogObject.isUserDialog(dialog.id)" in source,
     "My Bot does not silently hide all bots": "Bot chats available in this account" in source and "type != SECTION_BOTS && !owned" in source,
     "real last-message preview": "controller.dialogMessage.get(dialog.id)" in source and "lastMessage.messageText" in source,
