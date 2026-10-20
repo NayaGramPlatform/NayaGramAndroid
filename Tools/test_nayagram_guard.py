@@ -60,6 +60,13 @@ def main() -> None:
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
     assert "Fail closed: if encrypted auto-lock state cannot be read, force re-verification." in java
+    # Auto-lock save must use the synchronous persistence result, not apply()+in-memory reread.
+    save_method = java.split("public static boolean setAutoLockMinutes", 1)[1].split(
+        "public static String getAutoLockDisplayString", 1
+    )[0]
+    assert ".commit()" in save_method, "Auto-lock save must confirm disk persistence"
+    assert "boolean persisted = " in save_method and "if (!persisted)" in save_method
+    assert ".apply()" not in save_method, "Auto-lock save must not claim persistence from apply()"
     qr_generator = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGQRGenerator.java").read_text(encoding="utf-8")
     assert "NGQRGenerator.generate(context, uri, 720)" in ui and "Copy Secret" in ui
     # QR generation lives in NGQRGenerator, not in the settings Activity.
