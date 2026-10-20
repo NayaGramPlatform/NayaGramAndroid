@@ -130,6 +130,10 @@ public final class NGChatMenuHelper {
                 } else if (which == 2) {
                     showEditTextSignatureDialog(activity, sp);
                 } else if (which == 3) {
+                    if (!isLocked && !NayaConfig.getInstance().isBiometricChatLockerEnabled()) {
+                        Toast.makeText(activity, "Enable Biometric Chat Locker in NayaGram Settings first.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
                     if (isLocked) {
                         locker.unlockChatPermanent(dialogId);
                         Toast.makeText(activity, "Chat Lock Disabled", Toast.LENGTH_SHORT).show();
