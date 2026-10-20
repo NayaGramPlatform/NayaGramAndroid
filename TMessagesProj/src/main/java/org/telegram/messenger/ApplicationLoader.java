@@ -8,7 +8,6 @@
 
 package org.telegram.messenger;
 
-import org.nayagram.platform.security.NGSafety;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -337,7 +336,7 @@ public class ApplicationLoader extends Application {
         } catch (UnsatisfiedLinkError error) {
             throw new RuntimeException("can't load native libraries " +  Build.CPU_ABI + " lookup folder " + NativeLoader.getAbiFolder());
         }
-        ForegroundDetector foregroundDetector = new ForegroundDetector(this) {
+        new ForegroundDetector(this) {
             @Override
             public void onActivityStarted(Activity activity) {
                 boolean wasInBackground = isBackground();
@@ -347,17 +346,6 @@ public class ApplicationLoader extends Application {
                 }
             }
         };
-        foregroundDetector.addListener(new ForegroundDetector.Listener() {
-            @Override
-            public void onBecameForeground() {
-                NGSafety.onAppForeground(applicationContext);
-            }
-
-            @Override
-            public void onBecameBackground() {
-                NGSafety.onAppBackground(applicationContext);
-            }
-        });
         if (BuildConfig.DEBUG_VERSION) {
             new ANRDetector(FileLog::dumpANR);
         }
