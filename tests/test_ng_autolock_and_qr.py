@@ -70,10 +70,10 @@ class NGAutoLockAndQRTest(unittest.TestCase):
         self.assertIn('0xFF2D7FF9', code)
         self.assertIn('R.drawable.check_round', code)
 
-        # Persistent storage: uses NGSafety.setAutoLockMinutes and SharedConfig
+        # Persistent storage: NG auto-lock remains independent of Telegram passcode timeout
         self.assertIn('NGSafety.setAutoLockMinutes', code)
-        self.assertIn('SharedConfig.autoLockIn = finalMinutes * 60', code)
-        self.assertIn('SharedConfig.saveConfig()', code)
+        self.assertNotIn('SharedConfig.autoLockIn', code)
+        self.assertNotIn('SharedConfig.saveConfig()', code)
 
     def test_ng_safety_autolock_logic_and_logging(self):
         safety_file = ROOT / 'java/org/nayagram/platform/security/NGSafety.java'
@@ -114,7 +114,7 @@ class NGAutoLockAndQRTest(unittest.TestCase):
 
         # Must call setCustomBackground so Bulletin.Layout draws custom light card
         self.assertIn('layout.setCustomBackground(bg);', code)
-        self.assertIn('layout.setBackground(bg);', code)
+        self.assertNotIn('layout.setBackground(bg);', code)
 
     def test_otpauth_uri_format(self):
         # Verify otpauth URI generation pattern matches RFC / Google Authenticator standards
@@ -129,6 +129,12 @@ class NGAutoLockAndQRTest(unittest.TestCase):
         self.assertIn('secret=JBSWY3DPEHPK3PXP', parsed.query)
         self.assertIn('digits=6', parsed.query)
         self.assertIn('period=30', parsed.query)
+
+        # The production implementation must construct the standards-compliant URI.
+        safety_code = (ROOT / 'java/org/nayagram/platform/security/NGSafety.java').read_text(encoding='utf-8')
+        self.assertIn('public static String getOtpAuthUri(String accountLabel, String secret)', safety_code)
+        self.assertIn('otpauth://totp/', safety_code)
+        self.assertIn('&algorithm=SHA1&digits=6&period=30', safety_code)
 
 if __name__ == '__main__':
     unittest.main()
