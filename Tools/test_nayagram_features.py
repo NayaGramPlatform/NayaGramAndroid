@@ -82,8 +82,8 @@ def test_dynamic_footer_and_branding():
     assert "BUILD_VERSION = 4018" in buildvars_source
     assert "internal code 4018" in app_gradle_source
     assert "2.1.4 NG" in app_gradle_source
-    assert '"1.1.4 NG"' in about_source
-    assert '"1.1.4 NG"' in settings_source
+    assert '"2.1.4 NG"' in about_source
+    assert '"2.1.4 NG"' in settings_source
     assert "getInstalledAppVersionName()" in settings_source
     assert 'String nayaGramInfo = "NayaGram for Android v" + getInstalledAppVersionName() + " (" + code + ")";' in settings_source
     assert 'footer.setText("NayaGram v" + getAppVersion() + " • Build " + getInternalBuildCode()' in about_source
