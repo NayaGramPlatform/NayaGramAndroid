@@ -56,9 +56,10 @@ class NGAutoLockAndQRTest(unittest.TestCase):
         self.assertIn('Auto-lock NayaGram', code)
         self.assertIn('Built with ❤️ in Bangladesh', code)
 
-        # Toast: "Auto-lock set to X - Alhamdulillah"
-        self.assertIn('Auto-lock set to ', code)
-        self.assertIn('- Alhamdulillah', code)
+        # Save feedback must be neutral and must distinguish an inactive lock from an active one.
+        self.assertIn('Auto-lock duration saved: ', code)
+        self.assertIn('Duration saved, but Auto-lock is inactive.', code)
+        self.assertIn('Could not save auto-lock settings. Please try again.', code)
 
         # Presets: 15, 45, 60, 180, 300, 720 minutes, Never (0), and Custom
         for val in ['15', '45', '60', '180', '300', '720']:
