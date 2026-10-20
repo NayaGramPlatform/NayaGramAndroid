@@ -26,6 +26,10 @@ class NGAutoLockAndQRTest(unittest.TestCase):
         # Must render central protection logo
         self.assertIn('R.drawable.nayagram_protection_hero', code)
         self.assertIn('public static Bitmap generate(Context context, String otpAuthUri, int targetSize)', code)
+        # The exported QR bitmap must include the ISO/IEC 18004 four-module quiet zone.
+        self.assertIn('int quietZone = 4', code)
+        # Brand mark stays below the QR matrix rather than covering alignment patterns.
+        self.assertIn('dedicated footer beneath the QR', code)
 
     def test_ng_safety_activity_qr_and_autolock_integration(self):
         safety_act_file = ROOT / 'java/org/nayagram/platform/security/NGSafetyActivity.java'
