@@ -134,9 +134,18 @@ public final class NGSafety {
             return false;
         }
         try {
-            prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).apply();
-            FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
-            return getAutoLockMinutes(context) == minutes;
+            // commit() returns whether the encrypted preference write reached disk.
+            // Do not treat an in-memory SharedPreferences reread as proof of persistence.
+            boolean persisted = prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).commit();
+            if (!persisted) {
+                FileLog.e("NG Auto-lock preference write was not persisted");
+                return false;
+            }
+            boolean confirmed = getAutoLockMinutes(context) == minutes;
+            if (confirmed) {
+                FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
+            }
+            return confirmed;
         } catch (Exception e) {
             FileLog.e(e);
             return false;
