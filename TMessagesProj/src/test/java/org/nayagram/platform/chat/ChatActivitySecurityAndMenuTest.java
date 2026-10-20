@@ -19,6 +19,16 @@ public class ChatActivitySecurityAndMenuTest {
     }
 
     @Test
+    public void testBiometricLockerFailsClosedWhenDeviceSecurityIsUnavailable() throws Exception {
+        String source = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/org/nayagram/platform/security/BiometricChatLocker.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        Assert.assertTrue(source.contains("if (!isDeviceSecurityAvailable(activity))"));
+        Assert.assertTrue(source.contains("if (callback != null) callback.onUnlockFailed();"));
+        Assert.assertFalse(source.contains("// Fallback for older devices: grant session access"));
+    }
+
+    @Test
     public void testAutoTranslateMenuRemains() {
         Assert.assertEquals(29004, NGChatMenuHelper.ITEM_AUTO_TRANSLATE);
     }

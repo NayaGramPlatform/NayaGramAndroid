@@ -228,3 +228,11 @@ if __name__ == '__main__':
     test_search_and_hub_naming()
     test_advanced_feature_wiring()
     print("--- ALL 6 TESTS PASSED SUCCESSFULLY ---")
+
+
+class BiometricLockerFailClosedRegressionTest(unittest.TestCase):
+    def test_no_fail_open_fallback(self):
+        source = (ROOT / 'java/org/nayagram/platform/security/BiometricChatLocker.java').read_text(encoding='utf-8')
+        self.assertIn('Set a secure screen lock before protecting chats.', source)
+        self.assertIn('No supported authentication API: deny access rather than silently bypassing the lock.', source)
+        self.assertNotIn('Fallback for older devices: grant session access', source)
