@@ -74,7 +74,7 @@ def main() -> None:
     assert "textCell2.setContentDescription(getString(R.string.NayaGramGuardTitle) + \", \" + guardStatus);" in privacy
     assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
-    assert "NGSafety.lockSession();" in launch
+    assert "NGSafety.onAppBackground(this);" in launch, "Guard must process app background lifecycle"
     assert "topFragment instanceof NGSafetyActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
@@ -99,26 +99,14 @@ def main() -> None:
     assert "androidx.credentials:credentials:" in gradle
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
-    assert "PasskeysActivity" in privacy
-    assert 'actionBar.setTitle("NG Passkey & Biometrics");' in passkeys_ui
-    assert "FRESH_RESET_AUTHORIZATION" in passkeys_ui
-    assert "fingerprint, face recognition, or your device screen lock" in passkeys_ui
-    assert "NG Passkey & Biometrics" in passkeys_ui
-    assert "fingerprint unlock is enrolled in Android Settings" in passkeys_ui
-    assert "R.drawable.menu_passkey_add" in privacy
-    assert "passkey and device biometrics (fingerprint or face when supported)" in privacy
-    assert "Telegram OTP and Two-Step Verification remain unchanged." in passkeys_ui
-    assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
-    assert "if (Build.VERSION.SDK_INT >= 23)" in privacy, "Keep the settings row discoverable on supported Android versions"
-    assert "NG Passkey is a first-class NayaGram settings entry" in privacy
-    assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
-    assert "if (Build.VERSION.SDK_INT < 28)" in privacy, "Credential Manager passkey registration must be blocked below API 28"
-    assert "NGPasskeyUnsupportedVersion" in privacy and "NGPasskeyUnsupportedVersion" in (ROOT / "TMessagesProj/src/main/res/values/strings.xml").read_text(encoding="utf-8")
-    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_passkey_add, true);" in privacy
-    assert 'LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size())' in privacy
-    assert 'textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", passkey and device biometrics (fingerprint or face when supported), " + value);' in privacy
-    assert "presentFragment(new PasskeysActivity(currentPasskeys));" in privacy
-    print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
+    # Passkey UI is intentionally hidden from Privacy & Security; the underlying
+    # Telegram Credential Manager/server-verified implementation remains untouched.
+    assert "passkeysRow = rowCount++" not in privacy
+    assert "loadPasskeys();" not in privacy
+    assert "new PasskeysActivity(currentPasskeys)" not in privacy
+    assert "R.drawable.menu_passkey_add" not in privacy
+    assert "getString(R.string.NGPasskeyTitle)" not in privacy
+    print("PASS: NG Passkey is hidden from Privacy & Security without altering Telegram auth")
     print("PASS: Android Credential Manager passkey registration/login stays server-verified")
 
     # NG Hub privacy regression: this legacy helper must never silently join or pin channels.
