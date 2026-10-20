@@ -61,7 +61,7 @@ public final class BiometricChatLocker {
         unlockedSessionChats.remove(dialogId);
     }
 
-    public boolean isChatProtected(long dialogId) {
+    public synchronized boolean isChatProtected(long dialogId) {
         Set<String> set = preferences.getStringSet(KEY_LOCKED_CHATS, null);
         return set != null && set.contains(String.valueOf(dialogId));
     }
@@ -79,6 +79,9 @@ public final class BiometricChatLocker {
     }
 
     public static boolean isDeviceSecurityAvailable(Context context) {
+        if (context == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return false;
+        }
         try {
             KeyguardManager km = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
             return km != null && km.isDeviceSecure();
@@ -98,9 +101,10 @@ public final class BiometricChatLocker {
             return;
         }
 
+        // Fail closed: never grant access when the device has no secure lock configured.
         if (!isDeviceSecurityAvailable(activity)) {
-            grantSessionAccess(dialogId);
-            if (callback != null) callback.onUnlockSuccess();
+            Toast.makeText(activity, "Set a secure screen lock before protecting chats.", Toast.LENGTH_LONG).show();
+            if (callback != null) callback.onUnlockFailed();
             return;
         }
 
@@ -136,6 +140,8 @@ public final class BiometricChatLocker {
                 });
                 return;
             } catch (Exception ignored) {
+                if (callback != null) callback.onUnlockFailed();
+                return;
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
@@ -162,11 +168,13 @@ public final class BiometricChatLocker {
                 });
                 return;
             } catch (Exception ignored) {
+                if (callback != null) callback.onUnlockFailed();
+                return;
             }
         }
 
-        // Fallback for older devices: grant session access
-        grantSessionAccess(dialogId);
-        if (callback != null) callback.onUnlockSuccess();
+        // No supported authentication API: deny access rather than silently bypassing the lock.
+        Toast.makeText(activity, "Biometric chat lock requires Android 9 or newer.", Toast.LENGTH_LONG).show();
+        if (callback != null) callback.onUnlockFailed();
     }
 }
