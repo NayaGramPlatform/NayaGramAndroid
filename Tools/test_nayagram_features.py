@@ -169,6 +169,14 @@ def test_advanced_feature_wiring():
     assert '"Smart Chat Folders · SOON"' not in settings
     assert 'Opening native chat folder management' in settings
     assert 'Not active yet. Native Telegram folder integration is not implemented' not in settings
+    locker = (root / "TMessagesProj/src/main/java/org/nayagram/platform/security/BiometricChatLocker.java").read_text(encoding="utf-8")
+    launch = (root / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java").read_text(encoding="utf-8")
+    assert "Set a secure screen lock before protecting chats." in locker
+    assert "No supported authentication API: deny access rather than silently bypassing the lock." in locker
+    assert "Fallback for older devices: grant session access" not in locker
+    assert "enforceBiometricChatLock();" in launch
+    assert "BiometricChatLocker.getInstance(this).lockAllSessions();" in launch
+    assert "current.finishFragment();" in launch
     assert 'never turns them on or off' in tutorial
     assert 'Only this public tutorial text is sent for translation' in tutorial
     assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
