@@ -2,6 +2,7 @@ package org.nayagram.platform.security;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
@@ -47,6 +48,9 @@ public final class NGSafety {
 
     private static volatile boolean sessionVerified;
     private static Runnable backgroundLockRunnable;
+    // Monotonic clock for same-process background intervals; wall-clock timestamp remains
+    // persisted as a fallback when Android kills and later recreates the process.
+    private static volatile long backgroundElapsedRealtime = 0L;
 
     private NGSafety() {}
 
@@ -153,6 +157,7 @@ public final class NGSafety {
     public static void onAppBackground(Context context) {
         if (!isEnabled(context)) return;
         long now = System.currentTimeMillis();
+        backgroundElapsedRealtime = SystemClock.elapsedRealtime();
         try {
             prefs(context).edit().putLong(KEY_LAST_BG_TIME, now).apply();
         } catch (Throwable ignored) {
@@ -171,6 +176,7 @@ public final class NGSafety {
         if (isAutoLockExpired(context)) {
             lockSession();
         }
+        backgroundElapsedRealtime = 0L;
         try {
             prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();
         } catch (Throwable ignored) {
@@ -184,7 +190,16 @@ public final class NGSafety {
         try {
             long lastBg = prefs(context).getLong(KEY_LAST_BG_TIME, 0L);
             if (lastBg > 0) {
-                long elapsed = System.currentTimeMillis() - lastBg;
+                long elapsed;
+                long startedAtElapsed = backgroundElapsedRealtime;
+                if (startedAtElapsed > 0L) {
+                    // Wall-clock edits must not shorten or extend a live background timeout.
+                    elapsed = SystemClock.elapsedRealtime() - startedAtElapsed;
+                } else {
+                    // After process death, elapsedRealtime's old value is not available;
+                    // use the persisted wall-clock timestamp as a best-effort fallback.
+                    elapsed = System.currentTimeMillis() - lastBg;
+                }
                 return elapsed >= ((long) minutes * 60 * 1000L);
             }
         } catch (Throwable ignored) {
