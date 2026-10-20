@@ -206,8 +206,10 @@ def test_advanced_feature_wiring():
     assert 'cfg.setDataSaverEnabled(checked);' in legacy_hub
     assert 'if (isPendingFeaturePosition(position))' in legacy_hub
     assert 'private boolean isPendingFeaturePosition(int position)' in legacy_hub
-    assert 'Smart Chat Folders · SOON' in legacy_hub
-    assert 'Biometric Chat Locker · SOON' in legacy_hub
+    assert 'Smart Chat Folders · SOON' not in legacy_hub
+    assert 'Biometric Chat Locker · SOON' not in legacy_hub
+    assert 'setActionFeature(R.drawable.outline_groups_24' in legacy_hub
+    assert 'cfg.isBiometricChatLockerEnabled(), true' in legacy_hub
     assert 'headerOptimization = -1;' in legacy_hub
     assert 'rowApkBlock = -1;' in legacy_hub
     assert 'rowFocusMode = -1;' in legacy_hub
