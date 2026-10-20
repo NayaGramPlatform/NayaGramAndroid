@@ -158,6 +158,11 @@ def test_advanced_feature_wiring():
     assert 'Feature Pipeline · Details' in tutorial
     assert "Only verified, working features are shown in the active Features page." in tutorial
     assert "Planned or incomplete feature cards have been removed from the active list" in tutorial
+
+    settings = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    assert 'presentFragment(new FiltersSetupActivity());' in settings
+    assert 'Opening native chat folder management' in settings
+    assert 'Not active yet. Native Telegram folder integration is not implemented' not in settings
     assert 'never turns them on or off' in tutorial
     assert 'Only this public tutorial text is sent for translation' in tutorial
     assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
