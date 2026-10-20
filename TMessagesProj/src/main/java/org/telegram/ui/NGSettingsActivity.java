@@ -520,6 +520,13 @@ public class NGSettingsActivity extends BaseFragment {
             invalidate();
         }
 
+        public void setActionFeature(int iconRes, int badgeColor, String title, String subtitle, boolean divider) {
+            setFeature(iconRes, badgeColor, title, subtitle, false, divider);
+            // Action rows navigate to a native manager; they are not on/off preferences.
+            switchView.setVisibility(View.GONE);
+            updateAccessibilityLabel();
+        }
+
         public void setChecked(boolean checked) {
             switchView.setChecked(checked, true);
             updateAccessibilityLabel();
@@ -678,7 +685,7 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
 
                 } else if (position == rowSmartChatFolders) {
-                    c.setFeature(R.drawable.outline_groups_24, 0xFF64748B, "Smart Chat Folders · SOON", "Not active yet · Native folder integration is pending", false, false);
+                    c.setActionFeature(R.drawable.outline_groups_24, 0xFF10B981, "Smart Chat Folders", "Create and manage Telegram chat folders", false);
 
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);

@@ -161,6 +161,8 @@ def test_advanced_feature_wiring():
 
     settings = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
     assert 'presentFragment(new FiltersSetupActivity());' in settings
+    assert 'setActionFeature(R.drawable.outline_groups_24' in settings
+    assert '"Smart Chat Folders · SOON"' not in settings
     assert 'Opening native chat folder management' in settings
     assert 'Not active yet. Native Telegram folder integration is not implemented' not in settings
     assert 'never turns them on or off' in tutorial
