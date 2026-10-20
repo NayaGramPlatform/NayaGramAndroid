@@ -310,18 +310,26 @@ public class NGAutoLockActivity extends BaseFragment {
     private void saveSetting(Context context) {
         int finalMinutes;
         if (isCustomSelected) {
-            int h = 0;
-            int m = 0;
+            final int h;
+            final int m;
             try {
-                if (hoursInput != null && hoursInput.getText().length() > 0) {
-                    h = Integer.parseInt(hoursInput.getText().toString().trim());
+                String hoursText = hoursInput == null ? "" : hoursInput.getText().toString().trim();
+                String minutesText = minutesInput == null ? "" : minutesInput.getText().toString().trim();
+                if (hoursText.isEmpty() || minutesText.isEmpty()) {
+                    Toast.makeText(context, "Enter both hours and minutes.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                if (minutesInput != null && minutesInput.getText().length() > 0) {
-                    m = Integer.parseInt(minutesInput.getText().toString().trim());
-                }
-            } catch (Exception ignored) {
+                h = Integer.parseInt(hoursText);
+                m = Integer.parseInt(minutesText);
+            } catch (NumberFormatException e) {
+                Toast.makeText(context, "Enter valid whole numbers for hours and minutes.", Toast.LENGTH_SHORT).show();
+                return;
             }
 
+            if (h < 0 || h > 24 || m < 0 || m > 59 || (h == 24 && m != 0)) {
+                Toast.makeText(context, "Hours must be 0–24 and minutes 0–59 (24 hours maximum).", Toast.LENGTH_SHORT).show();
+                return;
+            }
             finalMinutes = h * 60 + m;
             if (finalMinutes <= 0) {
                 Toast.makeText(context, "Enter at least 1 minute or select Never.", Toast.LENGTH_SHORT).show();
