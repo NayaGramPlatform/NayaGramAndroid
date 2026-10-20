@@ -196,9 +196,13 @@ public class NGSafetyActivity extends BaseFragment {
         Button save = button(context, "Save");
         content.addView(save, params(0, 10));
         save.setOnClickListener(v -> {
-            NGAutoLockManager.saveTimeoutMinutes(context, selected[0]);
-            String display = selected[0] == 0 ? "Never" : selected[0] + " minutes";
-            toast(context, "Auto-lock set to " + display + " - Alhamdulillah");
+            try {
+                NGAutoLockManager.saveTimeoutMinutes(context, selected[0]);
+                String display = selected[0] == 0 ? "Never" : selected[0] + " minutes";
+                toast(context, "Auto-lock set to " + display + " - Alhamdulillah");
+            } catch (Exception e) {
+                toast(context, "Could not securely save Auto-lock settings.");
+            }
         });
         TextView footer = text(context, "Built with ❤️ in Bangladesh", 12, 0xFF64748B, false);
         footer.setGravity(Gravity.CENTER);
