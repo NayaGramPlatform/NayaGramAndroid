@@ -124,22 +124,25 @@ public class NGSettingsActivity extends BaseFragment {
         headerSecurity = rowCount++;
         rowShowIdDc = rowCount++;
         rowBiometricLocker = rowCount++;
-        rowApkBlock = rowCount++;
+        // Hidden until the APK/ZIP protection behavior is implemented and verified.
+        rowApkBlock = -1;
 
-        headerOptimization = rowCount++;
-        rowFocusMode = rowCount++;
+        // Hide inactive feature placeholders instead of showing non-working controls.
+        headerOptimization = -1;
+        rowFocusMode = -1;
         rowStorageDoctor = -1;
-        rowBatterySaver = rowCount++;
-        rowInstantTranslator = rowCount++;
+        rowBatterySaver = -1;
+        rowInstantTranslator = -1;
 
         headerInternational = rowCount++;
         rowIntlClock = rowCount++;
-        rowLinkGuard = rowCount++;
-        rowReadableText = rowCount++;
-        rowReduceMotion = rowCount++;
-        rowChatListDetails = rowCount++;
-        rowPauseGifs = rowCount++;
-        rowSaveData = rowCount++;
+        // These rows were marked for removal from this feature UI.
+        rowLinkGuard = -1;
+        rowReadableText = -1;
+        rowReduceMotion = -1;
+        rowChatListDetails = -1;
+        rowPauseGifs = -1;
+        rowSaveData = -1;
 
         headerSystem = rowCount++;
         rowResetDefaults = rowCount++;
