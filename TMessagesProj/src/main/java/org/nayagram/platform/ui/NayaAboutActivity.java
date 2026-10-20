@@ -433,7 +433,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "4014";
+        return "4018";
     }
 
     private String getAppVersion() {
@@ -444,7 +444,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "1.1.4 NG";
+        return "2.1.4 NG";
     }
 
     private void openUrl(String url) {
