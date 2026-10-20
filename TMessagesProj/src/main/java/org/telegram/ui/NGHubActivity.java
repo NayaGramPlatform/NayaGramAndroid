@@ -111,10 +111,10 @@ public class NGHubActivity extends BaseFragment {
         page.addView(buildShortcuts(context));
         page.addView(buildCreateRow(context));
 
-        audienceToggle = createAction(context, "Mine");
+        audienceToggle = createAction(context, "My Spaces");
         audienceToggle.setOnClickListener(v -> {
             mineOnly = !mineOnly;
-            audienceToggle.setText(mineOnly ? "Mine" : "Everyone");
+            audienceToggle.setText(mineOnly ? "My Spaces" : "All Joined");
             showSection(selectedSection);
         });
         page.addView(audienceToggle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 42, 0, 4, 0, 8));
@@ -368,7 +368,7 @@ public class NGHubActivity extends BaseFragment {
 
     private void selectMine(int section) {
         mineOnly = true;
-        if (audienceToggle != null) audienceToggle.setText("Mine");
+        if (audienceToggle != null) audienceToggle.setText("My Spaces");
         showSection(section);
     }
 
@@ -585,7 +585,7 @@ public class NGHubActivity extends BaseFragment {
                     ? "My Bot does not guess ownership. Create a bot with the official BotFather. Bot chats already on this account stay under Everyone."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
         } else {
-            note.setText("Everyone: communities already open on this account. These are not marked as yours.");
+            note.setText("All Joined: channels, groups and bots available in this account, including places you created. Ownership is shown only when Telegram confirms you are the creator.");
         }
         contentColumn.addView(note, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
@@ -631,7 +631,7 @@ public class NGHubActivity extends BaseFragment {
                 }
                 boolean owned = chat != null && chat.creator;
                 if (mineOnly && !owned) continue;
-                if (!mineOnly && owned) continue;
+                // All Joined includes both owned and joined communities.
                 if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
                         : (user.first_name == null ? "" : user.first_name) + (user.last_name == null ? "" : " " + user.last_name);
@@ -652,7 +652,7 @@ public class NGHubActivity extends BaseFragment {
             TextView empty = new TextView(getContext());
             empty.setText(!query.isEmpty() ? "No matches for \"" + query + "\"."
                     : mineOnly ? "Nothing you created is in this list yet."
-                    : "No other communities are in the loaded chat list.");
+                    : "No joined channels, groups or bots are available in the loaded chat list.");
             empty.setTextSize(15);
             empty.setGravity(Gravity.CENTER);
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
