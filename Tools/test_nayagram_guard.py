@@ -100,9 +100,9 @@ def main() -> None:
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
     assert "PasskeysActivity" in privacy
-    assert 'actionBar.setTitle("NG Passkey · Device Authentication");' in passkeys_ui
+    assert 'actionBar.setTitle("NG Passkey & Biometrics");' in passkeys_ui
     assert "FRESH_RESET_AUTHORIZATION" in passkeys_ui
-    assert "biometrics available on your device (fingerprint or face)" in passkeys_ui
+    assert "fingerprint, face recognition, or your device screen lock" in passkeys_ui
     assert "NG Passkey & Biometrics" in passkeys_ui
     assert "fingerprint unlock is enrolled in Android Settings" in passkeys_ui
     assert "R.drawable.menu_passkey_add" in privacy_ui
@@ -114,9 +114,9 @@ def main() -> None:
     assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
     assert "if (Build.VERSION.SDK_INT < 28)" in privacy, "Credential Manager passkey registration must be blocked below API 28"
     assert "NGPasskeyUnsupportedVersion" in privacy and "NGPasskeyUnsupportedVersion" in (ROOT / "TMessagesProj/src/main/res/values/strings.xml").read_text(encoding="utf-8")
-    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);" in privacy
+    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_passkey_add, true);" in privacy
     assert 'LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size())' in privacy
-    assert 'textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);' in privacy
+    assert 'textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", passkey and device biometrics (fingerprint or face when supported), " + value);' in privacy
     assert "presentFragment(new PasskeysActivity(currentPasskeys));" in privacy
     print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
     print("PASS: Android Credential Manager passkey registration/login stays server-verified")
