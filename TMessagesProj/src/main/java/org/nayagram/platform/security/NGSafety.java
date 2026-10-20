@@ -207,6 +207,8 @@ public final class NGSafety {
                 return elapsed >= ((long) minutes * 60 * 1000L);
             }
         } catch (Throwable ignored) {
+            // Fail closed: if encrypted auto-lock state cannot be read, force re-verification.
+            return true;
         }
         return false;
     }
