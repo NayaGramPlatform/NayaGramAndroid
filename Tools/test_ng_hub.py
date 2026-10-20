@@ -19,6 +19,8 @@ checks = {
     "audience labels are unambiguous": '"My Spaces"' in source and '"All Joined"' in source,
     "official botfather": "https://t.me/BotFather" in source,
     "feature date": "16 October 2026" in source,
+    "green gradient plus button": "GradientDrawable.Orientation.TL_BR" in source and "0xFF22C55E, 0xFF15803D" in source,
+    "plus button animation": ".scaleX(plusOpen ? 1.08f : 1f)" in source and ".scaleY(plusOpen ? 1.08f : 1f)" in source,
     "personal buttons": all(x in source for x in ("My Channel", "My Group", "My Bot", "My Profile", "My Contact List")),
 }
 failed = [name for name, passed in checks.items() if not passed]
