@@ -36,7 +36,7 @@ public class ChatActivitySecurityAndMenuTest {
         Assert.assertTrue(settings.contains("BiometricChatLocker.isDeviceSecurityAvailable(getParentActivity())"));
         Assert.assertTrue(settings.contains("Set a PIN, password, or pattern in Android Security Settings"));
         Assert.assertTrue(settings.contains("Existing protected chats stay locked until you open each chat's NayaGram In-Chat Settings"));
-        Assert.assertTrue(settings.contains("locker enabled. Open a chat's NayaGram In-Chat Settings to protect it."));
+        Assert.assertTrue(settings.contains("Locker enabled. Open a chat's NayaGram In-Chat Settings to protect it."));
     }
 
     @Test
