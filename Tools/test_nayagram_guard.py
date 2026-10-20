@@ -59,7 +59,9 @@ def main() -> None:
     ):
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
-    assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
+    qr_generator = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGQRGenerator.java").read_text(encoding="utf-8")
+    assert "NGQRGenerator.generate(context, uri, 720)" in ui and "Copy Secret" in ui
+    assert "Encoder.encode(otpAuthUri, ErrorCorrectionLevel.H, hints)" in qr_generator
     assert "NGSafety.cancelSetup(context)" in ui
     assert "NGSafetyActivity" in privacy and "guardRow = rowCount++" in privacy
     # Authenticator is a navigation row, not a toggle; opening its management screen must not disable it.
