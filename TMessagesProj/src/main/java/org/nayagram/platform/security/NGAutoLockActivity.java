@@ -403,7 +403,11 @@ public class NGAutoLockActivity extends BaseFragment {
             return;
         }
 
-        Toast.makeText(context, "Auto-lock set to " + NGSafety.getAutoLockDisplayString(finalMinutes), Toast.LENGTH_SHORT).show();
+        if (NGSafety.isEnabled(context)) {
+            Toast.makeText(context, "Auto-lock duration saved: " + NGSafety.getAutoLockDisplayString(finalMinutes), Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(context, "Duration saved, but Auto-lock is inactive. Enable NG Authenticator in NG Safety to activate it.", Toast.LENGTH_LONG).show();
+        }
         finishFragment();
     }
 
