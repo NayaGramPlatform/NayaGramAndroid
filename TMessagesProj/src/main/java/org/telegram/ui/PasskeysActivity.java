@@ -180,7 +180,7 @@ public class PasskeysActivity extends BaseFragment {
         if (error != null && error.contains("FRESH_RESET_AUTHORIZATION")) {
             new AlertDialog.Builder(getContext())
                 .setTitle("Passkey temporarily unavailable")
-                .setMessage("Telegram is temporarily preventing passkey registration from this newly connected device. For your account's security, use a device you were previously connected from, or wait a few hours before trying again. NayaGram cannot override this server-side restriction.")
+                .setMessage("Telegram's server rejected passkey registration with FRESH_RESET_AUTHORIZATION_FORBIDDEN. This is an account-security restriction, not a local biometric error, and NayaGram cannot bypass it. Keep your current session signed in; do not clear app data or reinstall just to retry. Try again from a device you previously used with this Telegram account, or wait and retry later. If it persists, use Telegram's official support.")
                 .setPositiveButton(getString(R.string.OK), null)
                 .show();
             return;
