@@ -121,5 +121,12 @@ def main() -> None:
     print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
     print("PASS: Android Credential Manager passkey registration/login stays server-verified")
 
+    # NG Hub privacy regression: this legacy helper must never silently join or pin channels.
+    auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")
+    assert "Intentionally disabled: never auto-join or auto-pin a channel." in auto_pin
+    assert "TL_channels_joinChannel" not in auto_pin
+    assert "controller.pinDialog" not in auto_pin
+    print("PASS: NG Hub never auto-joins or auto-pins an external channel")
+
 if __name__ == "__main__":
     main()
