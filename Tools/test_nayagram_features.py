@@ -77,8 +77,8 @@ def test_dynamic_footer_and_branding():
     props_source = Path("gradle.properties").read_text(encoding="utf-8")
     app_gradle_source = Path("TMessagesProj_App/build.gradle").read_text(encoding="utf-8")
     buildvars_source = Path("TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java").read_text(encoding="utf-8")
-    assert "APP_VERSION_CODE=4014" in props_source
-    assert "APP_VERSION_NAME=1.1.4 NG" in props_source
+    assert "APP_VERSION_CODE=4018" in props_source
+    assert "APP_VERSION_NAME=2.1.4 NG" in props_source
     assert "BUILD_VERSION = 4014" in buildvars_source
     assert "internal code 4014" in app_gradle_source
     assert "1.1.4 NG" in app_gradle_source
