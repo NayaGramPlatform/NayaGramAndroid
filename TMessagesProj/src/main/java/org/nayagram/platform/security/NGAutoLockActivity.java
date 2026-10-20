@@ -397,11 +397,13 @@ public class NGAutoLockActivity extends BaseFragment {
             finalMinutes = selectedMinutes;
         }
 
-        // Persist to Android storage
-        NGSafety.setAutoLockMinutes(context, finalMinutes);
+        // Do not claim success unless encrypted preferences confirm the saved value.
+        if (!NGSafety.setAutoLockMinutes(context, finalMinutes)) {
+            Toast.makeText(context, "Could not save auto-lock settings. Please try again.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         Toast.makeText(context, "Auto-lock set to " + NGSafety.getAutoLockDisplayString(finalMinutes), Toast.LENGTH_SHORT).show();
-
         finishFragment();
     }
 
