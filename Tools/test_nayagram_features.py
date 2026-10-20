@@ -234,7 +234,11 @@ def test_advanced_feature_wiring():
     assert 'title.setTextColor(COLOR_CYAN);' in hub_activity
     passkeys_activity = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PasskeysActivity.java").read_text(encoding="utf-8")
     assert 'FRESH_RESET_AUTHORIZATION_FORBIDDEN' in passkeys_activity
-    assert 'do not clear app data or reinstall just to retry' in passkeys_activity
+    assert 'do not clear app data, reinstall, or revoke sessions to retry' in passkeys_activity
+    assert 'FileLog.d("Passkey registration failed: " + diagnosticCode);' in passkeys_activity
+    assert 'FRESH_RESET_AUTHORIZATION_FORBIDDEN'.equals(diagnosticCode)' not in passkeys_activity
+    assert 'Passkey setup could not be completed. Check your account authorization and try again.' in passkeys_activity
+    assert 'showForError(error == null' not in passkeys_activity
     auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")
     assert 'Intentionally disabled: never auto-join or auto-pin a channel.' in auto_pin
     assert 'TL_channels_joinChannel' not in auto_pin
