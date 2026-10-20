@@ -377,8 +377,7 @@ public class NGSettingsActivity extends BaseFragment {
 
 
     private boolean isPendingFeaturePosition(int position) {
-        return position == rowSmartChatFolders
-                || position == rowFocusMode
+        return position == rowFocusMode
                 || position == rowBatterySaver
                 || position == rowInstantTranslator;
     }
