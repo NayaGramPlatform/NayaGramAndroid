@@ -11,6 +11,10 @@ Tests:
 
 import sys
 import re
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 def test_access_control():
     print("[TEST 1] Access Control (NG_STUDIO_ACCESS_IDS)...", end=" ")
@@ -159,7 +163,7 @@ def test_advanced_feature_wiring():
     assert "Only verified, working features are shown in the active Features page." in tutorial
     assert "Planned or incomplete feature cards have been removed from the active list" in tutorial
 
-    settings = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    settings = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
     assert 'presentFragment(new FiltersSetupActivity());' in settings
     assert 'setActionFeature(R.drawable.outline_groups_24' in settings
     assert '"Smart Chat Folders · SOON"' not in settings
