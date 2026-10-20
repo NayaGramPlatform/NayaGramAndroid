@@ -85,7 +85,10 @@ def main() -> None:
     assert "NGSafety.lockSession();" in launch
     assert "topFragment instanceof NGSafetyActivity" in launch
     # Auto-lock must be evaluated even while Telegram's passcode dialog is visible.
-    assert launch.index("NGSafety.onAppForeground(this);") < launch.index(
+    resume_section = launch.split("onPasscodeResume();", 1)[1].split(
+        "ConnectionsManager.getInstance(currentAccount).setAppPaused(false, false);", 1
+    )[0]
+    assert resume_section.index("NGSafety.onAppForeground(this);") < resume_section.index(
         "if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE)"
     )
     assert "Telegram's passcode may have hidden the NG gate while the app resumed." in launch
