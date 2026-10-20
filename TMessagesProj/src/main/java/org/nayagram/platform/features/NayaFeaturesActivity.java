@@ -100,6 +100,9 @@ public class NayaFeaturesActivity extends BaseFragment {
         root.addView(buildTutorialBanner(context), new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        root.addView(buildHubBanner(context), new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         TextView sectionTitle = new TextView(context);
         sectionTitle.setText("Verified Feature Controls");
         sectionTitle.setTextColor(0xFF075985);
@@ -211,6 +214,62 @@ public class NayaFeaturesActivity extends BaseFragment {
         details.setOnClickListener(v -> FeatureTutorialDialog.show(context));
         footer.addView(details, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        return card;
+    }
+
+    private View buildHubBanner(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(12),
+                AndroidUtilities.dp(15), AndroidUtilities.dp(12));
+        GradientDrawable background = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFFE0F2FE, 0xFFDCFCE7});
+        background.setCornerRadius(AndroidUtilities.dp(17));
+        background.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        card.setBackground(background);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        cardParams.setMargins(AndroidUtilities.dp(16), AndroidUtilities.dp(3),
+                AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        card.setLayoutParams(cardParams);
+
+        TextView title = new TextView(context);
+        title.setText("NG Hub");
+        title.setTextColor(0xFF075985);
+        title.setTextSize(16);
+        title.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        card.addView(title, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        TextView description = new TextView(context);
+        description.setText("Your own channels, groups, bots, profile and contacts. Other communities are not labeled as yours.");
+        description.setTextColor(0xFF334155);
+        description.setTextSize(12);
+        LinearLayout.LayoutParams descriptionParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        descriptionParams.topMargin = AndroidUtilities.dp(4);
+        card.addView(description, descriptionParams);
+
+        TextView open = new TextView(context);
+        open.setText("Open  ›");
+        open.setTextColor(0xFFFFFFFF);
+        open.setTextSize(13);
+        open.setGravity(Gravity.CENTER);
+        open.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        open.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(8),
+                AndroidUtilities.dp(15), AndroidUtilities.dp(8));
+        GradientDrawable buttonBackground = new GradientDrawable();
+        buttonBackground.setColor(0xFF16A34A);
+        buttonBackground.setCornerRadius(AndroidUtilities.dp(12));
+        open.setBackground(buttonBackground);
+        open.setOnClickListener(v -> presentFragment(new org.telegram.ui.NGHubActivity()));
+        LinearLayout.LayoutParams openParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        openParams.topMargin = AndroidUtilities.dp(8);
+        openParams.gravity = Gravity.END;
+        card.addView(open, openParams);
         return card;
     }
 

@@ -14,6 +14,10 @@ checks = {
     "existing create flows": "new GroupCreateActivity(new Bundle())" in source and "ACTION_TYPE_CHANNEL_CREATE" in source,
     "open chats using actual peer ids": 'args.putLong("chat_id", chat.id)' in source and 'args.putLong("user_id", user.id)' in source,
     "swipe navigation can be disabled": "swipeNavigationEnabled" in source and "showSection(Math.max" in source,
+    "owned communities only": "chat.creator" in source and "mineOnly" in source,
+    "official botfather": "https://t.me/BotFather" in source,
+    "feature date": "16 October 2026" in source,
+    "personal buttons": all(x in source for x in ("My Channel", "My Group", "My Bot", "My Profile", "My Contact List")),
 }
 failed = [name for name, passed in checks.items() if not passed]
 for name, passed in checks.items():
