@@ -182,9 +182,17 @@ def test_advanced_feature_wiring():
     assert 'private boolean isPendingFeaturePosition(int position)' in legacy_hub
     assert 'Smart Chat Folders · SOON' in legacy_hub
     assert 'Biometric Chat Locker · SOON' in legacy_hub
-    assert 'Focus & Wellbeing Mode · SOON' in legacy_hub
-    assert 'Ultra Battery Saver · SOON' in legacy_hub
-    assert 'In-Chat Instant Translator · SOON' in legacy_hub
+    assert 'headerOptimization = -1;' in legacy_hub
+    assert 'rowApkBlock = -1;' in legacy_hub
+    assert 'rowFocusMode = -1;' in legacy_hub
+    assert 'rowBatterySaver = -1;' in legacy_hub
+    assert 'rowInstantTranslator = -1;' in legacy_hub
+    assert 'rowLinkGuard = -1;' in legacy_hub
+    assert 'rowReadableText = -1;' in legacy_hub
+    assert 'rowReduceMotion = -1;' in legacy_hub
+    assert 'rowChatListDetails = -1;' in legacy_hub
+    assert 'rowPauseGifs = -1;' in legacy_hub
+    assert 'rowSaveData = -1;' in legacy_hub
     assert 'No chat is protected by this setting' in legacy_hub
     assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
     assert 'title.contains("· SOON") ? "Unavailable"' in legacy_hub
