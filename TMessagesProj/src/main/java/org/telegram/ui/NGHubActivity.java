@@ -281,8 +281,8 @@ public class NGHubActivity extends BaseFragment {
         grid.setOrientation(LinearLayout.VERTICAL);
         LinearLayout row1 = new LinearLayout(context);
         row1.setOrientation(LinearLayout.HORIZONTAL);
-        TextView channel = coloredButton(context, "My Channel", COLOR_CYAN);
-        TextView group = coloredButton(context, "My Group", COLOR_TEAL);
+        TextView channel = coloredButton(context, "📣  My Channel", COLOR_CYAN);
+        TextView group = coloredButton(context, "👥  My Group", COLOR_TEAL);
         row1.addView(channel, weight());
         LinearLayout.LayoutParams gap = weight();
         gap.leftMargin = AndroidUtilities.dp(8);
@@ -290,15 +290,15 @@ public class NGHubActivity extends BaseFragment {
         grid.addView(row1, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
         LinearLayout row2 = new LinearLayout(context);
         row2.setOrientation(LinearLayout.HORIZONTAL);
-        TextView bot = coloredButton(context, "My Bot", COLOR_GREEN);
-        TextView profile = coloredButton(context, "My Profile", COLOR_BLUE);
+        TextView bot = coloredButton(context, "🤖  My Bot", COLOR_GREEN);
+        TextView profile = coloredButton(context, "👤  My Profile", COLOR_BLUE);
         row2.addView(bot, weight());
         LinearLayout.LayoutParams gap2 = weight();
         gap2.leftMargin = AndroidUtilities.dp(8);
         row2.addView(profile, gap2);
         LinearLayout.LayoutParams row2Params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0);
         grid.addView(row2, row2Params);
-        TextView contacts = coloredButton(context, "My Contact List", COLOR_TEAL);
+        TextView contacts = coloredButton(context, "📇  My Contact List", COLOR_TEAL);
         grid.addView(contacts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0));
         channel.setOnClickListener(v -> selectMine(SECTION_CHANNELS));
         group.setOnClickListener(v -> selectMine(SECTION_GROUPS));
@@ -311,9 +311,9 @@ public class NGHubActivity extends BaseFragment {
     private View buildCreateRow(Context context) {
         LinearLayout actions = new LinearLayout(context);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        TextView createGroup = createAction(context, "Create Group");
-        TextView createChannel = createAction(context, "Create Channel");
-        TextView createBot = createAction(context, "Create Bot");
+        TextView createGroup = createAction(context, "＋  Create Group");
+        TextView createChannel = createAction(context, "＋  Create Channel");
+        TextView createBot = createAction(context, "＋  Create Bot");
         actions.addView(createGroup, weight());
         LinearLayout.LayoutParams channelParams = weight();
         channelParams.leftMargin = AndroidUtilities.dp(8);
@@ -335,19 +335,19 @@ public class NGHubActivity extends BaseFragment {
         menu.setOrientation(LinearLayout.VERTICAL);
         menu.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
         menu.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), 18));
-        menu.addView(menuItem(context, "Create Channel", v -> {
+        menu.addView(menuItem(context, "📣  Create Channel", v -> {
             togglePlus();
             presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE));
         }));
-        menu.addView(menuItem(context, "Create Group", v -> {
+        menu.addView(menuItem(context, "👥  Create Group", v -> {
             togglePlus();
             presentFragment(new GroupCreateActivity(new Bundle()));
         }));
-        menu.addView(menuItem(context, "Create Bot", v -> {
+        menu.addView(menuItem(context, "🤖  Create Bot", v -> {
             togglePlus();
             openBotFather();
         }));
-        menu.addView(menuItem(context, "My Contact List", v -> {
+        menu.addView(menuItem(context, "📇  My Contact List", v -> {
             togglePlus();
             presentFragment(new ContactsActivity(null));
         }));
@@ -464,7 +464,7 @@ public class NGHubActivity extends BaseFragment {
         languages.setHorizontalScrollBarEnabled(false);
         languages.addView(languageRow);
         column.addView(languages, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 12, 0, 0));
-        String[] names = {"English", "বাংলা", "العربية", "Русский", "Oʻzbekcha", "हिन्दी", "اردو"};
+        String[] names = {"🇬🇧 English", "🇧🇩 বাংলা", "🇸🇦 العربية", "🇷🇺 Русский", "🇺🇿 Oʻzbekcha", "🇮🇳 हिन्दी", "🇵🇰 اردو"};
         for (int i = 0; i < names.length; i++) {
             final int index = i;
             TextView chip = createTab(context, names[i]);
