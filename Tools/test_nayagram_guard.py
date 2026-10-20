@@ -59,6 +59,7 @@ def main() -> None:
     ):
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
+    assert "Fail closed: if encrypted auto-lock state cannot be read, force re-verification." in java
     qr_generator = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGQRGenerator.java").read_text(encoding="utf-8")
     assert "NGQRGenerator.generate(context, uri, 720)" in ui and "Copy Secret" in ui
     # QR generation lives in NGQRGenerator, not in the settings Activity.
