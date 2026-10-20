@@ -211,10 +211,11 @@ def test_ng_auto_lock_runtime_and_ui():
     root = Path(__file__).resolve().parents[1]
     safety = (root / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGSafety.java").read_text(encoding="utf-8")
     settings = (root / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGAutoLockActivity.java").read_text(encoding="utf-8")
-    app = (root / "TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java").read_text(encoding="utf-8")
-    assert "foregroundDetector.addListener(new ForegroundDetector.Listener()" in app
-    assert "NGSafety.onAppBackground(applicationContext);" in app
-    assert "NGSafety.onAppForeground(applicationContext);" in app
+    app = (root / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java").read_text(encoding="utf-8")
+    assert "NGSafety.onAppBackground(this);" in app
+    assert "NGSafety.onAppForeground(this);" in app
+    assert "if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified())" in app
+    assert "presentFragment(new NGSafetyActivity(true));" in app
     assert "AndroidUtilities.runOnUIThread(backgroundLockRunnable, (long) minutes * 60 * 1000L);" in safety
     assert "SystemClock.elapsedRealtime() - startedAtElapsed" in safety
     assert "public static boolean setAutoLockMinutes(Context context, int minutes)" in safety
