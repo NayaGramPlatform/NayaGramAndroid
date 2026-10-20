@@ -222,7 +222,13 @@ def test_advanced_feature_wiring():
     assert 'rowChatListDetails = -1;' in legacy_hub
     assert 'rowPauseGifs = -1;' in legacy_hub
     assert 'rowSaveData = -1;' in legacy_hub
-    assert 'No chat is protected by this setting' in legacy_hub
+    assert 'BiometricChatLocker.isDeviceSecurityAvailable(getParentActivity())' in legacy_hub
+    assert 'Set a PIN, password, or pattern in Android Security Settings' in legacy_hub
+    assert 'Existing protected chats stay locked until you open each chat' in legacy_hub
+    assert 'presentFragment(new FiltersSetupActivity());' in legacy_hub
+    assert 'Create and manage Telegram chat folders' in legacy_hub
+    assert 'Not active yet. No chat is protected by this setting' not in legacy_hub
+
     assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
     assert 'title.contains("· SOON") ? "Unavailable"' in legacy_hub
     print("PASS")
