@@ -19,11 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ApplicationLoader;
-import org.telegram.messenger.FileLog;
-import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.SharedConfig;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -337,12 +333,6 @@ public class NGAutoLockActivity extends BaseFragment {
 
         // Persist to Android storage
         NGSafety.setAutoLockMinutes(context, finalMinutes);
-
-        // Synchronize with Telegram native passcode autoLockIn if passcode is configured
-        if (SharedConfig.passcodeHash.length() > 0) {
-            SharedConfig.autoLockIn = finalMinutes * 60;
-            SharedConfig.saveConfig();
-        }
 
         String displayTime = NGSafety.getAutoLockDisplayString(finalMinutes);
         Toast.makeText(context, "Auto-lock set to " + displayTime + " - Alhamdulillah", Toast.LENGTH_SHORT).show();
