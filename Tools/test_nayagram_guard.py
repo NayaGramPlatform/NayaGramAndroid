@@ -12,6 +12,9 @@ PRIVACY = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PrivacySettingsAct
 TABS = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/MainTabsActivity.java"
 LAUNCH = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java"
 GRADLE = ROOT / "TMessagesProj/build.gradle"
+PASSKEYS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/PasskeysController.java"
+BUILD_VARS = ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java"
+PASSKEYS_UI = ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PasskeysActivity.java"
 
 
 def totp(secret: bytes, timestamp: int, digits: int = 6, step: int = 30) -> str:
@@ -44,6 +47,9 @@ def main() -> None:
     tabs = TABS.read_text(encoding="utf-8")
     launch = LAUNCH.read_text(encoding="utf-8")
     gradle = GRADLE.read_text(encoding="utf-8")
+    passkeys = PASSKEYS.read_text(encoding="utf-8")
+    build_vars = BUILD_VARS.read_text(encoding="utf-8")
+    passkeys_ui = PASSKEYS_UI.read_text(encoding="utf-8")
 
     for token in (
         "EncryptedSharedPreferences.create",
@@ -74,6 +80,40 @@ def main() -> None:
     assert "androidx.security:security-crypto" in gradle
     print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
 
+    # Keep passkeys on native Credential Manager and the server challenge/verification flow.
+    for token in (
+        "CredentialManager.create(context)",
+        "new TL_account.initPasskeyRegistration()",
+        "new TL_account.registerPasskey()",
+        "new TL_account.initPasskeyLogin()",
+        "new TL_account.finishPasskeyLogin()",
+        "CreatePublicKeyCredentialRequest(requestJson)",
+        "new GetPublicKeyCredentialOption(requestJson)",
+        "BUNDLE_KEY_REGISTRATION_RESPONSE_JSON",
+        "BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON",
+        "passkeyResponse.attestation_object",
+        "passkeyResponse.signature",
+        "ConnectionsManager.getInstance(currentAccount).sendRequestTyped",
+    ):
+        assert token in passkeys, f"Missing native/server-verified passkey flow: {token}"
+    assert "androidx.credentials:credentials:" in gradle
+    assert "androidx.credentials:credentials-play-services-auth:" in gradle
+    assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
+    assert "PasskeysActivity" in privacy
+    assert 'actionBar.setTitle("NG Passkey · Fingerprint Login");' in passkeys_ui
+    assert "Telegram OTP and Two-Step Verification remain unchanged." in passkeys_ui
+    assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
+    assert "if (Build.VERSION.SDK_INT >= 23)" in privacy, "Keep the settings row discoverable on supported Android versions"
+    assert "NG Passkey is a first-class NayaGram settings entry" in privacy
+    assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
+    assert "if (Build.VERSION.SDK_INT < 28)" in privacy, "Credential Manager passkey registration must be blocked below API 28"
+    assert "NGPasskeyUnsupportedVersion" in privacy and "NGPasskeyUnsupportedVersion" in (ROOT / "TMessagesProj/src/main/res/values/strings.xml").read_text(encoding="utf-8")
+    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);" in privacy
+    assert 'LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size())' in privacy
+    assert 'textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);' in privacy
+    assert "presentFragment(new PasskeysActivity(currentPasskeys));" in privacy
+    print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
+    print("PASS: Android Credential Manager passkey registration/login stays server-verified")
 
 if __name__ == "__main__":
     main()

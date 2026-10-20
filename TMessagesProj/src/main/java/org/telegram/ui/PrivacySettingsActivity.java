@@ -498,7 +498,10 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             } else if (position == guardRow) {
                 presentFragment(new NGSafetyActivity());
             } else if (position == passkeysRow) {
-                if (Build.VERSION.SDK_INT < 28 || !BuildVars.SUPPORTS_PASSKEYS) return;
+                if (Build.VERSION.SDK_INT < 28) {
+                    BulletinFactory.of(this).showForError(getString(R.string.NGPasskeyUnsupportedVersion));
+                    return;
+                }
                 if (currentPasskeys != null && currentPasskeys.size() > 0) {
                     presentFragment(new PasskeysActivity(currentPasskeys));
                 } else {
@@ -722,11 +725,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         securitySectionRow = rowCount++;
         passwordRow = rowCount++;
         guardRow = rowCount++;
-        autoDeleteMesages = rowCount++;
-        passcodeRow = rowCount++;
-        if (getMessagesController().config.settingsDisplayPasskeys.get() && Build.VERSION.SDK_INT >= 28 && BuildVars.SUPPORTS_PASSKEYS) {
+        // NG Passkey is a first-class NayaGram settings entry. Do not gate visibility on
+        // server config or BuildVars: availability is checked when the user opens the flow.
+        if (Build.VERSION.SDK_INT >= 23) {
             passkeysRow = rowCount++;
         }
+        autoDeleteMesages = rowCount++;
+        passcodeRow = rowCount++;
         if (currentPassword != null ? currentPassword.login_email_pattern != null : SharedConfig.hasEmailLogin) {
             emailLoginRow = rowCount++;
         } else {
@@ -1375,14 +1380,13 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                         value = "";
                         if (currentPasskeys == null) {
                             showLoading = true;
-                        } else if (currentPasskeys.size() == 1 && textCell2.valueTextView.getPaint().measureText(currentPasskeys.get(0).name) < AndroidUtilities.displaySize.x / 3f) {
-                            value = currentPasskeys.get(0).name;
                         } else if (currentPasskeys.size() > 0) {
-                            value = currentPasskeys.size() + "";
+                            value = LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size());
                         } else {
                             value = getString(R.string.PasswordOff);
                         }
-                        textCell2.setTextAndValueAndIcon(getString(R.string.Passkey), value, true, R.drawable.msg2_permissions, true);
+                        textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);
+                        textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);
                     } else if (position == passcodeRow) {
                         int icon;
                         if (SharedConfig.passcodeHash.length() != 0) {
