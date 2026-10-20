@@ -590,7 +590,7 @@ public class NGHubActivity extends BaseFragment {
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
-                    ? "My Bot does not guess ownership. Create a bot with the official BotFather. Bot chats already on this account stay under Everyone."
+                    ? "Bot chats available in this account. Telegram does not confirm bot ownership in this list, so these are not claimed as bots you created. Use the official BotFather to create your own."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
         } else {
             note.setText("All Joined: channels, groups and bots available in this account, including places you created. Ownership is shown only when Telegram confirms you are the creator.");
@@ -634,7 +634,7 @@ public class NGHubActivity extends BaseFragment {
                     continue;
                 }
                 boolean owned = chat != null && chat.creator;
-                if (mineOnly && !owned) continue;
+                if (mineOnly && type != SECTION_BOTS && !owned) continue;
                 // All Joined includes both owned and joined communities.
                 if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
