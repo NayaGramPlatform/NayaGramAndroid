@@ -256,7 +256,7 @@ public class NGSettingsActivity extends BaseFragment {
                                 try {
                                     getParentActivity().startActivity(new Intent(android.provider.Settings.ACTION_SECURITY_SETTINGS));
                                 } catch (Exception ignored) {
-                                    BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "Open Android Settings and set a secure screen lock").show();
+                                    android.widget.Toast.makeText(getParentActivity(), "Open Android Settings and set a secure screen lock", android.widget.Toast.LENGTH_LONG).show();
                                 }
                             });
                             showDialog(securityDialog.create());
