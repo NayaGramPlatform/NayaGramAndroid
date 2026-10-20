@@ -7045,6 +7045,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             @Override
             public void onUnlockSuccess() {
                 runOnUiThread(() -> {
+                    BaseFragment current = getLastFragment();
+                    if (!(current instanceof ChatActivity) || ((ChatActivity) current).getDialogId() != dialogId) {
+                        // Do not leave a session grant behind if navigation changed during authentication.
+                        locker.lockAllSessions();
+                    }
                     biometricChatGatePending = false;
                     biometricChatGateDialogId = 0;
                     removeBiometricChatGateOverlay();
