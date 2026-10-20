@@ -28,8 +28,8 @@ public final class FeatureTutorialDialog {
             "6. Data Saver changes Telegram's native media-streaming preference. It is not a complete network optimizer.\n" +
             "7. Smart Storage Guard runs a cache scan on demand and offers cache cleanup after you review the report.\n" +
             "8. When enabled, your own profile shows your Telegram ID and current account data-center ID; long-press the line to copy.\n\n" +
-            "FEATURES THAT ARE NOT READY\n" +
-            "Cards marked SOON are unavailable. A saved preference alone does not make an engine work. Smart Chat Folders, Modular Config, Focus Mode, Battery Saver, Chat Locker, Instant Translator, and Noise Suppression do not currently have their promised native behavior connected. Message Scheduler, Auto-Reply, Story Saver, and Anonymous Stories are disabled and must not be relied on.\n\n" +
+            "FEATURE AVAILABILITY\\n" +
+            "Only verified, working features are shown in the active Features page. Planned or incomplete feature cards have been removed from the active list so they cannot be mistaken for working controls. A saved preference alone does not activate a feature engine. Do not rely on any feature unless its behavior has been implemented and verified.\\n\\n" +
             "CHECKS AND BACKUPS\n" +
             "Feature Health Check reports local setting values only; it is not a security certification. Export Settings Backup shares supported feature preferences and excludes account, chat, and credential data.\n\n" +
             "IMPORTANT\n" +
