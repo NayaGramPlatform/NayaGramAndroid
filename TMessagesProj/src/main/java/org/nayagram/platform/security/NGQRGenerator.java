@@ -53,12 +53,15 @@ public final class NGQRGenerator {
         int inputWidth = input.getWidth();
         int inputHeight = input.getHeight();
 
-        int quietZone = 2; // Quiet zone in modules
+        int quietZone = 4; // ISO/IEC 18004 quiet zone: at least four modules
         int totalModules = inputWidth + quietZone * 2;
         int multiple = Math.max(1, targetSize / totalModules);
         int finalSize = multiple * totalModules;
+        // Keep the brand mark in a dedicated footer below the QR matrix. Never cover QR data,
+        // finder patterns, or alignment patterns with a logo.
+        int logoFooterHeight = AndroidUtilities.dp(64);
 
-        Bitmap bitmap = Bitmap.createBitmap(finalSize, finalSize, Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(finalSize, finalSize + logoFooterHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         canvas.drawColor(COLOR_WHITE);
 
@@ -73,13 +76,7 @@ public final class NGQRGenerator {
 
         badgeStrokePaint.setColor(COLOR_CYAN);
         badgeStrokePaint.setStyle(Paint.Style.STROKE);
-        badgeStrokePaint.setStrokeWidth(AndroidUtilities.dp(2.5f));
-
-        // Center cutout for NayaGram shield badge (approx 20-22% of modules)
-        int centerModules = 7;
-        if (centerModules % 2 != inputWidth % 2) centerModules++;
-        int centerStartX = (inputWidth - centerModules) / 2;
-        int centerStartY = (inputHeight - centerModules) / 2;
+        badgeStrokePaint.setStrokeWidth(Math.max(1f, multiple * 0.10f));
 
         RectF moduleRect = new RectF();
 
@@ -90,12 +87,6 @@ public final class NGQRGenerator {
 
                 // Skip modules in the 3 finder pattern areas (7x7)
                 if (isFinderArea(x, y, inputWidth, inputHeight)) continue;
-
-                // Skip modules occluded by the center shield badge
-                if (x >= centerStartX && x < centerStartX + centerModules &&
-                    y >= centerStartY && y < centerStartY + centerModules) {
-                    continue;
-                }
 
                 float px = (quietZone + x) * multiple;
                 float py = (quietZone + y) * multiple;
@@ -116,21 +107,20 @@ public final class NGQRGenerator {
         drawFinderPattern(canvas, quietZone + inputWidth - 7, quietZone, multiple, eyeOuterPaint, eyeInnerPaint);
         drawFinderPattern(canvas, quietZone, quietZone + inputHeight - 7, multiple, eyeOuterPaint, eyeInnerPaint);
 
-        // Draw center NayaGram Protection shield badge
-        float centerPixelX = (quietZone + centerStartX) * multiple;
-        float centerPixelY = (quietZone + centerStartY) * multiple;
-        float centerPixelSize = centerModules * multiple;
-        RectF centerRect = new RectF(centerPixelX, centerPixelY, centerPixelX + centerPixelSize, centerPixelY + centerPixelSize);
+        // Draw the NayaGram Protection badge in a dedicated footer beneath the QR.
+        // The logo is part of the exported image, but does not occlude any encoded modules.
+        float badgeSize = Math.min(AndroidUtilities.dp(42), logoFooterHeight - AndroidUtilities.dp(10));
+        float centerPixelX = (finalSize - badgeSize) / 2f;
+        float centerPixelY = finalSize + (logoFooterHeight - badgeSize) / 2f;
+        RectF centerRect = new RectF(centerPixelX, centerPixelY, centerPixelX + badgeSize, centerPixelY + badgeSize);
 
-        // Draw white rounded background with cyan border
-        float badgeRadius = centerPixelSize * 0.30f;
+        float badgeRadius = badgeSize * 0.24f;
         canvas.drawRoundRect(centerRect, badgeRadius, badgeRadius, badgeBgPaint);
         canvas.drawRoundRect(centerRect, badgeRadius, badgeRadius, badgeStrokePaint);
 
-        // Draw the Protection hero logo inside the badge
         Drawable heroDrawable = ContextCompat.getDrawable(context, R.drawable.nayagram_protection_hero);
         if (heroDrawable != null) {
-            int padding = (int) (centerPixelSize * 0.12f);
+            int padding = Math.max(1, (int) (badgeSize * 0.12f));
             heroDrawable.setBounds(
                     (int) (centerRect.left + padding),
                     (int) (centerRect.top + padding),
