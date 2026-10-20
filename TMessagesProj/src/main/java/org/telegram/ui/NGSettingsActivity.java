@@ -377,9 +377,7 @@ public class NGSettingsActivity extends BaseFragment {
 
 
     private boolean isPendingFeaturePosition(int position) {
-        return position == rowSmartChatFolders
-                || position == rowBiometricLocker
-                || position == rowFocusMode
+        return position == rowFocusMode
                 || position == rowBatterySaver
                 || position == rowInstantTranslator;
     }
@@ -690,7 +688,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
-                    c.setFeature(R.drawable.ic_naya_fingerprint, 0xFF64748B, "Biometric Chat Locker · SOON", "Not active yet · No chats are protected by this preference", false, false);
+                    c.setFeature(R.drawable.ic_naya_fingerprint, 0xFF10B981, "Biometric Chat Locker", "Protect selected chats with fingerprint, face unlock, or device screen lock", cfg.isBiometricChatLockerEnabled(), true);
                 } else if (position == rowFocusMode) {
                     c.setFeature(R.drawable.outline_profile_mute_24, 0xFF64748B, "Focus & Wellbeing Mode · SOON", "Not active yet · Notification scheduling is not connected", false, true);
                 } else if (position == rowBatterySaver) {

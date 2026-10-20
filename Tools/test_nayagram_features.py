@@ -177,6 +177,11 @@ def test_advanced_feature_wiring():
     assert "enforceBiometricChatLock();" in launch
     assert "BiometricChatLocker.getInstance(this).lockAllSessions();" in launch
     assert "current.finishFragment();" in launch
+    settings = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
+    assert '"Biometric Chat Locker · SOON"' not in settings
+    assert 'cfg.isBiometricChatLockerEnabled(), true' in settings
+    chat_menu = (root / "TMessagesProj/src/main/java/org/nayagram/platform/chat/NGChatMenuHelper.java").read_text(encoding="utf-8")
+    assert 'isBiometricChatLockerEnabled())' in chat_menu
     assert 'never turns them on or off' in tutorial
     assert 'Only this public tutorial text is sent for translation' in tutorial
     assert len(re.findall(r'^\s*\{"', translator, re.MULTILINE)) >= 28
