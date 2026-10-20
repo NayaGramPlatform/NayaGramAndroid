@@ -629,7 +629,9 @@ public class NGHubActivity extends BaseFragment {
                     // Telegram represents a Community as its own dialog wrapper.
                     // Do not classify it as a broadcast channel or an ordinary group.
                     chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
-                    if (chat == null || ChatObject.isNotInChat(chat)) continue;
+                    // Community wrappers are authoritative dialog entries. Do not discard them
+                    // merely because the parent chat does not pass the ordinary group membership check.
+                    if (chat == null) continue;
                     type = SECTION_COMMUNITIES;
                 } else if (DialogObject.isChatDialog(dialog.id)) {
                     chat = controller.getChat(-dialog.id);
