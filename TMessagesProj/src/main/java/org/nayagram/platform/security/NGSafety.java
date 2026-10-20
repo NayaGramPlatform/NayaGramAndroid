@@ -129,13 +129,17 @@ public final class NGSafety {
         }
     }
 
-    public static void setAutoLockMinutes(Context context, int minutes) {
+    public static boolean setAutoLockMinutes(Context context, int minutes) {
+        if (minutes < 0 || minutes > 24 * 60) {
+            return false;
+        }
         try {
             prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).apply();
             FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
-            android.util.Log.d("NGSafety", "NG Auto-lock preset saved: " + minutes + "min");
+            return getAutoLockMinutes(context) == minutes;
         } catch (Exception e) {
             FileLog.e(e);
+            return false;
         }
     }
 
