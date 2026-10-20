@@ -591,7 +591,7 @@ public class NGHubActivity extends BaseFragment {
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
-                    ? "Bot chats available in this account. Telegram does not confirm bot ownership in this list, so these are not claimed as bots you created. Use the official BotFather to create your own."
+                    ? "No bots are marked as yours because Telegram's chat list does not verify bot ownership. Use the official BotFather to create a bot; third-party bots appear only in All Joined."
                     : selectedSection == SECTION_COMMUNITIES
                     ? "Telegram Communities are listed separately from channels and groups. This section uses Telegram's actual community dialog entries; linked chats remain in their own sections."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
