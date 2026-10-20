@@ -177,6 +177,7 @@ def test_advanced_feature_wiring():
     assert "enforceBiometricChatLock();" in launch
     assert "BiometricChatLocker.getInstance(this).lockAllSessions();" in launch
     assert "current.finishFragment();" in launch
+    assert "Do not leave a session grant behind if navigation changed during authentication." in launch
     settings = (root / "TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java").read_text(encoding="utf-8")
     assert '"Biometric Chat Locker · SOON"' not in settings
     assert 'cfg.isBiometricChatLockerEnabled(), true' in settings
