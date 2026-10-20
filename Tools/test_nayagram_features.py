@@ -79,9 +79,9 @@ def test_dynamic_footer_and_branding():
     buildvars_source = Path("TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java").read_text(encoding="utf-8")
     assert "APP_VERSION_CODE=4018" in props_source
     assert "APP_VERSION_NAME=2.1.4 NG" in props_source
-    assert "BUILD_VERSION = 4014" in buildvars_source
-    assert "internal code 4014" in app_gradle_source
-    assert "1.1.4 NG" in app_gradle_source
+    assert "BUILD_VERSION = 4018" in buildvars_source
+    assert "internal code 4018" in app_gradle_source
+    assert "2.1.4 NG" in app_gradle_source
     assert '"1.1.4 NG"' in about_source
     assert '"1.1.4 NG"' in settings_source
     assert "getInstalledAppVersionName()" in settings_source
