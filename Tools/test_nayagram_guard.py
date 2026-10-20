@@ -103,13 +103,14 @@ def main() -> None:
     assert 'actionBar.setTitle("NG Passkey · Fingerprint Login");' in passkeys_ui
     assert "Telegram OTP and Two-Step Verification remain unchanged." in passkeys_ui
     assert "public static boolean SUPPORTS_PASSKEYS = true;" in build_vars, "NG Passkey support must be enabled in the NayaGram build"
-    assert "if (Build.VERSION.SDK_INT >= 23)" in privacy
+    assert "if (Build.VERSION.SDK_INT >= 23)" in privacy, "Keep the settings row discoverable on supported Android versions"
     assert "NG Passkey is a first-class NayaGram settings entry" in privacy
     assert "settingsDisplayPasskeys.get()" not in privacy, "Passkey UI must not be hidden by an unset display flag"
-    assert "if (Build.VERSION.SDK_INT < 23)" in privacy
-    assert 'textCell2.setTextAndValueAndIcon("NG Passkey", value, true, R.drawable.menu_face, true);' in privacy
-    assert '"1 device"' in privacy and '" devices"' in privacy
-    assert 'textCell2.setContentDescription("NG Passkey, Fingerprint Login, " + value);' in privacy
+    assert "if (Build.VERSION.SDK_INT < 28)" in privacy, "Credential Manager passkey registration must be blocked below API 28"
+    assert "NGPasskeyUnsupportedVersion" in privacy and "NGPasskeyUnsupportedVersion" in (ROOT / "TMessagesProj/src/main/res/values/strings.xml").read_text(encoding="utf-8")
+    assert "textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_face, true);" in privacy
+    assert 'LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size())' in privacy
+    assert 'textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", " + getString(R.string.NGPasskeyFingerprintLogin) + ", " + value);' in privacy
     assert "presentFragment(new PasskeysActivity(currentPasskeys));" in privacy
     print("PASS: NG Passkey is visible in Privacy & Security and opens native passkey management")
     print("PASS: Android Credential Manager passkey registration/login stays server-verified")
