@@ -58,6 +58,9 @@ public class NGAutoLockActivity extends BaseFragment {
     private int customMinutesVal = 30;
 
     private LinearLayout optionsContainer;
+    private LinearLayout optionsPanel;
+    private TextView optionsToggle;
+    private boolean optionsExpanded;
     private final List<View> cardViews = new ArrayList<>();
     private final List<ImageView> checkViews = new ArrayList<>();
     private LinearLayout customInputsCard;
@@ -121,12 +124,30 @@ public class NGAutoLockActivity extends BaseFragment {
         description.setPadding(0, 0, 0, AndroidUtilities.dp(14));
         root.addView(description);
 
+        optionsToggle = new TextView(context);
+        optionsToggle.setTextSize(15);
+        optionsToggle.setTextColor(0xFF075985);
+        optionsToggle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        optionsToggle.setGravity(Gravity.CENTER_VERTICAL);
+        optionsToggle.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(15), AndroidUtilities.dp(16), AndroidUtilities.dp(15));
+        optionsToggle.setBackground(roundCard(COLOR_CARD_BG, COLOR_BORDER_UNSELECTED, 14, 1));
+        optionsToggle.setText("Auto-lock duration · " + NGSafety.getAutoLockDisplayString(saved) + "   ▾");
+        root.addView(optionsToggle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        optionsPanel = new LinearLayout(context);
+        optionsPanel.setOrientation(LinearLayout.VERTICAL);
+        optionsPanel.setVisibility(View.GONE);
+        optionsPanel.setAlpha(0f);
+        LinearLayout.LayoutParams panelParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        panelParams.topMargin = AndroidUtilities.dp(10);
+        root.addView(optionsPanel, panelParams);
+
         optionsContainer = new LinearLayout(context);
         optionsContainer.setOrientation(LinearLayout.VERTICAL);
-        root.addView(optionsContainer);
-
+        optionsPanel.addView(optionsContainer);
         buildOptions(context);
-        buildCustomPickerCard(context, root);
+        buildCustomPickerCard(context, optionsPanel);
+        optionsToggle.setOnClickListener(v -> toggleOptionsPanel());
 
         Button saveButton = new Button(context);
         saveButton.setText("Save");
@@ -305,6 +326,43 @@ public class NGAutoLockActivity extends BaseFragment {
         if (customInputsCard != null) {
             customInputsCard.setVisibility(isCustomSelected ? View.VISIBLE : View.GONE);
         }
+        updateOptionsToggle();
+    }
+
+    private void toggleOptionsPanel() {
+        if (optionsPanel == null) return;
+        if (optionsExpanded) {
+            optionsExpanded = false;
+            updateOptionsToggle();
+            optionsPanel.animate().alpha(0f).translationY(-AndroidUtilities.dp(8)).setDuration(180).withEndAction(() -> {
+                if (!optionsExpanded) optionsPanel.setVisibility(View.GONE);
+            }).start();
+        } else {
+            optionsExpanded = true;
+            updateOptionsToggle();
+            optionsPanel.setVisibility(View.VISIBLE);
+            optionsPanel.setTranslationY(-AndroidUtilities.dp(8));
+            optionsPanel.setAlpha(0f);
+            optionsPanel.animate().alpha(1f).translationY(0).setDuration(220).start();
+        }
+    }
+
+    private String getSelectedDisplayTime() {
+        if (isCustomSelected && hoursInput != null && minutesInput != null) {
+            try {
+                int minutes = Integer.parseInt(hoursInput.getText().toString().trim()) * 60
+                        + Integer.parseInt(minutesInput.getText().toString().trim());
+                if (minutes > 0) return NGSafety.getAutoLockDisplayString(minutes);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return NGSafety.getAutoLockDisplayString(selectedMinutes);
+    }
+
+    private void updateOptionsToggle() {
+        if (optionsToggle != null) {
+            optionsToggle.setText("Auto-lock duration · " + getSelectedDisplayTime() + (optionsExpanded ? "   ▴" : "   ▾"));
+        }
     }
 
     private void saveSetting(Context context) {
@@ -342,8 +400,7 @@ public class NGAutoLockActivity extends BaseFragment {
         // Persist to Android storage
         NGSafety.setAutoLockMinutes(context, finalMinutes);
 
-        String displayTime = NGSafety.getAutoLockDisplayString(finalMinutes);
-        Toast.makeText(context, "Auto-lock set to " + displayTime + " - Alhamdulillah", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "Auto-lock set to " + NGSafety.getAutoLockDisplayString(finalMinutes), Toast.LENGTH_SHORT).show();
 
         finishFragment();
     }
