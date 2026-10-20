@@ -29,6 +29,26 @@ public class ChatActivitySecurityAndMenuTest {
     }
 
     @Test
+    public void testLockerSettingRequiresSecureDeviceAndExplainsPerChatSetup() throws Exception {
+        String settings = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/org/telegram/ui/NGSettingsActivity.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        Assert.assertTrue(settings.contains("BiometricChatLocker.isDeviceSecurityAvailable(getParentActivity())"));
+        Assert.assertTrue(settings.contains("Set a PIN, password, or pattern in Android Security Settings"));
+        Assert.assertTrue(settings.contains("Existing protected chats stay locked until you open each chat's NayaGram In-Chat Settings"));
+        Assert.assertTrue(settings.contains("locker enabled. Open a chat's NayaGram In-Chat Settings to protect it."));
+    }
+
+    @Test
+    public void testNativeFolderManagerIsUsed() throws Exception {
+        String settings = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/org/telegram/ui/NGSettingsActivity.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        Assert.assertTrue(settings.contains("presentFragment(new FiltersSetupActivity());"));
+        Assert.assertTrue(settings.contains("Create and manage Telegram chat folders"));
+    }
+
+    @Test
     public void testAutoTranslateMenuRemains() {
         Assert.assertEquals(29004, NGChatMenuHelper.ITEM_AUTO_TRANSLATE);
     }
