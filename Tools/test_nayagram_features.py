@@ -228,6 +228,14 @@ def test_advanced_feature_wiring():
     assert 'presentFragment(new FiltersSetupActivity());' in legacy_hub
     assert 'Create and manage Telegram chat folders' in legacy_hub
     assert 'Not active yet. No chat is protected by this setting' not in legacy_hub
+    hub_activity = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/NGHubActivity.java").read_text(encoding="utf-8")
+    assert 'addOfficialRow();' not in hub_activity
+    assert '@NayaGramPro · not marked as your personal channel' not in hub_activity
+    assert 'title.setTextColor(COLOR_CYAN);' in hub_activity
+    passkeys_activity = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PasskeysActivity.java").read_text(encoding="utf-8")
+    assert 'FRESH_RESET_AUTHORIZATION_FORBIDDEN' in passkeys_activity
+    assert 'do not clear app data or reinstall just to retry' in passkeys_activity
+
 
     assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
     assert 'title.contains("· SOON") ? "Unavailable"' in legacy_hub

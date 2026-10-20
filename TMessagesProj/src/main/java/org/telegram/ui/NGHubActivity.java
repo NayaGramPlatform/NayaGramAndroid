@@ -261,7 +261,8 @@ public class NGHubActivity extends BaseFragment {
         title.setText("NG Hub");
         title.setTextSize(26);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setTextColor(COLOR_BLUE);
+        title.setTextColor(COLOR_CYAN);
+        title.setShadowLayer(AndroidUtilities.dp(10), 0, AndroidUtilities.dp(2), 0x3038BDF8);
         title.setGravity(Gravity.CENTER);
         hero.addView(title, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 8, 0, 0));
         TextView subtitle = new TextView(context);
@@ -596,10 +597,6 @@ public class NGHubActivity extends BaseFragment {
         }
         contentColumn.addView(note, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        if (!mineOnly && selectedSection == SECTION_CHANNELS) {
-            addOfficialRow();
-        }
-
         if (horizontalCards) {
             HorizontalScrollView horizontal = new HorizontalScrollView(getContext());
             horizontal.setHorizontalScrollBarEnabled(false);
@@ -665,41 +662,6 @@ public class NGHubActivity extends BaseFragment {
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
             empty.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             contentColumn.addView(empty, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-        }
-    }
-
-    private void addOfficialRow() {
-        Context context = getContext();
-        if (context == null) return;
-        LinearLayout row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
-        row.setBackground(round(0xFFE0F2FE, 16));
-        TextView badge = new TextView(context);
-        badge.setText("Official");
-        badge.setTextSize(11);
-        badge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        badge.setTextColor(COLOR_GREEN);
-        TextView title = new TextView(context);
-        title.setText("NayaGram");
-        title.setTextSize(15);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setTextColor(COLOR_BLUE);
-        TextView handle = new TextView(context);
-        handle.setText("@NayaGramPro · not marked as your personal channel");
-        handle.setTextSize(13);
-        handle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        row.addView(badge);
-        row.addView(title);
-        row.addView(handle);
-        row.setOnClickListener(v -> openBotLink("NayaGramPro"));
-        LinearLayout.LayoutParams params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8);
-        contentColumn.addView(row, params);
-    }
-
-    private void openBotLink(String username) {
-        if (getParentActivity() != null) {
-            Browser.openUrl(getParentActivity(), "https://t.me/" + username);
         }
     }
 
