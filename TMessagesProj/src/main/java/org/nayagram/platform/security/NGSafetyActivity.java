@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.CountDownTimer;
@@ -28,10 +30,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.common.BitMatrix;
-
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.LocaleController;
@@ -45,7 +43,8 @@ import java.util.List;
 
 /**
  * Settings, enrollment, and verification UI for NG Authenticator (NGSafety).
- * Local-only RFC 6238 TOTP authentication layer with 15 one-time backup codes.
+ * Local-only RFC 6238 TOTP authentication layer with 15 one-time backup codes
+ * and Auto-lock settings access (Settings → NG Safety → Auto-lock).
  */
 public class NGSafetyActivity extends BaseFragment {
     private final boolean gateMode;
@@ -170,6 +169,33 @@ public class NGSafetyActivity extends BaseFragment {
                         }).show();
             }
         });
+
+        // Auto-lock configuration card (Settings → NG Safety → Auto-lock)
+        LinearLayout autoLockCard = new LinearLayout(context);
+        autoLockCard.setOrientation(LinearLayout.HORIZONTAL);
+        autoLockCard.setGravity(Gravity.CENTER_VERTICAL);
+        autoLockCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        autoLockCard.setBackground(round(0xFFFFFFFF, 0xFFBAE6FD));
+        content.addView(autoLockCard, params(0, 12));
+
+        LinearLayout autoLockLabels = new LinearLayout(context);
+        autoLockLabels.setOrientation(LinearLayout.VERTICAL);
+        autoLockCard.addView(autoLockLabels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView autoLockTitle = text(context, "Auto-lock", 15, 0xFF075985, true);
+        autoLockLabels.addView(autoLockTitle);
+
+        int currentMins = NGSafety.getAutoLockMinutes(context);
+        TextView autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
+        autoLockLabels.addView(autoLockSubtitle);
+
+        ImageView arrow = new ImageView(context);
+        arrow.setImageResource(R.drawable.arrow_more);
+        arrow.setColorFilter(new PorterDuffColorFilter(0xFF0284C7, PorterDuff.Mode.SRC_IN));
+        autoLockCard.addView(arrow, new LinearLayout.LayoutParams(AndroidUtilities.dp(16), AndroidUtilities.dp(16)));
+
+        autoLockCard.setOnClickListener(v -> presentFragment(new NGAutoLockActivity()));
+
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
         Button details = button(context, "Details and recovery help");
         content.addView(details, params(0, 8));
@@ -211,11 +237,7 @@ public class NGSafetyActivity extends BaseFragment {
         final Bitmap[] qrBitmap = new Bitmap[1];
         try {
             String uri = NGSafety.getOtpAuthUri("user", secret);
-            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
-            Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
-            for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
-            }
+            Bitmap bitmap = NGQRGenerator.generate(context, uri, 720);
             qrBitmap[0] = bitmap;
             qr.setImageBitmap(bitmap);
             qr.setBackground(round(Color.WHITE, 0xFFBAE6FD));
@@ -243,7 +265,8 @@ public class NGSafetyActivity extends BaseFragment {
         content.addView(revealSecret, params(0, 6));
         revealSecret.setOnClickListener(v -> {
             boolean hidden = secretText.getText().toString().equals("••••••••••••••••••••••••••••••••");
-            secretText.setText(hidden ? secret : "••••••••••••••••••••••••••••••••");
+            String masked = "••••••••••••••••••••••••••••••••";
+            secretText.setText(hidden ? secret : masked);
             revealSecret.setText(hidden ? "Hide Secret" : "Show Secret");
         });
         Button copy = button(context, "Copy Secret");

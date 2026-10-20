@@ -11,6 +11,9 @@ import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -21,10 +24,11 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Local-only RFC 6238 TOTP authentication layer (NG Authenticator / NGSafety).
+ * Local-only RFC 6238 TOTP authentication layer (NG Authenticator / NGSafety)
+ * and Auto-lock lifecycle controller.
  * No Google API or network request is used.
  * Privacy Policy: Local TOTP only, no data sent to Google server.
- * The TOTP secret and one-time backup-code hashes are stored in encrypted preferences.
+ * The TOTP secret, auto-lock configuration, and backup hashes are stored in encrypted preferences.
  */
 public final class NGSafety {
     private static final String PREFS = "ng_safety_secure";
@@ -35,7 +39,14 @@ public final class NGSafety {
     private static final String BACKUP_PREFIX = "backup_hash_";
     private static final int BACKUP_COUNT = 15;
     private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    public static final String KEY_AUTOLOCK_MINUTES = "autolock_minutes";
+    private static final String KEY_LAST_BG_TIME = "last_bg_time";
+    private static final String KEY_LAST_VERIFIED_TIME = "last_verified_time";
+    public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
+
     private static volatile boolean sessionVerified;
+    private static Runnable backgroundLockRunnable;
 
     private NGSafety() {}
 
@@ -94,8 +105,98 @@ public final class NGSafety {
         sessionVerified = true;
     }
 
+    public static void markSessionVerified(Context context) {
+        sessionVerified = true;
+        try {
+            prefs(context).edit().putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis()).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
     public static void lockSession() {
         sessionVerified = false;
+    }
+
+    public static int getAutoLockMinutes(Context context) {
+        try {
+            return prefs(context).getInt(KEY_AUTOLOCK_MINUTES, DEFAULT_AUTOLOCK_MINUTES);
+        } catch (Exception e) {
+            return DEFAULT_AUTOLOCK_MINUTES;
+        }
+    }
+
+    public static void setAutoLockMinutes(Context context, int minutes) {
+        try {
+            prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).apply();
+            FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
+            android.util.Log.d("NGSafety", "NG Auto-lock preset saved: " + minutes + "min");
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static String getAutoLockDisplayString(int minutes) {
+        if (minutes == 0) return "Never";
+        if (minutes == 15) return "15 minutes";
+        if (minutes == 45) return "45 minutes";
+        if (minutes == 60) return "1 hour";
+        if (minutes == 180) return "3 hours";
+        if (minutes == 300) return "5 hours";
+        if (minutes == 720) return "12 hours";
+        int hours = minutes / 60;
+        int mins = minutes % 60;
+        if (hours > 0 && mins > 0) return hours + "h " + mins + "m";
+        if (hours > 0) return hours + " hour" + (hours > 1 ? "s" : "");
+        return mins + " minutes";
+    }
+
+    public static void onAppBackground(Context context) {
+        if (!isEnabled(context)) return;
+        long now = System.currentTimeMillis();
+        try {
+            prefs(context).edit().putLong(KEY_LAST_BG_TIME, now).apply();
+        } catch (Throwable ignored) {
+        }
+        int minutes = getAutoLockMinutes(context);
+        if (minutes > 0) {
+            cancelBackgroundLockRunnable();
+            backgroundLockRunnable = () -> lockSession();
+            AndroidUtilities.runOnUIThread(backgroundLockRunnable, (long) minutes * 60 * 1000L);
+        }
+    }
+
+    public static void onAppForeground(Context context) {
+        cancelBackgroundLockRunnable();
+        if (!isEnabled(context)) return;
+        if (isAutoLockExpired(context)) {
+            lockSession();
+        }
+        try {
+            prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public static boolean isAutoLockExpired(Context context) {
+        if (!isEnabled(context)) return false;
+        int minutes = getAutoLockMinutes(context);
+        if (minutes == 0) return false;
+        try {
+            long lastBg = prefs(context).getLong(KEY_LAST_BG_TIME, 0L);
+            if (lastBg > 0) {
+                long elapsed = System.currentTimeMillis() - lastBg;
+                return elapsed >= ((long) minutes * 60 * 1000L);
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private static void cancelBackgroundLockRunnable() {
+        if (backgroundLockRunnable != null) {
+            AndroidUtilities.cancelRunOnUIThread(backgroundLockRunnable);
+            backgroundLockRunnable = null;
+        }
     }
 
     public static String beginSetup(Context context) throws Exception {
@@ -173,7 +274,9 @@ public final class NGSafety {
             backupCodes.add(display);
             editor.putString(BACKUP_PREFIX + index++, sha256(display));
         }
-        editor.putBoolean(ENABLED, true).apply();
+        editor.putBoolean(ENABLED, true);
+        editor.putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis());
+        editor.apply();
         markSessionVerified();
         return backupCodes;
     }
@@ -186,7 +289,7 @@ public final class NGSafety {
             }
             String secret = secure.getString(KEY_TOTP_SECRET, null);
             if (verifyCode(secret, code)) {
-                markSessionVerified();
+                markSessionVerified(context);
                 return true;
             }
             if (code == null || code.length() < 6 || code.length() > 10) {
@@ -196,7 +299,9 @@ public final class NGSafety {
             for (int i = 0; i < BACKUP_COUNT; i++) {
                 String stored = secure.getString(BACKUP_PREFIX + i, null);
                 if (stored != null && constantTimeEquals(stored, candidate)) {
-                    secure.edit().remove(BACKUP_PREFIX + i).apply();
+                    secure.edit().remove(BACKUP_PREFIX + i)
+                            .putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis())
+                            .apply();
                     markSessionVerified();
                     return true;
                 }
@@ -208,6 +313,7 @@ public final class NGSafety {
     }
 
     public static void disable(Context context) throws Exception {
+        cancelBackgroundLockRunnable();
         SharedPreferences secure = prefs(context);
         SharedPreferences.Editor editor = secure.edit().clear();
         editor.apply();

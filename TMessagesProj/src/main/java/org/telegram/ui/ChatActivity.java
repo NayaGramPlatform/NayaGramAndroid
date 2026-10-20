@@ -8654,6 +8654,7 @@ public class ChatActivity extends BaseFragment implements
                                 bg.setColor(0xFFFFFFFF);
                                 bg.setCornerRadius(AndroidUtilities.dp(16));
                                 bg.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);
+                                layout.setCustomBackground(bg);
                                 layout.setBackground(bg);
                                 BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();
                             } catch (Throwable ignore) {
