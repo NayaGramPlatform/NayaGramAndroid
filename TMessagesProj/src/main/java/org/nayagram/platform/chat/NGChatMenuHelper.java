@@ -60,7 +60,7 @@ public final class NGChatMenuHelper {
             showAutoTranslatePicker(activity, dialogId);
             return true;
         } else if (id == ITEM_NG_SETTINGS) {
-            showInChatSettings(activity, dialogId);
+            showInChatSettings(chatActivity, activity, dialogId);
             return true;
         }
         return false;
@@ -92,7 +92,7 @@ public final class NGChatMenuHelper {
         b.show();
     }
 
-    private static void showInChatSettings(Activity activity, long dialogId) {
+    private static void showInChatSettings(ChatActivity chatActivity, Activity activity, long dialogId) {
         SharedPreferences sp = activity.getSharedPreferences(PREFS_CHAT + dialogId, Context.MODE_PRIVATE);
         boolean oneTime = sp.getBoolean("one_time_media", false);
         boolean autoAddText = sp.getBoolean("auto_add_text", false);
@@ -135,7 +135,9 @@ public final class NGChatMenuHelper {
                         Toast.makeText(activity, "Chat Lock Disabled", Toast.LENGTH_SHORT).show();
                     } else {
                         locker.lockChat(dialogId);
-                        Toast.makeText(activity, "Chat Locked with Biometrics / Device Security", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Chat locked. Reopen it and authenticate to continue.", Toast.LENGTH_SHORT).show();
+                        // Close the currently visible conversation so locking it takes effect immediately.
+                        chatActivity.finishFragment();
                     }
                 }
             });

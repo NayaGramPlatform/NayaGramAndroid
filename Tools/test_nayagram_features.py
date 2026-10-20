@@ -238,3 +238,12 @@ class BiometricLockerFailClosedRegressionTest(unittest.TestCase):
         self.assertIn('Set a secure screen lock before protecting chats.', source)
         self.assertIn('No supported authentication API: deny access rather than silently bypassing the lock.', source)
         self.assertNotIn('Fallback for older devices: grant session access', source)
+
+
+class BiometricChatEntryGateTest(unittest.TestCase):
+    def test_launch_activity_gates_chat_stack_changes_and_resume(self):
+        launch = (ROOT / 'java/org/telegram/ui/LaunchActivity.java').read_text(encoding='utf-8')
+        self.assertIn('enforceBiometricChatLock();', launch)
+        self.assertIn('BiometricChatLocker.getInstance(this).lockAllSessions();', launch)
+        self.assertIn('current.finishFragment();', launch)
+        self.assertIn('Protected chat', launch)

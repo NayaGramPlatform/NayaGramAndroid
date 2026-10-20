@@ -350,6 +350,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private boolean passcodeSaveIntentIsNew;
     private boolean passcodeSaveIntentIsRestore;
 
+    private boolean biometricChatGatePending;
+    private long biometricChatGateDialogId;
+    private android.view.View biometricChatGateOverlay;
+
     private boolean tabletFullSize;
 
     private String loadingThemeFileName;
@@ -561,6 +565,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (getLastFragment() != null && getLastFragment().getLastStoryViewer() != null) {
                 getLastFragment().getLastStoryViewer().updatePlayingMode();
             }
+            enforceBiometricChatLock();
         });
         actionBarLayout.setDelegate(this);
         Theme.loadWallpaper(true);
@@ -6741,6 +6746,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     protected void onPause() {
         super.onPause();
+        org.nayagram.platform.security.BiometricChatLocker.getInstance(this).lockAllSessions();
         NGSafety.lockSession();
         isResumed = false;
         pipActivityHandler.onPause();
@@ -6977,6 +6983,97 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     View feedbackView;
 
+    private void enforceBiometricChatLock() {
+        if (isFinishing() || isDestroyed() || biometricChatGatePending) {
+            return;
+        }
+        BaseFragment top = getLastFragment();
+        if (!(top instanceof ChatActivity)) {
+            removeBiometricChatGateOverlay();
+            return;
+        }
+        ChatActivity chat = (ChatActivity) top;
+        long dialogId = chat.getDialogId();
+        org.nayagram.platform.security.BiometricChatLocker locker =
+                org.nayagram.platform.security.BiometricChatLocker.getInstance(this);
+        if (!locker.isChatProtected(dialogId) || locker.isChatUnlockedForSession(dialogId)) {
+            removeBiometricChatGateOverlay();
+            return;
+        }
+
+        biometricChatGatePending = true;
+        biometricChatGateDialogId = dialogId;
+        android.view.ViewGroup decor = (android.view.ViewGroup) getWindow().getDecorView();
+        android.widget.FrameLayout overlay = new android.widget.FrameLayout(this);
+        overlay.setBackgroundColor(0xFFF7FBFF);
+        overlay.setClickable(true);
+        overlay.setFocusable(true);
+        android.widget.LinearLayout card = new android.widget.LinearLayout(this);
+        card.setOrientation(android.widget.LinearLayout.VERTICAL);
+        card.setGravity(android.view.Gravity.CENTER);
+        card.setPadding(dp(28), dp(24), dp(28), dp(24));
+        android.graphics.drawable.GradientDrawable cardBackground = new android.graphics.drawable.GradientDrawable();
+        cardBackground.setColor(0xFFFFFFFF);
+        cardBackground.setCornerRadius(dp(24));
+        cardBackground.setStroke(dp(1), 0xFFB8E6D0);
+        card.setBackground(cardBackground);
+        android.widget.TextView title = new android.widget.TextView(this);
+        title.setText("Protected chat");
+        title.setTextColor(0xFF0F172A);
+        title.setTextSize(22);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(android.view.Gravity.CENTER);
+        android.widget.TextView message = new android.widget.TextView(this);
+        message.setText("Verify with fingerprint, face unlock, or your device screen lock to continue.");
+        message.setTextColor(0xFF475569);
+        message.setTextSize(15);
+        message.setGravity(android.view.Gravity.CENTER);
+        android.widget.LinearLayout.LayoutParams messageParams = new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        messageParams.topMargin = dp(12);
+        card.addView(title, new android.widget.LinearLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+        card.addView(message, messageParams);
+        overlay.addView(card, new android.widget.FrameLayout.LayoutParams(
+                Math.min(getResources().getDisplayMetrics().widthPixels - dp(40), dp(360)),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT, android.view.Gravity.CENTER));
+        decor.addView(overlay, new android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        biometricChatGateOverlay = overlay;
+
+        locker.authenticateAndUnlock(this, dialogId, new org.nayagram.platform.security.BiometricChatLocker.UnlockCallback() {
+            @Override
+            public void onUnlockSuccess() {
+                runOnUiThread(() -> {
+                    biometricChatGatePending = false;
+                    biometricChatGateDialogId = 0;
+                    removeBiometricChatGateOverlay();
+                });
+            }
+
+            @Override
+            public void onUnlockFailed() {
+                runOnUiThread(() -> {
+                    biometricChatGatePending = false;
+                    biometricChatGateDialogId = 0;
+                    removeBiometricChatGateOverlay();
+                    BaseFragment current = getLastFragment();
+                    if (current instanceof ChatActivity && ((ChatActivity) current).getDialogId() == dialogId) {
+                        current.finishFragment();
+                    }
+                });
+            }
+        });
+    }
+
+    private void removeBiometricChatGateOverlay() {
+        android.view.View overlay = biometricChatGateOverlay;
+        biometricChatGateOverlay = null;
+        if (overlay != null && overlay.getParent() instanceof android.view.ViewGroup) {
+            ((android.view.ViewGroup) overlay.getParent()).removeView(overlay);
+        }
+    }
+
     @Override
     protected void onResume() {
         // checkNayaGramProChannelPrompt();
@@ -7007,6 +7104,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         onPasscodeResume();
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
+            enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.
             if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified()) {
                 BaseFragment topFragment = getActionBarLayout().getLastFragment();
