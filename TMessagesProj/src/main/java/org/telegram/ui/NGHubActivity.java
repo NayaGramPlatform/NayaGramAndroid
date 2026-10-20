@@ -645,7 +645,12 @@ public class NGHubActivity extends BaseFragment {
                     continue;
                 }
                 boolean owned = chat != null && chat.creator;
-                if (mineOnly && type != SECTION_BOTS && !owned) continue;
+                // Telegram does not expose reliable bot ownership in the dialog list. Never
+                // populate "My Bot" with arbitrary third-party bots and label them as the user's.
+                if (mineOnly && type == SECTION_BOTS) continue;
+                // Community dialogs represent a distinct joined-space container; show them in
+                // their own tab even while My Spaces is selected, rather than silently hiding them.
+                if (mineOnly && type != SECTION_COMMUNITIES && !owned) continue;
                 // All Joined includes both owned and joined communities.
                 if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
