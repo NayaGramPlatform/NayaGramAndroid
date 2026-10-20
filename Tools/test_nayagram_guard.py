@@ -61,7 +61,11 @@ def main() -> None:
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
     qr_generator = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGQRGenerator.java").read_text(encoding="utf-8")
     assert "NGQRGenerator.generate(context, uri, 720)" in ui and "Copy Secret" in ui
+    # QR generation lives in NGQRGenerator, not in the settings Activity.
+    # Guard the real ZXing encoder and high error-correction implementation.
     assert "Encoder.encode(otpAuthUri, ErrorCorrectionLevel.H, hints)" in qr_generator
+    assert "R.drawable.nayagram_protection_hero" in qr_generator
+    assert "ErrorCorrectionLevel.H" in qr_generator
     assert "NGSafety.cancelSetup(context)" in ui
     assert "NGSafetyActivity" in privacy and "guardRow = rowCount++" in privacy
     # Authenticator is a navigation row, not a toggle; opening its management screen must not disable it.
