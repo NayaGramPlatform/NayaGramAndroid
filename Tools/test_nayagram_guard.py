@@ -84,6 +84,16 @@ def main() -> None:
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
     assert "NGSafety.lockSession();" in launch
     assert "topFragment instanceof NGSafetyActivity" in launch
+    # Auto-lock must be evaluated even while Telegram's passcode dialog is visible.
+    assert launch.index("NGSafety.onAppForeground(this);") < launch.index(
+        "if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE)"
+    )
+    assert "Telegram's passcode may have hidden the NG gate while the app resumed." in launch
+    assert "if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified())" in launch
+    safety_activity = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGSafetyActivity.java").read_text(encoding="utf-8")
+    assert "private TextView autoLockSubtitle;" in safety_activity
+    assert "public void onResume()" in safety_activity
+    assert "autoLockSubtitle.setText(NGSafety.getAutoLockDisplayString(" in safety_activity
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
     print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
