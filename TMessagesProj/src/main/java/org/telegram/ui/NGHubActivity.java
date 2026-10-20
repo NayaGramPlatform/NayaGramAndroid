@@ -46,6 +46,7 @@ public class NGHubActivity extends BaseFragment {
     private static final int SECTION_CHANNELS = 0;
     private static final int SECTION_GROUPS = 1;
     private static final int SECTION_BOTS = 2;
+    private static final int SECTION_COMMUNITIES = 3;
     private static final int COLOR_CYAN = 0xFF0284C7;
     private static final int COLOR_TEAL = 0xFF0F766E;
     private static final int COLOR_GREEN = 0xFF16A34A;
@@ -122,7 +123,7 @@ public class NGHubActivity extends BaseFragment {
         searchField = new EditText(context);
         searchField.setSingleLine(true);
         searchField.setTextSize(15);
-        searchField.setHint("Search channels, groups, and bots");
+        searchField.setHint("Search channels, groups, bots, and communities");
         searchField.setHintTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
         searchField.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         searchField.setPadding(AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14), 0);
@@ -139,7 +140,7 @@ public class NGHubActivity extends BaseFragment {
         LinearLayout tabRow = new LinearLayout(context);
         tabRow.setOrientation(LinearLayout.HORIZONTAL);
         page.addView(tabRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 0, 0, 10));
-        String[] labels = {"Channels", "Groups", "Bots"};
+        String[] labels = {"Channels", "Groups", "Bots", "Communities"};
         tabs = new TextView[labels.length];
         for (int i = 0; i < labels.length; i++) {
             final int section = i;
@@ -183,7 +184,7 @@ public class NGHubActivity extends BaseFragment {
                 float dy = event.getY() - touchStartY;
                 if (Math.abs(dx) > AndroidUtilities.dp(72) && Math.abs(dx) > Math.abs(dy) * 1.25f) {
                     int next = selectedSection + (dx < 0 ? 1 : -1);
-                    showSection(Math.max(SECTION_CHANNELS, Math.min(SECTION_BOTS, next)));
+                    showSection(Math.max(SECTION_CHANNELS, Math.min(SECTION_COMMUNITIES, next)));
                 }
             }
             return false;
@@ -579,7 +580,7 @@ public class NGHubActivity extends BaseFragment {
     }
 
     private void showSection(int section) {
-        selectedSection = Math.max(SECTION_CHANNELS, Math.min(SECTION_BOTS, section));
+        selectedSection = Math.max(SECTION_CHANNELS, Math.min(SECTION_COMMUNITIES, section));
         if (contentColumn == null || getContext() == null) return;
         updateTabStyles();
         contentColumn.removeAllViews();
@@ -591,9 +592,11 @@ public class NGHubActivity extends BaseFragment {
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
                     ? "Bot chats available in this account. Telegram does not confirm bot ownership in this list, so these are not claimed as bots you created. Use the official BotFather to create your own."
+                    : selectedSection == SECTION_COMMUNITIES
+                    ? "Telegram Communities are listed separately from channels and groups. This section uses Telegram's actual community dialog entries; linked chats remain in their own sections."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
         } else {
-            note.setText("All Joined: channels, groups and bots available in this account, including places you created. Ownership is shown only when Telegram confirms you are the creator.");
+            note.setText("All Joined: channels, groups, bots and Telegram Communities available in this account. Community entries are kept separate from their linked chats; ownership is shown only when Telegram confirms you are the creator.");
         }
         contentColumn.addView(note, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
@@ -622,7 +625,13 @@ public class NGHubActivity extends BaseFragment {
                 TLRPC.Chat chat = null;
                 TLRPC.User user = null;
                 int type;
-                if (DialogObject.isChatDialog(dialog.id)) {
+                if (dialog instanceof TLRPC.TL_dialogCommunity) {
+                    // Telegram represents a Community as its own dialog wrapper.
+                    // Do not classify it as a broadcast channel or an ordinary group.
+                    chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
+                    if (chat == null || ChatObject.isNotInChat(chat)) continue;
+                    type = SECTION_COMMUNITIES;
+                } else if (DialogObject.isChatDialog(dialog.id)) {
                     chat = controller.getChat(-dialog.id);
                     if (chat == null || ChatObject.isNotInChat(chat)) continue;
                     type = ChatObject.isChannel(chat) && !chat.megagroup ? SECTION_CHANNELS : SECTION_GROUPS;
@@ -655,8 +664,10 @@ public class NGHubActivity extends BaseFragment {
         if (visibleCount == 0) {
             TextView empty = new TextView(getContext());
             empty.setText(!query.isEmpty() ? "No matches for \"" + query + "\"."
+                    : selectedSection == SECTION_COMMUNITIES
+                    ? "No Telegram Community entries are available in the loaded chat list."
                     : mineOnly ? "Nothing you created is in this list yet."
-                    : "No joined channels, groups or bots are available in the loaded chat list.");
+                    : "No joined channels, groups, bots or communities are available in the loaded chat list.");
             empty.setTextSize(15);
             empty.setGravity(Gravity.CENTER);
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
