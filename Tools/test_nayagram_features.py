@@ -221,7 +221,8 @@ def test_ng_auto_lock_runtime_and_ui():
     assert "public static boolean setAutoLockMinutes(Context context, int minutes)" in safety
     assert "optionsToggle.setOnClickListener(v -> toggleOptionsPanel());" in settings
     assert "optionsPanel.animate().alpha(1f).translationY(0).setDuration(220).start();" in settings
-    assert "Auto-lock set to " in settings
+    assert "Auto-lock duration saved:" in settings
+    assert "Duration saved, but Auto-lock is inactive. Enable NG Authenticator in NG Safety to activate it." in settings
     assert "Alhamdulillah" not in settings
     print("PASS")
 
