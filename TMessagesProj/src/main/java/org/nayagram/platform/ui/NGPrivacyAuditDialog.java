@@ -90,7 +90,8 @@ public class NGPrivacyAuditDialog {
         // 2. Biometric Chat Locker
         boolean bioActive = cfg.isBiometricChatLockerEnabled();
         statusContainer.addView(createStatusRow(context, R.drawable.ic_naya_fingerprint, 0xFF10B981,
-                "Biometric Chat Locker", "Passkey & biometric protection", bioActive, bioActive ? "ACTIVE" : "OFF", true));
+                "Biometric Chat Locker", bioActive ? "Ready · lock individual chats from In-Chat Settings" : "Off · enable in NayaGram Settings",
+                bioActive, bioActive ? "ENABLED" : "OFF", true));
 
         // 4. Focus Mode
         boolean focusActive = cfg.isFocusModeEnabled();
