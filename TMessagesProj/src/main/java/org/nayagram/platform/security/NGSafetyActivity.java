@@ -29,8 +29,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.google.zxing.common.BitMatrix;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -211,10 +216,18 @@ public class NGSafetyActivity extends BaseFragment {
         final Bitmap[] qrBitmap = new Bitmap[1];
         try {
             String uri = NGSafety.getOtpAuthUri("user", secret);
-            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
+            // Keep the QR standards-compliant and high-contrast for reliable camera scanning.
+            // High error correction leaves room for a future center mark without exposing the secret.
+            Map<EncodeHintType, Object> qrHints = new EnumMap<>(EncodeHintType.class);
+            qrHints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+            qrHints.put(EncodeHintType.MARGIN, 4);
+            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640, qrHints);
             Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
+            final int qrBlue = 0xFF2D7FF9;
             for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
+                for (int y = 0; y < 640; y++) {
+                    bitmap.setPixel(x, y, matrix.get(x, y) ? qrBlue : Color.WHITE);
+                }
             }
             qrBitmap[0] = bitmap;
             qr.setImageBitmap(bitmap);
