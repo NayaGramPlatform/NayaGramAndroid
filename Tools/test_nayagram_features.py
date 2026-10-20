@@ -235,6 +235,11 @@ def test_advanced_feature_wiring():
     passkeys_activity = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/PasskeysActivity.java").read_text(encoding="utf-8")
     assert 'FRESH_RESET_AUTHORIZATION_FORBIDDEN' in passkeys_activity
     assert 'do not clear app data or reinstall just to retry' in passkeys_activity
+    auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")
+    assert 'Intentionally disabled: never auto-join or auto-pin a channel.' in auto_pin
+    assert 'TL_channels_joinChannel' not in auto_pin
+    assert 'controller.pinDialog' not in auto_pin
+
 
 
     assert 'switchView.setVisibility(unavailable ? View.GONE : View.VISIBLE)' in legacy_hub
