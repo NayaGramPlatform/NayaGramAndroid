@@ -1979,10 +1979,10 @@ public class ChatObject {
         if (chat == null) {
             return false;
         }
-        if (ChatObject.isDiscussionGroup(chat)) {
-            return true;
-        }
-        return ChatObject.isChannel(chat) && (!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat) || chat.megagroup);
+        return ChatObject.isChannel(chat) && (
+                !chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat)
+                || chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link)
+        );
     }
 
     public static boolean isHiddenInCommunity(int currentAccount, long dialogId) {

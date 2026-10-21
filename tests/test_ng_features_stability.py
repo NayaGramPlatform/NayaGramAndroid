@@ -30,6 +30,18 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         # Must use currentAccount
         self.assertIn('if (peerObj.premium_required && !UserConfig.getInstance(currentAccount).isPremium()) {', popup_code)
 
+    def test_send_as_peers_preserves_telegram_permission_gates(self):
+        chat_object_code = (ROOT / 'java/org/telegram/messenger/ChatObject.java').read_text()
+        method_start = chat_object_code.index('public static boolean canSendAsPeers(TLRPC.Chat chat)')
+        method_end = chat_object_code.index('public static boolean isHiddenInCommunity', method_start)
+        method = chat_object_code[method_start:method_end]
+        # Channel send-as eligibility must retain Telegram's original restrictions.
+        self.assertIn('if (chat == null)', method)
+        self.assertIn('!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat)', method)
+        self.assertIn('chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link)', method)
+        self.assertNotIn('if (ChatObject.isDiscussionGroup(chat))', method)
+        self.assertNotIn('|| chat.megagroup);', method)
+
     def test_send_when_online_discovery_and_handling(self):
         enter_view_code = (ROOT / 'java/org/telegram/ui/Components/ChatActivityEnterView.java').read_text()
         # Discoverable in private user chats
