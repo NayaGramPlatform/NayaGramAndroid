@@ -23,14 +23,20 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.google.zxing.common.BitMatrix;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -123,6 +129,86 @@ public class NGSafetyActivity extends BaseFragment {
         super.onFragmentDestroy();
     }
 
+
+    private void buildAutoLockSettings(Context context) {
+        addTitle(context, "Auto-lock NayaGram");
+        addText(context, "Choose how long NayaGram can stay in the background before the existing NG Safety lock is required.");
+        LinearLayout options = new LinearLayout(context);
+        options.setOrientation(LinearLayout.VERTICAL);
+        content.addView(options, params(0, 8));
+        final int[] selected = {NGAutoLockManager.getTimeoutMinutes(context)};
+        final String[] labels = {"15 minutes", "45 minutes", "1 hour", "3 hours", "5 hours", "12 hours", "Custom", "Never"};
+        final int[] values = {15, 45, 60, 180, 300, 720, -1, 0};
+        final Runnable[] render = new Runnable[1];
+        render[0] = () -> {
+            options.removeAllViews();
+            for (int i = 0; i < labels.length; i++) {
+                final int index = i;
+                LinearLayout row = new LinearLayout(context);
+                row.setGravity(Gravity.CENTER_VERTICAL);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(13), AndroidUtilities.dp(16), AndroidUtilities.dp(13));
+                row.setBackground(round(Color.WHITE, 0xFFE2E8F0));
+                TextView label = text(context, labels[i], 15, 0xFF172033, true);
+                row.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+                boolean checked = values[i] == selected[0] || (values[i] == -1 && selected[0] > 0 && selected[0] != 15 && selected[0] != 45 && selected[0] != 60 && selected[0] != 180 && selected[0] != 300 && selected[0] != 720);
+                if (checked) {
+                    TextView check = text(context, "✓", 20, 0xFF2D7FF9, true);
+                    row.addView(check);
+                }
+                options.addView(row, params(0, 6));
+                row.setOnClickListener(v -> {
+                    if (values[index] == -1) {
+                        LinearLayout pickers = new LinearLayout(context);
+                        pickers.setGravity(Gravity.CENTER);
+                        NumberPicker hours = new NumberPicker(context);
+                        hours.setMinValue(0);
+                        hours.setMaxValue(8760);
+                        NumberPicker minutes = new NumberPicker(context);
+                        minutes.setMinValue(0);
+                        minutes.setMaxValue(59);
+                        int current = selected[0] > 0 ? selected[0] : 60;
+                        hours.setValue(current / 60);
+                        minutes.setValue(current % 60);
+                        pickers.addView(hours, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(150), 1f));
+                        pickers.addView(minutes, new LinearLayout.LayoutParams(0, AndroidUtilities.dp(150), 1f));
+                        new AlertDialog.Builder(context).setTitle("Custom auto-lock time")
+                                .setMessage("Select hours and minutes")
+                                .setView(pickers)
+                                .setNegativeButton("Cancel", null)
+                                .setPositiveButton("Set", (dialog, which) -> {
+                                    int total = hours.getValue() * 60 + minutes.getValue();
+                                    if (total == 0) {
+                                        toast(context, "Choose a time greater than zero, or select Never.");
+                                        return;
+                                    }
+                                    selected[0] = total;
+                                    render[0].run();
+                                }).show();
+                    } else {
+                        selected[0] = values[index];
+                        render[0].run();
+                    }
+                });
+            }
+        };
+        render[0].run();
+        Button save = button(context, "Save");
+        content.addView(save, params(0, 10));
+        save.setOnClickListener(v -> {
+            try {
+                NGAutoLockManager.saveTimeoutMinutes(context, selected[0]);
+                String display = selected[0] == 0 ? "Never" : selected[0] + " minutes";
+                toast(context, "Auto-lock set to " + display + " - Alhamdulillah");
+            } catch (Exception e) {
+                toast(context, "Could not securely save Auto-lock settings.");
+            }
+        });
+        TextView footer = text(context, "Built with ❤️ in Bangladesh", 12, 0xFF64748B, false);
+        footer.setGravity(Gravity.CENTER);
+        content.addView(footer, params(0, 12));
+    }
+
     private void buildSettings(Context context) {
         addTitle(context, "NG Authenticator");
         addText(context, "An optional app-level authenticator layer. Telegram OTP and Telegram Two-Step Verification remain unchanged.");
@@ -170,6 +256,7 @@ public class NGSafetyActivity extends BaseFragment {
                         }).show();
             }
         });
+        buildAutoLockSettings(context);
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
         Button details = button(context, "Details and recovery help");
         content.addView(details, params(0, 8));
@@ -211,10 +298,18 @@ public class NGSafetyActivity extends BaseFragment {
         final Bitmap[] qrBitmap = new Bitmap[1];
         try {
             String uri = NGSafety.getOtpAuthUri("user", secret);
-            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640);
+            // Keep the QR standards-compliant and high-contrast for reliable camera scanning.
+            // High error correction leaves room for a future center mark without exposing the secret.
+            Map<EncodeHintType, Object> qrHints = new EnumMap<>(EncodeHintType.class);
+            qrHints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+            qrHints.put(EncodeHintType.MARGIN, 4);
+            BitMatrix matrix = new MultiFormatWriter().encode(uri, BarcodeFormat.QR_CODE, 640, 640, qrHints);
             Bitmap bitmap = Bitmap.createBitmap(640, 640, Bitmap.Config.ARGB_8888);
+            final int qrBlue = 0xFF2D7FF9;
             for (int x = 0; x < 640; x++) {
-                for (int y = 0; y < 640; y++) bitmap.setPixel(x, y, matrix.get(x, y) ? 0xFF075985 : Color.WHITE);
+                for (int y = 0; y < 640; y++) {
+                    bitmap.setPixel(x, y, matrix.get(x, y) ? qrBlue : Color.WHITE);
+                }
             }
             qrBitmap[0] = bitmap;
             qr.setImageBitmap(bitmap);

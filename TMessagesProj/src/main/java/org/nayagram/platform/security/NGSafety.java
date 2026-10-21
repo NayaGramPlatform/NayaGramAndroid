@@ -32,6 +32,36 @@ public final class NGSafety {
     private static final String ENABLED = "enabled";
     private static final String KEY_TOTP_SECRET = "totp_secret";
     private static final String KEY_PENDING_SECRET = "pending_secret";
+    private static final String KEY_AUTO_LOCK_MINUTES = "auto_lock_minutes";
+    private static final String KEY_AUTO_LOCK_BACKGROUND_WALL_TIME = "auto_lock_background_wall_time";
+
+    public static int getAutoLockMinutes(Context context) {
+        try {
+            return Math.max(0, prefs(context).getInt(KEY_AUTO_LOCK_MINUTES, 0));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    public static void saveAutoLockMinutes(Context context, int minutes) throws Exception {
+        prefs(context).edit().putInt(KEY_AUTO_LOCK_MINUTES, Math.max(0, Math.min(minutes, 525600))).apply();
+    }
+
+    public static long getAutoLockBackgroundWallTime(Context context) {
+        try {
+            return prefs(context).getLong(KEY_AUTO_LOCK_BACKGROUND_WALL_TIME, 0L);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    public static void saveAutoLockBackgroundWallTime(Context context, long wallTime) throws Exception {
+        SharedPreferences.Editor editor = prefs(context).edit();
+        if (wallTime <= 0L) editor.remove(KEY_AUTO_LOCK_BACKGROUND_WALL_TIME);
+        else editor.putLong(KEY_AUTO_LOCK_BACKGROUND_WALL_TIME, wallTime);
+        editor.apply();
+    }
+
     private static final String BACKUP_PREFIX = "backup_hash_";
     private static final int BACKUP_COUNT = 15;
     private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
