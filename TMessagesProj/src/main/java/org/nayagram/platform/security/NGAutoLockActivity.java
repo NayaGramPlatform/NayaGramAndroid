@@ -138,8 +138,10 @@ public class NGAutoLockActivity extends BaseFragment {
 
         optionsPanel = new LinearLayout(context);
         optionsPanel.setOrientation(LinearLayout.VERTICAL);
-        optionsPanel.setVisibility(View.GONE);
-        optionsPanel.setAlpha(0f);
+        // Show duration choices immediately so the settings page never appears empty.
+        optionsExpanded = true;
+        optionsPanel.setVisibility(View.VISIBLE);
+        optionsPanel.setAlpha(1f);
         LinearLayout.LayoutParams panelParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         panelParams.topMargin = AndroidUtilities.dp(10);
         root.addView(optionsPanel, panelParams);
@@ -149,6 +151,7 @@ public class NGAutoLockActivity extends BaseFragment {
         optionsPanel.addView(optionsContainer);
         buildOptions(context);
         buildCustomPickerCard(context, optionsPanel);
+        optionsToggle.setText("Auto-lock duration · " + NGSafety.getAutoLockDisplayString(saved) + "   ▴");
         optionsToggle.setOnClickListener(v -> toggleOptionsPanel());
 
         Button saveButton = new Button(context);
