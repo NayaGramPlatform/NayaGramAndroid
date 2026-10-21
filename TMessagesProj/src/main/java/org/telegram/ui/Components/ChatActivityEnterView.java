@@ -11179,6 +11179,12 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (defPeer == null && delegate.getSendAsPeers() != null && !delegate.getSendAsPeers().peers.isEmpty()) {
             defPeer = delegate.getSendAsPeers().peers.get(0).peer;
         }
+        if (defPeer == null && chat != null && ChatObject.canSendAsPeers(chat)) {
+            long selfUserId = UserConfig.getInstance(currentAccount).getClientUserId();
+            TLRPC.TL_peerUser selfPeer = new TLRPC.TL_peerUser();
+            selfPeer.user_id = selfUserId;
+            defPeer = selfPeer;
+        }
         final boolean isVisible = !forceHide && defPeer != null
             && (delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1)
             && !isEditingMessage() && !isRecordingAudioVideo()

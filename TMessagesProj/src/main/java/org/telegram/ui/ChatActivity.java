@@ -8649,11 +8649,11 @@ public class ChatActivity extends BaseFragment implements
                                 Bulletin.LottieLayout layout = new Bulletin.LottieLayout(ctx, getResourceProvider());
                                 layout.setAnimation(R.raw.star_premium_2, 36, 36);
                                 layout.textView.setText(LocaleController.getString(R.string.SupportedChannelGroup));
-                                layout.textView.setTextColor(0xFF0F172A);
+                                layout.textView.setTextColor(0xFFFFFFFF);
                                 android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-                                bg.setColor(0xFFFFFFFF);
-                                bg.setCornerRadius(AndroidUtilities.dp(16));
-                                bg.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);
+                                bg.setColor(0xFF10B981);
+                                bg.setCornerRadius(AndroidUtilities.dp(20));
+                                bg.setStroke(AndroidUtilities.dp(2f), 0xFFFFFFFF);
                                 layout.setBackground(bg);
                                 BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();
                             } catch (Throwable ignore) {

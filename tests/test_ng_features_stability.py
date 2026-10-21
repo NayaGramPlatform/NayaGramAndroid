@@ -42,10 +42,10 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
 
     def test_support_bulletin_styling(self):
         chat_activity_code = (ROOT / 'java/org/telegram/ui/ChatActivity.java').read_text()
-        # Custom light card styling with cyan border and dark readable text
-        self.assertIn('0xFF00D4FF', chat_activity_code)
-        self.assertIn('0xFF0F172A', chat_activity_code)
-        self.assertIn('bg.setColor(0xFFFFFFFF);', chat_activity_code)
+        # Custom vibrant green and white styling with animated star
+        self.assertIn('0xFF10B981', chat_activity_code)
+        self.assertIn('0xFFFFFFFF', chat_activity_code)
+        self.assertIn('bg.setColor(0xFF10B981);', chat_activity_code)
         # Prolonged display duration (5 seconds)
         self.assertIn('BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();', chat_activity_code)
 

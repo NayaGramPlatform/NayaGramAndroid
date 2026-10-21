@@ -1976,7 +1976,13 @@ public class ChatObject {
     }
 
     public static boolean canSendAsPeers(TLRPC.Chat chat) {
-        return ChatObject.isChannel(chat) && (!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat) || chat.megagroup && (ChatObject.isPublic(chat) || chat.has_geo || chat.has_link));
+        if (chat == null) {
+            return false;
+        }
+        if (ChatObject.isDiscussionGroup(chat)) {
+            return true;
+        }
+        return ChatObject.isChannel(chat) && (!chat.megagroup && chat.signatures && ChatObject.hasAdminRights(chat) && ChatObject.canWriteToChat(chat) || chat.megagroup);
     }
 
     public static boolean isHiddenInCommunity(int currentAccount, long dialogId) {

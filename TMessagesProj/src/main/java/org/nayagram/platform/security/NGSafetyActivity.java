@@ -304,7 +304,7 @@ public class NGSafetyActivity extends BaseFragment {
             try {
                 List<String> backups = NGSafety.confirmSetup(context, codeInput.getText().toString().trim());
                 if (backups == null) {
-                    codeInput.setError("Enter the current valid 6-digit code");
+                    toast(context, "Enter the current valid 6-digit code");
                     return;
                 }
                 setupCompleted = true;
@@ -675,6 +675,13 @@ public class NGSafetyActivity extends BaseFragment {
     }
 
     private void toast(Context context, String message) {
+        if (context == null) return;
+        try {
+            if (getParentActivity() != null) {
+                org.telegram.ui.Components.BulletinFactory.of(NGSafetyActivity.this).createSimpleBulletin(org.telegram.messenger.R.raw.star_premium_2, message).show();
+                return;
+            }
+        } catch (Throwable ignored) { }
         Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 
