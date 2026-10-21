@@ -82,8 +82,12 @@ def main() -> None:
     setter_start = java.index("public static boolean setAutoLockMinutes")
     setter_end = java.index("public static String getAutoLockDisplayString", setter_start)
     setter = java[setter_start:setter_end]
-    assert "cancelBackgroundLockRunnable();" in setter
     assert '.putLong(KEY_LAST_BG_TIME, 0L)' in setter, "Saving a new timeout must clear stale background timing"
+    background_start = java.index("public static void onAppBackground")
+    background_end = java.index("public static void onAppForeground", background_start)
+    background = java[background_start:background_end]
+    assert "backgroundElapsedRealtime = SystemClock.elapsedRealtime();" in background
+    assert "runOnUIThread" not in background and "Runnable" not in background, "Auto-lock must not depend on a delayed UI callback that can race lifecycle transitions"
     foreground_start = java.index("public static void onAppForeground")
     foreground_end = java.index("public static boolean isAutoLockExpired", foreground_start)
     foreground = java[foreground_start:foreground_end]
