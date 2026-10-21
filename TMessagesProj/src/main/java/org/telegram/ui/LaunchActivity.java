@@ -6747,7 +6747,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onPause() {
         super.onPause();
         org.nayagram.platform.security.BiometricChatLocker.getInstance(this).lockAllSessions();
-        NGSafety.lockSession();
+        NGSafety.onAppBackground(this);
         isResumed = false;
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
@@ -7109,6 +7109,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         onPasscodeResume();
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
+            NGSafety.onAppForeground(this);
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.
             if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified()) {
