@@ -201,7 +201,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         updateRows();
         loadPasswordSettings();
-        loadPasskeys();
 
         getNotificationCenter().addObserver(this, NotificationCenter.privacyRulesUpdated);
         getNotificationCenter().addObserver(this, NotificationCenter.blockedUsersDidLoad);
@@ -497,16 +496,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 }
             } else if (position == guardRow) {
                 presentFragment(new NGSafetyActivity());
-            } else if (position == passkeysRow) {
-                if (Build.VERSION.SDK_INT < 28) {
-                    BulletinFactory.of(this).showForError(getString(R.string.NGPasskeyUnsupportedVersion));
-                    return;
-                }
-                if (currentPasskeys != null && currentPasskeys.size() > 0) {
-                    presentFragment(new PasskeysActivity(currentPasskeys));
-                } else {
-                    PasskeysActivity.showLearnSheet(context, currentAccount, resourceProvider, true);
-                }
             } else if (position == passcodeRow) {
                 presentFragment(PasscodeActivity.determineOpenFragment());
             } else if (position == secretWebpageRow) {
@@ -725,11 +714,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         securitySectionRow = rowCount++;
         passwordRow = rowCount++;
         guardRow = rowCount++;
-        // NG Passkey is a first-class NayaGram settings entry. Do not gate visibility on
-        // server config or BuildVars: availability is checked when the user opens the flow.
-        if (Build.VERSION.SDK_INT >= 23) {
-            passkeysRow = rowCount++;
-        }
         autoDeleteMesages = rowCount++;
         passcodeRow = rowCount++;
         if (currentPassword != null ? currentPassword.login_email_pattern != null : SharedConfig.hasEmailLogin) {
@@ -1037,7 +1021,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == passwordRow || position == guardRow || position == passkeysRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
+            return position == passcodeRow || position == passwordRow || position == guardRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
                     position == groupsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_INVITE) ||
                     position == lastSeenRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_LASTSEEN) ||
                     position == callsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_CALLS) ||
@@ -1376,17 +1360,6 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             value = getString(R.string.PasswordOff);
                         }
                         textCell2.setTextAndValueAndIcon(getString(R.string.TwoStepVerification), value, true, icon, true);
-                    } else if (position == passkeysRow) {
-                        value = "";
-                        if (currentPasskeys == null) {
-                            showLoading = true;
-                        } else if (currentPasskeys.size() > 0) {
-                            value = LocaleController.formatPluralString("NGPasskeyDevices", currentPasskeys.size());
-                        } else {
-                            value = getString(R.string.PasswordOff);
-                        }
-                        textCell2.setTextAndValueAndIcon(getString(R.string.NGPasskeyTitle), value, true, R.drawable.menu_passkey_add, true);
-                        textCell2.setContentDescription(getString(R.string.NGPasskeyTitle) + ", passkey and device biometrics (fingerprint or face when supported), " + value);
                     } else if (position == passcodeRow) {
                         int icon;
                         if (SharedConfig.passcodeHash.length() != 0) {
