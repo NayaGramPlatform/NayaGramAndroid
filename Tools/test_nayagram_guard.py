@@ -130,7 +130,7 @@ def main() -> None:
     fragment_rebuild = launch.index("actionBarLayout.rebuildFragments(INavigationLayout.REBUILD_FLAG_REBUILD_LAST);", delegate_start)
     passcode_dismissed = launch.index("NotificationCenter.passcodeDismissed", delegate_start)
     assert gate_recheck < content_restore and gate_recheck < fragment_rebuild and gate_recheck < passcode_dismissed, "NG gate must run before Telegram content is restored"
-    assert "retain the persisted background" in launch, "Do not clear auto-lock timing while Telegram passcode is still visible"
+    assert "retain the background timestamp until that dialog is dismissed" in launch, "Do not clear auto-lock timing while Telegram passcode is still visible"
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
     print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
