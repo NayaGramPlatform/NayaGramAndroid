@@ -59,39 +59,39 @@ public final class NGSafety {
             if (cached != null) return cached;
             Context appContext = context.getApplicationContext();
             MasterKey masterKey = new MasterKey.Builder(appContext)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build();
-        SharedPreferences primary = EncryptedSharedPreferences.create(
-                appContext,
-                PREFS,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build();
+            SharedPreferences primary = EncryptedSharedPreferences.create(
+                    appContext,
+                    PREFS,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
 
-        // Migrate seamlessly from legacy preferences if present
-        if (!primary.contains(ENABLED)) {
-            try {
-                SharedPreferences legacy = EncryptedSharedPreferences.create(
-                        appContext,
-                        LEGACY_PREFS,
-                        masterKey,
-                        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
-                if (legacy.contains(ENABLED)) {
-                    SharedPreferences.Editor editor = primary.edit();
-                    for (java.util.Map.Entry<String, ?> entry : legacy.getAll().entrySet()) {
-                        Object val = entry.getValue();
-                        if (val instanceof Boolean) editor.putBoolean(entry.getKey(), (Boolean) val);
-                        else if (val instanceof String) editor.putString(entry.getKey(), (String) val);
-                        else if (val instanceof Integer) editor.putInt(entry.getKey(), (Integer) val);
-                        else if (val instanceof Long) editor.putLong(entry.getKey(), (Long) val);
-                        else if (val instanceof Float) editor.putFloat(entry.getKey(), (Float) val);
+            // Migrate seamlessly from legacy preferences if present.
+            if (!primary.contains(ENABLED)) {
+                try {
+                    SharedPreferences legacy = EncryptedSharedPreferences.create(
+                            appContext,
+                            LEGACY_PREFS,
+                            masterKey,
+                            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM);
+                    if (legacy.contains(ENABLED)) {
+                        SharedPreferences.Editor editor = primary.edit();
+                        for (java.util.Map.Entry<String, ?> entry : legacy.getAll().entrySet()) {
+                            Object val = entry.getValue();
+                            if (val instanceof Boolean) editor.putBoolean(entry.getKey(), (Boolean) val);
+                            else if (val instanceof String) editor.putString(entry.getKey(), (String) val);
+                            else if (val instanceof Integer) editor.putInt(entry.getKey(), (Integer) val);
+                            else if (val instanceof Long) editor.putLong(entry.getKey(), (Long) val);
+                            else if (val instanceof Float) editor.putFloat(entry.getKey(), (Float) val);
+                        }
+                        editor.apply();
                     }
-                    editor.apply();
+                } catch (Throwable ignored) {
                 }
-            } catch (Throwable ignored) {
             }
-        }
             cachedPreferences = primary;
             return primary;
         }
