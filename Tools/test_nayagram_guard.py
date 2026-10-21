@@ -78,6 +78,17 @@ def main() -> None:
     assert "NGSafety.onAppForeground(this);" in launch, "Guard must process app foreground lifecycle"
     assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
+    # Changing a timeout while foregrounded must not inherit an old background timestamp.
+    setter_start = java.index("public static boolean setAutoLockMinutes")
+    setter_end = java.index("public static String getAutoLockDisplayString", setter_start)
+    setter = java[setter_start:setter_end]
+    assert "cancelBackgroundLockRunnable();" in setter
+    assert '.putLong(KEY_LAST_BG_TIME, 0L)' in setter, "Saving a new timeout must clear stale background timing"
+    foreground_start = java.index("public static void onAppForeground")
+    foreground_end = java.index("public static boolean isAutoLockExpired", foreground_start)
+    foreground = java[foreground_start:foreground_end]
+    assert "if (isEnabled(context) && isAutoLockExpired(context))" in foreground
+    assert "prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();" in foreground, "Foreground must clear stale timestamps even if Guard is disabled"
     assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
     assert 'throw new Exception("Failed to migrate legacy NG Safety preferences", e);' in java, "Legacy migration errors must not be cached as disabled"
     assert "cachedPreferences = primary;" in java, "Encrypted preferences should be reused across lifecycle calls"
