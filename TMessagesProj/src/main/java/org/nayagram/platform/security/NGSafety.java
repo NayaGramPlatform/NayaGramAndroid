@@ -134,7 +134,15 @@ public final class NGSafety {
             return false;
         }
         try {
-            prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).apply();
+            // Changing the timeout happens while the user is in the foreground settings UI.
+            // Clear any stale background timestamp so the previous session's pause cannot
+            // immediately expire the newly selected duration on the next resume.
+            cancelBackgroundLockRunnable();
+            backgroundElapsedRealtime = 0L;
+            prefs(context).edit()
+                    .putInt(KEY_AUTOLOCK_MINUTES, minutes)
+                    .putLong(KEY_LAST_BG_TIME, 0L)
+                    .apply();
             FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
             return getAutoLockMinutes(context) == minutes;
         } catch (Exception e) {
@@ -191,8 +199,10 @@ public final class NGSafety {
 
     public static void onAppForeground(Context context) {
         cancelBackgroundLockRunnable();
-        if (!isEnabled(context)) return;
-        if (isAutoLockExpired(context)) {
+        // Check expiry before clearing the timestamp, but clear it even when Guard is
+        // disabled. Otherwise an old background timestamp can survive disable/re-enable
+        // and cause an immediate lock unrelated to the newly selected timeout.
+        if (isEnabled(context) && isAutoLockExpired(context)) {
             lockSession();
         }
         backgroundElapsedRealtime = 0L;
