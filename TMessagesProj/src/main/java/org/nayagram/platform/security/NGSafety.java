@@ -2,6 +2,7 @@ package org.nayagram.platform.security;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.SystemClock;
 
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKey;
@@ -10,6 +11,9 @@ import dev.samstevens.totp.code.DefaultCodeGenerator;
 import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
+
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -35,6 +39,13 @@ public final class NGSafety {
     private static final String BACKUP_PREFIX = "backup_hash_";
     private static final int BACKUP_COUNT = 15;
     private static final String BACKUP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    public static final String KEY_AUTOLOCK_MINUTES = "autolock_minutes";
+    private static final String KEY_LAST_BG_TIME = "last_bg_time";
+    private static final String KEY_LAST_VERIFIED_TIME = "last_verified_time";
+    public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
+    private static Runnable backgroundLockRunnable;
+    private static volatile long backgroundElapsedRealtime = 0L;
+
     private static volatile boolean sessionVerified;
 
     private NGSafety() {}
@@ -96,6 +107,103 @@ public final class NGSafety {
 
     public static void lockSession() {
         sessionVerified = false;
+    }
+
+    public static int getAutoLockMinutes(Context context) {
+        try {
+            return prefs(context).getInt(KEY_AUTOLOCK_MINUTES, DEFAULT_AUTOLOCK_MINUTES);
+        } catch (Exception e) {
+            return DEFAULT_AUTOLOCK_MINUTES;
+        }
+    }
+
+    public static boolean setAutoLockMinutes(Context context, int minutes) {
+        if (minutes < 0 || minutes > 24 * 60) {
+            return false;
+        }
+        try {
+            prefs(context).edit().putInt(KEY_AUTOLOCK_MINUTES, minutes).apply();
+            FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
+            return getAutoLockMinutes(context) == minutes;
+        } catch (Exception e) {
+            FileLog.e(e);
+            return false;
+        }
+    }
+
+    public static String getAutoLockDisplayString(int minutes) {
+        if (minutes == 0) return "Never";
+        if (minutes == 15) return "15 minutes";
+        if (minutes == 45) return "45 minutes";
+        if (minutes == 60) return "1 hour";
+        if (minutes == 180) return "3 hours";
+        if (minutes == 300) return "5 hours";
+        if (minutes == 720) return "12 hours";
+        int hours = minutes / 60;
+        int mins = minutes % 60;
+        if (hours > 0 && mins > 0) return hours + "h " + mins + "m";
+        if (hours > 0) return hours + " hour" + (hours > 1 ? "s" : "");
+        return mins + " minutes";
+    }
+
+    public static void onAppBackground(Context context) {
+        if (!isEnabled(context)) return;
+        long now = System.currentTimeMillis();
+        backgroundElapsedRealtime = SystemClock.elapsedRealtime();
+        try {
+            prefs(context).edit().putLong(KEY_LAST_BG_TIME, now).apply();
+        } catch (Throwable ignored) {
+        }
+        int minutes = getAutoLockMinutes(context);
+        if (minutes > 0) {
+            cancelBackgroundLockRunnable();
+            backgroundLockRunnable = () -> lockSession();
+            AndroidUtilities.runOnUIThread(backgroundLockRunnable, (long) minutes * 60 * 1000L);
+        }
+    }
+
+    public static void onAppForeground(Context context) {
+        cancelBackgroundLockRunnable();
+        if (!isEnabled(context)) return;
+        if (isAutoLockExpired(context)) {
+            lockSession();
+        }
+        backgroundElapsedRealtime = 0L;
+        try {
+            prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public static boolean isAutoLockExpired(Context context) {
+        if (!isEnabled(context)) return false;
+        int minutes = getAutoLockMinutes(context);
+        if (minutes == 0) return false;
+        try {
+            long lastBg = prefs(context).getLong(KEY_LAST_BG_TIME, 0L);
+            if (lastBg > 0) {
+                long elapsed;
+                long startedAtElapsed = backgroundElapsedRealtime;
+                if (startedAtElapsed > 0L) {
+                    // Wall-clock edits must not shorten or extend a live background timeout.
+                    elapsed = SystemClock.elapsedRealtime() - startedAtElapsed;
+                } else {
+                    // After process death, elapsedRealtime's old value is not available;
+                    // use the persisted wall-clock timestamp as a best-effort fallback.
+                    elapsed = System.currentTimeMillis() - lastBg;
+                }
+                return elapsed >= ((long) minutes * 60 * 1000L);
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private static void cancelBackgroundLockRunnable() {
+        if (backgroundLockRunnable != null) {
+            AndroidUtilities.cancelRunOnUIThread(backgroundLockRunnable);
+            backgroundLockRunnable = null;
+        }
     }
 
     public static String beginSetup(Context context) throws Exception {

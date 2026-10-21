@@ -170,6 +170,32 @@ public class NGSafetyActivity extends BaseFragment {
                         }).show();
             }
         });
+        // Auto-lock configuration card (Settings → NG Safety → Auto-lock)
+        LinearLayout autoLockCard = new LinearLayout(context);
+        autoLockCard.setOrientation(LinearLayout.HORIZONTAL);
+        autoLockCard.setGravity(Gravity.CENTER_VERTICAL);
+        autoLockCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        autoLockCard.setBackground(round(0xFFFFFFFF, 0xFFBAE6FD));
+        content.addView(autoLockCard, params(0, 12));
+
+        LinearLayout autoLockLabels = new LinearLayout(context);
+        autoLockLabels.setOrientation(LinearLayout.VERTICAL);
+        autoLockCard.addView(autoLockLabels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView autoLockTitle = text(context, "Auto-lock", 15, 0xFF075985, true);
+        autoLockLabels.addView(autoLockTitle);
+
+        int currentMins = NGSafety.getAutoLockMinutes(context);
+        TextView autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
+        autoLockLabels.addView(autoLockSubtitle);
+
+        ImageView arrow = new ImageView(context);
+        arrow.setImageResource(R.drawable.arrow_more);
+        arrow.setColorFilter(new PorterDuffColorFilter(0xFF0284C7, PorterDuff.Mode.SRC_IN));
+        autoLockCard.addView(arrow, new LinearLayout.LayoutParams(AndroidUtilities.dp(16), AndroidUtilities.dp(16)));
+
+        autoLockCard.setOnClickListener(v -> presentFragment(new NGAutoLockActivity()));
+
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
         Button details = button(context, "Details and recovery help");
         content.addView(details, params(0, 8));

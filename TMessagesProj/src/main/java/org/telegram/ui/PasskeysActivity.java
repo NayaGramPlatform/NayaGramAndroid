@@ -376,7 +376,15 @@ public class PasskeysActivity extends BaseFragment {
                 if (fragment == null) return;
 
                 if (error != null) {
-                    BulletinFactory.of(sheet.topBulletinContainer, sheet.getResourcesProvider()).showForError(error);
+                    if (error.contains("FRESH_RESET_AUTHORIZATION")) {
+                        new AlertDialog.Builder(context)
+                            .setTitle("Passkey temporarily unavailable")
+                            .setMessage("Telegram's server rejected passkey registration with FRESH_RESET_AUTHORIZATION_FORBIDDEN. This is an account-security restriction, not a local biometric error, and NayaGram cannot bypass it. Keep your current session signed in; do not clear app data or reinstall just to retry. Try again from a device you previously used with this Telegram account, or wait and retry later. If it persists, use Telegram's official support.")
+                            .setPositiveButton(getString(R.string.OK), null)
+                            .show();
+                    } else {
+                        BulletinFactory.of(sheet.topBulletinContainer, sheet.getResourcesProvider()).showForError(error);
+                    }
                 } else if (passkey != null) {
                     MessagesController.getInstance(currentAccount).removeSuggestion(0, "SETUP_PASSKEY");
                     if (fragment instanceof PasskeysActivity) {
