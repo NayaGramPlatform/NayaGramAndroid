@@ -83,9 +83,10 @@ def main() -> None:
     assert "NGSafety.onAppBackground(this);" in launch, "Guard must process app background lifecycle"
     assert "NGSafety.onAppForeground(this);" in launch, "Guard must process app foreground lifecycle"
     activity_resume_start = launch.index("protected void onResume()")
-    activity_super_resume = launch.index("super.onResume();", activity_resume_start)
+    native_passcode_check = launch.index("onPasscodeResume();", activity_resume_start)
     guard_restore_before_fragments = launch.index("NGSafety.onAppForeground(this);", activity_resume_start)
-    assert guard_restore_before_fragments < activity_super_resume, "Restore persisted auto-lock state before MainTabsActivity.onResume checks the gate"
+    custom_fragments_resume = launch.index("actionBarLayout.onResume();", activity_resume_start)
+    assert native_passcode_check < guard_restore_before_fragments < custom_fragments_resume, "Restore NG Guard before custom fragments resume, but only after Telegram native passcode state is known"
     assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
     # Changing a timeout while foregrounded must not inherit an old background timestamp.
