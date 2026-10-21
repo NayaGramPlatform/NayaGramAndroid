@@ -89,6 +89,9 @@ def main() -> None:
     assert native_passcode_check < guard_restore_before_fragments < custom_fragments_resume, "Restore NG Guard before custom fragments resume, but only after Telegram native passcode state is known"
     assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
+    assert "return elapsed >= ((long) minutes * 60 * 1000L);" in java, "Auto-lock must wait the entire selected number of minutes"
+    assert "elapsed = SystemClock.elapsedRealtime() - startedAtElapsed;" in java, "Live-process timeout must use monotonic elapsed time"
+    assert "elapsed = now - lastBg;" in java, "Process-restart timeout must use the persisted background timestamp"
     # Changing a timeout while foregrounded must not inherit an old background timestamp.
     setter_start = java.index("public static boolean setAutoLockMinutes")
     setter_end = java.index("public static String getAutoLockDisplayString", setter_start)
