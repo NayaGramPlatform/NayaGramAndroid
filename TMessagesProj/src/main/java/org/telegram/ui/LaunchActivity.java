@@ -1484,6 +1484,13 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             // Re-evaluate the original background interval only after Telegram passcode
             // succeeds; NG Guard must still block content if its timeout expired meanwhile.
             NGSafety.onAppForeground(LaunchActivity.this);
+            // Enforce NG Guard before restoring the main content after Telegram's passcode.
+            if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()) {
+                BaseFragment topFragment = getActionBarLayout().getLastFragment();
+                if (!(topFragment instanceof NGSafetyActivity)) {
+                    presentFragment(new NGSafetyActivity(true));
+                }
+            }
             if (passcodeSaveIntent != null) {
                 handleIntent(passcodeSaveIntent, passcodeSaveIntentIsNew, passcodeSaveIntentIsRestore, true, null, false, true);
                 passcodeSaveIntent = null;
@@ -1500,14 +1507,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 rightActionBarLayout.getView().setVisibility(View.VISIBLE);
             }
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.passcodeDismissed, view);
-            // Telegram passcode and NG Guard are separate layers: after Telegram unlocks,
-            // do not reveal the main screen if NG Guard's auto-lock expired in the background.
-            if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()) {
-                BaseFragment topFragment = getActionBarLayout().getLastFragment();
-                if (!(topFragment instanceof NGSafetyActivity)) {
-                    presentFragment(new NGSafetyActivity(true));
-                }
-            }
             try {
                 NotificationsController.getInstance(UserConfig.selectedAccount).showNotifications();
             } catch (Exception e) {
