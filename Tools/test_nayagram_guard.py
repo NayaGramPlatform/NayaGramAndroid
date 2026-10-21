@@ -87,6 +87,10 @@ def main() -> None:
     assert "private TextView autoLockSubtitle;" in ui
     assert "NGSafety.getAutoLockMinutes(getParentActivity())" in ui, "Auto-lock subtitle must refresh when settings resumes"
     assert "NGSafety.onAppForeground(LaunchActivity.this);" in launch, "Native passcode dismissal must re-evaluate NG auto-lock"
+    delegate_start = launch.index("PasscodeView.PasscodeViewDelegate delegate = view -> {")
+    foreground_recheck = launch.index("NGSafety.onAppForeground(LaunchActivity.this);", delegate_start)
+    gate_recheck = launch.index("NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()", delegate_start)
+    assert foreground_recheck < gate_recheck, "Reconcile auto-lock before restoring the main interface"
     assert "retain the persisted background" in launch, "Do not clear auto-lock timing while Telegram passcode is still visible"
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
