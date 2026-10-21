@@ -167,6 +167,11 @@ def main() -> None:
     sender_select = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/Components/SenderSelectPopup.java").read_text(encoding="utf-8")
     assert "peerObj.premium_required && !UserConfig.getInstance(currentAccount).isPremium()" in sender_select, "Send As must preserve Telegram Premium gating"
     print("PASS: Send As respects Telegram's premium_required entitlement")
+    send_as_hint = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/Components/SelectSendAsPremiumHintBulletinLayout.java").read_text(encoding="utf-8")
+    assert "background.setColor(0xFFFFFFFF)" in send_as_hint
+    assert "setCustomBackground(background)" in send_as_hint
+    assert "textView.setTextColor(0xFF0F172A)" in send_as_hint, "Group/channel Send As hint must stay readable on a light background"
+    print("PASS: Group/channel Send As hint uses a readable NayaGram light theme")
 
 if __name__ == "__main__":
     main()
