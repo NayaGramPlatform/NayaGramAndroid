@@ -79,7 +79,15 @@ def main() -> None:
     assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
     assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
+    assert "cachedPreferences = primary;" in java, "Encrypted preferences should be reused across lifecycle calls"
+    assert "int autoLockMinutes = secure.getInt(KEY_AUTOLOCK_MINUTES, DEFAULT_AUTOLOCK_MINUTES);" in java
+    assert "editor.putInt(KEY_AUTOLOCK_MINUTES, autoLockMinutes).apply();" in java, "Disabling NG Guard must preserve the auto-lock preference"
+    assert 'mins + (mins == 1 ? " minute" : " minutes")' in java, "One-minute duration must use singular grammar"
     assert "topFragment instanceof NGSafetyActivity" in launch
+    assert "private TextView autoLockSubtitle;" in ui
+    assert "NGSafety.getAutoLockMinutes(getParentActivity())" in ui, "Auto-lock subtitle must refresh when settings resumes"
+    assert "NGSafety.onAppForeground(LaunchActivity.this);" in launch, "Native passcode dismissal must re-evaluate NG auto-lock"
+    assert "retain the persisted background" in launch, "Do not clear auto-lock timing while Telegram passcode is still visible"
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
     print("PASS: NGSafety storage, UI, settings, login-gate and dependency guardrails")
