@@ -698,7 +698,7 @@ public class NGHubActivity extends BaseFragment {
             empty.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             contentColumn.addView(empty, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             if (selectedSection == SECTION_BOTS && mineOnly && query.isEmpty()) {
-                TextView botFather = coloredButton(getContext(), "Open official BotFather");
+                TextView botFather = coloredButton(getContext(), "Open official BotFather", COLOR_GREEN);
                 botFather.setOnClickListener(v -> openBotFather());
                 contentColumn.addView(botFather, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 4, 0, 8));
             }
