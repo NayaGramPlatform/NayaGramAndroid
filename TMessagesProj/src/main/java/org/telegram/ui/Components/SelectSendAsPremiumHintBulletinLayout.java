@@ -36,7 +36,7 @@ public class SelectSendAsPremiumHintBulletinLayout extends Bulletin.MultiLineLay
 
         Bulletin.UndoButton button = new Bulletin.UndoButton(context, true, resourcesProvider);
         button.setText(LocaleController.getString(R.string.SelectSendAsPeerPremiumOpen));
-        button.setTextColor(0xFF0284C7);
+        if (button.undoTextView != null) button.undoTextView.setTextColor(0xFF0284C7);
         button.setUndoAction(callback);
         setButton(button);
     }
