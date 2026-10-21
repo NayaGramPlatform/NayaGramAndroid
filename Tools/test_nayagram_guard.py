@@ -156,5 +156,10 @@ def main() -> None:
     assert "controller.pinDialog" not in auto_pin
     print("PASS: NG Hub never auto-joins or auto-pins an external channel")
 
+    # Telegram's server-provided premium_required flag must remain enforced for Send As.
+    sender_select = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/Components/SenderSelectPopup.java").read_text(encoding="utf-8")
+    assert "peerObj.premium_required && !UserConfig.getInstance(currentAccount).isPremium()" in sender_select, "Send As must preserve Telegram Premium gating"
+    print("PASS: Send As respects Telegram's premium_required entitlement")
+
 if __name__ == "__main__":
     main()
