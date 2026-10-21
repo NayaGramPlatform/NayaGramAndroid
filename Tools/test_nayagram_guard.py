@@ -79,6 +79,7 @@ def main() -> None:
     assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
     assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
+    assert 'throw new Exception("Failed to migrate legacy NG Safety preferences", e);' in java, "Legacy migration errors must not be cached as disabled"
     assert "cachedPreferences = primary;" in java, "Encrypted preferences should be reused across lifecycle calls"
     assert "int autoLockMinutes = secure.getInt(KEY_AUTOLOCK_MINUTES, DEFAULT_AUTOLOCK_MINUTES);" in java
     assert "editor.putInt(KEY_AUTOLOCK_MINUTES, autoLockMinutes).apply();" in java, "Disabling NG Guard must preserve the auto-lock preference"
@@ -95,6 +96,10 @@ def main() -> None:
     foreground_recheck = launch.index("NGSafety.onAppForeground(LaunchActivity.this);", delegate_start)
     gate_recheck = launch.index("NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()", delegate_start)
     assert foreground_recheck < gate_recheck, "Reconcile auto-lock before restoring the main interface"
+    content_restore = launch.index("actionBarLayout.getView().setVisibility(View.VISIBLE);", delegate_start)
+    fragment_rebuild = launch.index("actionBarLayout.rebuildFragments(INavigationLayout.REBUILD_FLAG_REBUILD_LAST);", delegate_start)
+    passcode_dismissed = launch.index("NotificationCenter.passcodeDismissed", delegate_start)
+    assert gate_recheck < content_restore and gate_recheck < fragment_rebuild and gate_recheck < passcode_dismissed, "NG gate must run before Telegram content is restored"
     assert "retain the persisted background" in launch, "Do not clear auto-lock timing while Telegram passcode is still visible"
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
