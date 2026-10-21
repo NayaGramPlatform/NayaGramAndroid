@@ -3455,11 +3455,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 cancelRequestingPasskey = null;
                 requestingPasskey = false;
                 if (err != null && ("EMPTY".equals(err) || "CANCELLED".equals(err))) {
-                    if (subtitleView != null && "CANCELLED".equals(err)) {
-                        subtitleView.setText(AndroidUtilities.replaceArrows(AndroidUtilities.replaceSingleTag(getString(R.string.StartTextPasskey), () -> {
-                            requestPasskey(true);
-                        }), true));
-                    }
+                    // Do not leave the passkey-login prompt/title on the login screen
+                    // after the optional credential sheet is dismissed.
                     return;
                 }
                 if (userId != 0 && getParentActivity() instanceof LaunchActivity) {

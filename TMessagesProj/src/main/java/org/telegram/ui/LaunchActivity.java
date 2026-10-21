@@ -1481,6 +1481,16 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         SharedConfig.isWaitingForPasscodeEnter = true;
         PasscodeView.PasscodeViewDelegate delegate = view -> {
             SharedConfig.isWaitingForPasscodeEnter = false;
+            // Re-evaluate the original background interval only after Telegram passcode
+            // succeeds; NG Guard must still block content if its timeout expired meanwhile.
+            NGSafety.onAppForeground(LaunchActivity.this);
+            // Enforce NG Guard before restoring the main content after Telegram's passcode.
+            if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()) {
+                BaseFragment topFragment = getActionBarLayout().getLastFragment();
+                if (!(topFragment instanceof NGSafetyActivity)) {
+                    presentFragment(new NGSafetyActivity(true));
+                }
+            }
             if (passcodeSaveIntent != null) {
                 handleIntent(passcodeSaveIntent, passcodeSaveIntentIsNew, passcodeSaveIntentIsRestore, true, null, false, true);
                 passcodeSaveIntent = null;
@@ -6747,7 +6757,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     protected void onPause() {
         super.onPause();
         org.nayagram.platform.security.BiometricChatLocker.getInstance(this).lockAllSessions();
-        NGSafety.lockSession();
+        NGSafety.onAppBackground(this);
         isResumed = false;
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
@@ -7107,7 +7117,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkFreeDiscSpace(0);
         MediaController.checkGallery();
         onPasscodeResume();
+        // Wait until Telegram's native passcode state is known. If its dialog is visible,
+        // retain the background timestamp until that dialog is dismissed; otherwise restore
+        // NG Guard before resuming custom fragments so their gates see the persisted state.
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
+            NGSafety.onAppForeground(this);
             actionBarLayout.onResume();
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.

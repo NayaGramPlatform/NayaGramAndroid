@@ -1,6 +1,7 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
@@ -591,7 +593,7 @@ public class NGHubActivity extends BaseFragment {
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
-                    ? "Bot chats available in this account. Telegram does not confirm bot ownership in this list, so these are not claimed as bots you created. Use the official BotFather to create your own."
+                    ? "My Bot shows bots you marked as yours. Tap All Joined to see bot chats from every folder, then long-press your bot to add or remove it from My Bot. Telegram's chat list does not expose bot ownership automatically."
                     : selectedSection == SECTION_COMMUNITIES
                     ? "Telegram Communities are listed separately from channels and groups. This section uses Telegram's actual community dialog entries; linked chats remain in their own sections."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
@@ -612,8 +614,27 @@ public class NGHubActivity extends BaseFragment {
         }
 
         MessagesController controller = MessagesController.getInstance(currentAccount);
-        ArrayList<TLRPC.Dialog> dialogs = controller.getDialogs(0);
-        if (dialogs == null || dialogs.isEmpty()) dialogs = controller.getAllDialogs();
+        // Read dialogs from every folder first (including archived chats), then merge
+        // the main folder without duplicating entries. The old fallback only loaded
+        // all folders when the main folder was empty, hiding archived bot chats.
+        ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
+        ArrayList<TLRPC.Dialog> allDialogs = controller.getAllDialogs();
+        if (allDialogs != null) dialogs.addAll(allDialogs);
+        ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
+        if (mainDialogs != null) {
+            for (TLRPC.Dialog mainDialog : mainDialogs) {
+                if (mainDialog == null) continue;
+                boolean alreadyPresent = false;
+                for (TLRPC.Dialog existing : dialogs) {
+                    if (existing != null && existing.id == mainDialog.id
+                            && existing.getClass() == mainDialog.getClass()) {
+                        alreadyPresent = true;
+                        break;
+                    }
+                }
+                if (!alreadyPresent) dialogs.add(mainDialog);
+            }
+        }
         int visibleCount = 0;
         String query = searchField == null || searchField.getText() == null
                 ? "" : searchField.getText().toString().trim().toLowerCase(Locale.ROOT);
@@ -644,7 +665,8 @@ public class NGHubActivity extends BaseFragment {
                 }
                 boolean owned = chat != null && chat.creator;
                 if (mineOnly && type != SECTION_BOTS && !owned) continue;
-                // All Joined includes both owned and joined communities.
+                if (mineOnly && type == SECTION_BOTS && (user == null || !isMarkedMyBot(user.id))) continue;
+                // Bot ownership is not exposed by the dialog object; My Bot uses an explicit local user selection.
                 if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
                         : (user.first_name == null ? "" : user.first_name) + (user.last_name == null ? "" : " " + user.last_name);
@@ -664,6 +686,8 @@ public class NGHubActivity extends BaseFragment {
         if (visibleCount == 0) {
             TextView empty = new TextView(getContext());
             empty.setText(!query.isEmpty() ? "No matches for \"" + query + "\"."
+                    : selectedSection == SECTION_BOTS && mineOnly
+                    ? "No bots marked as yours yet. Tap All Joined, long-press your bot chat, and choose My Bot. You can also open BotFather to view bots created by your account."
                     : selectedSection == SECTION_COMMUNITIES
                     ? "No Telegram Community entries are available in the loaded chat list."
                     : mineOnly ? "Nothing you created is in this list yet."
@@ -673,6 +697,11 @@ public class NGHubActivity extends BaseFragment {
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
             empty.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             contentColumn.addView(empty, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            if (selectedSection == SECTION_BOTS && mineOnly && query.isEmpty()) {
+                TextView botFather = coloredButton(getContext(), "Open official BotFather", COLOR_GREEN);
+                botFather.setOnClickListener(v -> openBotFather());
+                contentColumn.addView(botFather, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 4, 0, 8));
+            }
         }
     }
 
@@ -736,6 +765,16 @@ public class NGHubActivity extends BaseFragment {
             else return;
             presentFragment(new ChatActivity(args));
         });
+        if (user != null && user.bot) {
+            row.setOnLongClickListener(v -> {
+                boolean marked = !isMarkedMyBot(user.id);
+                getMyBotsPreferences().edit().putBoolean("bot_" + user.id, marked).apply();
+                Toast.makeText(context, marked ? "Added to My Bot" : "Removed from My Bot", Toast.LENGTH_SHORT).show();
+                showSection(selectedSection);
+                return true;
+            });
+            row.setContentDescription(titleText + (isMarkedMyBot(user.id) ? ", marked as My Bot. Long press to remove." : ", long press to add to My Bot."));
+        }
 
         LinearLayout.LayoutParams rowParams;
         if (horizontalCards) {
@@ -746,6 +785,16 @@ public class NGHubActivity extends BaseFragment {
             rowParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
         activeRows.addView(row, rowParams);
+    }
+
+    private SharedPreferences getMyBotsPreferences() {
+        Context context = getParentActivity();
+        if (context == null) context = org.telegram.messenger.ApplicationLoader.applicationContext;
+        return context.getSharedPreferences("ng_hub_my_bots", Context.MODE_PRIVATE);
+    }
+
+    private boolean isMarkedMyBot(long userId) {
+        return getMyBotsPreferences().getBoolean("bot_" + userId, false);
     }
 
     private TextView createAction(Context context, String label) {

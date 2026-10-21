@@ -7,14 +7,18 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.CountDownTimer;
 import android.os.Build;
 import android.provider.MediaStore;
 import java.io.OutputStream;
+import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,6 +56,7 @@ public class NGSafetyActivity extends BaseFragment {
     private final boolean startSetup;
     private LinearLayout content;
     private EditText codeInput;
+    private TextView verificationError;
     private FrameLayout codeFrame;
     private LinearLayout digitBoxes;
     private TextView backupModeToggle;
@@ -61,6 +66,7 @@ public class NGSafetyActivity extends BaseFragment {
     private boolean setupCompleted;
     private CountDownTimer codeCountdown;
     private TextView countdownView;
+    private TextView autoLockSubtitle;
 
     public NGSafetyActivity() {
         this(false, false);
@@ -109,6 +115,15 @@ public class NGSafetyActivity extends BaseFragment {
             buildSettings(context);
         }
         return fragmentView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (autoLockSubtitle != null && getParentActivity() != null) {
+            autoLockSubtitle.setText(NGSafety.getAutoLockDisplayString(
+                    NGSafety.getAutoLockMinutes(getParentActivity())));
+        }
     }
 
     @Override
@@ -170,6 +185,32 @@ public class NGSafetyActivity extends BaseFragment {
                         }).show();
             }
         });
+        // Auto-lock configuration card (Settings → NG Safety → Auto-lock)
+        LinearLayout autoLockCard = new LinearLayout(context);
+        autoLockCard.setOrientation(LinearLayout.HORIZONTAL);
+        autoLockCard.setGravity(Gravity.CENTER_VERTICAL);
+        autoLockCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        autoLockCard.setBackground(round(0xFFFFFFFF, 0xFFBAE6FD));
+        content.addView(autoLockCard, params(0, 12));
+
+        LinearLayout autoLockLabels = new LinearLayout(context);
+        autoLockLabels.setOrientation(LinearLayout.VERTICAL);
+        autoLockCard.addView(autoLockLabels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView autoLockTitle = text(context, "Auto-lock", 15, 0xFF075985, true);
+        autoLockLabels.addView(autoLockTitle);
+
+        int currentMins = NGSafety.getAutoLockMinutes(context);
+        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
+        autoLockLabels.addView(autoLockSubtitle);
+
+        ImageView arrow = new ImageView(context);
+        arrow.setImageResource(R.drawable.arrow_more);
+        arrow.setColorFilter(new PorterDuffColorFilter(0xFF0284C7, PorterDuff.Mode.SRC_IN));
+        autoLockCard.addView(arrow, new LinearLayout.LayoutParams(AndroidUtilities.dp(16), AndroidUtilities.dp(16)));
+
+        autoLockCard.setOnClickListener(v -> presentFragment(new NGAutoLockActivity()));
+
         addText(context, "Privacy: Local TOTP only, no data sent to Google server. Your secret stays on this device in encrypted storage.");
         Button details = button(context, "Details and recovery help");
         content.addView(details, params(0, 8));
@@ -281,7 +322,7 @@ public class NGSafetyActivity extends BaseFragment {
                 toast(context, "Could not clear the pending secret securely.");
                 return;
             }
-            NGSafety.lockSession();
+            NGSafety.lockSession(context);
             finishFragment();
         });
     }
@@ -363,6 +404,23 @@ public class NGSafetyActivity extends BaseFragment {
 
         addText(context, "Enter your current six-digit authenticator code. A saved one-time backup code can also be used.");
         buildCodeEntry(context, true);
+        verificationError = text(context, "", 13, 0xFFB91C1C, true);
+        verificationError.setGravity(Gravity.CENTER);
+        verificationError.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        verificationError.setBackground(round(0xFFFFF1F2, 0xFFFDA4AF));
+        verificationError.setVisibility(View.GONE);
+        content.addView(verificationError, params(0, 6));
+        codeInput.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (verificationError != null && verificationError.getVisibility() == View.VISIBLE && s.length() > 0) {
+                    verificationError.animate().cancel();
+                    verificationError.setVisibility(View.GONE);
+                    codeFrame.setBackground(round(Color.WHITE, 0xFF06B6D4));
+                }
+            }
+            @Override public void afterTextChanged(Editable s) { }
+        });
         Button pasteCode = button(context, "Paste code");
         content.addView(pasteCode, params(0, 6));
         pasteCode.setOnClickListener(v -> pasteCodeFromClipboard(context));
@@ -370,10 +428,22 @@ public class NGSafetyActivity extends BaseFragment {
         content.addView(verify, params(0, 10));
         verify.setOnClickListener(v -> {
             if (NGSafety.verifyStoredCode(context, codeInput.getText().toString().trim())) {
+                if (verificationError != null) verificationError.setVisibility(View.GONE);
                 finishFragment();
             } else {
-                codeInput.setError("Invalid or already-used code");
                 codeInput.setText("");
+                verificationError.setText("Invalid or already-used code. Check the six digits and try again.");
+                verificationError.setVisibility(View.VISIBLE);
+                verificationError.setAlpha(0f);
+                verificationError.setTranslationY(AndroidUtilities.dp(8));
+                verificationError.animate().cancel();
+                verificationError.animate().alpha(1f).translationY(0f).setDuration(220).start();
+                codeFrame.setBackground(round(0xFFFFF1F2, 0xFFEF4444));
+                codeFrame.animate().cancel();
+                codeFrame.setTranslationX(0f);
+                codeFrame.animate().translationX(AndroidUtilities.dp(6)).setDuration(55).withEndAction(() ->
+                        codeFrame.animate().translationX(-AndroidUtilities.dp(6)).setDuration(55).withEndAction(() ->
+                                codeFrame.animate().translationX(0f).setDuration(55).start()).start()).start();
             }
         });
 

@@ -22,8 +22,16 @@ public final class NayaGramGuard {
         NGSafety.markSessionVerified();
     }
 
+    public static void markSessionVerified(Context context) {
+        NGSafety.markSessionVerified(context);
+    }
+
     public static void lockSession() {
         NGSafety.lockSession();
+    }
+
+    public static void lockSession(Context context) {
+        NGSafety.lockSession(context);
     }
 
     public static String beginSetup(Context context) throws Exception {
