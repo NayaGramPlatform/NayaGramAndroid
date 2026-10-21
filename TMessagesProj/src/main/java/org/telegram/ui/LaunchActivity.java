@@ -7091,13 +7091,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     @Override
     protected void onResume() {
-        // Restore NG Guard's persisted verification/timeout state BEFORE super.onResume()
-        // dispatches fragment callbacks. MainTabsActivity checks the session in its own
-        // onResume; restoring afterward makes every process recreation look like an
-        // expired session even when the selected timeout is several hours.
-        if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
-            NGSafety.onAppForeground(this);
-        }
         // checkNayaGramProChannelPrompt();
         org.nayagram.platform.AutoPinChannelManager.checkAndPinOfficialChannel(currentAccount);
         super.onResume();
@@ -7124,11 +7117,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkFreeDiscSpace(0);
         MediaController.checkGallery();
         onPasscodeResume();
-        // If Telegram's own passcode dialog is visible, retain the persisted background
-        // timestamp until that dialog is dismissed. Otherwise the native passcode could
-        // consume the remaining NG auto-lock window while it is on screen. In the normal
-        // path the guard state was restored before super.onResume() above.
+        // Wait until Telegram's native passcode state is known. If its dialog is visible,
+        // retain the background timestamp until that dialog is dismissed; otherwise restore
+        // NG Guard before resuming custom fragments so their gates see the persisted state.
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
+            NGSafety.onAppForeground(this);
             actionBarLayout.onResume();
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.
