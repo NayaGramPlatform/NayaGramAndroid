@@ -45,17 +45,24 @@ public final class NGSafety {
     public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
     private static Runnable backgroundLockRunnable;
     private static volatile long backgroundElapsedRealtime = 0L;
+    private static volatile SharedPreferences cachedPreferences;
 
     private static volatile boolean sessionVerified;
 
     private NGSafety() {}
 
     private static SharedPreferences prefs(Context context) throws Exception {
-        MasterKey masterKey = new MasterKey.Builder(context.getApplicationContext())
+        SharedPreferences cached = cachedPreferences;
+        if (cached != null) return cached;
+        synchronized (NGSafety.class) {
+            cached = cachedPreferences;
+            if (cached != null) return cached;
+            Context appContext = context.getApplicationContext();
+            MasterKey masterKey = new MasterKey.Builder(appContext)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build();
         SharedPreferences primary = EncryptedSharedPreferences.create(
-                context.getApplicationContext(),
+                appContext,
                 PREFS,
                 masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
@@ -65,7 +72,7 @@ public final class NGSafety {
         if (!primary.contains(ENABLED)) {
             try {
                 SharedPreferences legacy = EncryptedSharedPreferences.create(
-                        context.getApplicationContext(),
+                        appContext,
                         LEGACY_PREFS,
                         masterKey,
                         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
@@ -85,7 +92,9 @@ public final class NGSafety {
             } catch (Throwable ignored) {
             }
         }
-        return primary;
+            cachedPreferences = primary;
+            return primary;
+        }
     }
 
     public static boolean isEnabled(Context context) {
@@ -143,7 +152,7 @@ public final class NGSafety {
         int mins = minutes % 60;
         if (hours > 0 && mins > 0) return hours + "h " + mins + "m";
         if (hours > 0) return hours + " hour" + (hours > 1 ? "s" : "");
-        return mins + " minutes";
+        return mins + (mins == 1 ? " minute" : " minutes");
     }
 
     public static void onAppBackground(Context context) {
@@ -323,8 +332,11 @@ public final class NGSafety {
 
     public static void disable(Context context) throws Exception {
         SharedPreferences secure = prefs(context);
+        // Keep the user's auto-lock preference when disabling the authenticator;
+        // only secrets, backup hashes, and other guard state are cleared.
+        int autoLockMinutes = secure.getInt(KEY_AUTOLOCK_MINUTES, DEFAULT_AUTOLOCK_MINUTES);
         SharedPreferences.Editor editor = secure.edit().clear();
-        editor.apply();
+        editor.putInt(KEY_AUTOLOCK_MINUTES, autoLockMinutes).apply();
         try {
             MasterKey masterKey = new MasterKey.Builder(context.getApplicationContext())
                     .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
