@@ -63,6 +63,7 @@ public class NGSafetyActivity extends BaseFragment {
     private boolean setupCompleted;
     private CountDownTimer codeCountdown;
     private TextView countdownView;
+    private TextView autoLockSubtitle;
 
     public NGSafetyActivity() {
         this(false, false);
@@ -111,6 +112,15 @@ public class NGSafetyActivity extends BaseFragment {
             buildSettings(context);
         }
         return fragmentView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (autoLockSubtitle != null && getParentActivity() != null) {
+            autoLockSubtitle.setText(NGSafety.getAutoLockDisplayString(
+                    NGSafety.getAutoLockMinutes(getParentActivity())));
+        }
     }
 
     @Override
@@ -188,7 +198,7 @@ public class NGSafetyActivity extends BaseFragment {
         autoLockLabels.addView(autoLockTitle);
 
         int currentMins = NGSafety.getAutoLockMinutes(context);
-        TextView autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
+        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
         autoLockLabels.addView(autoLockSubtitle);
 
         ImageView arrow = new ImageView(context);
