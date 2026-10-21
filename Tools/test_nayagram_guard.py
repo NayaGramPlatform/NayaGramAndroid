@@ -76,6 +76,8 @@ def main() -> None:
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
     assert "NGSafety.onAppBackground(this);" in launch, "Guard must process app background lifecycle"
     assert "NGSafety.onAppForeground(this);" in launch, "Guard must process app foreground lifecycle"
+    assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
+    assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
     assert "topFragment instanceof NGSafetyActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
