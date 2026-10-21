@@ -85,6 +85,10 @@ def main() -> None:
     assert 'mins + (mins == 1 ? " minute" : " minutes")' in java, "One-minute duration must use singular grammar"
     assert "topFragment instanceof NGSafetyActivity" in launch
     assert "private TextView autoLockSubtitle;" in ui
+    auto_lock_ui = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/security/NGAutoLockActivity.java").read_text(encoding="utf-8")
+    assert "optionsExpanded = true;" in auto_lock_ui and "optionsPanel.setVisibility(View.VISIBLE);" in auto_lock_ui, "Auto-lock choices must be visible when the page opens"
+    login_ui = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java").read_text(encoding="utf-8")
+    assert 'if (subtitleView != null && "CANCELLED".equals(err))' not in login_ui, "Cancelled passkey prompt must not leave a stale login title"
     assert "NGSafety.getAutoLockMinutes(getParentActivity())" in ui, "Auto-lock subtitle must refresh when settings resumes"
     assert "NGSafety.onAppForeground(LaunchActivity.this);" in launch, "Native passcode dismissal must re-evaluate NG auto-lock"
     delegate_start = launch.index("PasscodeView.PasscodeViewDelegate delegate = view -> {")
