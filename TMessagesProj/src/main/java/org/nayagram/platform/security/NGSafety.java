@@ -190,11 +190,17 @@ public final class NGSafety {
                 } else {
                     // After process death, elapsedRealtime's old value is not available;
                     // use the persisted wall-clock timestamp as a best-effort fallback.
-                    elapsed = System.currentTimeMillis() - lastBg;
+                    long now = System.currentTimeMillis();
+                    // If the wall clock moved backwards, fail closed instead of extending access.
+                    if (now < lastBg) return true;
+                    elapsed = now - lastBg;
                 }
                 return elapsed >= ((long) minutes * 60 * 1000L);
             }
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            // A storage failure must never leave an already-verified session unlocked.
+            FileLog.e(e);
+            return true;
         }
         return false;
     }
