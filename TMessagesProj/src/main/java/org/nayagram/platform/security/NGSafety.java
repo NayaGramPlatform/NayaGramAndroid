@@ -12,7 +12,6 @@ import dev.samstevens.totp.code.DefaultCodeVerifier;
 import dev.samstevens.totp.secret.DefaultSecretGenerator;
 import dev.samstevens.totp.time.SystemTimeProvider;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLog;
 
 import java.nio.charset.StandardCharsets;
@@ -43,7 +42,6 @@ public final class NGSafety {
     private static final String KEY_LAST_BG_TIME = "last_bg_time";
     private static final String KEY_LAST_VERIFIED_TIME = "last_verified_time";
     public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
-    private static Runnable backgroundLockRunnable;
     private static volatile long backgroundElapsedRealtime = 0L;
     private static volatile SharedPreferences cachedPreferences;
 
@@ -137,7 +135,6 @@ public final class NGSafety {
             // Changing the timeout happens while the user is in the foreground settings UI.
             // Clear any stale background timestamp so the previous session's pause cannot
             // immediately expire the newly selected duration on the next resume.
-            cancelBackgroundLockRunnable();
             backgroundElapsedRealtime = 0L;
             prefs(context).edit()
                     .putInt(KEY_AUTOLOCK_MINUTES, minutes)
@@ -168,37 +165,21 @@ public final class NGSafety {
 
     public static void onAppBackground(Context context) {
         if (!isEnabled(context)) return;
-        long now = System.currentTimeMillis();
+        // Mirror Telegram's native passcode model: record when the app leaves the
+        // foreground, then evaluate the configured timeout on return. Do not use a
+        // delayed UI runnable to mutate the session while the app is backgrounded;
+        // stale/cancelled callbacks can race lifecycle transitions on some devices.
         backgroundElapsedRealtime = SystemClock.elapsedRealtime();
         try {
-            prefs(context).edit().putLong(KEY_LAST_BG_TIME, now).apply();
-        } catch (Throwable ignored) {
-        }
-        int minutes = getAutoLockMinutes(context);
-        if (minutes > 0) {
-            cancelBackgroundLockRunnable();
-            // A delayed UI callback is not proof that the configured timeout elapsed.
-            // Re-check the monotonic clock before locking, and reschedule if the callback
-            // fires early (for example after scheduler pressure or device sleep transitions).
-            backgroundLockRunnable = () -> {
-                if (!isEnabled(context)) return;
-                if (isAutoLockExpired(context)) {
-                    lockSession();
-                    return;
-                }
-                long startedAt = backgroundElapsedRealtime;
-                if (startedAt > 0L) {
-                    long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - startedAt);
-                    long remaining = Math.max(1000L, ((long) getAutoLockMinutes(context) * 60 * 1000L) - elapsed);
-                    AndroidUtilities.runOnUIThread(backgroundLockRunnable, remaining);
-                }
-            };
-            AndroidUtilities.runOnUIThread(backgroundLockRunnable, (long) minutes * 60 * 1000L);
+            prefs(context).edit()
+                    .putLong(KEY_LAST_BG_TIME, System.currentTimeMillis())
+                    .apply();
+        } catch (Throwable e) {
+            FileLog.e(e);
         }
     }
 
     public static void onAppForeground(Context context) {
-        cancelBackgroundLockRunnable();
         // Check expiry before clearing the timestamp, but clear it even when Guard is
         // disabled. Otherwise an old background timestamp can survive disable/re-enable
         // and cause an immediate lock unrelated to the newly selected timeout.
@@ -240,13 +221,6 @@ public final class NGSafety {
             return true;
         }
         return false;
-    }
-
-    private static void cancelBackgroundLockRunnable() {
-        if (backgroundLockRunnable != null) {
-            AndroidUtilities.cancelRunOnUIThread(backgroundLockRunnable);
-            backgroundLockRunnable = null;
-        }
     }
 
     public static String beginSetup(Context context) throws Exception {
