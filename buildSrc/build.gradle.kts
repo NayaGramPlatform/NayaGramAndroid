@@ -20,10 +20,11 @@ gradlePlugin {
 }
 
 repositories {
-    maven { url = uri("https://maven.aliyun.com/repository/public") }
+    // Prefer canonical repositories; use the Aliyun mirror only as a fallback.
     google()
-    gradlePluginPortal()
     mavenCentral()
+    gradlePluginPortal()
+    maven { url = uri("https://maven.aliyun.com/repository/public") }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
