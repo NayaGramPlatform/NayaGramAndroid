@@ -1497,6 +1497,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 rightActionBarLayout.getView().setVisibility(View.VISIBLE);
             }
             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.passcodeDismissed, view);
+            // Telegram passcode and NG Guard are separate layers: after Telegram unlocks,
+            // do not reveal the main screen if NG Guard's auto-lock expired in the background.
+            if (NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()) {
+                BaseFragment topFragment = getActionBarLayout().getLastFragment();
+                if (!(topFragment instanceof NGSafetyActivity)) {
+                    presentFragment(new NGSafetyActivity(true));
+                }
+            }
             try {
                 NotificationsController.getInstance(UserConfig.selectedAccount).showNotifications();
             } catch (Exception e) {
@@ -7107,9 +7115,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkFreeDiscSpace(0);
         MediaController.checkGallery();
         onPasscodeResume();
+        // Always account for the app returning to foreground, even while Telegram's
+        // own passcode dialog is visible. NG Guard is enforced after that dialog succeeds.
+        NGSafety.onAppForeground(this);
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             actionBarLayout.onResume();
-            NGSafety.onAppForeground(this);
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.
             if (NGSafety.isEnabled(this) && !NGSafety.isSessionVerified()) {
