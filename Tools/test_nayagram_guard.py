@@ -75,6 +75,7 @@ def main() -> None:
     assert "if (position == guardRow) {\\n                return 3;\\n            }" not in privacy
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
     assert "NGSafety.onAppBackground(this);" in launch, "Guard must process app background lifecycle"
+    assert "NGSafety.onAppForeground(this);" in launch, "Guard must process app foreground lifecycle"
     assert "topFragment instanceof NGSafetyActivity" in launch
     assert "dev.samstevens.totp:totp:1.7.1" in gradle
     assert "androidx.security:security-crypto" in gradle
