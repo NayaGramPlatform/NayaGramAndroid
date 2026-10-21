@@ -169,7 +169,22 @@ public final class NGSafety {
         int minutes = getAutoLockMinutes(context);
         if (minutes > 0) {
             cancelBackgroundLockRunnable();
-            backgroundLockRunnable = () -> lockSession();
+            // A delayed UI callback is not proof that the configured timeout elapsed.
+            // Re-check the monotonic clock before locking, and reschedule if the callback
+            // fires early (for example after scheduler pressure or device sleep transitions).
+            backgroundLockRunnable = () -> {
+                if (!isEnabled(context)) return;
+                if (isAutoLockExpired(context)) {
+                    lockSession();
+                    return;
+                }
+                long startedAt = backgroundElapsedRealtime;
+                if (startedAt > 0L) {
+                    long elapsed = Math.max(0L, SystemClock.elapsedRealtime() - startedAt);
+                    long remaining = Math.max(1000L, ((long) getAutoLockMinutes(context) * 60 * 1000L) - elapsed);
+                    AndroidUtilities.runOnUIThread(backgroundLockRunnable, remaining);
+                }
+            };
             AndroidUtilities.runOnUIThread(backgroundLockRunnable, (long) minutes * 60 * 1000L);
         }
     }
