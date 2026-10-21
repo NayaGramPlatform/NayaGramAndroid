@@ -89,7 +89,10 @@ public final class NGSafety {
                         }
                         editor.apply();
                     }
-                } catch (Throwable ignored) {
+                } catch (Throwable e) {
+                    // Do not cache an un-migrated store as disabled. Let the caller fail
+                    // closed and allow a later call to retry the legacy migration.
+                    throw new Exception("Failed to migrate legacy NG Safety preferences", e);
                 }
             }
             cachedPreferences = primary;
