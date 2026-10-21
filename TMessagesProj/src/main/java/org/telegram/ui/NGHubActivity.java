@@ -591,9 +591,9 @@ public class NGHubActivity extends BaseFragment {
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
-                    ? "Bot chats available in this account. Telegram does not confirm bot ownership in this list, so these are not claimed as bots you created. Use the official BotFather to create your own."
+                    ? "No bots are marked as yours because Telegram's chat list does not verify bot ownership. Use the official BotFather to create a bot; third-party bots appear only in All Joined."
                     : selectedSection == SECTION_COMMUNITIES
-                    ? "Telegram Communities are listed separately from channels and groups. This section uses Telegram's actual community dialog entries; linked chats remain in their own sections."
+                    ? "Telegram Communities are listed separately from channels and groups. Joined community dialog entries appear here; linked chats remain in their own sections."
                     : "Only channels and groups this account created. They appear here automatically from your chat list.");
         } else {
             note.setText("All Joined: channels, groups, bots and Telegram Communities available in this account. Community entries are kept separate from their linked chats; ownership is shown only when Telegram confirms you are the creator.");
@@ -629,7 +629,9 @@ public class NGHubActivity extends BaseFragment {
                     // Telegram represents a Community as its own dialog wrapper.
                     // Do not classify it as a broadcast channel or an ordinary group.
                     chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
-                    if (chat == null || ChatObject.isNotInChat(chat)) continue;
+                    // Community wrappers are authoritative dialog entries. Do not discard them
+                    // merely because the parent chat does not pass the ordinary group membership check.
+                    if (chat == null) continue;
                     type = SECTION_COMMUNITIES;
                 } else if (DialogObject.isChatDialog(dialog.id)) {
                     chat = controller.getChat(-dialog.id);
@@ -643,7 +645,12 @@ public class NGHubActivity extends BaseFragment {
                     continue;
                 }
                 boolean owned = chat != null && chat.creator;
-                if (mineOnly && type != SECTION_BOTS && !owned) continue;
+                // Telegram does not expose reliable bot ownership in the dialog list. Never
+                // populate "My Bot" with arbitrary third-party bots and label them as the user's.
+                if (mineOnly && type == SECTION_BOTS) continue;
+                // Community dialogs represent a distinct joined-space container; show them in
+                // their own tab even while My Spaces is selected, rather than silently hiding them.
+                if (mineOnly && type != SECTION_COMMUNITIES && !owned) continue;
                 // All Joined includes both owned and joined communities.
                 if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
