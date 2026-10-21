@@ -65,8 +65,14 @@ def main() -> None:
     ):
         assert token in java, f"Missing security requirement: {token}"
     assert "getBoolean(ENABLED, false)" in java, "Guard must default OFF"
+    assert 'private static final String KEY_SESSION_VERIFIED = "session_verified"' in java
+    assert 'putBoolean(KEY_SESSION_VERIFIED, true)' in java, "Successful verification must persist session state"
+    assert 'sessionVerified = prefs(context).getBoolean(KEY_SESSION_VERIFIED, false)' in java, "A process restart must restore a verified session when timeout has not expired"
+    assert "KEY_LAST_VERIFIED_TIME" in java, "Successful verification time must be persisted"
     assert "BarcodeFormat.QR_CODE" in ui and "Copy Secret" in ui
     assert "NGSafety.cancelSetup(context)" in ui
+    assert 'verificationError.animate().alpha(1f).translationY(0f).setDuration(220).start();' in ui
+    assert 'codeInput.setError("Invalid or already-used code")' not in ui, "Invalid-code feedback must not use the unreadable system error tooltip"
     assert "NGSafetyActivity" in privacy and "guardRow = rowCount++" in privacy
     # Authenticator is a navigation row, not a toggle; opening its management screen must not disable it.
     assert "presentFragment(new NGSafetyActivity());" in privacy
@@ -91,8 +97,9 @@ def main() -> None:
     foreground_start = java.index("public static void onAppForeground")
     foreground_end = java.index("public static boolean isAutoLockExpired", foreground_start)
     foreground = java[foreground_start:foreground_end]
-    assert "if (isEnabled(context) && isAutoLockExpired(context))" in foreground
-    assert "prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();" in foreground, "Foreground must clear stale timestamps even if Guard is disabled"
+    assert "boolean expired = enabled && isAutoLockExpired(context);" in foreground
+    assert "if (expired)" in foreground and "lockSession(context);" in foreground
+    assert "prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();" in foreground, "Foreground must clear stale timestamps after expiry is evaluated"
     assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
     assert 'throw new Exception("Failed to migrate legacy NG Safety preferences", e);' in java, "Legacy migration errors must not be cached as disabled"
     assert "cachedPreferences = primary;" in java, "Encrypted preferences should be reused across lifecycle calls"
