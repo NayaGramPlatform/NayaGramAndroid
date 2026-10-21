@@ -41,6 +41,7 @@ public final class NGSafety {
     public static final String KEY_AUTOLOCK_MINUTES = "autolock_minutes";
     private static final String KEY_LAST_BG_TIME = "last_bg_time";
     private static final String KEY_LAST_VERIFIED_TIME = "last_verified_time";
+    private static final String KEY_SESSION_VERIFIED = "session_verified";
     public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
     private static volatile long backgroundElapsedRealtime = 0L;
     private static volatile SharedPreferences cachedPreferences;
@@ -111,12 +112,46 @@ public final class NGSafety {
         return sessionVerified;
     }
 
-    public static void markSessionVerified() {
+    public static void markSessionVerified(Context context) {
         sessionVerified = true;
+        try {
+            prefs(context).edit()
+                    .putBoolean(KEY_SESSION_VERIFIED, true)
+                    .putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis())
+                    .apply();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
     }
 
+    /** Backward-compatible entry point for older callers that do not have a Context. */
+    public static void markSessionVerified() {
+        sessionVerified = true;
+        SharedPreferences cached = cachedPreferences;
+        if (cached != null) {
+            cached.edit().putBoolean(KEY_SESSION_VERIFIED, true)
+                    .putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis()).apply();
+        }
+    }
+
+    public static void lockSession(Context context) {
+        sessionVerified = false;
+        try {
+            prefs(context).edit().putBoolean(KEY_SESSION_VERIFIED, false)
+                    .remove(KEY_LAST_VERIFIED_TIME).apply();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    /** Backward-compatible entry point for older callers that do not have a Context. */
     public static void lockSession() {
         sessionVerified = false;
+        SharedPreferences cached = cachedPreferences;
+        if (cached != null) {
+            cached.edit().putBoolean(KEY_SESSION_VERIFIED, false)
+                    .remove(KEY_LAST_VERIFIED_TIME).apply();
+        }
     }
 
     public static int getAutoLockMinutes(Context context) {
@@ -173,6 +208,7 @@ public final class NGSafety {
         try {
             prefs(context).edit()
                     .putLong(KEY_LAST_BG_TIME, System.currentTimeMillis())
+                    .putBoolean(KEY_SESSION_VERIFIED, sessionVerified)
                     .apply();
         } catch (Throwable e) {
             FileLog.e(e);
@@ -180,16 +216,29 @@ public final class NGSafety {
     }
 
     public static void onAppForeground(Context context) {
-        // Check expiry before clearing the timestamp, but clear it even when Guard is
-        // disabled. Otherwise an old background timestamp can survive disable/re-enable
-        // and cause an immediate lock unrelated to the newly selected timeout.
-        if (isEnabled(context) && isAutoLockExpired(context)) {
-            lockSession();
+        // Process recreation resets the in-memory flag. Restore the persisted verified
+        // session only when its configured background interval has not expired.
+        boolean enabled = isEnabled(context);
+        boolean expired = enabled && isAutoLockExpired(context);
+        if (expired) {
+            lockSession(context);
+        } else if (enabled) {
+            try {
+                sessionVerified = prefs(context).getBoolean(KEY_SESSION_VERIFIED, false);
+            } catch (Exception e) {
+                FileLog.e(e);
+                sessionVerified = false;
+            }
+        } else {
+            sessionVerified = false;
         }
+
         backgroundElapsedRealtime = 0L;
         try {
             prefs(context).edit().putLong(KEY_LAST_BG_TIME, 0L).apply();
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            FileLog.e(e);
+            sessionVerified = false;
         }
     }
 
@@ -298,8 +347,9 @@ public final class NGSafety {
             backupCodes.add(display);
             editor.putString(BACKUP_PREFIX + index++, sha256(display));
         }
-        editor.putBoolean(ENABLED, true).apply();
-        markSessionVerified();
+        editor.putBoolean(ENABLED, true).putBoolean(KEY_SESSION_VERIFIED, true)
+                .putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis()).apply();
+        markSessionVerified(context);
         return backupCodes;
     }
 
@@ -311,7 +361,7 @@ public final class NGSafety {
             }
             String secret = secure.getString(KEY_TOTP_SECRET, null);
             if (verifyCode(secret, code)) {
-                markSessionVerified();
+                markSessionVerified(context);
                 return true;
             }
             if (code == null || code.length() < 6 || code.length() > 10) {
@@ -322,7 +372,7 @@ public final class NGSafety {
                 String stored = secure.getString(BACKUP_PREFIX + i, null);
                 if (stored != null && constantTimeEquals(stored, candidate)) {
                     secure.edit().remove(BACKUP_PREFIX + i).apply();
-                    markSessionVerified();
+                    markSessionVerified(context);
                     return true;
                 }
             }
