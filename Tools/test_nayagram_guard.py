@@ -76,6 +76,7 @@ def main() -> None:
     assert "NGSafety.isEnabled" in tabs and "new NGSafetyActivity(true)" in tabs
     assert "NGSafety.onAppBackground(this);" in launch, "Guard must process app background lifecycle"
     assert "NGSafety.onAppForeground(this);" in launch, "Guard must process app foreground lifecycle"
+    assert "NGSafety.isEnabled(LaunchActivity.this) && !NGSafety.isSessionVerified()" in launch, "Guard must re-check after Telegram passcode unlock"
     assert "if (now < lastBg) return true;" in java, "Auto-lock must fail closed on clock rollback"
     assert "FileLog.e(e);\n            return true;" in java, "Auto-lock storage errors must fail closed"
     assert "topFragment instanceof NGSafetyActivity" in launch
