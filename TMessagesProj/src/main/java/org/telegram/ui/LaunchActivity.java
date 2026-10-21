@@ -1481,6 +1481,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         SharedConfig.isWaitingForPasscodeEnter = true;
         PasscodeView.PasscodeViewDelegate delegate = view -> {
             SharedConfig.isWaitingForPasscodeEnter = false;
+            // Re-evaluate the original background interval only after Telegram passcode
+            // succeeds; NG Guard must still block content if its timeout expired meanwhile.
+            NGSafety.onAppForeground(LaunchActivity.this);
             if (passcodeSaveIntent != null) {
                 handleIntent(passcodeSaveIntent, passcodeSaveIntentIsNew, passcodeSaveIntentIsRestore, true, null, false, true);
                 passcodeSaveIntent = null;
@@ -7115,10 +7118,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         checkFreeDiscSpace(0);
         MediaController.checkGallery();
         onPasscodeResume();
-        // Always account for the app returning to foreground, even while Telegram's
-        // own passcode dialog is visible. NG Guard is enforced after that dialog succeeds.
-        NGSafety.onAppForeground(this);
+        // If Telegram's own passcode dialog is visible, retain the persisted background
+        // timestamp until that dialog is dismissed. Otherwise the native passcode could
+        // consume the remaining NG auto-lock window while it is on screen.
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
+            NGSafety.onAppForeground(this);
             actionBarLayout.onResume();
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.
