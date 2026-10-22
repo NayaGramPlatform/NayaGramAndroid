@@ -24,6 +24,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ChatActivity;
 
 /**
@@ -43,9 +44,9 @@ public final class NGChatMenuHelper {
 
     public static void addItems(ActionBarMenuItem headerItem, long dialogId) {
         if (headerItem == null) return;
-        headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId).setColors(0xFF111827, 0xFF7C3AED);
-        headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings").setColors(0xFF111827, 0xFF2563EB);
-        headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate").setColors(0xFF111827, 0xFF059669);
+        headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId).setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
+        headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings").setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
+        headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate").setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
     }
 
     public static boolean handleItemClick(ChatActivity chatActivity, int id, long dialogId) {
