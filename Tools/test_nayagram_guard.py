@@ -120,6 +120,8 @@ def main() -> None:
     assert "optionsExpanded = true;" in auto_lock_ui and "optionsPanel.setVisibility(View.VISIBLE);" in auto_lock_ui, "Auto-lock choices must be visible when the page opens"
     login_ui = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/LoginActivity.java").read_text(encoding="utf-8")
     assert 'if (subtitleView != null && "CANCELLED".equals(err))' not in login_ui, "Cancelled passkey prompt must not leave a stale login title"
+    assert "requestPasskey(" not in login_ui, "Phone login must not request a passkey"
+    assert "PasskeysController" not in login_ui, "Phone login must not open Credential Manager"
     assert "NGSafety.getAutoLockMinutes(getParentActivity())" in ui, "Auto-lock subtitle must refresh when settings resumes"
     assert "NGSafety.onAppForeground(LaunchActivity.this);" in launch, "Native passcode dismissal must re-evaluate NG auto-lock"
     delegate_start = launch.index("PasscodeView.PasscodeViewDelegate delegate = view -> {")
@@ -154,15 +156,16 @@ def main() -> None:
     assert "androidx.credentials:credentials:" in gradle
     assert "androidx.credentials:credentials-play-services-auth:" in gradle
     assert "if (!BuildVars.SUPPORTS_PASSKEYS) return;" in passkeys
-    # Passkey UI is intentionally hidden from Privacy & Security; the underlying
-    # Telegram Credential Manager/server-verified implementation remains untouched.
+    # Passkeys are removed. Privacy must not offer them, and the login screen
+    # must not open Google Password Manager (that sheet lists saved phone numbers).
     assert "passkeysRow = rowCount++" not in privacy
     assert "loadPasskeys();" not in privacy
     assert "new PasskeysActivity(currentPasskeys)" not in privacy
     assert "R.drawable.menu_passkey_add" not in privacy
     assert "getString(R.string.NGPasskeyTitle)" not in privacy
-    print("PASS: NG Passkey is hidden from Privacy & Security without altering Telegram auth")
-    print("PASS: Android Credential Manager passkey registration/login stays server-verified")
+    assert "SUPPORTS_PASSKEYS = false" in build_vars, "Passkeys must stay disabled"
+    assert "SUPPORTS_PASSKEYS = true" not in build_vars
+    print("PASS: NG Passkey is hidden and cannot prompt on the phone login screen")
 
     # NG Hub privacy regression: this legacy helper must never silently join or pin channels.
     auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")

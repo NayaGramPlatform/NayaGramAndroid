@@ -137,7 +137,6 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.MessagesStorage;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.PasskeysController;
 import org.telegram.messenger.PushListenerController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SRPHelper;
@@ -3426,84 +3425,7 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         }
                     }
                 }
-                if (activityMode == MODE_LOGIN) {
-                    requestPasskey(false);
-                }
             }, SHOW_DELAY);
-        }
-
-        @Override
-        public void onDestroyActivity() {
-            super.onDestroyActivity();
-            if (cancelRequestingPasskey != null) {
-                cancelRequestingPasskey.run();
-                cancelRequestingPasskey = null;
-            }
-        }
-
-        private boolean requestedPasskey = false;
-        private boolean requestingPasskey = false;
-        private Runnable cancelRequestingPasskey;
-        private void requestPasskey(boolean clickedButton) {
-            if (activityMode != MODE_LOGIN) return;
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || !BuildVars.SUPPORTS_PASSKEYS) return;
-            if (requestingPasskey || !clickedButton && requestedPasskey) return;
-
-            requestingPasskey = true;
-            requestedPasskey = true;
-            cancelRequestingPasskey = PasskeysController.login(getContext(), currentAccount, clickedButton, (userId, authObject, err) -> {
-                cancelRequestingPasskey = null;
-                requestingPasskey = false;
-                if (err != null && ("EMPTY".equals(err) || "CANCELLED".equals(err))) {
-                    // Do not leave the passkey-login prompt/title on the login screen
-                    // after the optional credential sheet is dismissed.
-                    return;
-                }
-                if (userId != 0 && getParentActivity() instanceof LaunchActivity) {
-                    for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                        UserConfig userConfig = UserConfig.getInstance(a);
-                        if (!userConfig.isClientActivated()) {
-                            continue;
-                        }
-                        if (userConfig.getClientUserId() == userId && ConnectionsManager.getInstance(a).isTestBackend() == testBackend) {
-                            if (UserConfig.selectedAccount != a) {
-                                ((LaunchActivity) getParentActivity()).switchToAccount(a, true);
-                            }
-                            finishFragment();
-                            needHideProgress(false);
-                            return;
-                        }
-                    }
-                }
-                if (err != null && err.contains("SESSION_PASSWORD_NEEDED")) {
-                    final TL_account.getPassword req2 = new TL_account.getPassword();
-                    ConnectionsManager.getInstance(currentAccount).sendRequest(req2, (response1, error1) -> AndroidUtilities.runOnUIThread(() -> {
-                        nextPressed = false;
-                        showDoneButton(false, true);
-                        if (error1 == null) {
-                            final TL_account.Password password = (TL_account.Password) response1;
-                            if (!TwoStepVerificationActivity.canHandleCurrentPassword(password, true)) {
-                                AlertsCreator.showUpdateAppAlert(getParentActivity(), getString("UpdateAppAlert", R.string.UpdateAppAlert), true);
-                                return;
-                            }
-                            final Bundle bundle = new Bundle();
-                            final SerializedData data = new SerializedData(password.getObjectSize());
-                            password.serializeToStream(data);
-                            bundle.putString("password", Utilities.bytesToHex(data.toByteArray()));
-                            setPage(VIEW_PASSWORD, true, bundle, false);
-                        } else {
-                            needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), error1.text);
-                        }
-                    }), ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin);
-                } else if (err != null) {
-                    if (BuildVars.DEBUG_VERSION)
-                        BulletinFactory.of(LoginActivity.this).showForError(err);
-                    return;
-                }
-                if (authObject instanceof TLRPC.TL_auth_authorization) {
-                    onAuthSuccess((TLRPC.TL_auth_authorization) authObject);
-                }
-            });
         }
 
         @Override

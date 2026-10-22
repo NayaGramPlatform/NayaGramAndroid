@@ -52,10 +52,10 @@ public class BuildVars {
     }
 
 
-    // NayaGram enables the native Android Credential Manager passkey flow.
-    // The server must advertise a relying-party ID associated with org.nayagram.platform
-    // before production passkey registration can succeed.
-    public static boolean SUPPORTS_PASSKEYS = true;
+    // Passkeys are removed. Leaving this on makes the phone login screen call
+    // Credential Manager, which shows Google Password Manager and the saved
+    // account phone numbers. Do not turn this back on.
+    public static boolean SUPPORTS_PASSKEYS = false;
 
     static {
         if (ApplicationLoader.applicationContext != null) {
