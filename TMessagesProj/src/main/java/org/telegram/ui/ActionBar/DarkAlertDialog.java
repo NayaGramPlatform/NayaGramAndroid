@@ -10,12 +10,8 @@ public class DarkAlertDialog extends AlertDialog {
 
 	@Override
 	protected int getThemedColor(int key) {
-		if (key == Theme.key_dialogBackground) {
-			return 0xFF262626;
-		} else if (key == Theme.key_dialogTextBlack || key == Theme.key_dialogButton || key == Theme.key_dialogScrollGlow) {
-			return 0xFFFFFFFF;
-		}
-		return super.getThemedColor(key);
+        // Respect the active theme; hard-coded dark surfaces made dialogs unreadable in light mode.
+        return super.getThemedColor(key);
 	}
 
 	public static class Builder extends AlertDialog.Builder {
