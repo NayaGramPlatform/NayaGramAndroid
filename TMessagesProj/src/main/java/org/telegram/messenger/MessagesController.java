@@ -15241,12 +15241,34 @@ public class MessagesController extends BaseController implements NotificationCe
         });
     }
 
+    private final LongSparseArray<TLRPC.Peer> localDefaultSendAsPeers = new LongSparseArray<>();
+
+    public TLRPC.Peer getSavedDefaultSendAs(long dialogId) {
+        TLRPC.Peer mem = localDefaultSendAsPeers.get(dialogId);
+        if (mem != null) {
+            return mem;
+        }
+        long savedPeerId = getMainSettings().getLong("ng_send_as_peer_" + dialogId, 0L);
+        if (savedPeerId != 0L) {
+            TLRPC.Peer restored = getPeer(savedPeerId);
+            localDefaultSendAsPeers.put(dialogId, restored);
+            return restored;
+        }
+        return null;
+    }
+
     public void setDefaultSendAs(long chatId, long newPeer) {
+        TLRPC.Peer selectedPeer = getPeer(newPeer);
+        localDefaultSendAsPeers.put(chatId, selectedPeer);
+        getMainSettings().edit().putLong("ng_send_as_peer_" + chatId, newPeer).apply();
         TLRPC.ChatFull cachedFull = getChatFull(-chatId);
         if (cachedFull != null) {
-            cachedFull.default_send_as = getPeer(newPeer);
+            cachedFull.default_send_as = selectedPeer;
+            cachedFull.flags |= 32768;
             getMessagesStorage().updateChatInfo(cachedFull, false);
             getNotificationCenter().postNotificationName(NotificationCenter.updateDefaultSendAsPeer, chatId, cachedFull.default_send_as);
+        } else {
+            getNotificationCenter().postNotificationName(NotificationCenter.updateDefaultSendAsPeer, chatId, selectedPeer);
         }
 
         final TLRPC.TL_messages_saveDefaultSendAs req = new TLRPC.TL_messages_saveDefaultSendAs();
@@ -15256,8 +15278,6 @@ public class MessagesController extends BaseController implements NotificationCe
             if (response instanceof TLRPC.TL_boolTrue) {
                 TLRPC.ChatFull full = getChatFull(-chatId);
                 if (full == null) loadFullChat(-chatId, 0, true);
-            } else if (error != null && error.code == 400) {
-                loadFullChat(-chatId, 0, true);
             }
         }, ConnectionsManager.RequestFlagInvokeAfter);
     }
@@ -21726,58 +21746,120 @@ public class MessagesController extends BaseController implements NotificationCe
     public TLRPC.TL_channels_sendAsPeers getSendAsPeers(long dialogId) {
         return getSendAsPeers(dialogId, false);
     }
+    public TLRPC.TL_channels_sendAsPeers ensureSendAsPeers(TLRPC.TL_channels_sendAsPeers res) {
+        if (res == null) {
+            res = new TLRPC.TL_channels_sendAsPeers();
+        }
+        long selfId = getUserConfig().getClientUserId();
+        TLRPC.User selfUser = getUser(selfId);
+        if (selfUser == null) {
+            selfUser = getUserConfig().getCurrentUser();
+        }
+        boolean hasSelf = false;
+        for (int i = 0; i < res.peers.size(); i++) {
+            TLRPC.Peer p = res.peers.get(i).peer;
+            if (p != null && p.user_id == selfId) {
+                hasSelf = true;
+                break;
+            }
+        }
+        if (!hasSelf && selfId != 0) {
+            TLRPC.TL_sendAsPeer selfSendAs = new TLRPC.TL_sendAsPeer();
+            TLRPC.TL_peerUser peerUser = new TLRPC.TL_peerUser();
+            peerUser.user_id = selfId;
+            selfSendAs.peer = peerUser;
+            selfSendAs.premium_required = false;
+            res.peers.add(0, selfSendAs);
+            if (selfUser != null && !res.users.contains(selfUser)) {
+                res.users.add(selfUser);
+            }
+        }
+        for (int i = 0; i < allDialogs.size(); i++) {
+            TLRPC.Dialog d = allDialogs.get(i);
+            if (d != null && DialogObject.isChatDialog(d.id)) {
+                TLRPC.Chat c = getChat(-d.id);
+                if (c != null && ChatObject.isChannelAndNotMegaGroup(c) && !c.gigagroup && !ChatObject.isNotInChat(c)
+                        && (c.creator || (c.admin_rights != null && c.admin_rights.post_messages))) {
+                    boolean exists = false;
+                    for (int j = 0; j < res.peers.size(); j++) {
+                        TLRPC.Peer p = res.peers.get(j).peer;
+                        if (p != null && p.channel_id == c.id) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        TLRPC.TL_sendAsPeer sp = new TLRPC.TL_sendAsPeer();
+                        TLRPC.TL_peerChannel pc = new TLRPC.TL_peerChannel();
+                        pc.channel_id = c.id;
+                        sp.peer = pc;
+                        sp.premium_required = false;
+                        res.peers.add(sp);
+                        boolean chatInList = false;
+                        for (int k = 0; k < res.chats.size(); k++) {
+                            if (res.chats.get(k).id == c.id) {
+                                chatInList = true;
+                                break;
+                            }
+                        }
+                        if (!chatInList) {
+                            res.chats.add(c);
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
     public TLRPC.TL_channels_sendAsPeers getSendAsPeers(long dialogId, boolean live_stories) {
         final LongSparseArray<SendAsPeersInfo> array = live_stories ? sendAsPeersLiveStories : sendAsPeers;
         SendAsPeersInfo info = array.get(dialogId);
         if (info != null && (info.loading || Math.abs(SystemClock.elapsedRealtime() - info.loadTime) <= 5 * 60 * 1000)) {
-            return info.sendAsPeers;
+            if (info.sendAsPeers != null) {
+                return ensureSendAsPeers(info.sendAsPeers);
+            }
         }
         if (!live_stories) {
             final TLRPC.Chat chat = getChat(-dialogId);
-            if (chat == null || !ChatObject.canSendAsPeers(chat)) {
+            if (chat == null || (!ChatObject.canSendAsPeers(chat) && !chat.megagroup)) {
                 return null;
             }
         }
         info = new SendAsPeersInfo();
         info.loading = true;
+        info.sendAsPeers = ensureSendAsPeers(null);
         array.put(dialogId, info);
         SendAsPeersInfo infoFinal = info;
         final TLRPC.TL_channels_getSendAs req = new TLRPC.TL_channels_getSendAs();
         req.peer = getInputPeer(dialogId);
         req.for_live_stories = live_stories;
         getConnectionsManager().sendRequest(req, (response, error) -> {
-            TLRPC.TL_channels_sendAsPeers result;
-            if (response != null) {
-                TLRPC.TL_channels_sendAsPeers res = (TLRPC.TL_channels_sendAsPeers) response;
-                if (res.peers.isEmpty()) {
-                    result = null;
-                } else {
-                    result = res;
-                    AndroidUtilities.runOnUIThread(() -> {
-                        putUsers(res.users, false);
-                        putChats(res.chats, false);
-                    });
-                }
-            } else {
-                result = null;
-            }
+            final TLRPC.TL_channels_sendAsPeers rawRes = response instanceof TLRPC.TL_channels_sendAsPeers
+                    ? (TLRPC.TL_channels_sendAsPeers) response : null;
             AndroidUtilities.runOnUIThread(() -> {
-                if (result == null) {
-                    array.remove(dialogId);
-                } else {
-                    infoFinal.loadTime = SystemClock.elapsedRealtime();
-                    infoFinal.sendAsPeers = result;
-                    getNotificationCenter().postNotificationName(NotificationCenter.didLoadSendAsPeers, dialogId, result, live_stories);
+                infoFinal.loading = false;
+                if (rawRes != null) {
+                    putUsers(rawRes.users, false);
+                    putChats(rawRes.chats, false);
                 }
+                TLRPC.TL_channels_sendAsPeers merged = ensureSendAsPeers(rawRes);
+                infoFinal.loadTime = SystemClock.elapsedRealtime();
+                infoFinal.sendAsPeers = merged;
+                getNotificationCenter().postNotificationName(NotificationCenter.didLoadSendAsPeers, dialogId, merged, live_stories);
             });
         });
-        return null;
+        return info.sendAsPeers;
     }
 
     public TLRPC.Peer getSendAsSelectedPeer(long dialogId) {
         TLRPC.ChatFull chatFull = getChatFull(-dialogId);
         if (chatFull != null && chatFull.default_send_as != null) {
             return chatFull.default_send_as;
+        }
+        TLRPC.Peer saved = getSavedDefaultSendAs(dialogId);
+        if (saved != null) {
+            return saved;
         }
         TLRPC.TL_peerUser peerUser = new TLRPC.TL_peerUser();
         peerUser.user_id = getAccountInstance().getUserConfig().clientUserId;

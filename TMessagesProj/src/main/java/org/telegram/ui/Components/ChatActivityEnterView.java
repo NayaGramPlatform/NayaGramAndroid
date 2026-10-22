@@ -4158,6 +4158,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             if (peers == null) {
                 peers = controller.getSendAsPeers(dialog_id);
             }
+            peers = controller.ensureSendAsPeers(peers);
             if (peers != null) {
                 try {
                     v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
@@ -11180,17 +11181,21 @@ public class ChatActivityEnterView extends FrameLayout implements
             TLRPC.ChatFull full = MessagesController.getInstance(currentAccount).getChatFull(-dialog_id);
             defPeer = full != null ? full.default_send_as : null;
         }
+        if (!isLiveComment && defPeer == null) {
+            defPeer = MessagesController.getInstance(currentAccount).getSavedDefaultSendAs(dialog_id);
+        }
         if (defPeer == null && delegate.getSendAsPeers() != null && !delegate.getSendAsPeers().peers.isEmpty()) {
             defPeer = delegate.getSendAsPeers().peers.get(0).peer;
         }
-        if (defPeer == null && chat != null && ChatObject.canSendAsPeers(chat)) {
+        final boolean canSendAsInChat = chat != null && (ChatObject.canSendAsPeers(chat) || (chat.megagroup && ChatObject.canWriteToChat(chat)));
+        if (defPeer == null && canSendAsInChat) {
             long selfUserId = UserConfig.getInstance(currentAccount).getClientUserId();
             TLRPC.TL_peerUser selfPeer = new TLRPC.TL_peerUser();
             selfPeer.user_id = selfUserId;
             defPeer = selfPeer;
         }
         final boolean isVisible = !forceHide && defPeer != null
-            && (delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1)
+            && (canSendAsInChat || delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1)
             && !isEditingMessage() && !isRecordingAudioVideo()
             && (recordedAudioPanel == null || recordedAudioPanel.getVisibility() != View.VISIBLE)
             && (isLiveComment || (!ChatObject.isChannelAndNotMegaGroup(chat) || ChatObject.canSendAsPeers(chat)) && !ChatObject.isMonoForum(chat))

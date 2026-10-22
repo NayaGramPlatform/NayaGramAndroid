@@ -152,5 +152,33 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn("Theme.key_windowBackgroundWhiteBlackText", safety_code)
         self.assertIn("Theme.key_windowBackgroundWhiteGrayText2", safety_code)
 
+
+    def test_send_as_channel_group_persistence(self):
+        enter_view_code = (ROOT / "java/org/telegram/ui/Components/ChatActivityEnterView.java").read_text()
+        self.assertIn("final boolean canSendAsInChat = chat != null && (ChatObject.canSendAsPeers(chat) || (chat.megagroup && ChatObject.canWriteToChat(chat)));", enter_view_code)
+        self.assertIn("&& (canSendAsInChat || delegate.getSendAsPeers() == null || delegate.getSendAsPeers().peers.size() > 1)", enter_view_code)
+        self.assertIn("peers = controller.ensureSendAsPeers(peers);", enter_view_code)
+        mc_code = (ROOT / "java/org/telegram/messenger/MessagesController.java").read_text()
+        self.assertIn("public TLRPC.TL_channels_sendAsPeers ensureSendAsPeers(TLRPC.TL_channels_sendAsPeers res)", mc_code)
+        self.assertIn("public TLRPC.Peer getSavedDefaultSendAs(long dialogId)", mc_code)
+        self.assertIn("infoFinal.loading = false;", mc_code)
+
+    def test_about_rating_no_yellow_and_super_admin_button(self):
+        about_code = (ROOT / "java/org/nayagram/platform/ui/NayaAboutActivity.java").read_text()
+        self.assertIn("SUPER_ADMIN_HANDLE = \"NG_HuzayfaSheikh\"", about_code)
+        self.assertIn("SUPER ADMIN", about_code)
+        self.assertIn("Rate NayaGram on Google Play", about_code)
+        self.assertNotIn("0xFFFF8A00", about_code)
+        settings_code = (ROOT / "java/org/telegram/ui/SettingsActivity.java").read_text()
+        self.assertIn("NG_HuzayfaSheikh", settings_code)
+        self.assertIn("Super Admin", settings_code)
+
+    def test_autolock_cold_start_and_preset_persistence(self):
+        safety_code = (ROOT / "java/org/nayagram/platform/security/NGSafety.java").read_text()
+        self.assertIn(".putBoolean(KEY_SESSION_VERIFIED, true)", safety_code)
+        self.assertIn("long lastVerified = prefs(context).getLong(KEY_LAST_VERIFIED_TIME, 0L);", safety_code)
+        tabs_code = (ROOT / "java/org/telegram/ui/MainTabsActivity.java").read_text()
+        self.assertIn("NGSafety.onAppForeground(getParentActivity());", tabs_code)
+
 if __name__ == '__main__':
     unittest.main()

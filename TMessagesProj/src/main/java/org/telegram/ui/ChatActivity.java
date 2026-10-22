@@ -22692,6 +22692,13 @@ public class ChatActivity extends BaseFragment implements
                 }
                 showGigagroupConvertAlert();
                 long prevLinkedChatId = chatInfo != null ? chatInfo.linked_chat_id : 0;
+                if (chatFull.default_send_as == null) {
+                    TLRPC.Peer savedSendAs = getMessagesController().getSavedDefaultSendAs(dialog_id);
+                    if (savedSendAs != null) {
+                        chatFull.default_send_as = savedSendAs;
+                        chatFull.flags |= 32768;
+                    }
+                }
                 chatInfo = chatFull;
                 gotChatInfo();
                 if (ChatObject.isBoostSupported(currentChat) && !ChatObject.isMonoForum(currentChat) /*chatMode != MODE_SUGGESTIONS*/) {
@@ -25044,10 +25051,14 @@ public class ChatActivity extends BaseFragment implements
     }
 
     private void loadSendAsPeers(boolean animatedUpdate) {
-        if (sendAsPeersObj != null || currentChat == null || !ChatObject.canSendAsPeers(currentChat) || chatActivityEnterView == null || ChatObject.isMonoForum(currentChat)) {
+        if (currentChat == null || (!ChatObject.canSendAsPeers(currentChat) && !currentChat.megagroup) || chatActivityEnterView == null || ChatObject.isMonoForum(currentChat)) {
             return;
         }
-        sendAsPeersObj = getMessagesController().getSendAsPeers(dialog_id);
+        if (sendAsPeersObj == null) {
+            sendAsPeersObj = getMessagesController().getSendAsPeers(dialog_id);
+        } else {
+            sendAsPeersObj = getMessagesController().ensureSendAsPeers(sendAsPeersObj);
+        }
         if (sendAsPeersObj != null) {
             chatActivityEnterView.updateSendAsButton(animatedUpdate);
         }

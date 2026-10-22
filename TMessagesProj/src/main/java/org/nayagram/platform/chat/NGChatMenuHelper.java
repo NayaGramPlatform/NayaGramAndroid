@@ -44,9 +44,13 @@ public final class NGChatMenuHelper {
 
     public static void addItems(ActionBarMenuItem headerItem, long dialogId) {
         if (headerItem == null) return;
-        headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId).setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
-        headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings").setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
-        headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate").setColors(Theme.getColor(Theme.key_actionBarDefaultSubmenuItem), Theme.getColor(Theme.key_actionBarDefaultSubmenuItemIcon));
+        boolean dark = Theme.isCurrentThemeDark();
+        headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId)
+                .setColors(dark ? 0xFFFFFFFF : 0xFF7C3AED, dark ? 0xFFA78BFA : 0xFF7C3AED);
+        headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings")
+                .setColors(dark ? 0xFFFFFFFF : 0xFF0284C7, dark ? 0xFF00D4FF : 0xFF0284C7);
+        headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate")
+                .setColors(dark ? 0xFFFFFFFF : 0xFF059669, dark ? 0xFF10B981 : 0xFF059669);
     }
 
     public static boolean handleItemClick(ChatActivity chatActivity, int id, long dialogId) {
@@ -156,8 +160,9 @@ public final class NGChatMenuHelper {
         row.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
         boolean dark = Theme.isCurrentThemeDark();
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(dark ? 0xFF1E293B : 0xFFF8FAFC);
+        bg.setColor(dark ? 0xFF1E293B : 0xFFF0F9FF);
         bg.setCornerRadius(AndroidUtilities.dp(14));
+        bg.setStroke(AndroidUtilities.dp(1), dark ? 0x4400D4FF : 0xFFBAE6FD);
         row.setBackground(bg);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.bottomMargin = AndroidUtilities.dp(8);
@@ -182,12 +187,12 @@ public final class NGChatMenuHelper {
         text.setOrientation(LinearLayout.VERTICAL);
         TextView titleView = new TextView(context);
         titleView.setText(title);
-        titleView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        titleView.setTextColor(dark ? Theme.getColor(Theme.key_dialogTextBlack) : color);
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
         titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         TextView valueView = new TextView(context);
         valueView.setText(value);
-        valueView.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
+        valueView.setTextColor(dark ? Theme.getColor(Theme.key_dialogTextGray2) : 0xFF0284C7);
         valueView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         valueView.setMaxLines(1);
         valueView.setEllipsize(TextUtils.TruncateAt.END);

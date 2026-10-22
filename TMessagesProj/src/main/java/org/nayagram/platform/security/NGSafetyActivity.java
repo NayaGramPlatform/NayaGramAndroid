@@ -141,18 +141,19 @@ public class NGSafetyActivity extends BaseFragment {
     private void buildSettings(Context context) {
         addTitle(context, "NG Authenticator");
         addText(context, "An optional app-level authenticator layer. Telegram OTP and Telegram Two-Step Verification remain unchanged.");
+        boolean dark = Theme.isCurrentThemeDark();
         LinearLayout card = new LinearLayout(context);
         card.setGravity(Gravity.CENTER_VERTICAL);
         card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
-        card.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_divider)));
+        card.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), dark ? 0xFF00D4FF : 0xFFBAE6FD));
         card.setOrientation(LinearLayout.HORIZONTAL);
         content.addView(card, params(0, 12));
         LinearLayout labels = new LinearLayout(context);
         labels.setOrientation(LinearLayout.VERTICAL);
         card.addView(labels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView label = text(context, "NG Authenticator", 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
+        TextView label = text(context, "NG Authenticator", 15, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : 0xFF0284C7, true);
         labels.addView(label);
-        TextView status = text(context, NGSafety.isEnabled(context) ? "Enabled · code required before main page" : "Disabled by default", 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
+        TextView status = text(context, NGSafety.isEnabled(context) ? "Enabled · code required before main page" : "Disabled by default", 12, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2) : 0xFF059669, false);
         labels.addView(status);
         Switch toggle = new Switch(context);
         toggle.setChecked(NGSafety.isEnabled(context));
@@ -190,18 +191,18 @@ public class NGSafetyActivity extends BaseFragment {
         autoLockCard.setOrientation(LinearLayout.HORIZONTAL);
         autoLockCard.setGravity(Gravity.CENTER_VERTICAL);
         autoLockCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        autoLockCard.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_divider)));
+        autoLockCard.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), dark ? 0xFF7C3AED : 0xFFBAE6FD));
         content.addView(autoLockCard, params(0, 12));
 
         LinearLayout autoLockLabels = new LinearLayout(context);
         autoLockLabels.setOrientation(LinearLayout.VERTICAL);
         autoLockCard.addView(autoLockLabels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-        TextView autoLockTitle = text(context, "Auto-lock", 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
+        TextView autoLockTitle = text(context, "Auto-lock", 15, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : 0xFF7C3AED, true);
         autoLockLabels.addView(autoLockTitle);
 
         int currentMins = NGSafety.getAutoLockMinutes(context);
-        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
+        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2) : 0xFF0284C7, false);
         autoLockLabels.addView(autoLockSubtitle);
 
         ImageView arrow = new ImageView(context);
@@ -394,7 +395,7 @@ public class NGSafetyActivity extends BaseFragment {
         logoParams.gravity = Gravity.CENTER_HORIZONTAL;
         hero.addView(heroLogo, logoParams);
 
-        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 24, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
+        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 24, Theme.isCurrentThemeDark() ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : 0xFF0284C7, true);
         heroTitle.setGravity(Gravity.CENTER);
         heroTitle.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(4));
         hero.addView(heroTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -632,13 +633,15 @@ public class NGSafetyActivity extends BaseFragment {
     }
 
     private void addTitle(Context context, String value) {
-        TextView title = text(context, value, 22, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
+        boolean dark = Theme.isCurrentThemeDark();
+        TextView title = text(context, value, 22, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : 0xFF0284C7, true);
         title.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(8));
         content.addView(title, params(0, 6));
     }
 
     private void addText(Context context, String value) {
-        TextView label = text(context, value, 13, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
+        boolean dark = Theme.isCurrentThemeDark();
+        TextView label = text(context, value, 13, dark ? Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2) : 0xFF075985, false);
         label.setLineSpacing(AndroidUtilities.dp(2), 1.05f);
         content.addView(label, params(0, 10));
     }

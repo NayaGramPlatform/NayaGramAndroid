@@ -207,7 +207,7 @@ public class NGAutoLockActivity extends BaseFragment {
             TextView label = new TextView(context);
             label.setText(item.label);
             label.setTextSize(15);
-            label.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            label.setTextColor(Theme.isCurrentThemeDark() ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : (selected ? 0xFF0284C7 : 0xFF7C3AED));
             label.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
             card.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 

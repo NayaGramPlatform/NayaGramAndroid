@@ -171,9 +171,12 @@ public final class NGSafety {
             // Clear any stale background timestamp so the previous session's pause cannot
             // immediately expire the newly selected duration on the next resume.
             backgroundElapsedRealtime = 0L;
+            sessionVerified = true;
             prefs(context).edit()
                     .putInt(KEY_AUTOLOCK_MINUTES, minutes)
                     .putLong(KEY_LAST_BG_TIME, 0L)
+                    .putBoolean(KEY_SESSION_VERIFIED, true)
+                    .putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis())
                     .apply();
             FileLog.d("NG Auto-lock preset saved: " + minutes + "min");
             return getAutoLockMinutes(context) == minutes;
@@ -225,6 +228,9 @@ public final class NGSafety {
         } else if (enabled) {
             try {
                 sessionVerified = prefs(context).getBoolean(KEY_SESSION_VERIFIED, false);
+                if (sessionVerified) {
+                    prefs(context).edit().putLong(KEY_LAST_VERIFIED_TIME, System.currentTimeMillis()).apply();
+                }
             } catch (Exception e) {
                 FileLog.e(e);
                 sessionVerified = false;
@@ -263,6 +269,12 @@ public final class NGSafety {
                     elapsed = now - lastBg;
                 }
                 return elapsed >= ((long) minutes * 60 * 1000L);
+            }
+            long lastVerified = prefs(context).getLong(KEY_LAST_VERIFIED_TIME, 0L);
+            if (lastVerified > 0L) {
+                long now = System.currentTimeMillis();
+                if (now < lastVerified) return true;
+                return (now - lastVerified) >= ((long) minutes * 60 * 1000L);
             }
         } catch (Throwable e) {
             // A storage failure must never leave an already-verified session unlocked.

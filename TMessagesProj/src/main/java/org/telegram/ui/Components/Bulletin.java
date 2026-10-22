@@ -2026,7 +2026,7 @@ public class Bulletin {
             addView(textView, LayoutHelper.createFrameRelatively(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL, 56, 0, 16, 0));
 
             textView.setLinkTextColor(getThemedColor(Theme.key_undo_cancelColor));
-            setTextColor(getThemedColor(Theme.key_undo_infoColor));
+            setTextColor(Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0284C7);
             setBackground(getThemedColor(Theme.key_undo_background));
         }
 
@@ -2053,8 +2053,13 @@ public class Bulletin {
 
         public void setAnimation(int resId, int w, int h, String... layers) {
             imageView.setAnimation(resId, w, h);
-            for (String layer : layers) {
-                imageView.setLayerColor(layer, textColor);
+            int iconColor = Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;
+            if (layers != null && layers.length > 0) {
+                for (String layer : layers) {
+                    imageView.setLayerColor(layer, iconColor);
+                }
+            } else if (!Theme.isCurrentThemeDark()) {
+                imageView.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
             }
         }
 

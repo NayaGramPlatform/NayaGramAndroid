@@ -274,6 +274,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     @Override
     public void onResume() {
         super.onResume();
+        if (getParentActivity() != null && !org.telegram.messenger.SharedConfig.isWaitingForPasscodeEnter && !NGSafety.isSessionVerified()) {
+            NGSafety.onAppForeground(getParentActivity());
+        }
         if (getParentActivity() != null && NGSafety.isEnabled(getParentActivity()) && !NGSafety.isSessionVerified()) {
             // Avoid stacking duplicate gates when returning from the authenticator app.
             BaseFragment topFragment = getParentLayout() == null ? null : getParentLayout().getLastFragment();

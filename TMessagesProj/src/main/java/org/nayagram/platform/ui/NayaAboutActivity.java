@@ -38,17 +38,18 @@ public class NayaAboutActivity extends BaseFragment {
 
     private static final String SUPPORT_EMAIL = "support.nayagram@gmail.com";
     private static final String PRIVACY_URL = "https://nayagramplatform.github.io/PrivacyArticleCenter/";
+    private static final String SUPER_ADMIN_HANDLE = "NG_HuzayfaSheikh";
     private static final String TG_CHANNEL = "NayaGramPro";
     private static final String X_HANDLE = "NayaGramPro";
     private static final String YT_HANDLE = "NayaGramPro";
     private static final String FB_HANDLE = "NayaGramPro";
 
-    private static final int C_BLUE = 0xFF0D80ED;
+    private static final int C_CYAN = 0xFF00D4FF;
+    private static final int C_BLUE = 0xFF0284C7;
     private static final int C_BLUE2 = 0xFF4C6FFF;
-    private static final int C_PURPLE = 0xFF7C4DFF;
+    private static final int C_PURPLE = 0xFF7C3AED;
     private static final int C_TEAL = 0xFF00BFA5;
-    private static final int C_GREEN = 0xFF43A047;
-    private static final int C_ORANGE = 0xFFFF8A00;
+    private static final int C_GREEN = 0xFF10B981;
     private static final int C_PINK = 0xFFEC407A;
     private static final int C_RED = 0xFFE53935;
     private static final int C_TG = 0xFF2AABEE;
@@ -152,7 +153,7 @@ public class NayaAboutActivity extends BaseFragment {
         chips.addView(chip(context, R.drawable.outline_shield_check, C_BLUE, "Privacy First"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
         chips.addView(chip(context, R.drawable.msg_folders, C_PURPLE, "Smart Tools"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
         chips.addView(chip(context, R.drawable.ic_naya_fingerprint, C_PINK, "Biometric"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 8, 0));
-        chips.addView(chip(context, R.drawable.outline_ai_translate2, C_ORANGE, "Translate"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+        chips.addView(chip(context, R.drawable.outline_ai_translate2, C_GREEN, "Translate"), LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
         chipsScroll.addView(chips);
         root.addView(chipsScroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
@@ -199,9 +200,60 @@ public class NayaAboutActivity extends BaseFragment {
         privacy.addView(row(context, R.drawable.msg_policy, C_PURPLE, "No chat selling", "We do not sell messages or contacts", v -> openUrl(PRIVACY_URL)));
         root.addView(privacy, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
+        // ════════ SUPER ADMIN ════════
+        root.addView(section(context, "Administration"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        LinearLayout adminBtnCard = new LinearLayout(context);
+        adminBtnCard.setOrientation(LinearLayout.HORIZONTAL);
+        adminBtnCard.setGravity(Gravity.CENTER_VERTICAL);
+        GradientDrawable adminBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFF0284C7, 0xFF7C3AED}
+        );
+        adminBg.setCornerRadius(AndroidUtilities.dp(18));
+        adminBg.setStroke(AndroidUtilities.dp(1.5f), C_CYAN);
+        adminBtnCard.setBackground(adminBg);
+        adminBtnCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        if (Build.VERSION.SDK_INT >= 21) adminBtnCard.setElevation(AndroidUtilities.dp(4));
+        adminBtnCard.setOnClickListener(v -> openSuperAdmin());
+
+        FrameLayout adminIconWrap = new FrameLayout(context);
+        GradientDrawable adminIconBg = new GradientDrawable();
+        adminIconBg.setShape(GradientDrawable.OVAL);
+        adminIconBg.setColor(0x33FFFFFF);
+        adminIconBg.setStroke(AndroidUtilities.dp(1), 0x80FFFFFF);
+        adminIconWrap.setBackground(adminIconBg);
+        ImageView adminIcon = new ImageView(context);
+        adminIcon.setImageResource(R.drawable.msg_admins);
+        adminIcon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        adminIconWrap.addView(adminIcon, LayoutHelper.createFrame(24, 24, Gravity.CENTER));
+        adminBtnCard.addView(adminIconWrap, LayoutHelper.createLinear(44, 44, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
+
+        LinearLayout adminCol = new LinearLayout(context);
+        adminCol.setOrientation(LinearLayout.VERTICAL);
+        TextView adminRoleBadge = bold(context, "👑 SUPER ADMIN", 11, C_CYAN);
+        adminCol.addView(adminRoleBadge);
+        TextView adminHandleView = bold(context, "@" + SUPER_ADMIN_HANDLE, 16, Color.WHITE);
+        adminCol.addView(adminHandleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        TextView adminSubView = normal(context, "Official Super Admin · Tap to message directly", 12, 0xE6FFFFFF);
+        adminCol.addView(adminSubView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        adminBtnCard.addView(adminCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+
+        TextView adminActionPill = bold(context, "Chat →", 13, Color.WHITE);
+        GradientDrawable adminPillBg = new GradientDrawable();
+        adminPillBg.setColor(0x33FFFFFF);
+        adminPillBg.setCornerRadius(AndroidUtilities.dp(14));
+        adminPillBg.setStroke(AndroidUtilities.dp(1), C_CYAN);
+        adminActionPill.setBackground(adminPillBg);
+        adminActionPill.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
+        adminBtnCard.addView(adminActionPill, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+        root.addView(adminBtnCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
+
         // ════════ COMMUNITY ════════
         root.addView(section(context, "Community & updates"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
         LinearLayout community = whiteCard(context);
+        community.addView(row(context, R.drawable.msg_admins, C_PURPLE, "Super Admin", "@" + SUPER_ADMIN_HANDLE, v -> openSuperAdmin()));
+        community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
         community.addView(row(context, R.drawable.ic_social_telegram, C_TG, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
         community.addView(row(context, R.drawable.ic_social_x, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), "Twitter / X", "@" + X_HANDLE, v -> openUrl("https://x.com/" + X_HANDLE)));
@@ -211,8 +263,56 @@ public class NayaAboutActivity extends BaseFragment {
         community.addView(row(context, R.drawable.ic_social_facebook, 0xFF1877F2, "Facebook", "@" + FB_HANDLE, v -> openUrl("https://facebook.com/" + FB_HANDLE)));
         root.addView(community, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
-        // ════════ SUPPORT CTA ════════
-        root.addView(section(context, "Support"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+        // ════════ RATING & SUPPORT CTA ════════
+        root.addView(section(context, "Support & Rating"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        if (BuildVars.PLAYSTORE_APP_URL != null && !BuildVars.PLAYSTORE_APP_URL.isEmpty()) {
+            LinearLayout rateBtnCard = new LinearLayout(context);
+            rateBtnCard.setOrientation(LinearLayout.HORIZONTAL);
+            rateBtnCard.setGravity(Gravity.CENTER_VERTICAL);
+            GradientDrawable rateBg = new GradientDrawable(
+                    GradientDrawable.Orientation.LEFT_RIGHT,
+                    new int[]{0xFF00B4D8, C_PURPLE, C_GREEN}
+            );
+            rateBg.setCornerRadius(AndroidUtilities.dp(18));
+            rateBg.setStroke(AndroidUtilities.dp(1.5f), C_CYAN);
+            rateBtnCard.setBackground(rateBg);
+            rateBtnCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+            if (Build.VERSION.SDK_INT >= 21) rateBtnCard.setElevation(AndroidUtilities.dp(4));
+            rateBtnCard.setOnClickListener(v -> openUrl(BuildVars.PLAYSTORE_APP_URL));
+
+            FrameLayout rateIconWrap = new FrameLayout(context);
+            GradientDrawable rateIconBg = new GradientDrawable();
+            rateIconBg.setShape(GradientDrawable.OVAL);
+            rateIconBg.setColor(0x33FFFFFF);
+            rateIconBg.setStroke(AndroidUtilities.dp(1), 0x80FFFFFF);
+            rateIconWrap.setBackground(rateIconBg);
+            ImageView rateIcon = new ImageView(context);
+            rateIcon.setImageResource(R.drawable.msg_premium_liststar);
+            rateIcon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+            rateIconWrap.addView(rateIcon, LayoutHelper.createFrame(24, 24, Gravity.CENTER));
+            rateBtnCard.addView(rateIconWrap, LayoutHelper.createLinear(44, 44, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
+
+            LinearLayout rateCol = new LinearLayout(context);
+            rateCol.setOrientation(LinearLayout.VERTICAL);
+            TextView rateStars = bold(context, "★ ★ ★ ★ ★   OFFICIAL RATING", 11, C_CYAN);
+            rateCol.addView(rateStars);
+            TextView rateTitle = bold(context, "Rate NayaGram on Google Play", 16, Color.WHITE);
+            rateCol.addView(rateTitle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+            TextView rateSub = normal(context, "Share your honest 5-star review & support our team", 12, 0xE6FFFFFF);
+            rateCol.addView(rateSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+            rateBtnCard.addView(rateCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+
+            TextView ratePill = bold(context, "Rate →", 13, Color.WHITE);
+            GradientDrawable ratePillBg = new GradientDrawable();
+            ratePillBg.setColor(0x33FFFFFF);
+            ratePillBg.setCornerRadius(AndroidUtilities.dp(14));
+            ratePillBg.setStroke(AndroidUtilities.dp(1), C_CYAN);
+            ratePill.setBackground(ratePillBg);
+            ratePill.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
+            rateBtnCard.addView(ratePill, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+            root.addView(rateBtnCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
+        }
 
         TextView cta = new TextView(context);
         cta.setText("✉   Contact support");
@@ -232,7 +332,7 @@ public class NayaAboutActivity extends BaseFragment {
         support.addView(row(context, R.drawable.msg_msgbubble, C_GREEN, "Email", SUPPORT_EMAIL, v -> openEmail()));
         if (BuildVars.PLAYSTORE_APP_URL != null && !BuildVars.PLAYSTORE_APP_URL.isEmpty()) {
             support.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-            support.addView(row(context, R.drawable.msg_premium_liststar, C_ORANGE, "Rate on Google Play", "Share honest feedback", v -> openUrl(BuildVars.PLAYSTORE_APP_URL)));
+            support.addView(row(context, R.drawable.msg_premium_liststar, C_PURPLE, "Rate on Google Play", "Share honest feedback", v -> openUrl(BuildVars.PLAYSTORE_APP_URL)));
         }
         root.addView(support, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
@@ -303,9 +403,11 @@ public class NayaAboutActivity extends BaseFragment {
     private LinearLayout whiteCard(Context context) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
+        boolean dark = Theme.isCurrentThemeDark();
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         bg.setCornerRadius(AndroidUtilities.dp(16));
+        bg.setStroke(AndroidUtilities.dp(1), dark ? 0x4400D4FF : 0xFFBAE6FD);
         card.setBackground(bg);
         if (Build.VERSION.SDK_INT >= 21) {
             card.setElevation(AndroidUtilities.dp(2));
@@ -373,8 +475,10 @@ public class NayaAboutActivity extends BaseFragment {
         row.addView(iconBadge(context, iconRes, color, 36), LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
         LinearLayout col = new LinearLayout(context);
         col.setOrientation(LinearLayout.VERTICAL);
-        col.addView(bold(context, title, 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText)));
-        col.addView(normal(context, subtitle, 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        boolean dark = Theme.isCurrentThemeDark();
+        int titleColor = dark ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText) : color;
+        col.addView(bold(context, title, 15, titleColor));
+        col.addView(normal(context, subtitle, 12, dark ? 0xFFCBD5E1 : Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2)), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         row.addView(col, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
         ImageView chevron = new ImageView(context);
         try {
@@ -445,6 +549,14 @@ public class NayaAboutActivity extends BaseFragment {
             FileLog.e(e);
         }
         return "2.1.4 NG";
+    }
+
+    private void openSuperAdmin() {
+        try {
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName(SUPER_ADMIN_HANDLE, this, 1);
+        } catch (Exception e) {
+            openUrl("https://t.me/" + SUPER_ADMIN_HANDLE);
+        }
     }
 
     private void openUrl(String url) {

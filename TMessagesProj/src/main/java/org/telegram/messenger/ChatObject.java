@@ -2268,6 +2268,12 @@ public class ChatObject {
             TLRPC.Peer p = chatFull.default_send_as;
             return p.user_id != 0 ? p.user_id : invertChannel ? -p.channel_id : p.channel_id;
         }
+        if (chat != null) {
+            TLRPC.Peer saved = MessagesController.getInstance(UserConfig.selectedAccount).getSavedDefaultSendAs(-chat.id);
+            if (saved != null) {
+                return saved.user_id != 0 ? saved.user_id : invertChannel ? -saved.channel_id : saved.channel_id;
+            }
+        }
         if (chat != null && chat.admin_rights != null && chat.admin_rights.anonymous) {
             return invertChannel ? -chat.id : chat.id;
         }
