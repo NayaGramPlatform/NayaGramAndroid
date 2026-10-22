@@ -202,7 +202,7 @@ public class NGAutoLockActivity extends BaseFragment {
             card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
 
             boolean selected = isSelected(item);
-            card.setBackground(roundCard(COLOR_CARD_BG, selected ? COLOR_BORDER_SELECTED : COLOR_BORDER_UNSELECTED, 14, selected ? 2 : 1));
+            card.setBackground(roundCard(cardBackgroundColor(), selected ? COLOR_BORDER_SELECTED : unselectedBorderColor(), 14, selected ? 2 : 1));
 
             TextView label = new TextView(context);
             label.setText(item.label);
@@ -265,7 +265,7 @@ public class NGAutoLockActivity extends BaseFragment {
         hoursInput.setText(String.valueOf(customHours));
         hoursInput.setTextSize(16);
         hoursInput.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        hoursInput.setBackground(roundCard(COLOR_CARD_BG, 0xFFCBD5E1, 8, 1));
+        hoursInput.setBackground(roundCard(cardBackgroundColor(), Theme.getColor(Theme.key_divider), 8, 1));
         hoursInput.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         hoursInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
         hoursCol.addView(hoursInput);
@@ -290,7 +290,7 @@ public class NGAutoLockActivity extends BaseFragment {
         minutesInput.setText(String.valueOf(customMinutesVal));
         minutesInput.setTextSize(16);
         minutesInput.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        minutesInput.setBackground(roundCard(COLOR_CARD_BG, 0xFFCBD5E1, 8, 1));
+        minutesInput.setBackground(roundCard(cardBackgroundColor(), Theme.getColor(Theme.key_divider), 8, 1));
         minutesInput.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         minutesInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
         minsCol.addView(minutesInput);
@@ -318,7 +318,7 @@ public class NGAutoLockActivity extends BaseFragment {
             View card = cardViews.get(i);
             ImageView check = checkViews.get(i);
 
-            card.setBackground(roundCard(COLOR_CARD_BG, sel ? COLOR_BORDER_SELECTED : COLOR_BORDER_UNSELECTED, 14, sel ? 2 : 1));
+            card.setBackground(roundCard(cardBackgroundColor(), sel ? COLOR_BORDER_SELECTED : unselectedBorderColor(), 14, sel ? 2 : 1));
             check.setVisibility(sel ? View.VISIBLE : View.GONE);
             if (card instanceof LinearLayout) {
                 View first = ((LinearLayout) card).getChildAt(0);
