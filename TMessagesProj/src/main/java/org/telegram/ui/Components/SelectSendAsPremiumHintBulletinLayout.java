@@ -20,23 +20,25 @@ public class SelectSendAsPremiumHintBulletinLayout extends Bulletin.MultiLineLay
     public SelectSendAsPremiumHintBulletinLayout(@NonNull Context context, Theme.ResourcesProvider resourcesProvider, boolean channels, Runnable callback) {
         super(context, resourcesProvider);
 
-        // Keep this group/channel Send As restriction hint readable even when the
-        // surrounding Telegram theme supplies a dark undo-bulletin background.
+        // Theme-aware Premium hint with a NayaGram accent, readable in light and dark modes.
+        int surface = Theme.getColor(Theme.key_dialogBackground, resourcesProvider);
+        int primaryText = Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider);
+        int accent = Theme.getColor(Theme.key_dialogTextBlue, resourcesProvider);
         GradientDrawable background = new GradientDrawable();
-        background.setColor(0xFFFFFFFF);
+        background.setColor(surface);
         background.setCornerRadius(AndroidUtilities.dp(16));
-        background.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        background.setStroke(AndroidUtilities.dp(1), accent);
         setCustomBackground(background);
 
         imageView.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.msg_premium_prolfilestar));
-        imageView.setColorFilter(new PorterDuffColorFilter(0xFF0284C7, PorterDuff.Mode.SRC_IN));
-        textView.setTextColor(0xFF0F172A);
-        textView.setLinkTextColor(0xFF0284C7);
+        imageView.setColorFilter(new PorterDuffColorFilter(accent, PorterDuff.Mode.SRC_IN));
+        textView.setTextColor(primaryText);
+        textView.setLinkTextColor(accent);
         textView.setText(AndroidUtilities.replaceTags(LocaleController.getString(channels ? R.string.SelectSendAsPeerPremiumHint : R.string.SelectSendAsPeerPremiumHint)));
 
         Bulletin.UndoButton button = new Bulletin.UndoButton(context, true, resourcesProvider);
         button.setText(LocaleController.getString(R.string.SelectSendAsPeerPremiumOpen));
-        if (button.undoTextView != null) button.undoTextView.setTextColor(0xFF0284C7);
+        if (button.undoTextView != null) button.undoTextView.setTextColor(accent);
         button.setUndoAction(callback);
         setButton(button);
     }
