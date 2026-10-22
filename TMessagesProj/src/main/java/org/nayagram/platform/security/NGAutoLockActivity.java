@@ -37,8 +37,8 @@ import java.util.List;
 public class NGAutoLockActivity extends BaseFragment {
 
     private static final int COLOR_NG_BLUE = 0xFF2D7FF9;
-    private static final int COLOR_CARD_BG = 0xFFFFFFFF;
-    private static final int COLOR_BORDER_UNSELECTED = 0xFFE2E8F0;
+    private int cardBackgroundColor() { return Theme.getColor(Theme.key_windowBackgroundWhite); }
+    private int unselectedBorderColor() { return Theme.getColor(Theme.key_divider); }
     private static final int COLOR_BORDER_SELECTED = 0xFF2D7FF9;
 
     private static class OptionItem {
@@ -113,7 +113,7 @@ public class NGAutoLockActivity extends BaseFragment {
         TextView title = new TextView(context);
         title.setText("Auto-lock NayaGram");
         title.setTextSize(22);
-        title.setTextColor(0xFF0F172A);
+        title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setPadding(0, 0, 0, AndroidUtilities.dp(4));
         root.addView(title);
@@ -121,18 +121,18 @@ public class NGAutoLockActivity extends BaseFragment {
         TextView description = new TextView(context);
         description.setText("Choose when auto-lock should activate after NayaGram goes to the background. NG Authenticator must be enabled for this lock to require verification.");
         description.setTextSize(13);
-        description.setTextColor(0xFF64748B);
+        description.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         description.setLineSpacing(AndroidUtilities.dp(2), 1.05f);
         description.setPadding(0, 0, 0, AndroidUtilities.dp(14));
         root.addView(description);
 
         optionsToggle = new TextView(context);
         optionsToggle.setTextSize(15);
-        optionsToggle.setTextColor(0xFF075985);
+        optionsToggle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
         optionsToggle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         optionsToggle.setGravity(Gravity.CENTER_VERTICAL);
         optionsToggle.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(15), AndroidUtilities.dp(16), AndroidUtilities.dp(15));
-        optionsToggle.setBackground(roundCard(COLOR_CARD_BG, COLOR_BORDER_UNSELECTED, 14, 1));
+        optionsToggle.setBackground(roundCard(cardBackgroundColor(), unselectedBorderColor(), 14, 1));
         optionsToggle.setText("Auto-lock duration · " + NGSafety.getAutoLockDisplayString(saved) + "   ▾");
         root.addView(optionsToggle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -171,7 +171,7 @@ public class NGAutoLockActivity extends BaseFragment {
         TextView footer = new TextView(context);
         footer.setText("Built with ❤️ in Bangladesh");
         footer.setTextSize(13);
-        footer.setTextColor(0xFF64748B);
+        footer.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         footer.setGravity(Gravity.CENTER);
         footer.setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(8));
         root.addView(footer);
@@ -207,7 +207,7 @@ public class NGAutoLockActivity extends BaseFragment {
             TextView label = new TextView(context);
             label.setText(item.label);
             label.setTextSize(15);
-            label.setTextColor(0xFF0F172A);
+            label.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
             label.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
             card.addView(label, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
@@ -232,13 +232,13 @@ public class NGAutoLockActivity extends BaseFragment {
         customInputsCard = new LinearLayout(context);
         customInputsCard.setOrientation(LinearLayout.VERTICAL);
         customInputsCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        customInputsCard.setBackground(roundCard(0xFFF8FAFC, 0xFFBAE6FD, 14, 1));
+        customInputsCard.setBackground(roundCard(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_divider), 14, 1));
         customInputsCard.setVisibility(isCustomSelected ? View.VISIBLE : View.GONE);
 
         TextView pickerTitle = new TextView(context);
         pickerTitle.setText("Custom Duration");
         pickerTitle.setTextSize(14);
-        pickerTitle.setTextColor(0xFF0284C7);
+        pickerTitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText));
         pickerTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         pickerTitle.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         customInputsCard.addView(pickerTitle);
@@ -256,7 +256,7 @@ public class NGAutoLockActivity extends BaseFragment {
         TextView hoursLabel = new TextView(context);
         hoursLabel.setText("Hours (0–24)");
         hoursLabel.setTextSize(12);
-        hoursLabel.setTextColor(0xFF64748B);
+        hoursLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         hoursCol.addView(hoursLabel);
 
         hoursInput = new EditText(context);
@@ -264,7 +264,7 @@ public class NGAutoLockActivity extends BaseFragment {
         hoursInput.setSingleLine(true);
         hoursInput.setText(String.valueOf(customHours));
         hoursInput.setTextSize(16);
-        hoursInput.setTextColor(0xFF0F172A);
+        hoursInput.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         hoursInput.setBackground(roundCard(COLOR_CARD_BG, 0xFFCBD5E1, 8, 1));
         hoursInput.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         hoursInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
@@ -281,7 +281,7 @@ public class NGAutoLockActivity extends BaseFragment {
         TextView minsLabel = new TextView(context);
         minsLabel.setText("Minutes (0–59)");
         minsLabel.setTextSize(12);
-        minsLabel.setTextColor(0xFF64748B);
+        minsLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         minsCol.addView(minsLabel);
 
         minutesInput = new EditText(context);
@@ -289,7 +289,7 @@ public class NGAutoLockActivity extends BaseFragment {
         minutesInput.setSingleLine(true);
         minutesInput.setText(String.valueOf(customMinutesVal));
         minutesInput.setTextSize(16);
-        minutesInput.setTextColor(0xFF0F172A);
+        minutesInput.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         minutesInput.setBackground(roundCard(COLOR_CARD_BG, 0xFFCBD5E1, 8, 1));
         minutesInput.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), AndroidUtilities.dp(10), AndroidUtilities.dp(8));
         minutesInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(2)});
