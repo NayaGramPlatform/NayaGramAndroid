@@ -650,9 +650,9 @@ public class ThemeColors {
 
         defaultColors[key_chat_botSwitchToInlineText] = 0xff4391cc;
 
-        defaultColors[key_undo_background] = 0xea272f38;
-        defaultColors[key_undo_cancelColor] = 0xff85caff;
-        defaultColors[key_undo_infoColor] = 0xffffffff;
+        defaultColors[key_undo_background] = 0xffffffff;
+        defaultColors[key_undo_cancelColor] = 0xff0284c7;
+        defaultColors[key_undo_infoColor] = 0xff0f172a;
 
         defaultColors[key_chat_outTextSelectionHighlight] = 0x2E3F9923;
         defaultColors[key_chat_inTextSelectionHighlight] = 0x5062A9E3;

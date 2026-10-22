@@ -99,5 +99,34 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('<string name="NGProtectionTagline">Your Security, Our Priority</string>', strings_bn)
         self.assertIn('<string name="NGAuthenticatorCreatedDate">NG Authenticator • Created October 18, 2026</string>', strings_bn)
 
+    def test_sender_select_popup_premium_lock_badge_and_enforcement(self):
+        popup_code = (ROOT / 'java/org/telegram/ui/Components/SenderSelectPopup.java').read_text()
+        # Must display premium lock badge on sender title when premium is required
+        self.assertIn('if (peerObj.premium_required) {', popup_code)
+        self.assertIn('ColoredImageSpan span = new ColoredImageSpan(R.drawable.msg_mini_premiumlock);', popup_code)
+        self.assertIn('str.setSpan(span, str.length() - 1, str.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);', popup_code)
+        # Must enforce premium gate
+        self.assertIn('if (peerObj.premium_required && !UserConfig.getInstance(currentAccount).isPremium()) {', popup_code)
+        self.assertIn('new SelectSendAsPremiumHintBulletinLayout(', popup_code)
+
+    def test_bulletin_and_undo_toast_styling_not_black(self):
+        bulletin_code = (ROOT / 'java/org/telegram/ui/Components/Bulletin.java').read_text()
+        # Bulletin background must use NayaGram Cyan stroke and theme-adaptive background
+        self.assertIn('gd.setStroke(dp(1.5f), 0xFF00D4FF);', bulletin_code)
+        self.assertIn('gd.setColor(0xFFFFFFFF);', bulletin_code)
+        self.assertIn('gd.setColor(0xFA0F172A);', bulletin_code)
+        self.assertIn('return Theme.isCurrentThemeDark() ? 0xFF0F172A : 0xFFFFFFFF;', bulletin_code)
+        self.assertIn('return Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0F172A;', bulletin_code)
+
+        # UndoView must also use NayaGram Cyan stroke and theme-adaptive colors
+        undo_code = (ROOT / 'java/org/telegram/ui/Components/UndoView.java').read_text()
+        self.assertIn('gd.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);', undo_code)
+        self.assertIn('return Theme.isCurrentThemeDark() ? 0xFF0F172A : 0xFFFFFFFF;', undo_code)
+
+        # Default theme colors must be light card and dark text (not dark charcoal)
+        theme_colors_code = (ROOT / 'java/org/telegram/ui/ActionBar/ThemeColors.java').read_text()
+        self.assertIn('defaultColors[key_undo_background] = 0xffffffff;', theme_colors_code)
+        self.assertIn('defaultColors[key_undo_infoColor] = 0xff0f172a;', theme_colors_code)
+
 if __name__ == '__main__':
     unittest.main()

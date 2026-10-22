@@ -26,6 +26,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.StaticLayout;
@@ -814,7 +815,17 @@ public class Bulletin {
 
         public void setBackground(int color, int rounding) {
             if (!hasCustomBackground) {
-                background = Theme.createRoundRectDrawable(dp(rounding), color);
+                boolean dark = Theme.isCurrentThemeDark();
+                GradientDrawable gd = new GradientDrawable();
+                gd.setCornerRadius(dp(rounding));
+                if (dark) {
+                    gd.setColor(0xFA0F172A);
+                    gd.setStroke(dp(1.5f), 0xFF00D4FF);
+                } else {
+                    gd.setColor(0xFFFFFFFF);
+                    gd.setStroke(dp(1.5f), 0xFF00D4FF);
+                }
+                background = gd;
             }
         }
 
@@ -1267,6 +1278,15 @@ public class Bulletin {
         }
 
         protected int getThemedColor(int key) {
+            if (key == Theme.key_undo_background) {
+                return Theme.isCurrentThemeDark() ? 0xFF0F172A : 0xFFFFFFFF;
+            }
+            if (key == Theme.key_undo_infoColor) {
+                return Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0F172A;
+            }
+            if (key == Theme.key_undo_cancelColor) {
+                return Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;
+            }
             return Theme.getColor(key, resourcesProvider);
         }
         //endregion
@@ -1348,9 +1368,10 @@ public class Bulletin {
             super(context, resourcesProvider);
 
             final int undoInfoColor = getThemedColor(Theme.key_undo_infoColor);
+            final int undoIconColor = getThemedColor(Theme.key_undo_cancelColor);
 
             imageView = new ImageView(context);
-            imageView.setColorFilter(new PorterDuffColorFilter(undoInfoColor, PorterDuff.Mode.MULTIPLY));
+            imageView.setColorFilter(new PorterDuffColorFilter(undoIconColor, PorterDuff.Mode.SRC_IN));
             addView(imageView, LayoutHelper.createFrameRelatively(24, 24, Gravity.START | Gravity.CENTER_VERTICAL, 16, 12, 16, 12));
 
             textView = new LinkSpanDrawable.LinksTextView(context);
@@ -2323,6 +2344,12 @@ public class Bulletin {
         }
 
         protected int getThemedColor(int key) {
+            if (key == Theme.key_undo_cancelColor) {
+                return Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;
+            }
+            if (key == Theme.key_undo_infoColor) {
+                return Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0F172A;
+            }
             if (resourcesProvider != null) {
                 return resourcesProvider.getColor(key);
             }
