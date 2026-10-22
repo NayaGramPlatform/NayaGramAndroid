@@ -176,10 +176,13 @@ def main() -> None:
     assert "peerObj.premium_required && !UserConfig.getInstance(currentAccount).isPremium()" in sender_select, "Send As must preserve Telegram Premium gating"
     print("PASS: Send As respects Telegram's premium_required entitlement")
     send_as_hint = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/Components/SelectSendAsPremiumHintBulletinLayout.java").read_text(encoding="utf-8")
-    assert "background.setColor(0xFFFFFFFF)" in send_as_hint
+    assert "Theme.getColor(Theme.key_dialogBackground, resourcesProvider)" in send_as_hint
+    assert "Theme.getColor(Theme.key_dialogTextBlack, resourcesProvider)" in send_as_hint
+    assert "Theme.getColor(Theme.key_dialogTextBlue, resourcesProvider)" in send_as_hint
     assert "setCustomBackground(background)" in send_as_hint
-    assert "textView.setTextColor(0xFF0F172A)" in send_as_hint, "Group/channel Send As hint must stay readable on a light background"
-    print("PASS: Group/channel Send As hint uses a readable NayaGram light theme")
+    assert "textView.setTextColor(primaryText)" in send_as_hint
+    assert "button.undoTextView.setTextColor(accent)" in send_as_hint, "Group/channel Send As hint must remain readable in both themes"
+    print("PASS: Group/channel Send As hint follows active theme with readable text and accent")
 
 if __name__ == "__main__":
     main()
