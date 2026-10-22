@@ -22130,7 +22130,14 @@ public class ChatActivity extends BaseFragment implements
             }
             FileLog.d("ChatActivity didReceiveNewMessages return: done");
         } else if (id == NotificationCenter.didLoadSendAsPeers) {
-            loadSendAsPeers(true);
+            if (args != null && args.length > 1 && args[0] instanceof Long && (Long) args[0] == dialog_id) {
+                sendAsPeersObj = (TLRPC.TL_channels_sendAsPeers) args[1];
+                if (chatActivityEnterView != null) {
+                    chatActivityEnterView.updateSendAsButton(true);
+                }
+            } else {
+                loadSendAsPeers(true);
+            }
         } else if (id == NotificationCenter.didLoadSponsoredMessages) {
             addSponsoredMessages(true);
         } else if (id == NotificationCenter.closeChats) {

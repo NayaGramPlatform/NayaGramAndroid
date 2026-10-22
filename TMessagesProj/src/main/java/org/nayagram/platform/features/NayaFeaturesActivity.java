@@ -105,7 +105,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView sectionTitle = new TextView(context);
         sectionTitle.setText("Verified Feature Controls");
-        sectionTitle.setTextColor(0xFF075985);
+        sectionTitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlueHeader));
         sectionTitle.setTextSize(16);
         sectionTitle.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         sectionTitle.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(5), AndroidUtilities.dp(18), AndroidUtilities.dp(2));
@@ -114,7 +114,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView sectionDescription = new TextView(context);
         sectionDescription.setText("Only features with a verified behavior path appear below.");
-        sectionDescription.setTextColor(0xFF64748B);
+        sectionDescription.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         sectionDescription.setTextSize(12);
         sectionDescription.setPadding(AndroidUtilities.dp(18), 0, AndroidUtilities.dp(18), AndroidUtilities.dp(5));
         root.addView(sectionDescription, new LinearLayout.LayoutParams(
@@ -151,11 +151,12 @@ public class NayaFeaturesActivity extends BaseFragment {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(12),
                 AndroidUtilities.dp(15), AndroidUtilities.dp(12));
+        boolean dark = Theme.isCurrentThemeDark();
         GradientDrawable background = new GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{0xFFE0F2FE, 0xFFDCFCE7});
+                dark ? new int[]{0xFF1E293B, 0xFF0F172A} : new int[]{0xFFE0F2FE, 0xFFDCFCE7});
         background.setCornerRadius(AndroidUtilities.dp(17));
-        background.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        background.setStroke(AndroidUtilities.dp(1), dark ? 0xFF334155 : 0xFFBAE6FD);
         card.setBackground(background);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -166,7 +167,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView title = new TextView(context);
         title.setText("📚 Feature Pipeline · Tutorial");
-        title.setTextColor(0xFF075985);
+        title.setTextColor(dark ? 0xFF38BDF8 : 0xFF075985);
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         card.addView(title, new LinearLayout.LayoutParams(
@@ -174,7 +175,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView description = new TextView(context);
         description.setText("A step-by-step guide to NayaGram features. Tutorial only — it does not activate feature engines.");
-        description.setTextColor(0xFF334155);
+        description.setTextColor(dark ? 0xFFCBD5E1 : 0xFF334155);
         description.setTextSize(12);
         description.setLineSpacing(AndroidUtilities.dp(1), 1.08f);
         LinearLayout.LayoutParams descriptionParams = new LinearLayout.LayoutParams(
@@ -222,11 +223,12 @@ public class NayaFeaturesActivity extends BaseFragment {
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(AndroidUtilities.dp(15), AndroidUtilities.dp(12),
                 AndroidUtilities.dp(15), AndroidUtilities.dp(12));
+        boolean dark = Theme.isCurrentThemeDark();
         GradientDrawable background = new GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{0xFFE0F2FE, 0xFFDCFCE7});
+                dark ? new int[]{0xFF1E293B, 0xFF0F172A} : new int[]{0xFFE0F2FE, 0xFFDCFCE7});
         background.setCornerRadius(AndroidUtilities.dp(17));
-        background.setStroke(AndroidUtilities.dp(1), 0xFFBAE6FD);
+        background.setStroke(AndroidUtilities.dp(1), dark ? 0xFF334155 : 0xFFBAE6FD);
         card.setBackground(background);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -237,7 +239,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView title = new TextView(context);
         title.setText("NG Hub");
-        title.setTextColor(0xFF075985);
+        title.setTextColor(dark ? 0xFF38BDF8 : 0xFF075985);
         title.setTextSize(16);
         title.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
         card.addView(title, new LinearLayout.LayoutParams(
@@ -245,7 +247,7 @@ public class NayaFeaturesActivity extends BaseFragment {
 
         TextView description = new TextView(context);
         description.setText("Your own channels, groups, bots, profile and contacts. Other communities are not labeled as yours.");
-        description.setTextColor(0xFF334155);
+        description.setTextColor(dark ? 0xFFCBD5E1 : 0xFF334155);
         description.setTextSize(12);
         LinearLayout.LayoutParams descriptionParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);

@@ -4153,7 +4153,12 @@ public class ChatActivityEnterView extends FrameLayout implements
                     return;
                 }
             }
-            if (delegate.getSendAsPeers() != null) {
+            MessagesController controller = MessagesController.getInstance(currentAccount);
+            TLRPC.TL_channels_sendAsPeers peers = delegate.getSendAsPeers();
+            if (peers == null) {
+                peers = controller.getSendAsPeers(dialog_id);
+            }
+            if (peers != null) {
                 try {
                     v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
                 } catch (Exception ignored) {
@@ -4163,7 +4168,6 @@ public class ChatActivityEnterView extends FrameLayout implements
                     senderSelectPopupWindow.startDismissAnimation();
                     return;
                 }
-                MessagesController controller = MessagesController.getInstance(currentAccount);
 
                 final TLRPC.ChatFull chatFull;
                 TLRPC.Peer defPeer;
@@ -4176,8 +4180,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                     chatFull = MessagesController.getInstance(currentAccount).getChatFull(-dialog_id);
                     defPeer = chatFull != null ? chatFull.default_send_as : null;
                 }
-                if (defPeer == null && delegate.getSendAsPeers() != null && !delegate.getSendAsPeers().peers.isEmpty()) {
-                    defPeer = delegate.getSendAsPeers().peers.get(0).peer;
+                if (defPeer == null && peers != null && !peers.peers.isEmpty()) {
+                    defPeer = peers.peers.get(0).peer;
                 }
                 final boolean isChannel = ChatObject.isChannelAndNotMegaGroup(controller.getChat(-dialog_id));
 
@@ -4188,7 +4192,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     fl = parentFragment.getParentLayout().getOverlayContainerView();
                 }
 
-                senderSelectPopupWindow = new SenderSelectPopup(getContext(), parentFragment, controller, isChannel, defPeer, delegate.getSendAsPeers(), (recyclerView, senderView, peer) -> {
+                senderSelectPopupWindow = new SenderSelectPopup(getContext(), parentFragment, controller, isChannel, defPeer, peers, (recyclerView, senderView, peer) -> {
                     if (senderSelectPopupWindow == null) return;
                     if (chatFull != null) {
                         chatFull.default_send_as = peer;

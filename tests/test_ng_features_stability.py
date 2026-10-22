@@ -128,5 +128,29 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('defaultColors[key_undo_background] = 0xffffffff;', theme_colors_code)
         self.assertIn('defaultColors[key_undo_infoColor] = 0xff0f172a;', theme_colors_code)
 
+    def test_ng_hub_plus_button_circular_styling(self):
+        dialogs_code = (ROOT / "java/org/telegram/ui/DialogsActivity.java").read_text()
+        self.assertIn("ActionBarMenuItem ngHubItem = menu.addItem(9910, R.drawable.msg_add);", dialogs_code)
+        self.assertIn("circleBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);", dialogs_code)
+        self.assertIn("0xFF00D4FF", dialogs_code)
+        self.assertIn("0xFF0284C7", dialogs_code)
+
+    def test_profile_music_view_cyan_accent_styling(self):
+        music_code = (ROOT / "java/org/telegram/ui/Components/ProfileMusicView.java").read_text()
+        self.assertIn("icon.setColorFilter(new PorterDuffColorFilter(0xFF00D4FF, PorterDuff.Mode.SRC_IN));", music_code)
+        self.assertIn("0x8000D4FF", music_code)
+        self.assertIn("Theme.key_windowBackgroundWhiteBlackText", music_code)
+
+    def test_theme_contrast_in_platform_screens(self):
+        menu_code = (ROOT / "java/org/nayagram/platform/chat/NGChatMenuHelper.java").read_text()
+        self.assertIn("Theme.key_dialogTextBlack", menu_code)
+        self.assertIn("Theme.key_dialogTextGray2", menu_code)
+        features_code = (ROOT / "java/org/nayagram/platform/features/NayaFeaturesActivity.java").read_text()
+        self.assertIn("Theme.key_windowBackgroundWhiteBlueHeader", features_code)
+        self.assertIn("Theme.key_windowBackgroundWhiteGrayText2", features_code)
+        safety_code = (ROOT / "java/org/nayagram/platform/security/NGSafetyActivity.java").read_text()
+        self.assertIn("Theme.key_windowBackgroundWhiteBlackText", safety_code)
+        self.assertIn("Theme.key_windowBackgroundWhiteGrayText2", safety_code)
+
 if __name__ == '__main__':
     unittest.main()

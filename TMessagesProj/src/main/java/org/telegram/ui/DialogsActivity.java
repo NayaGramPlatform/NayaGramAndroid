@@ -3264,6 +3264,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             ActionBarMenuItem ngHubItem = menu.addItem(9910, R.drawable.msg_add);
             ngHubItem.setContentDescription("NG Hub");
+            org.telegram.ui.Components.RLottieImageView iconView = ngHubItem.getIconView();
+            if (iconView != null) {
+                android.graphics.drawable.GradientDrawable circleBg = new android.graphics.drawable.GradientDrawable(
+                        android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                        new int[]{0xFF00D4FF, 0xFF0284C7}
+                );
+                circleBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+                iconView.setBackground(circleBg);
+                iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+                android.widget.FrameLayout.LayoutParams lp = LayoutHelper.createFrame(32, 32, Gravity.CENTER);
+                iconView.setLayoutParams(lp);
+                int pad = AndroidUtilities.dp(4);
+                iconView.setPadding(pad, pad, pad, pad);
+            }
             ngHubItem.setOnClickListener(v -> {
                 v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 v.animate()

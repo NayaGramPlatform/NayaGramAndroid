@@ -144,15 +144,15 @@ public class NGSafetyActivity extends BaseFragment {
         LinearLayout card = new LinearLayout(context);
         card.setGravity(Gravity.CENTER_VERTICAL);
         card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(12), AndroidUtilities.dp(12));
-        card.setBackground(round(0xFFFFFFFF, 0xFFBAE6FD));
+        card.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_divider)));
         card.setOrientation(LinearLayout.HORIZONTAL);
         content.addView(card, params(0, 12));
         LinearLayout labels = new LinearLayout(context);
         labels.setOrientation(LinearLayout.VERTICAL);
         card.addView(labels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView label = text(context, "NG Authenticator", 15, 0xFF075985, true);
+        TextView label = text(context, "NG Authenticator", 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
         labels.addView(label);
-        TextView status = text(context, NGSafety.isEnabled(context) ? "Enabled · code required before main page" : "Disabled by default", 12, 0xFF475569, false);
+        TextView status = text(context, NGSafety.isEnabled(context) ? "Enabled · code required before main page" : "Disabled by default", 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         labels.addView(status);
         Switch toggle = new Switch(context);
         toggle.setChecked(NGSafety.isEnabled(context));
@@ -190,18 +190,18 @@ public class NGSafetyActivity extends BaseFragment {
         autoLockCard.setOrientation(LinearLayout.HORIZONTAL);
         autoLockCard.setGravity(Gravity.CENTER_VERTICAL);
         autoLockCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        autoLockCard.setBackground(round(0xFFFFFFFF, 0xFFBAE6FD));
+        autoLockCard.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), Theme.getColor(Theme.key_divider)));
         content.addView(autoLockCard, params(0, 12));
 
         LinearLayout autoLockLabels = new LinearLayout(context);
         autoLockLabels.setOrientation(LinearLayout.VERTICAL);
         autoLockCard.addView(autoLockLabels, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-        TextView autoLockTitle = text(context, "Auto-lock", 15, 0xFF075985, true);
+        TextView autoLockTitle = text(context, "Auto-lock", 15, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
         autoLockLabels.addView(autoLockTitle);
 
         int currentMins = NGSafety.getAutoLockMinutes(context);
-        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, 0xFF475569, false);
+        autoLockSubtitle = text(context, NGSafety.getAutoLockDisplayString(currentMins), 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         autoLockLabels.addView(autoLockSubtitle);
 
         ImageView arrow = new ImageView(context);
@@ -394,7 +394,7 @@ public class NGSafetyActivity extends BaseFragment {
         logoParams.gravity = Gravity.CENTER_HORIZONTAL;
         hero.addView(heroLogo, logoParams);
 
-        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 24, 0xFF075985, true);
+        TextView heroTitle = text(context, gate ? "Unlock NayaGram" : "Verify NG Authenticator", 24, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
         heroTitle.setGravity(Gravity.CENTER);
         heroTitle.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(4));
         hero.addView(heroTitle, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -447,7 +447,7 @@ public class NGSafetyActivity extends BaseFragment {
             }
         });
 
-        TextView footer = text(context, LocaleController.getString(R.string.NGAuthenticatorCreatedDate), 12, 0xFF64748B, false);
+        TextView footer = text(context, LocaleController.getString(R.string.NGAuthenticatorCreatedDate), 12, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         footer.setGravity(Gravity.CENTER);
         footer.setPadding(0, AndroidUtilities.dp(16), 0, AndroidUtilities.dp(4));
         content.addView(footer, params(0, 8));
@@ -632,13 +632,13 @@ public class NGSafetyActivity extends BaseFragment {
     }
 
     private void addTitle(Context context, String value) {
-        TextView title = text(context, value, 22, 0xFF075985, true);
+        TextView title = text(context, value, 22, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), true);
         title.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(8));
         content.addView(title, params(0, 6));
     }
 
     private void addText(Context context, String value) {
-        TextView label = text(context, value, 13, 0xFF334155, false);
+        TextView label = text(context, value, 13, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2), false);
         label.setLineSpacing(AndroidUtilities.dp(2), 1.05f);
         content.addView(label, params(0, 10));
     }

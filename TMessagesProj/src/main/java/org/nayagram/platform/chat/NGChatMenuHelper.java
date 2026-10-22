@@ -154,8 +154,9 @@ public final class NGChatMenuHelper {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8), AndroidUtilities.dp(8));
+        boolean dark = Theme.isCurrentThemeDark();
         GradientDrawable bg = new GradientDrawable();
-        bg.setColor(0xFFF8FAFC);
+        bg.setColor(dark ? 0xFF1E293B : 0xFFF8FAFC);
         bg.setCornerRadius(AndroidUtilities.dp(14));
         row.setBackground(bg);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -181,12 +182,12 @@ public final class NGChatMenuHelper {
         text.setOrientation(LinearLayout.VERTICAL);
         TextView titleView = new TextView(context);
         titleView.setText(title);
-        titleView.setTextColor(0xFF111827);
+        titleView.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
         titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
         titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         TextView valueView = new TextView(context);
         valueView.setText(value);
-        valueView.setTextColor(0xFF6B7280);
+        valueView.setTextColor(Theme.getColor(Theme.key_dialogTextGray2));
         valueView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         valueView.setMaxLines(1);
         valueView.setEllipsize(TextUtils.TruncateAt.END);

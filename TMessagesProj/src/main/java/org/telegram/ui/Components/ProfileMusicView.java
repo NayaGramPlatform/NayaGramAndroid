@@ -115,10 +115,10 @@ public class ProfileMusicView extends View {
 
     private void checkTextColor() {
         final boolean useBlackText = parentExpanded < 0.8f && AndroidUtilities.computePerceivedBrightness(backgroundColor) > 0.85f;
-        textColor = useBlackText ? Color.BLACK : Color.WHITE;
-        icon.setColorFilter(useBlackText ? filterColorBlack : filterColorWhite);
+        textColor = useBlackText ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider) : Color.WHITE;
+        icon.setColorFilter(new PorterDuffColorFilter(0xFF00D4FF, PorterDuff.Mode.SRC_IN));
         iconPaint.setColor(textColor);
-        arrowPaint.setColor(Theme.multAlpha(textColor, 0.85f));
+        arrowPaint.setColor(0xFF00D4FF);
         invalidate();
     }
 
@@ -188,8 +188,8 @@ public class ProfileMusicView extends View {
     }
 
     public void setText(CharSequence author, CharSequence title) {
-        this.author = new Text(author, 11, AndroidUtilities.bold());
-        this.title = new Text(title, 11);
+        this.author = new Text(author, 12, AndroidUtilities.bold());
+        this.title = new Text(title, 12);
 
         setContentDescription(getString(R.string.AccDescrProfileMusic) + " " + author + " — " + title);
     }
@@ -286,6 +286,10 @@ public class ProfileMusicView extends View {
             canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, strokePaint);
         }
         canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, backgroundPaint);
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setStrokeWidth(dpf2(1.2f));
+        strokePaint.setColor(Theme.isCurrentThemeDark() ? 0x8000D4FF : 0x5500D4FF);
+        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, strokePaint);
         backgroundPaint.setAlpha(wasAlpha);
 
         clipPath.rewind();
