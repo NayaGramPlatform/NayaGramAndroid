@@ -186,13 +186,26 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
 
     def test_about_rating_no_yellow_and_super_admin_button(self):
         about_code = (ROOT / "java/org/nayagram/platform/ui/NayaAboutActivity.java").read_text()
-        self.assertIn("SUPER_ADMIN_HANDLE = \"NG_HuzayfaSheikh\"", about_code)
+        self.assertIn("SUPER_ADMIN_HANDLE = \"NGSupreme\"", about_code)
         self.assertIn("SUPER ADMIN", about_code)
         self.assertIn("Rate NayaGram on Google Play", about_code)
         self.assertNotIn("0xFFFF8A00", about_code)
         settings_code = (ROOT / "java/org/telegram/ui/SettingsActivity.java").read_text()
-        self.assertIn("NG_HuzayfaSheikh", settings_code)
+        self.assertIn("NGSupreme", settings_code)
         self.assertIn("Super Admin", settings_code)
+
+    def test_profile_balance_badge_and_pin_animation(self):
+        dc_code = (ROOT / "java/org/telegram/ui/Cells/DialogCell.java").read_text()
+        self.assertIn("0xFF8B5CF6", dc_code)
+        self.assertIn("0xFF0284C7", dc_code)
+        self.assertIn("postInvalidateOnAnimation();", dc_code)
+        pb_file = ROOT / "java/org/telegram/ui/Components/ProfileBalanceView.java"
+        self.assertTrue(pb_file.exists())
+        pb_code = pb_file.read_text()
+        self.assertIn("Balance: 💎", pb_code)
+        pa_code = (ROOT / "java/org/telegram/ui/ProfileActivity.java").read_text()
+        self.assertIn("ProfileBalanceView balanceView;", pa_code)
+        self.assertIn("5,092.49", pa_code)
 
     def test_autolock_cold_start_and_preset_persistence(self):
         safety_code = (ROOT / "java/org/nayagram/platform/security/NGSafety.java").read_text()

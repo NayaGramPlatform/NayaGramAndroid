@@ -721,7 +721,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(UItem.asHeader("NayaGram"));
         items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NayaGram Settings", "Stories, clean forward, translator, features", "\u2728"));
         items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Infonity AI 💎", "Official AI Assistant @InfonityAI_Bot", ""));
-        items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "Super Admin", "@NG_HuzayfaSheikh • Official Super Admin", "👑"));
+        items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "Super Admin", "@NGSupreme • Official Owner", "👑"));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
@@ -860,7 +860,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 MessagesController.getInstance(currentAccount).openByUserName("InfonityAI_Bot", this, 1);
                 break;
             case 112:
-                MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", this, 1);
+                MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", this, 1);
                 break;
             case 110: {
                 presentFragment(new NayaAboutActivity());

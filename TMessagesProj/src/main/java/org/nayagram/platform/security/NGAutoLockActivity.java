@@ -70,8 +70,9 @@ public class NGAutoLockActivity extends BaseFragment {
     private EditText minutesInput;
 
     public NGAutoLockActivity() {
+        options.add(new OptionItem("5 minutes (Default)", 5, false));
         options.add(new OptionItem("15 minutes", 15, false));
-        options.add(new OptionItem("45 minutes", 45, false));
+        options.add(new OptionItem("30 minutes", 30, false));
         options.add(new OptionItem("1 hour", 60, false));
         options.add(new OptionItem("3 hours", 180, false));
         options.add(new OptionItem("5 hours", 300, false));

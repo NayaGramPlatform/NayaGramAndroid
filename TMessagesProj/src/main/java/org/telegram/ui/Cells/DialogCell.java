@@ -4180,12 +4180,27 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                         dy + pd.getIntrinsicHeight());
 
 
+                    // NayaGram Vibrant Purple & Blue Animated Pin
+                    float animPhase = (android.os.SystemClock.elapsedRealtime() % 2400) / 2400f;
+                    float pulse = (float) Math.sin(animPhase * Math.PI * 2);
+                    int purpleBlue = androidx.core.graphics.ColorUtils.blendARGB(0xFF8B5CF6, 0xFF0284C7, (pulse + 1f) / 2f);
+                    pd.setColorFilter(new android.graphics.PorterDuffColorFilter(purpleBlue, android.graphics.PorterDuff.Mode.SRC_IN));
+
+                    // Soft purple-blue tinted background badge
                     int a = timeTextPaint.getAlpha();
-                    timeTextPaint.setAlpha(27);
+                    int oldColor = timeTextPaint.getColor();
+                    timeTextPaint.setColor(purpleBlue);
+                    timeTextPaint.setAlpha(36 + (int)(16 * pulse));
                     canvas.drawRoundRect(l, y, r, y + dp(17), dp(17 / 2f), dp(17 / 2f), timeTextPaint);
+                    timeTextPaint.setColor(oldColor);
                     timeTextPaint.setAlpha(a);
 
+                    canvas.save();
+                    float pinScale = 1f + 0.08f * pulse;
+                    canvas.scale(pinScale, pinScale, dx + pd.getIntrinsicWidth() / 2f, dy + pd.getIntrinsicHeight() / 2f);
                     pd.draw(canvas);
+                    canvas.restore();
+                    postInvalidateOnAnimation();
                 }
 
                 final int tpColor = timeLayout.getPaint().getColor();

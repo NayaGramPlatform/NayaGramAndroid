@@ -231,6 +231,14 @@ public class ProfileMusicView extends View {
     }
 
     private float currentHeight;
+    private boolean isSideBySide;
+    private boolean isLeft = true;
+
+    public void setSideBySide(boolean sideBySide, boolean left) {
+        this.isSideBySide = sideBySide;
+        this.isLeft = left;
+        invalidate();
+    }
 
     public void updatePosition(float y, float newHeight) {
         currentHeight = newHeight;
@@ -276,6 +284,7 @@ public class ProfileMusicView extends View {
 
         final float width = dp(20f) + this.author.getWidth() + this.title.getWidth() + eqWidth + dp(10);
         final float containerWidth = dp(18) + width;
+        float centerX = isSideBySide ? (isLeft ? getWidth() * 0.28f : getWidth() * 0.72f) : (getWidth() / 2f);
 
         canvas.save();
         canvas.scale(scale, scale, getWidth() / 2f, getHeight() / 2f);
@@ -283,9 +292,9 @@ public class ProfileMusicView extends View {
         final float pillHeight = dp(22) * alpha;
         final float top = (getHeight() - pillHeight) / 2f;
         rect.set(
-            (getWidth() - containerWidth) / 2f,
+            centerX - containerWidth / 2f,
             top,
-            (getWidth() + containerWidth) / 2f,
+            centerX + containerWidth / 2f,
             top + pillHeight
         );
         if (withShadows && SharedConfig.shadowsInSections) {

@@ -264,6 +264,7 @@ import org.telegram.ui.Components.Premium.boosts.UserSelectorBottomSheet;
 import org.telegram.ui.Components.ProfileGalleryView;
 import org.telegram.ui.Components.ProfileGooeyView;
 import org.telegram.ui.Components.ProfileMusicView;
+import org.telegram.ui.Components.ProfileBalanceView;
 import org.telegram.ui.Components.RLottieDrawable;
 import org.telegram.ui.Components.RLottieImageView;
 import org.telegram.ui.Components.RadialProgressView;
@@ -391,6 +392,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     private ProfileActionsView actionsView;
     private MessagesController.SavedMusicList savedMusicList;
     private ProfileMusicView musicView;
+    private ProfileBalanceView balanceView;
     private AnimatedStatusView animatedStatusView;
     private AvatarImageView avatarImage;
     private View avatarOverlay;
@@ -3843,6 +3845,31 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 //        sharedMediaLayout.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
         if (userId == 0 || imageUpdater == null || myProfile) {
             musicView = new ProfileMusicView(context, resourcesProvider);
+            balanceView = new ProfileBalanceView(context, resourcesProvider);
+            balanceView.setAccount(currentAccount);
+            if (user != null) {
+                if (user.id == 777000 || "durov".equalsIgnoreCase(user.username) || "monk".equalsIgnoreCase(user.username)) {
+                    balanceView.setBalance("5,092.49");
+                } else if (UserObject.isUserSelf(user)) {
+                    try {
+                        long stars = org.telegram.ui.Stars.StarsController.getInstance(currentAccount).getBalance(false);
+                        balanceView.setBalance(stars > 0 ? LocaleController.formatNumber(stars, ',') : "0");
+                    } catch (Throwable e) {
+                        balanceView.setBalance("0");
+                    }
+                } else {
+                    balanceView.setBalance("0");
+                }
+            }
+            balanceView.setOnClickListener(v -> {
+                try {
+                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, currentAccount, dialog_id, resourcesProvider);
+                } catch (Throwable e) {
+                    try {
+                        Browser.openUrl(getParentActivity(), "https://fragment.com");
+                    } catch (Throwable ignored) {}
+                }
+            });
             if (avatarsBlurView != null) {
                 avatarsBlurView.setMusicView(musicView);
             }
@@ -5500,6 +5527,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (musicView != null) {
             avatarsBlurView.setMusicView(musicView);
             avatarContainer2.addView(musicView, LayoutHelper.createFrame(-1, -1));
+        if (balanceView != null) {
+            avatarContainer2.addView(balanceView, LayoutHelper.createFrame(-1, -1));
+        }
         }
         avatarImage.setAvatarsViewPager(avatarsViewPager);
 
@@ -11264,6 +11294,18 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             float bottom = extraHeight + newTop + dp(74);
             float height = Math.min(getActionsExtraHeight(), bottom - newTop);
             musicView.updatePosition(bottom - height, height - dp(74));
+            if (balanceView != null) {
+                balanceView.updatePosition(bottom - height, height - dp(74));
+                boolean hasMusic = musicView != null && musicView.getVisibility() == View.VISIBLE;
+                boolean hasBalance = balanceView != null && balanceView.getVisibility() == View.VISIBLE;
+                if (hasMusic && hasBalance) {
+                    musicView.setSideBySide(true, true);
+                    balanceView.setSideBySide(true, false);
+                } else {
+                    if (musicView != null) musicView.setSideBySide(false, false);
+                    balanceView.setSideBySide(false, false);
+                }
+            }
         }
     }
 

@@ -2,10 +2,12 @@ package org.nayagram.platform;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import java.util.ArrayList;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
@@ -18,7 +20,7 @@ import org.telegram.tgnet.TLRPC;
 public final class AutoPinChannelManager {
 
     private static final String PREF_NAME = "nayagram_autopin_prefs";
-    private static final String KEY_CHANNEL_PINNED = "channel_pinned_v2_";
+    private static final String KEY_CHANNEL_PINNED = "channel_pinned_v3_";
     private static final String KEY_OFFICIAL_DIALOG_ID = "official_dialog_id_";
     public static final String OFFICIAL_CHANNEL_USERNAME = "NayaGramPro";
     public static final String OFFICIAL_CHANNEL_URL = "https://t.me/NayaGramPro";
@@ -48,12 +50,6 @@ public final class AutoPinChannelManager {
                 ensureDialogPinned(account, savedDialogId);
             }
 
-            boolean joinedOnce = prefs.getBoolean(KEY_CHANNEL_PINNED + userNum, false);
-            if (joinedOnce && savedDialogId != 0) {
-                ensureDialogPinned(account, savedDialogId);
-                return;
-            }
-
             resolveAndPinChannel(account, OFFICIAL_CHANNEL_USERNAME, (dialogId) -> {
                 prefs.edit()
                     .putBoolean(KEY_CHANNEL_PINNED + userNum, true)
@@ -65,7 +61,7 @@ public final class AutoPinChannelManager {
         }
     }
 
-    private interface OnChannelResolvedListener {
+    public interface OnChannelResolvedListener {
         void onResolved(long dialogId);
     }
 
@@ -90,23 +86,59 @@ public final class AutoPinChannelManager {
 
             final long dialogId = -chat.id;
 
-            TLRPC.TL_inputChannel input = new TLRPC.TL_inputChannel();
-            input.channel_id = chat.id;
-            input.access_hash = chat.access_hash;
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    MessagesController controller = MessagesController.getInstance(account);
+                    controller.putChat(chat, false);
 
-            TLRPC.TL_channels_joinChannel joinReq = new TLRPC.TL_channels_joinChannel();
-            joinReq.channel = input;
+                    // Join channel if not already in chat
+                    TLRPC.TL_inputChannel input = new TLRPC.TL_inputChannel();
+                    input.channel_id = chat.id;
+                    input.access_hash = chat.access_hash;
 
-            ConnectionsManager.getInstance(account).sendRequest(joinReq, (joinResp, joinErr) -> {
-                AndroidUtilities.runOnUIThread(() -> {
-                    try {
-                        ensureDialogPinned(account, dialogId);
-                        if (listener != null) {
-                            listener.onResolved(dialogId);
+                    TLRPC.TL_channels_joinChannel joinReq = new TLRPC.TL_channels_joinChannel();
+                    joinReq.channel = input;
+                    ConnectionsManager.getInstance(account).sendRequest(joinReq, (joinResp, joinErr) -> {});
+
+                    controller.addUserToChat(chat.id, UserConfig.getInstance(account).getCurrentUser(), 0, null, null, true, null, null);
+
+                    // Ensure dialog exists and is pinned
+                    TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
+                    if (dialog == null) {
+                        dialog = new TLRPC.TL_dialog();
+                        dialog.id = dialogId;
+                        dialog.unread_count = 0;
+                        dialog.top_message = 0;
+                        dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
+                        controller.dialogs_dict.put(dialogId, dialog);
+                        controller.allDialogs.add(0, dialog);
+                        ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
+                        if (!mainDialogs.contains(dialog)) {
+                            mainDialogs.add(0, dialog);
                         }
-                    } catch (Throwable ignored) {
                     }
-                });
+                    dialog.pinned = true;
+                    dialog.pinnedNum = 9999;
+
+                    // Send toggle pin to server
+                    TLRPC.TL_messages_toggleDialogPin toggleReq = new TLRPC.TL_messages_toggleDialogPin();
+                    toggleReq.pinned = true;
+                    toggleReq.peer = new TLRPC.TL_inputDialogPeer();
+                    TLRPC.TL_inputPeerChannel inputPeer = new TLRPC.TL_inputPeerChannel();
+                    inputPeer.channel_id = chat.id;
+                    inputPeer.access_hash = chat.access_hash;
+                    toggleReq.peer.peer = inputPeer;
+                    ConnectionsManager.getInstance(account).sendRequest(toggleReq, (tResp, tErr) -> {});
+
+                    controller.pinDialog(dialogId, true, null, 0);
+                    controller.sortDialogs(null);
+                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.dialogsNeedReload);
+
+                    if (listener != null) {
+                        listener.onResolved(dialogId);
+                    }
+                } catch (Throwable ignored) {
+                }
             });
         });
     }
@@ -115,9 +147,26 @@ public final class AutoPinChannelManager {
         try {
             MessagesController controller = MessagesController.getInstance(account);
             TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
-            if (dialog == null || !dialog.pinned) {
+            if (dialog == null) {
+                dialog = new TLRPC.TL_dialog();
+                dialog.id = dialogId;
+                dialog.unread_count = 0;
+                dialog.top_message = 0;
+                dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
+                controller.dialogs_dict.put(dialogId, dialog);
+                controller.allDialogs.add(0, dialog);
+                ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
+                if (!mainDialogs.contains(dialog)) {
+                    mainDialogs.add(0, dialog);
+                }
+            }
+            if (!dialog.pinned) {
+                dialog.pinned = true;
+                dialog.pinnedNum = 9999;
                 controller.pinDialog(dialogId, true, null, 0);
             }
+            controller.sortDialogs(null);
+            NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.dialogsNeedReload);
         } catch (Throwable ignored) {
         }
     }

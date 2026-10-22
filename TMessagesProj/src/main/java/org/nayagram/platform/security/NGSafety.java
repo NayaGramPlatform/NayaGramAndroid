@@ -42,7 +42,7 @@ public final class NGSafety {
     private static final String KEY_LAST_BG_TIME = "last_bg_time";
     private static final String KEY_LAST_VERIFIED_TIME = "last_verified_time";
     private static final String KEY_SESSION_VERIFIED = "session_verified";
-    public static final int DEFAULT_AUTOLOCK_MINUTES = 60; // 1 hour
+    public static final int DEFAULT_AUTOLOCK_MINUTES = 5; // 5 minutes default
     private static volatile long backgroundElapsedRealtime = 0L;
     private static volatile SharedPreferences cachedPreferences;
 
@@ -109,7 +109,14 @@ public final class NGSafety {
     }
 
     public static boolean isSessionVerified() {
-        return sessionVerified;
+        if (!sessionVerified) {
+            return false;
+        }
+        if (org.telegram.messenger.ApplicationLoader.applicationContext != null && isAutoLockExpired(org.telegram.messenger.ApplicationLoader.applicationContext)) {
+            lockSession(org.telegram.messenger.ApplicationLoader.applicationContext);
+            return false;
+        }
+        return true;
     }
 
     public static void markSessionVerified(Context context) {

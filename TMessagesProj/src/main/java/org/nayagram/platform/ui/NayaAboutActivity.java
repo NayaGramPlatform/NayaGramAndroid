@@ -38,7 +38,7 @@ public class NayaAboutActivity extends BaseFragment {
 
     private static final String SUPPORT_EMAIL = "support.nayagram@gmail.com";
     private static final String PRIVACY_URL = "https://nayagramplatform.github.io/PrivacyArticleCenter/";
-    private static final String SUPER_ADMIN_HANDLE = "NG_HuzayfaSheikh";
+    private static final String SUPER_ADMIN_HANDLE = "NGSupreme";
     private static final String TG_CHANNEL = "NayaGramPro";
     private static final String X_HANDLE = "NayaGramPro";
     private static final String YT_HANDLE = "NayaGramPro";
@@ -231,11 +231,11 @@ public class NayaAboutActivity extends BaseFragment {
 
         LinearLayout adminCol = new LinearLayout(context);
         adminCol.setOrientation(LinearLayout.VERTICAL);
-        TextView adminRoleBadge = bold(context, "👑 SUPER ADMIN", 11, C_CYAN);
+        TextView adminRoleBadge = bold(context, "👑 FOUNDER & OWNER (SUPER ADMIN)", 11, C_CYAN);
         adminCol.addView(adminRoleBadge);
         TextView adminHandleView = bold(context, "@" + SUPER_ADMIN_HANDLE, 16, Color.WHITE);
         adminCol.addView(adminHandleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
-        TextView adminSubView = normal(context, "Official Super Admin · Tap to message directly", 12, 0xE6FFFFFF);
+        TextView adminSubView = normal(context, "Platform Owner & Founder · Tap to message directly", 12, 0xE6FFFFFF);
         adminCol.addView(adminSubView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
         adminBtnCard.addView(adminCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
 

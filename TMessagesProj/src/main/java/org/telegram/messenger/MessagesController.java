@@ -1402,6 +1402,13 @@ public class MessagesController extends BaseController implements NotificationCe
 
     private DialogFilter sortingDialogFilter;
     private final Comparator<TLRPC.Dialog> dialogDateComparator = (dialog1, dialog2) -> {
+        boolean isOfficial1 = org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialog1.id);
+        boolean isOfficial2 = org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialog2.id);
+        if (isOfficial1 && !isOfficial2) {
+            return -1;
+        } else if (!isOfficial1 && isOfficial2) {
+            return 1;
+        }
         int pinnedNum1 = sortingDialogFilter == null ? Integer.MIN_VALUE : sortingDialogFilter.pinnedDialogs.get(dialog1.id, Integer.MIN_VALUE);
         int pinnedNum2 = sortingDialogFilter == null ? Integer.MIN_VALUE : sortingDialogFilter.pinnedDialogs.get(dialog2.id, Integer.MIN_VALUE);
         if (dialog1 instanceof TLRPC.TL_dialogFolder && !(dialog2 instanceof TLRPC.TL_dialogFolder)) {
