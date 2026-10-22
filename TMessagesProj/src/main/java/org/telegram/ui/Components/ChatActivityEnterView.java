@@ -4180,6 +4180,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                     final TLRPC.Chat chat = MessagesController.getInstance(currentAccount).getChat(-dialog_id);
                     chatFull = MessagesController.getInstance(currentAccount).getChatFull(-dialog_id);
                     defPeer = chatFull != null ? chatFull.default_send_as : null;
+                    if (defPeer == null) {
+                        defPeer = controller.getSavedDefaultSendAs(dialog_id);
+                    }
                 }
                 if (defPeer == null && peers != null && !peers.peers.isEmpty()) {
                     defPeer = peers.peers.get(0).peer;
@@ -13175,6 +13178,13 @@ public class ChatActivityEnterView extends FrameLayout implements
 
     public boolean isPopupShowing() {
         return emojiViewVisible || botKeyboardViewVisible;
+    }
+
+    public boolean canHidePopupByBackButton() {
+        if (!isPopupShowing()) {
+            return false;
+        }
+        return !(currentPopupContentType == POPUP_CONTENT_BOT_KEYBOARD && botReplyMarkup != null && botReplyMarkup.is_persistent && botButtonsMessageObject != null);
     }
 
     public boolean closeCreationLinkDialog(boolean invoked) {

@@ -140,6 +140,10 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn("icon.setColorFilter(new PorterDuffColorFilter(0xFF00D4FF, PorterDuff.Mode.SRC_IN));", music_code)
         self.assertIn("0x8000D4FF", music_code)
         self.assertIn("Theme.key_windowBackgroundWhiteBlackText", music_code)
+        self.assertIn("equalizerPaint", music_code)
+        self.assertIn("iconBadgePaint", music_code)
+        self.assertIn("0xFF7C3AED", music_code)
+        self.assertIn("0xFF10B981", music_code)
 
     def test_theme_contrast_in_platform_screens(self):
         menu_code = (ROOT / "java/org/nayagram/platform/chat/NGChatMenuHelper.java").read_text()
@@ -161,6 +165,8 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         mc_code = (ROOT / "java/org/telegram/messenger/MessagesController.java").read_text()
         self.assertIn("public TLRPC.TL_channels_sendAsPeers ensureSendAsPeers(TLRPC.TL_channels_sendAsPeers res)", mc_code)
         self.assertIn("public TLRPC.Peer getSavedDefaultSendAs(long dialogId)", mc_code)
+        self.assertIn("sp.premium_required = true;", mc_code)
+        self.assertIn("!getUserConfig().isPremium()", mc_code)
         self.assertIn("infoFinal.loading = false;", mc_code)
 
     def test_about_rating_no_yellow_and_super_admin_button(self):

@@ -15246,10 +15246,16 @@ public class MessagesController extends BaseController implements NotificationCe
     public TLRPC.Peer getSavedDefaultSendAs(long dialogId) {
         TLRPC.Peer mem = localDefaultSendAsPeers.get(dialogId);
         if (mem != null) {
+            if (mem.channel_id != 0 && mem.channel_id != -dialogId && !getUserConfig().isPremium()) {
+                return null;
+            }
             return mem;
         }
         long savedPeerId = getMainSettings().getLong("ng_send_as_peer_" + dialogId, 0L);
         if (savedPeerId != 0L) {
+            if (savedPeerId < 0 && savedPeerId != dialogId && !getUserConfig().isPremium()) {
+                return null;
+            }
             TLRPC.Peer restored = getPeer(savedPeerId);
             localDefaultSendAsPeers.put(dialogId, restored);
             return restored;
@@ -21784,6 +21790,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     for (int j = 0; j < res.peers.size(); j++) {
                         TLRPC.Peer p = res.peers.get(j).peer;
                         if (p != null && p.channel_id == c.id) {
+                            res.peers.get(j).premium_required = true;
                             exists = true;
                             break;
                         }
@@ -21793,7 +21800,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         TLRPC.TL_peerChannel pc = new TLRPC.TL_peerChannel();
                         pc.channel_id = c.id;
                         sp.peer = pc;
-                        sp.premium_required = false;
+                        sp.premium_required = true;
                         res.peers.add(sp);
                         boolean chatInList = false;
                         for (int k = 0; k < res.chats.size(); k++) {
