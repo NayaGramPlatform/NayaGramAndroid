@@ -137,7 +137,7 @@ public class NayaAboutActivity extends BaseFragment {
         LinearLayout verRow = new LinearLayout(context);
         verRow.setOrientation(LinearLayout.HORIZONTAL);
         verRow.addView(makeVerCard(context, "NayaGram", getAppVersion(), "App version"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 0, 0, 8, 0));
-        verRow.addView(makeVerCard(context, "Telegram", "12.x", "Core engine"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 8, 0, 0, 0));
+        verRow.addView(makeVerCard(context, "Telegram", "13.1.4", "Core engine"), LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, 8, 0, 0, 0));
         hero.addView(verRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         root.addView(heroFrame, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));

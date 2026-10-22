@@ -189,6 +189,7 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn("SUPER_ADMIN_HANDLE = \"NGSupreme\"", about_code)
         self.assertIn("SUPER ADMIN", about_code)
         self.assertIn("Rate NayaGram on Google Play", about_code)
+        self.assertIn("\"13.1.4\"", about_code)
         self.assertNotIn("0xFFFF8A00", about_code)
         settings_code = (ROOT / "java/org/telegram/ui/SettingsActivity.java").read_text()
         self.assertIn("NGSupreme", settings_code)
@@ -213,6 +214,25 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn("long lastVerified = prefs(context).getLong(KEY_LAST_VERIFIED_TIME, 0L);", safety_code)
         tabs_code = (ROOT / "java/org/telegram/ui/MainTabsActivity.java").read_text()
         self.assertIn("NGSafety.onAppForeground(getParentActivity());", tabs_code)
+
+    def test_novagram_folder_cards_and_auto_add_text(self):
+        about_code = (ROOT / "java/org/nayagram/platform/ui/NayaAboutActivity.java").read_text()
+        self.assertIn("\"13.1.4\"", about_code)
+        tabs_code = (ROOT / "java/org/telegram/ui/Components/FilterTabsView.java").read_text()
+        self.assertIn("cardRect", tabs_code)
+        self.assertIn("cardBgPaint", tabs_code)
+        self.assertIn("iconDrawable", tabs_code)
+        self.assertIn("iconResId", tabs_code)
+        dialogs_code = (ROOT / "java/org/telegram/ui/DialogsActivity.java").read_text()
+        self.assertIn("getFilterIcon", dialogs_code)
+        config_code = (ROOT / "java/org/nayagram/platform/NayaConfig.java").read_text()
+        self.assertIn("isAutoAddTextEnabled", config_code)
+        self.assertIn("getAutoAddText", config_code)
+        enter_code = (ROOT / "java/org/telegram/ui/Components/ChatActivityEnterView.java").read_text()
+        self.assertIn("isAutoAddTextEnabled", enter_code)
+        ng_settings = (ROOT / "java/org/telegram/ui/NGSettingsActivity.java").read_text()
+        self.assertIn("rowAutoAddText", ng_settings)
+        self.assertIn("rowOneTimeVoiceVideo", ng_settings)
 
 if __name__ == '__main__':
     unittest.main()

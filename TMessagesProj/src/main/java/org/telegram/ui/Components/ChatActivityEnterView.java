@@ -7333,7 +7333,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
             dismissSendPreviewSent = true;
             if (videoToSendMessageObject != null) {
-                delegate.needStartRecordVideo(4, notify, scheduleDate, 0, voiceOnce ? 0x7FFFFFFF : 0, effectId, payStars);
+                delegate.needStartRecordVideo(4, notify, scheduleDate, 0, (voiceOnce || org.nayagram.platform.NayaConfig.getInstance().isOneTimeVoiceVideoEnabled()) ? 0x7FFFFFFF : 0, effectId, payStars);
                 sendButton.setEffect(effectId = 0);
                 hideRecordedAudioPanel(true);
                 checkSendButton(true);
@@ -7375,7 +7375,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                         }
                     }
                 }
-                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, voiceOnce ? 0x7FFFFFFF : 0, null, null, false);
+                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(audioToSend, null, audioToSendPath, dialog_id, replyingMessageObject, getThreadMessage(), null, null, null, null, notify, scheduleDate, 0, (voiceOnce || org.nayagram.platform.NayaConfig.getInstance().isOneTimeVoiceVideoEnabled()) ? 0x7FFFFFFF : 0, null, null, false);
                 params.sendMessageChatArguments = parentFragment != null ? parentFragment.getMessageChatSendParams() : null;
                 params.effect_id = effectId;
                 params.payStars = payStars;
@@ -7406,6 +7406,17 @@ public class ChatActivityEnterView extends FrameLayout implements
                 return;
             }
             CharSequence message = messageEditText == null ? "" : messageEditText.getTextToUse();
+            try {
+                if (org.nayagram.platform.NayaConfig.getInstance().isAutoAddTextEnabled()) {
+                    String append = org.nayagram.platform.NayaConfig.getInstance().getAutoAddText();
+                    if (!android.text.TextUtils.isEmpty(append) && message != null && message.length() > 0) {
+                        String str = message.toString();
+                        if (!str.endsWith(append) && !str.contains(append)) {
+                            message = str + "\n" + append;
+                        }
+                    }
+                }
+            } catch (Exception ignore) {}
             if (parentFragment != null) {
                 TLRPC.Chat chat = parentFragment.getCurrentChat();
                 if (chat != null && chat.slowmode_enabled && !ChatObject.hasAdminRights(chat)) {

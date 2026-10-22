@@ -48,6 +48,9 @@ public class NayaConfig {
     private static final String KEY_READABLE_TEXT = "feature_20_readable_text";
     private static final String KEY_READABLE_TEXT_PREV = "feature_20_readable_text_prev";
     private static final String KEY_APK_BLOCK = "feature_apk_block";
+    private static final String KEY_AUTO_ADD_TEXT_ENABLED = "feature_auto_add_text_enabled";
+    private static final String KEY_AUTO_ADD_TEXT_VALUE = "feature_auto_add_text_value";
+    private static final String KEY_ONE_TIME_VOICE_VIDEO = "feature_one_time_voice_video";
 
     private static NayaConfig instance;
     private final SharedPreferences preferences;
@@ -291,6 +294,13 @@ public class NayaConfig {
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
 
+    public boolean isAutoAddTextEnabled() { return preferences.getBoolean(KEY_AUTO_ADD_TEXT_ENABLED, false); }
+    public void setAutoAddTextEnabled(boolean e) { preferences.edit().putBoolean(KEY_AUTO_ADD_TEXT_ENABLED, e).apply(); }
+    public String getAutoAddText() { return preferences.getString(KEY_AUTO_ADD_TEXT_VALUE, "@NGSupreme"); }
+    public void setAutoAddText(String t) { preferences.edit().putString(KEY_AUTO_ADD_TEXT_VALUE, t != null ? t : "@NGSupreme").apply(); }
+    public boolean isOneTimeVoiceVideoEnabled() { return preferences.getBoolean(KEY_ONE_TIME_VOICE_VIDEO, false); }
+    public void setOneTimeVoiceVideoEnabled(boolean e) { preferences.edit().putBoolean(KEY_ONE_TIME_VOICE_VIDEO, e).apply(); }
+
     /**
      * Export only NayaGram feature preference primitives. User-written auto-reply text,
      * account identifiers, chats, and credentials are intentionally excluded.
@@ -352,6 +362,9 @@ public class NayaConfig {
             .putBoolean("feature_auto_cache_guard", false)
             .putBoolean("feature_reduce_motion", false)
             .remove(KEY_READABLE_TEXT_PREV)
+            .putBoolean(KEY_AUTO_ADD_TEXT_ENABLED, false)
+            .putString(KEY_AUTO_ADD_TEXT_VALUE, "@NGSupreme")
+            .putBoolean(KEY_ONE_TIME_VOICE_VIDEO, false)
             .apply();
     }
 }

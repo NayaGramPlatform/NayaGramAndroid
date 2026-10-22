@@ -72,6 +72,9 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowApkBlock = -1;
 
     private int headerMessaging;
+    private int rowOneTimeVoiceVideo;
+    private int rowAutoAddText;
+    private int rowEditText;
     private int rowMessageScheduler;
     private int rowSmartAutoReply;
     private int rowStorySaver;
@@ -116,6 +119,9 @@ public class NGSettingsActivity extends BaseFragment {
         rowApkBlock = -1;
 
         headerMessaging = rowCount++;
+        rowOneTimeVoiceVideo = rowCount++;
+        rowAutoAddText = rowCount++;
+        rowEditText = rowCount++;
         rowMessageScheduler = -1;
         rowSmartAutoReply = -1;
         rowStorySaver = -1;
@@ -159,7 +165,7 @@ public class NGSettingsActivity extends BaseFragment {
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);
-        overflowItem.addSubItem(7, R.drawable.msg_admins, "Super Admin (@NG_HuzayfaSheikh)").setIconColor(0xFF7C3AED);
+        overflowItem.addSubItem(7, R.drawable.msg_admins, "Super Admin (@NGSupreme)").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram").setIconColor(0xFF00D4FF);
         overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults").setIconColor(0xFFDB2777);
 
@@ -180,7 +186,7 @@ public class NGSettingsActivity extends BaseFragment {
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
                 } else if (id == 7) {
-                    org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGSettingsActivity.this, 1);
+                    org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGSettingsActivity.this, 1);
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
@@ -232,6 +238,17 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
                     if (checked) showAutoReplyConfigDialog();
+                } else if (position == rowOneTimeVoiceVideo) {
+                    cfg.setOneTimeVoiceVideoEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowAutoAddText) {
+                    cfg.setAutoAddTextEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-add text: " + (checked ? "On" : "Off")).show();
+                    if (checked) showAutoAddTextConfigDialog();
+                } else if (position == rowEditText) {
+                    showAutoAddTextConfigDialog();
                 } else if (position == rowStorySaver) {
                     cfg.setStorySaverEnabled(checked);
                     cell.setChecked(checked);
@@ -377,6 +394,25 @@ public class NGSettingsActivity extends BaseFragment {
             cleanB.setNegativeButton("Cancel", null);
             showDialog(cleanB.create());
         });
+    }
+
+    private void showAutoAddTextConfigDialog() {
+        if (getParentActivity() == null) return;
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle("Auto-add text");
+        b.setMessage("Append your custom text or username to every message you send");
+        final EditText et = new EditText(getParentActivity());
+        et.setText(NayaConfig.getInstance().getAutoAddText());
+        et.setSelection(et.getText().length());
+        b.setView(et);
+        b.setPositiveButton("Save", (d, w) -> {
+            String text = et.getText().toString().trim();
+            NayaConfig.getInstance().setAutoAddText(text.isEmpty() ? "@NGSupreme" : text);
+            if (listAdapter != null) listAdapter.notifyDataSetChanged();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-add text saved").show();
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
     }
 
     private void showAutoReplyConfigDialog() {
@@ -711,6 +747,23 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
                     c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
+                } else if (position == rowOneTimeVoiceVideo) {
+                    cfg.setOneTimeVoiceVideoEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowAutoAddText) {
+                    cfg.setAutoAddTextEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-add text: " + (checked ? "On" : "Off")).show();
+                    if (checked) showAutoAddTextConfigDialog();
+                } else if (position == rowEditText) {
+                    showAutoAddTextConfigDialog();
+                } else if (position == rowOneTimeVoiceVideo) {
+                    c.setFeature(R.drawable.msg_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
+                } else if (position == rowAutoAddText) {
+                    c.setFeature(R.drawable.msg_edit, 0xFF8B5CF6, "Auto-add text", "Append your text to every message you send", cfg.isAutoAddTextEnabled(), true);
+                } else if (position == rowEditText) {
+                    c.setActionFeature(R.drawable.msg_settings_old, 0xFF10B981, "Edit text", cfg.getAutoAddText(), false);
                 } else if (position == rowStorySaver) {
                     c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
 
