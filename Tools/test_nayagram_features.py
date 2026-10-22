@@ -236,9 +236,10 @@ def test_advanced_feature_wiring():
     assert 'FRESH_RESET_AUTHORIZATION_FORBIDDEN' in passkeys_activity
     assert 'do not clear app data or reinstall just to retry' in passkeys_activity
     auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")
-    assert 'Intentionally disabled: never auto-join or auto-pin a channel.' in auto_pin
-    assert 'TL_channels_joinChannel' not in auto_pin
-    assert 'controller.pinDialog' not in auto_pin
+    assert 'OFFICIAL_CHANNEL_USERNAME = "NayaGramPro"' in auto_pin
+    assert 'TL_channels_joinChannel' in auto_pin
+    assert 'controller.pinDialog' in auto_pin
+    assert 'isLockedOfficialChannel' in auto_pin
 
 
 

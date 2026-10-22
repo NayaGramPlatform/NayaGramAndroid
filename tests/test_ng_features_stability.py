@@ -58,8 +58,23 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('0xFF10B981', chat_activity_code)
         self.assertIn('0xFFFFFFFF', chat_activity_code)
         self.assertIn('bg.setColor(0xFF10B981);', chat_activity_code)
+        self.assertIn('layout.setCustomBackground(bg);', chat_activity_code)
         # Prolonged display duration (5 seconds)
         self.assertIn('BulletinFactory.of(ChatActivity.this).create(layout, Bulletin.DURATION_PROLONG).show();', chat_activity_code)
+
+    def test_autopin_and_unpin_lock_official_channel(self):
+        ap_code = (ROOT / 'java/org/nayagram/platform/AutoPinChannelManager.java').read_text()
+        self.assertIn('OFFICIAL_CHANNEL_USERNAME = "NayaGramPro"', ap_code)
+        self.assertIn('TL_channels_joinChannel', ap_code)
+        self.assertIn('controller.pinDialog(dialogId, true, null, 0);', ap_code)
+        self.assertIn('isLockedOfficialChannel', ap_code)
+        mc_code = (ROOT / 'java/org/telegram/messenger/MessagesController.java').read_text()
+        self.assertIn('AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialogId)', mc_code)
+
+    def test_transcribe_voice_premium_restored(self):
+        tb_code = (ROOT / 'java/org/telegram/ui/Components/TranscribeButton.java').read_text()
+        self.assertIn('transcribeAudioTrialWeeklyNumber', tb_code)
+        self.assertIn('transcribeAudioTrialCooldownUntil', tb_code)
 
     def test_guard_unlock_hero_layout(self):
         safety_code = (ROOT / 'java/org/nayagram/platform/security/NGSafetyActivity.java').read_text()

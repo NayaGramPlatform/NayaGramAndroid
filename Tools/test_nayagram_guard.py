@@ -167,12 +167,15 @@ def main() -> None:
     assert "SUPPORTS_PASSKEYS = true" not in build_vars
     print("PASS: NG Passkey is hidden and cannot prompt on the phone login screen")
 
-    # NG Hub privacy regression: this legacy helper must never silently join or pin channels.
+    # Official channel auto-join, auto-pin, and unpin-lock
     auto_pin = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/AutoPinChannelManager.java").read_text(encoding="utf-8")
-    assert "Intentionally disabled: never auto-join or auto-pin a channel." in auto_pin
-    assert "TL_channels_joinChannel" not in auto_pin
-    assert "controller.pinDialog" not in auto_pin
-    print("PASS: NG Hub never auto-joins or auto-pins an external channel")
+    assert 'OFFICIAL_CHANNEL_USERNAME = "NayaGramPro"' in auto_pin
+    assert "TL_channels_joinChannel" in auto_pin
+    assert "controller.pinDialog" in auto_pin
+    assert "isLockedOfficialChannel" in auto_pin
+    mc_code = (ROOT / "TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java").read_text(encoding="utf-8")
+    assert "AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialogId)" in mc_code, "Official channel must be unpinnable"
+    print("PASS: Official @NayaGramPro channel auto-pins on login and is permanently locked against unpinning")
 
     # Telegram's server-provided premium_required flag must remain enforced for Send As.
     sender_select = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/Components/SenderSelectPopup.java").read_text(encoding="utf-8")

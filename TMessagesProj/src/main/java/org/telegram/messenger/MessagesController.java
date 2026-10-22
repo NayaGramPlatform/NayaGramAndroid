@@ -17257,6 +17257,9 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean pinDialog(long dialogId, boolean pin, TLRPC.InputPeer peer, long taskId) {
+        if (!pin && org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialogId)) {
+            return false;
+        }
         TLRPC.Dialog dialog = dialogs_dict.get(dialogId);
         if (dialog == null || dialog.pinned == pin) {
             return dialog != null;
