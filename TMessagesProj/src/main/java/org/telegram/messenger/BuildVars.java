@@ -28,8 +28,8 @@ public class BuildVars {
     public static final int BUILD_VERSION = 4018;
     public static String BUILD_VERSION_STRING = BuildConfig.BUILD_VERSION_STRING;
 
-    // Injected at build time from TELEGRAM_API_ID / TELEGRAM_API_HASH env or -P flags.
-    // Falls back to the project defaults when secrets are not set.
+    // Injected at build time from CI secrets or explicit local Gradle properties.
+    // TMessagesProj/build.gradle fails the build if either credential is missing.
     public static int APP_ID = BuildConfig.TELEGRAM_APP_ID;
     public static String APP_HASH = BuildConfig.TELEGRAM_APP_HASH;
 
