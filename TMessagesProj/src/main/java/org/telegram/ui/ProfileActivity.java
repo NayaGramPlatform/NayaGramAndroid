@@ -3866,12 +3866,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             balanceView.setOnClickListener(v -> {
                 try {
-                    long did = dialogId != 0 ? dialogId : userId;
-                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, currentAccount, did, resourcesProvider);
+                    long targetDialogId = dialogId != 0 ? dialogId : userId;
+                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, false, targetDialogId, currentAccount, null, resourcesProvider);
                 } catch (Throwable e) {
                     try {
-                        Browser.openUrl(getParentActivity(), "https://fragment.com");
-                    } catch (Throwable ignored) {}
+                        presentFragment(new org.telegram.ui.Stars.StarsIntroActivity());
+                    } catch (Throwable e2) {
+                        try {
+                            Browser.openUrl(getParentActivity(), "https://fragment.com");
+                        } catch (Throwable ignored) {}
+                    }
                 }
             });
             if (avatarsBlurView != null) {

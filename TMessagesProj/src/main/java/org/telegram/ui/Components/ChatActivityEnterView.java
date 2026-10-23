@@ -7405,18 +7405,20 @@ public class ChatActivityEnterView extends FrameLayout implements
                 sendRichDraft(notify, scheduleDate, scheduleRepeatPeriod, payStars);
                 return;
             }
-            CharSequence message = messageEditText == null ? "" : messageEditText.getTextToUse();
+            CharSequence rawMessage = messageEditText == null ? "" : messageEditText.getTextToUse();
             try {
                 if (org.nayagram.platform.NayaConfig.getInstance().isAutoAddTextEnabled()) {
                     String append = org.nayagram.platform.NayaConfig.getInstance().getAutoAddText();
-                    if (!android.text.TextUtils.isEmpty(append) && message != null && message.length() > 0) {
-                        String str = message.toString();
+                    if (!android.text.TextUtils.isEmpty(append) && rawMessage != null && rawMessage.length() > 0) {
+                        String str = rawMessage.toString();
                         if (!str.endsWith(append) && !str.contains(append)) {
-                            message = str + "\n" + append;
+                            rawMessage = str + "
+" + append;
                         }
                     }
                 }
             } catch (Exception ignore) {}
+            final CharSequence message = rawMessage;
             if (parentFragment != null) {
                 TLRPC.Chat chat = parentFragment.getCurrentChat();
                 if (chat != null && chat.slowmode_enabled && !ChatObject.hasAdminRights(chat)) {
