@@ -1,0 +1,98 @@
+name: Fix remaining compile errors
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/fix-remaining-compile.yml'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix ChatActivityEnterView + ProfileActivity
+        run: |
+          python3 << 'END'
+          from pathlib import Path
+
+          p = Path("TMessagesProj/src/main/java/org/telegram/ui/Components/ChatActivityEnterView.java")
+          t = p.read_text()
+
+          # Make message effectively-final for lambda by introducing messageForSend
+          marker = "            } catch (Exception ignore) {}\n"
+          key = "isAutoAddTextEnabled"
+          i = t.find(key)
+          if i < 0:
+              raise SystemExit("auto-add key not found")
+          j = t.find(marker, i)
+          if j < 0:
+              raise SystemExit("auto-add catch marker not found")
+          insert_at = j + len(marker)
+          insertion = "            final CharSequence messageForSend = message;\n"
+          if "messageForSend" not in t[i:i+800]:
+              t = t[:insert_at] + insertion + t[insert_at:]
+              print("inserted messageForSend")
+          else:
+              print("messageForSend already present")
+
+          old_lambda = '''                    AndroidUtilities.runOnUIThread(moveToSendStateRunnable = () -> {
+                        moveToSendStateRunnable = null;
+                        hideTopView(true);
+                        if (messageEditText != null) {
+                            messageEditText.setText("");
+                        }
+                        if (delegate != null) {
+                            delegate.onMessageSend(message, notify, scheduleDate, scheduleRepeatPeriod, payStars);
+                        }
+                    }, 200);'''
+          new_lambda = '''                    AndroidUtilities.runOnUIThread(moveToSendStateRunnable = () -> {
+                        moveToSendStateRunnable = null;
+                        hideTopView(true);
+                        if (messageEditText != null) {
+                            messageEditText.setText("");
+                        }
+                        if (delegate != null) {
+                            delegate.onMessageSend(messageForSend, notify, scheduleDate, scheduleRepeatPeriod, payStars);
+                        }
+                    }, 200);'''
+          if old_lambda not in t:
+              raise SystemExit("lambda block not found")
+          t = t.replace(old_lambda, new_lambda, 1)
+          p.write_text(t)
+          print("ChatActivityEnterView OK")
+
+          pp = Path("TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java")
+          tp = pp.read_text()
+          oldp = '''            balanceView.setOnClickListener(v -> {
+                try {
+                    long did = dialogId != 0 ? dialogId : userId;
+                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, currentAccount, did, resourcesProvider);
+                } catch (Throwable e) {
+                    try {
+                        Browser.openUrl(getParentActivity(), "https://fragment.com");
+                    } catch (Throwable ignored) {}
+                }
+            });'''
+          newp = '''            balanceView.setOnClickListener(v -> {
+                try {
+                    Browser.openUrl(getParentActivity(), "https://fragment.com");
+                } catch (Throwable ignored) {}
+            });'''
+          if oldp not in tp:
+              raise SystemExit("Profile balance click not found")
+          pp.write_text(tp.replace(oldp, newp, 1))
+          print("ProfileActivity OK")
+          END
+      - name: Commit and push
+        run: |
+          git config user.name "NayaGram CI"
+          git config user.email "ci@nayagram.local"
+          git add TMessagesProj/src/main/java/org/telegram/ui/Components/ChatActivityEnterView.java \
+                  TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "fix: ChatActivityEnterView lambda final + ProfileActivity balance click compile errors"
+          git push origin HEAD:master
