@@ -114,6 +114,26 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
+def resolveTelegramApiId() {
+    def v = System.getenv("TELEGRAM_API_ID")
+    if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
+    if (project.hasProperty("TELEGRAM_API_ID")) {
+        def p = project.property("TELEGRAM_API_ID")
+        if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
+    }
+    return "39273870"
+}
+
+def resolveTelegramApiHash() {
+    def v = System.getenv("TELEGRAM_API_HASH")
+    if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
+    if (project.hasProperty("TELEGRAM_API_HASH")) {
+        def p = project.property("TELEGRAM_API_HASH")
+        if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
+    }
+    return "87dd441b1eff5587925d0ea78bcc0e95"
+}
+
 android {
     compileSdk 36
     compileSdkVersion 36
@@ -145,7 +165,11 @@ android {
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
         multiDexEnabled true
-        externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
+        externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' }
+
+        // Telegram API credentials: prefer CI secrets / -P flags, else project defaults.
+        buildConfigField "int", "TELEGRAM_APP_ID", resolveTelegramApiId()
+        buildConfigField "String", "TELEGRAM_APP_HASH", "\"" + resolveTelegramApiHash() + "\""
     }
     buildTypes {
         debug {
