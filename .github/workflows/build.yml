@@ -54,18 +54,37 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Generate CI-Only Test Keystore
+      - name: Configure release signing (repository secrets)
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           mkdir -p TMessagesProj/config
-          keytool -genkeypair -v \
-            -keystore TMessagesProj/config/nayagrampro.jks \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 3650 \
-            -alias nayagrampro_key \
-            -storepass 'NayaGramCI@Test2026' \
-            -keypass 'NayaGramCI@Test2026' \
-            -dname "CN=NayaGram CI Test, OU=CI, O=NayaGram Platform, L=Rangpur, ST=Rangpur, C=BD"
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$RELEASE_STORE_PASSWORD" ] && [ -n "$RELEASE_KEY_PASSWORD" ] && [ -n "$RELEASE_KEY_ALIAS" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > TMessagesProj/config/nayagrampro.jks
+            test -s TMessagesProj/config/nayagrampro.jks
+            keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" >/dev/null
+            echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
+            echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "Using configured release keystore from GitHub Actions secrets."
+          else
+            echo "::warning::Release signing secrets are incomplete; generating a CI-only test keystore. Do not distribute these artifacts as Play Store releases."
+            keytool -genkeypair -v \
+              -keystore "$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" \
+              -keyalg RSA -keysize 2048 -validity 3650 \
+              -alias nayagrampro_key \
+              -storepass 'NayaGramCI@Test2026' \
+              -keypass 'NayaGramCI@Test2026' \
+              -dname "CN=NayaGram CI Test, OU=CI, O=NayaGram Platform, L=Rangpur, ST=Rangpur, C=BD"
+            echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
+            echo "RELEASE_STORE_PASSWORD=NayaGramCI@Test2026" >> "$GITHUB_ENV"
+            echo "RELEASE_KEY_PASSWORD=NayaGramCI@Test2026" >> "$GITHUB_ENV"
+            echo "RELEASE_KEY_ALIAS=nayagrampro_key" >> "$GITHUB_ENV"
+          fi
 
       - name: Clean Gradle and native build outputs
         run: |
@@ -82,10 +101,6 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release \
-            -PRELEASE_STORE_PASSWORD="NayaGramCI@Test2026" \
-            -PRELEASE_KEY_PASSWORD="NayaGramCI@Test2026" \
-            -PRELEASE_KEY_ALIAS="nayagrampro_key" \
-            -PRELEASE_KEYSTORE_PATH="$(pwd)/TMessagesProj/config/nayagrampro.jks" \
             --no-build-cache --rerun-tasks --stacktrace
 
       - name: Verify freshly built native libraries in AAB
@@ -122,10 +137,10 @@ jobs:
             --bundle="$AAB_FILE" \
             --output=build_output/app.apks \
             --mode=universal \
-            --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:'NayaGramCI@Test2026' \
-            --ks-key-alias=nayagrampro_key \
-            --key-pass=pass:'NayaGramCI@Test2026'
+            --ks="$RELEASE_KEYSTORE_PATH" \
+            --ks-pass="pass:$RELEASE_STORE_PASSWORD" \
+            --ks-key-alias="$RELEASE_KEY_ALIAS" \
+            --key-pass="pass:$RELEASE_KEY_PASSWORD"
           unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
           ls -lh build_output/
 
@@ -141,10 +156,10 @@ jobs:
             --bundle="$AAB_FILE" \
             --output=build_output/phone.apks \
             --mode=default \
-            --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:'NayaGramCI@Test2026' \
-            --ks-key-alias=nayagrampro_key \
-            --key-pass=pass:'NayaGramCI@Test2026'
+            --ks="$RELEASE_KEYSTORE_PATH" \
+            --ks-pass="pass:$RELEASE_STORE_PASSWORD" \
+            --ks-key-alias="$RELEASE_KEY_ALIAS" \
+            --key-pass="pass:$RELEASE_KEY_PASSWORD"
           rm -rf build_output/phone-splits
           mkdir -p build_output/phone-splits
           java -jar bundletool-all-1.17.2.jar extract-apks \
