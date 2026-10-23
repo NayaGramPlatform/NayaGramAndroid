@@ -51,6 +51,13 @@ public class NayaConfig {
     private static final String KEY_AUTO_ADD_TEXT_ENABLED = "feature_auto_add_text_enabled";
     private static final String KEY_AUTO_ADD_TEXT_VALUE = "feature_auto_add_text_value";
     private static final String KEY_ONE_TIME_VOICE_VIDEO = "feature_one_time_voice_video";
+    private static final String KEY_HIDE_PHONE_NUMBER = "feature_hide_phone_number";
+    private static final String KEY_APP_THEME_MODE = "feature_app_theme_mode";
+
+    public static final int THEME_MODE_LIGHT = 0;
+    public static final int THEME_MODE_DARK_SLATE = 1;
+    public static final int THEME_MODE_NEON_AURORA = 2;
+
 
     private static NayaConfig instance;
     private final SharedPreferences preferences;
@@ -300,6 +307,25 @@ public class NayaConfig {
     public void setAutoAddText(String t) { preferences.edit().putString(KEY_AUTO_ADD_TEXT_VALUE, t != null ? t : "@NGSupreme").apply(); }
     public boolean isOneTimeVoiceVideoEnabled() { return preferences.getBoolean(KEY_ONE_TIME_VOICE_VIDEO, false); }
     public void setOneTimeVoiceVideoEnabled(boolean e) { preferences.edit().putBoolean(KEY_ONE_TIME_VOICE_VIDEO, e).apply(); }
+    public boolean isHidePhoneNumberEnabled() { return preferences.getBoolean(KEY_HIDE_PHONE_NUMBER, false); }
+    public void setHidePhoneNumberEnabled(boolean e) { preferences.edit().putBoolean(KEY_HIDE_PHONE_NUMBER, e).apply(); }
+
+    public int getAppThemeMode() { return preferences.getInt(KEY_APP_THEME_MODE, THEME_MODE_DARK_SLATE); }
+    public void setAppThemeMode(int mode) { preferences.edit().putInt(KEY_APP_THEME_MODE, mode).apply(); }
+
+    public static String formatPhoneNumberPrivacy(String phone, boolean isHidden) {
+        if (!isHidden || phone == null || phone.isEmpty()) {
+            return phone != null ? phone : "";
+        }
+        if (phone.length() > 6) {
+            String start = phone.substring(0, 3);
+            String end = phone.substring(phone.length() - 4);
+            return start + " ••• ••• " + end;
+        } else {
+            return "••••••••••••";
+        }
+    }
+
 
     /**
      * Export only NayaGram feature preference primitives. User-written auto-reply text,

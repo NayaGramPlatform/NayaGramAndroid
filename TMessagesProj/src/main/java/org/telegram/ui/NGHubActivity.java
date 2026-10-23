@@ -315,7 +315,7 @@ public class NGHubActivity extends BaseFragment {
         LinearLayout row3 = new LinearLayout(context);
         row3.setOrientation(LinearLayout.HORIZONTAL);
         TextView contacts = coloredButton(context, "📇  My Contact List", COLOR_TEAL);
-        TextView liveStream = coloredButton(context, "📡  Live Stream", 0xFFE11D48);
+        TextView liveStream = coloredButton(context, "📡  Live Stream", 0xFF0D9488);
         row3.addView(contacts, weight());
         LinearLayout.LayoutParams gap3 = weight();
         gap3.leftMargin = AndroidUtilities.dp(8);
@@ -886,7 +886,11 @@ public class NGHubActivity extends BaseFragment {
         title.setText(titleText.isEmpty() ? "Untitled" : titleText);
         title.setTextSize(15);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        if (chat != null) {
+            title.setTextColor(0xFF00D4FF); // Cyan title for channels & groups
+        } else {
+            title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        }
         title.setMaxLines(1);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
         textColumn.addView(title, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));

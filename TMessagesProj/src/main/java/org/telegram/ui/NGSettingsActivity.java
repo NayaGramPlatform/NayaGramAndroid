@@ -82,6 +82,8 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerSecurity;
     private int rowShowIdDc;
+    private int rowHidePhoneNumber;
+    private int rowThemeMode;
     private int rowBiometricLocker;
 
     private int headerOptimization;
@@ -129,6 +131,8 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerSecurity = rowCount++;
         rowShowIdDc = rowCount++;
+        rowHidePhoneNumber = rowCount++;
+        rowThemeMode = rowCount++;
         rowBiometricLocker = rowCount++;
         // Hidden until the APK/ZIP protection behavior is implemented and verified.
         rowApkBlock = -1;
@@ -261,6 +265,16 @@ public class NGSettingsActivity extends BaseFragment {
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Opening native chat folder management").show();
                     presentFragment(new FiltersSetupActivity());
 
+                } else                 if (position == rowHidePhoneNumber) {
+                    cfg.setHidePhoneNumberEnabled(!cfg.isHidePhoneNumberEnabled());
+                    c.setChecked(cfg.isHidePhoneNumberEnabled());
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, cfg.isHidePhoneNumberEnabled() ? "Phone Privacy Enabled" : "Phone Privacy Disabled").show();
+                } else if (position == rowThemeMode) {
+                    int nextMode = (cfg.getAppThemeMode() + 1) % 3;
+                    cfg.setAppThemeMode(nextMode);
+                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    String modeName = nextMode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (nextMode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Theme: " + modeName).show();
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
@@ -471,7 +485,17 @@ public class NGSettingsActivity extends BaseFragment {
             title = "Smart Chat Folders";
             body = "Opens Telegram's native chat-folder manager so you can create, edit, and organize your own folders using Telegram's existing filter system. Folder membership and chat filtering remain managed by Telegram.";
 
-        } else if (position == rowShowIdDc) {
+        } else                 if (position == rowHidePhoneNumber) {
+                    cfg.setHidePhoneNumberEnabled(!cfg.isHidePhoneNumberEnabled());
+                    c.setChecked(cfg.isHidePhoneNumberEnabled());
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, cfg.isHidePhoneNumberEnabled() ? "Phone Privacy Enabled" : "Phone Privacy Disabled").show();
+                } else if (position == rowThemeMode) {
+                    int nextMode = (cfg.getAppThemeMode() + 1) % 3;
+                    cfg.setAppThemeMode(nextMode);
+                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    String modeName = nextMode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (nextMode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Theme: " + modeName).show();
+                } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
             body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
         } else if (position == rowBiometricLocker) {
@@ -742,7 +766,13 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowApkBlock) {
-                    c.setFeature(R.drawable.outline_shield_check, 0xFFEF4444, "APK & ZIP Security Shield", "Block downloading or receiving malicious .apk, .zip, .exe files", cfg.isApkBlockEnabled(), true);
+                    c.setFeature(R.drawable.outline_shield_check, 0xFF00D4FF, "APK & ZIP Security Shield", "Block downloading or receiving malicious files", cfg.isApkBlockEnabled(), true);
+                } else if (position == rowHidePhoneNumber) {
+                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF6366F1, "Screen Share Phone Privacy", "Blur & mask personal phone number with blue-purple background and eye toggle", cfg.isHidePhoneNumberEnabled(), true);
+                } else if (position == rowThemeMode) {
+                    int mode = cfg.getAppThemeMode();
+                    String modeName = mode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (mode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
+                    c.setActionFeature(R.drawable.msg_theme, 0xFF8B5CF6, "Naya Theme Mode", modeName, true);
                 } else if (position == rowMessageScheduler) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
@@ -770,6 +800,16 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowSmartChatFolders) {
                     c.setActionFeature(R.drawable.outline_groups_24, 0xFF10B981, "Smart Chat Folders", "Create and manage Telegram chat folders", false);
 
+                } else                 if (position == rowHidePhoneNumber) {
+                    cfg.setHidePhoneNumberEnabled(!cfg.isHidePhoneNumberEnabled());
+                    c.setChecked(cfg.isHidePhoneNumberEnabled());
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, cfg.isHidePhoneNumberEnabled() ? "Phone Privacy Enabled" : "Phone Privacy Disabled").show();
+                } else if (position == rowThemeMode) {
+                    int nextMode = (cfg.getAppThemeMode() + 1) % 3;
+                    cfg.setAppThemeMode(nextMode);
+                    if (listAdapter != null) listAdapter.notifyDataSetChanged();
+                    String modeName = nextMode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (nextMode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Theme: " + modeName).show();
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {

@@ -267,3 +267,23 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+    def test_phone_number_privacy_blur_masking(self):
+        config_code = (ROOT / 'java/org/nayagram/platform/NayaConfig.java').read_text()
+        settings_code = (ROOT / 'java/org/telegram/ui/NGSettingsActivity.java').read_text()
+        self.assertIn('KEY_HIDE_PHONE_NUMBER', config_code)
+        self.assertIn('isHidePhoneNumberEnabled', config_code)
+        self.assertIn('formatPhoneNumberPrivacy', config_code)
+        self.assertIn('rowHidePhoneNumber', settings_code)
+        self.assertIn('Screen Share Phone Privacy', settings_code)
+
+    def test_group_channel_member_subscriber_cyan_green_purple_formatting(self):
+        hub_code = (ROOT / 'java/org/telegram/ui/NGHubActivity.java').read_text()
+        self.assertIn('0xFF00D4FF', hub_code)
+        self.assertNotIn('0xFFE11D48', hub_code) # No red color allowed
+
+    def test_cyan_purple_neon_aurora_theme_and_dark_slate(self):
+        config_code = (ROOT / 'java/org/nayagram/platform/NayaConfig.java').read_text()
+        settings_code = (ROOT / 'java/org/telegram/ui/NGSettingsActivity.java').read_text()
+        self.assertIn('THEME_MODE_NEON_AURORA', config_code)
+        self.assertIn('Naya Theme Mode', settings_code)
