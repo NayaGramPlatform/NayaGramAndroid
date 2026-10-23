@@ -113,7 +113,7 @@ jobs:
         run: |
           set -e
           STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
-          KEY_PASS="${RELEASE_KEY_PASSWORD:-nayagram123}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
           chmod +x gradlew
           ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release \
@@ -150,6 +150,9 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           set -e
+          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
+          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
           curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           if [ -z "$AAB_FILE" ]; then
@@ -163,9 +166,9 @@ jobs:
             --output=build_output/app.apks \
             --mode=universal \
             --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:"$RELEASE_STORE_PASSWORD" \
-            --ks-key-alias="$RELEASE_KEY_ALIAS" \
-            --key-pass=pass:"$RELEASE_KEY_PASSWORD"
+            --ks-pass=pass:"$STORE_PASS" \
+            --ks-key-alias="$KEY_ALIAS" \
+            --key-pass=pass:"$KEY_PASS"
           unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
           ls -lh build_output/
 
@@ -182,9 +185,9 @@ jobs:
             --output=build_output/phone.apks \
             --mode=default \
             --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:"$RELEASE_STORE_PASSWORD" \
-            --ks-key-alias="$RELEASE_KEY_ALIAS" \
-            --key-pass=pass:"$RELEASE_KEY_PASSWORD"
+            --ks-pass=pass:"$STORE_PASS" \
+            --ks-key-alias="$KEY_ALIAS" \
+            --key-pass=pass:"$KEY_PASS"
           rm -rf build_output/phone-splits
           mkdir -p build_output/phone-splits
           java -jar bundletool-all-1.17.2.jar extract-apks \
