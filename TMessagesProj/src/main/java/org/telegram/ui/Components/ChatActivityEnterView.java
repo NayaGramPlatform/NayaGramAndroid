@@ -7418,6 +7418,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     }
                 }
             } catch (Exception ignore) {}
+            final CharSequence messageForSend = message;
             final CharSequence message = rawMessage;
             if (parentFragment != null) {
                 TLRPC.Chat chat = parentFragment.getCurrentChat();
@@ -7451,7 +7452,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                             messageEditText.setText("");
                         }
                         if (delegate != null) {
-                            delegate.onMessageSend(message, notify, scheduleDate, scheduleRepeatPeriod, payStars);
+                            delegate.onMessageSend(messageForSend, notify, scheduleDate, scheduleRepeatPeriod, payStars);
                         }
                     }, 200);
                 }
