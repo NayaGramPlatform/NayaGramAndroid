@@ -70,6 +70,8 @@ jobs:
           echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > TMessagesProj/config/nayagrampro.jks
           test -s TMessagesProj/config/nayagrampro.jks
           keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" >/dev/null
+          keytool -certreq -keystore TMessagesProj/config/nayagrampro.jks -storepass "$RELEASE_STORE_PASSWORD" -keypass "$RELEASE_KEY_PASSWORD" -alias "$RELEASE_KEY_ALIAS" -file /tmp/nayagram-release-key-check.csr >/dev/null
+          rm -f /tmp/nayagram-release-key-check.csr
           echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
           echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD" >> "$GITHUB_ENV"
           echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD" >> "$GITHUB_ENV"
