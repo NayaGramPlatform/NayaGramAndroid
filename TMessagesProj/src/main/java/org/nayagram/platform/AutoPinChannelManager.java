@@ -171,6 +171,14 @@ public final class AutoPinChannelManager {
      * Returns true if the dialog belongs to the official NayaGramPro channel,
      * which must remain pinned and cannot be unpinned.
      */
+    public static boolean isOfficialChannel(long dialogId) {
+        return isLockedOfficialChannel(UserConfig.selectedAccount, dialogId);
+    }
+
+    public static boolean isLockedOfficialChannel(long dialogId) {
+        return isLockedOfficialChannel(UserConfig.selectedAccount, dialogId);
+    }
+
     public static boolean isLockedOfficialChannel(int account, long dialogId) {
         if (dialogId >= 0) {
             return false;
