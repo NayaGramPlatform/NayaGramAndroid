@@ -114,24 +114,22 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
-def resolveTelegramApiId() {
-    def v = System.getenv("TELEGRAM_API_ID")
+def resolveSecret(String envName) {
+    def v = System.getenv(envName)
     if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
-    if (project.hasProperty("TELEGRAM_API_ID")) {
-        def p = project.property("TELEGRAM_API_ID")
+    if (project.hasProperty(envName)) {
+        def p = project.property(envName)
         if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
     }
-    return "39273870"
+    throw new GradleException(envName + " is required. Set the GitHub Actions secret or a local Gradle -P property. Do not commit the value.")
+}
+
+def resolveTelegramApiId() {
+    return resolveSecret("TELEGRAM_API_ID")
 }
 
 def resolveTelegramApiHash() {
-    def v = System.getenv("TELEGRAM_API_HASH")
-    if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
-    if (project.hasProperty("TELEGRAM_API_HASH")) {
-        def p = project.property("TELEGRAM_API_HASH")
-        if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
-    }
-    return "87dd441b1eff5587925d0ea78bcc0e95"
+    return resolveSecret("TELEGRAM_API_HASH")
 }
 
 android {
@@ -167,7 +165,7 @@ android {
         multiDexEnabled true
         externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
 
-        // Telegram API credentials: prefer CI secrets / -P flags, else project defaults.
+        // Telegram API credentials come only from CI secrets or a local -P flag.
         buildConfigField "int", "TELEGRAM_APP_ID", resolveTelegramApiId()
         buildConfigField "String", "TELEGRAM_APP_HASH", "\"" + resolveTelegramApiHash() + "\""
     }
