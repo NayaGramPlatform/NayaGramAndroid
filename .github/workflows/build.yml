@@ -88,6 +88,9 @@ jobs:
           ./gradlew clean --no-build-cache --stacktrace
 
       - name: Assemble VoIP Native Libs (Fat Release, no cache)
+        env:
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
           ./gradlew :TMessagesProj:assembleAfatRelease \
             --no-build-cache --rerun-tasks --stacktrace
@@ -98,6 +101,8 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/TMessagesProj/config/nayagrampro.jks
+          TELEGRAM_API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          TELEGRAM_API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
         run: |
           set -e
           STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
