@@ -114,38 +114,69 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
+def configuredTelegramSecret(String name) {
+    def value = System.getenv(name)
+    if (value == null || value.toString().trim().isEmpty()) {
+        if (project.hasProperty(name)) value = project.property(name)
+    }
+    return value == null ? "" : value.toString().trim()
+}
+
+// Placeholders permit Gradle Sync and non-build tasks (such as clean) without
+// credentials. The validation task below prevents any app artifact from being built
+// unless real, well-formed credentials were supplied.
 def resolveTelegramApiId() {
-    def v = System.getenv("TELEGRAM_API_ID")
-    if (v == null || v.toString().trim().isEmpty()) {
-        if (project.hasProperty("TELEGRAM_API_ID")) {
-            v = project.property("TELEGRAM_API_ID")
-        }
-    }
-    def value = v == null ? "" : v.toString().trim()
-    if (value.isEmpty()) {
-        throw new GradleException("Missing TELEGRAM_API_ID. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_ID.")
-    }
+    def value = configuredTelegramSecret("TELEGRAM_API_ID")
+    if (value.isEmpty()) return "0"
     if (!(value ==~ /[0-9]+/)) {
         throw new GradleException("TELEGRAM_API_ID must contain digits only.")
     }
-    return value
+    try {
+        return Integer.toString(Integer.parseInt(value, 10))
+    } catch (NumberFormatException ignored) {
+        throw new GradleException("TELEGRAM_API_ID must be a valid positive decimal 32-bit integer.")
+    }
 }
 
 def resolveTelegramApiHash() {
-    def v = System.getenv("TELEGRAM_API_HASH")
-    if (v == null || v.toString().trim().isEmpty()) {
-        if (project.hasProperty("TELEGRAM_API_HASH")) {
-            v = project.property("TELEGRAM_API_HASH")
-        }
-    }
-    def value = v == null ? "" : v.toString().trim()
-    if (value.isEmpty()) {
-        throw new GradleException("Missing TELEGRAM_API_HASH. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_HASH.")
-    }
+    def value = configuredTelegramSecret("TELEGRAM_API_HASH")
+    if (value.isEmpty()) return "00000000000000000000000000000000"
     if (!(value ==~ /[0-9a-fA-F]{32}/)) {
         throw new GradleException("TELEGRAM_API_HASH must be a 32-character hexadecimal string.")
     }
     return value
+}
+
+def validateTelegramApiCredentials = tasks.register("validateTelegramApiCredentials") {
+    group = "verification"
+    description = "Validates Telegram API credentials before app artifacts are built."
+    doLast {
+        def apiId = configuredTelegramSecret("TELEGRAM_API_ID")
+        def apiHash = configuredTelegramSecret("TELEGRAM_API_HASH")
+        if (apiId.isEmpty()) {
+            throw new GradleException("Missing TELEGRAM_API_ID. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_ID.")
+        }
+        if (!(apiId ==~ /[0-9]+/)) {
+            throw new GradleException("TELEGRAM_API_ID must contain digits only.")
+        }
+        try {
+            if (Integer.parseInt(apiId, 10) <= 0) throw new NumberFormatException("not positive")
+        } catch (NumberFormatException ignored) {
+            throw new GradleException("TELEGRAM_API_ID must be a valid positive decimal 32-bit integer.")
+        }
+        if (apiHash.isEmpty()) {
+            throw new GradleException("Missing TELEGRAM_API_HASH. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_HASH.")
+        }
+        if (!(apiHash ==~ /[0-9a-fA-F]{32}/)) {
+            throw new GradleException("TELEGRAM_API_HASH must be a 32-character hexadecimal string.")
+        }
+    }
+}
+
+tasks.configureEach { task ->
+    if (task.name == "preBuild") {
+        task.dependsOn(validateTelegramApiCredentials)
+    }
 }
 
 android {
@@ -181,7 +212,7 @@ android {
         multiDexEnabled true
         externalNativeBuild { cmake { version '3.22.1'; arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21'; targets 'tmessages.49' } }
 
-        // Telegram API credentials: prefer CI secrets / -P flags, else project defaults.
+        // Telegram API credentials are injected from CI secrets / -P flags; placeholders are sync-only.
         buildConfigField "int", "TELEGRAM_APP_ID", resolveTelegramApiId()
         buildConfigField "String", "TELEGRAM_APP_HASH", "\"" + resolveTelegramApiHash() + "\""
     }
