@@ -1,4 +1,7 @@
 package org.telegram.ui;
+import org.telegram.ui.Stories.recorder.StoryRecorder;
+import org.telegram.messenger.FileLog;
+import android.app.Activity;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -69,6 +72,11 @@ public class NGHubActivity extends BaseFragment {
     private TextView detailPurpose;
     private TextView detailDoes;
     private TextView detailNever;
+    private TextView detailPurposeHeader;
+    private TextView detailDoesHeader;
+    private TextView detailNeverHeader;
+    private TextView detailUpdatesHeader;
+    private TextView detailUpdates;
     private LinearLayout languageRow;
     private int selectedSection = SECTION_CHANNELS;
     private int detailLang;
@@ -195,7 +203,7 @@ public class NGHubActivity extends BaseFragment {
         TextView footer = new TextView(context);
         footer.setText("NG Hub was introduced on 16 October 2026. My Channel and My Group list only places this account created. Other communities stay in Everyone. Create Bot opens Telegram's official BotFather.");
         footer.setTextSize(12);
-        footer.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        footer.setTextColor(Theme.isCurrentThemeDark() ? 0xFF94A3B8 : 0xFF475569);
         footer.setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(16), AndroidUtilities.dp(4), AndroidUtilities.dp(8));
         page.addView(footer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
@@ -304,13 +312,22 @@ public class NGHubActivity extends BaseFragment {
         row2.addView(profile, gap2);
         LinearLayout.LayoutParams row2Params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0);
         grid.addView(row2, row2Params);
+        LinearLayout row3 = new LinearLayout(context);
+        row3.setOrientation(LinearLayout.HORIZONTAL);
         TextView contacts = coloredButton(context, "📇  My Contact List", COLOR_TEAL);
-        grid.addView(contacts, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0));
+        TextView liveStream = coloredButton(context, "📡  Live Stream", 0xFFE11D48);
+        row3.addView(contacts, weight());
+        LinearLayout.LayoutParams gap3 = weight();
+        gap3.leftMargin = AndroidUtilities.dp(8);
+        row3.addView(liveStream, gap3);
+        grid.addView(row3, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0));
+
         channel.setOnClickListener(v -> selectMine(SECTION_CHANNELS));
         group.setOnClickListener(v -> selectMine(SECTION_GROUPS));
         bot.setOnClickListener(v -> selectMine(SECTION_BOTS));
         profile.setOnClickListener(v -> openProfile());
         contacts.setOnClickListener(v -> presentFragment(new ContactsActivity(null)));
+        liveStream.setOnClickListener(v -> startLiveStream());
         return grid;
     }
 
@@ -327,9 +344,14 @@ public class NGHubActivity extends BaseFragment {
         LinearLayout.LayoutParams botParams = weight();
         botParams.leftMargin = AndroidUtilities.dp(8);
         actions.addView(createBot, botParams);
+        TextView liveStreamAction = createAction(context, "📡  Live Stream");
+        LinearLayout.LayoutParams liveParams = weight();
+        liveParams.leftMargin = AndroidUtilities.dp(8);
+        actions.addView(liveStreamAction, liveParams);
         createGroup.setOnClickListener(v -> presentFragment(new GroupCreateActivity(new Bundle())));
         createChannel.setOnClickListener(v -> presentFragment(new ActionIntroActivity(ActionIntroActivity.ACTION_TYPE_CHANNEL_CREATE)));
         createBot.setOnClickListener(v -> openBotFather());
+        liveStreamAction.setOnClickListener(v -> startLiveStream());
         LinearLayout.LayoutParams params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 42, 0, 12, 0, 8);
         actions.setLayoutParams(params);
         return actions;
@@ -356,6 +378,10 @@ public class NGHubActivity extends BaseFragment {
         menu.addView(menuItem(context, "📇  My Contact List", v -> {
             togglePlus();
             presentFragment(new ContactsActivity(null));
+        }));
+        menu.addView(menuItem(context, "📡  Live Stream", v -> {
+            togglePlus();
+            startLiveStream();
         }));
         wrap.addView(menu, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
         return wrap;
@@ -384,6 +410,26 @@ public class NGHubActivity extends BaseFragment {
         Bundle args = new Bundle();
         args.putLong("user_id", me.id);
         presentFragment(new ProfileActivity(args));
+    }
+
+    private void startLiveStream() {
+        Activity activity = getParentActivity();
+        if (activity == null) return;
+        long myId = UserConfig.getInstance(currentAccount).getClientUserId();
+        try {
+            StoryRecorder.getInstance(activity, currentAccount)
+                    .selectedPeerId(myId)
+                    .setMode(StoryRecorder.MODE_LIVE)
+                    .open(null);
+        } catch (Throwable e) {
+            FileLog.e(e);
+            try {
+                StoryRecorder.getInstance(activity, currentAccount)
+                        .selectedPeerId(myId)
+                        .open(null);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     private void openBotFather() {
@@ -430,6 +476,26 @@ public class NGHubActivity extends BaseFragment {
         view.animate().alpha(0f).translationY(AndroidUtilities.dp(12)).setDuration(180).withEndAction(this::finishFragment).start();
     }
 
+    private LinearLayout buildSectionCard(Context context, TextView header, TextView body) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        int cardBg = Theme.isCurrentThemeDark() ? 0xFF1E293B : Theme.getColor(Theme.key_windowBackgroundWhite);
+        GradientDrawable cardDrawable = new GradientDrawable();
+        cardDrawable.setColor(cardBg);
+        cardDrawable.setCornerRadius(AndroidUtilities.dp(18));
+        cardDrawable.setStroke(AndroidUtilities.dp(1), Theme.isCurrentThemeDark() ? 0x2E38BDF8 : 0x14000000);
+        card.setBackground(cardDrawable);
+        if (header != null) {
+            card.addView(header, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+        }
+        if (body != null) {
+            body.setLineSpacing(AndroidUtilities.dp(2), 1.25f);
+            card.addView(body, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        }
+        return card;
+    }
+
     private FrameLayout buildDetails(Context context) {
         FrameLayout overlay = new FrameLayout(context);
         overlay.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
@@ -437,49 +503,73 @@ public class NGHubActivity extends BaseFragment {
         overlay.addView(scroll, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         LinearLayout column = new LinearLayout(context);
         column.setOrientation(LinearLayout.VERTICAL);
-        column.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
+        column.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(28));
         scroll.addView(column, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        TextView back = coloredButton(context, "Back", COLOR_BLUE);
+        TextView back = coloredButton(context, "←  Back to NG Hub", COLOR_BLUE);
         back.setOnClickListener(v -> closeDetails());
-        column.addView(back, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 40, 0, 0, 0, 12));
+        column.addView(back, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 40, 0, 0, 0, 14));
 
-        LinearLayout card = new LinearLayout(context);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
-        GradientDrawable head = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{COLOR_CYAN, COLOR_BLUE});
-        head.setCornerRadius(AndroidUtilities.dp(20));
-        card.setBackground(head);
-        detailTitle = detailText(context, 24, 0xFFF7FBFF, true);
-        detailLead = detailText(context, 14, 0xFFF7FBFF, false);
-        detailPurpose = detailText(context, 14, 0xFFF7FBFF, false);
-        card.addView(detailTitle);
-        card.addView(detailLead);
-        card.addView(detailPurpose);
-        column.addView(card);
+        LinearLayout heroCard = new LinearLayout(context);
+        heroCard.setOrientation(LinearLayout.VERTICAL);
+        heroCard.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(18), AndroidUtilities.dp(18), AndroidUtilities.dp(18));
+        GradientDrawable head = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF0284C7, 0xFF0369A1});
+        head.setCornerRadius(AndroidUtilities.dp(22));
+        heroCard.setBackground(head);
 
-        LinearLayout body = new LinearLayout(context);
-        body.setOrientation(LinearLayout.VERTICAL);
-        body.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        body.setBackground(round(Theme.getColor(Theme.key_windowBackgroundWhite), 20));
-        detailDoes = detailText(context, 14, Theme.getColor(Theme.key_windowBackgroundWhiteBlackText), false);
-        detailNever = detailText(context, 14, Theme.getColor(Theme.key_windowBackgroundWhiteGrayText), false);
-        body.addView(detailDoes);
-        body.addView(detailNever);
-        LinearLayout.LayoutParams bodyParams = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 10, 0, 0);
-        column.addView(body, bodyParams);
+        TextView versionBadge = new TextView(context);
+        versionBadge.setText("🚀 Version 2.2 • Enhanced October 2026 Edition");
+        versionBadge.setTextSize(11);
+        versionBadge.setTextColor(0xFFE0F2FE);
+        versionBadge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setColor(0x28FFFFFF);
+        badgeBg.setCornerRadius(AndroidUtilities.dp(10));
+        versionBadge.setBackground(badgeBg);
+        versionBadge.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(4), AndroidUtilities.dp(10), AndroidUtilities.dp(4));
+        heroCard.addView(versionBadge, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        detailTitle = detailText(context, 26, 0xFFFFFFFF, true);
+        detailLead = detailText(context, 14, 0xFFE0F2FE, false);
+        heroCard.addView(detailTitle);
+        heroCard.addView(detailLead, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+        column.addView(heroCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
+
+        detailPurposeHeader = detailText(context, 16, COLOR_CYAN, true);
+        detailPurpose = detailText(context, 14, Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFF334155, false);
+        column.addView(buildSectionCard(context, detailPurposeHeader, detailPurpose), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        detailDoesHeader = detailText(context, 16, COLOR_BLUE, true);
+        detailDoes = detailText(context, 14, Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFF334155, false);
+        column.addView(buildSectionCard(context, detailDoesHeader, detailDoes), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        detailNeverHeader = detailText(context, 16, 0xFF10B981, true);
+        detailNever = detailText(context, 14, Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFF334155, false);
+        column.addView(buildSectionCard(context, detailNeverHeader, detailNever), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        detailUpdatesHeader = detailText(context, 16, 0xFFF59E0B, true);
+        detailUpdates = detailText(context, 14, Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFF334155, false);
+        column.addView(buildSectionCard(context, detailUpdatesHeader, detailUpdates), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
+
+        TextView langLabel = new TextView(context);
+        langLabel.setText("🌐 Language Selection / ভাষা পরিবর্তন");
+        langLabel.setTextSize(13);
+        langLabel.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        langLabel.setTextColor(COLOR_CYAN);
+        langLabel.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(6));
+        column.addView(langLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         languageRow = new LinearLayout(context);
         languageRow.setOrientation(LinearLayout.HORIZONTAL);
         HorizontalScrollView languages = new HorizontalScrollView(context);
         languages.setHorizontalScrollBarEnabled(false);
         languages.addView(languageRow);
-        column.addView(languages, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 12, 0, 0));
+        column.addView(languages, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 0, 0, 8));
         String[] names = {"🇬🇧 English", "🇧🇩 বাংলা", "🇸🇦 العربية", "🇷🇺 Русский", "🇺🇿 Oʻzbekcha", "🇮🇳 हिन्दी", "🇵🇰 اردو"};
         for (int i = 0; i < names.length; i++) {
             final int index = i;
             TextView chip = createTab(context, names[i]);
-            chip.setPadding(AndroidUtilities.dp(12), 0, AndroidUtilities.dp(12), 0);
+            chip.setPadding(AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14), 0);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
             if (i > 0) lp.leftMargin = AndroidUtilities.dp(6);
             languageRow.addView(chip, lp);
@@ -497,9 +587,16 @@ public class NGHubActivity extends BaseFragment {
         int gravity = rtl ? Gravity.RIGHT : Gravity.LEFT;
         bindDetail(detailTitle, pack[2], dir, gravity);
         bindDetail(detailLead, pack[3], dir, gravity);
-        bindDetail(detailPurpose, pack[4] + "\n" + pack[5], dir, gravity);
-        bindDetail(detailDoes, pack[6] + "\n" + pack[7], dir, gravity);
-        bindDetail(detailNever, pack[8] + "\n" + pack[9], dir, gravity);
+        bindDetail(detailPurposeHeader, pack[4], dir, gravity);
+        bindDetail(detailPurpose, pack[5], dir, gravity);
+        bindDetail(detailDoesHeader, pack[6], dir, gravity);
+        bindDetail(detailDoes, pack[7], dir, gravity);
+        bindDetail(detailNeverHeader, pack[8], dir, gravity);
+        bindDetail(detailNever, pack[9], dir, gravity);
+        if (pack.length > 11) {
+            bindDetail(detailUpdatesHeader, pack[10], dir, gravity);
+            bindDetail(detailUpdates, pack[11], dir, gravity);
+        }
         if (languageRow == null) return;
         for (int i = 0; i < languageRow.getChildCount(); i++) {
             View child = languageRow.getChildAt(i);
@@ -537,47 +634,68 @@ public class NGHubActivity extends BaseFragment {
     private String[] detailPack(int index) {
         switch (index) {
             case 1:
-                return new String[]{"bn", "বাংলা", "এনজি হাব",
+                return new String[]{
+                        "bn", "বাংলা", "এনজি হাব",
                         "এনজি হাব আপনার নিজের তৈরি চ্যানেল, গ্রুপ ও বট, আর প্রোফাইল ও কন্টাক্ট লিস্টের একটি ব্যক্তিগত ঘর।",
-                        "উদ্দেশ্য", "নিজের টেলিগ্রাম জায়গাগুলো এক স্ক্রিনে রাখা, এবং অন্যের কমিউনিটিকে নিজের বলে না দেখানো।",
-                        "এটি যা করে", "এই অ্যাকাউন্টের তৈরি চ্যানেল ও গ্রুপ দেখায়, প্রোফাইল ও কন্টাক্ট লিস্ট খোলে, এবং বটের জন্য অফিসিয়াল বটফাদার খোলে।",
-                        "এটি যা করে না", "মিথ্যা চ্যানেল বা গ্রুপ বানায় না, এবং অন্য কারও কমিউনিটিকে আপনার বলে না।"};
+                        "🎯 উদ্দেশ্য", "নিজের টেলিগ্রাম জায়গাগুলো এক স্ক্রিনে রাখা, এবং অন্যের কমিউনিটিকে নিজের বলে না দেখানো।",
+                        "✨ এটি যা করে", "এই অ্যাকাউন্টের তৈরি চ্যানেল ও গ্রুপ দেখায়, প্রোফাইল ও কন্টাক্ট লিস্ট খোলে, এবং বটের জন্য অফিসিয়াল বটফাদার খোলে।",
+                        "🛡️ এটি যা করে না", "মিথ্যা চ্যানেল বা গ্রুপ বানায় না, এবং অন্য কারও কমিউনিটিকে আপনার বলে না।",
+                        "🚀 সর্বশেষ আপডেট ও নতুন সুবিধাসমূহ", "• ডান থেকে বামে কার্ড স্লাইড এনিমেশন ও প্রিমিয়াম টপ-বটম বর্ডার।\n• ডার্ক ও লাইট মোডে স্পষ্ট ও উজ্জ্বল টেক্সট কন্ট্রাস্ট।\n• এনজি হাব থেকে সরাসরি এক-ট্যাপ লাইভ স্ট্রিমিং ও ব্রডকাস্ট।\n• নোভাগ্রাম স্টাইল ফোল্ডার কার্ডস ও ডাইনামিক ভেক্টর আইকন।"
+                };
             case 2:
-                return new String[]{"ar", "العربية", "إن جي هب",
+                return new String[]{
+                        "ar", "العربية", "إن جي هب",
                         "إن جي هب هو بيتك الشخصي للقنوات والمجموعات والبوتات التي تنشئها، مع ملفك وقائمة جهات الاتصال.",
-                        "الغاية", "أن تبقى أماكنك في شاشة واحدة، وألا تُعرض مجتمعات الآخرين كأنها ملكك.",
-                        "ماذا يفعل", "يعرض ما أنشأه هذا الحساب، ويفتح ملفك وجهات الاتصال، ويفتح بوت فادر الرسمي.",
-                        "ما لا يفعله", "لا يخترع قنوات أو مجموعات، ولا يضع اسمك على مجتمع شخص آخر."};
+                        "🎯 الغاية", "أن تبقى أماكنك في شاشة واحدة، وألا تُعرض مجتمعات الآخرين كأنها ملكك.",
+                        "✨ ماذا يفعل", "يعرض ما أنشأه هذا الحساب، ويفتح ملفك وجهات الاتصال، ويفتح بوت فادر الرسمي.",
+                        "🛡️ ما لا يفعله", "لا يخترع قنوات أو مجموعات، ولا يضع اسمك على مجتمع شخص آخر.",
+                        "🚀 آخر التحديثات والتحسينات", "• حركة انزلاقية للبطاقات من اليمين إلى اليسار مع حدود علوية وسفلية أنيقة.\n• تباين نصوص فائق الوضوح في الوضعين الداكن والفاتح.\n• اختصار مباشر لبدء البث المباشر من إن جي هب.\n• بطاقات مجلدات مستوحاة من نوفاغرام مع أيقونات ديناميكية."
+                };
             case 3:
-                return new String[]{"ru", "Русский", "NG Hub",
+                return new String[]{
+                        "ru", "Русский", "NG Hub",
                         "NG Hub — личный экран для каналов, групп и ботов, которые создали вы, а также профиля и контактов.",
-                        "Задача", "Держать свои места на одном экране и не показывать чужие сообщества как ваши.",
-                        "Что делает", "Показывает созданное этим аккаунтом, открывает профиль и контакты и официального BotFather.",
-                        "Чего не делает", "Не придумывает каналы или группы и не выдаёт чужое сообщество за ваше."};
+                        "🎯 Задача", "Держать свои места на одном экране и не показывать чужие сообщества как ваши.",
+                        "✨ Что делает", "Показывает созданное этим аккаунтом, открывает профиль и контакты и официального BotFather.",
+                        "🛡️ Чего не делает", "Не придумывает каналы или группы и не выдаёт чужое сообщество за ваше.",
+                        "🚀 Новые улучшения", "• Плавная анимация карточек справа налево с верхней и нижней границей.\n• Высококонтрастный четкий текст в темной и светлой темах.\n• Быстрый запуск прямого эфира прямо из NG Hub.\n• Карточки папок в стиле Novagram с векторными иконками."
+                };
             case 4:
-                return new String[]{"uz", "Oʻzbekcha", "NG Hub",
+                return new String[]{
+                        "uz", "Oʻzbekcha", "NG Hub",
                         "NG Hub — o‘zingiz yaratgan kanal, guruh va botlar, hamda profil va kontaktlar uchun shaxsiy joy.",
-                        "Maqsad", "O‘z joylaringizni bitta ekranda saqlash va begona hamjamiyatni sizniki deb ko‘rsatmaslik.",
-                        "Nima qiladi", "Bu hisob yaratgan joylarni ko‘rsatadi, profil va kontaktlarni ochadi, bot uchun rasmiy BotFather’ni ochadi.",
-                        "Nima qilmaydi", "Soxta kanal yoki guruh o‘ylab topmaydi va birovning hamjamiyatini sizniki deb belgilamaydi."};
+                        "🎯 Maqsad", "O‘z joylaringizni bitta ekranda saqlash va begona hamjamiyatni sizniki deb ko‘rsatmaslik.",
+                        "✨ Nima qiladi", "Bu hisob yaratgan joylarni ko‘rsatadi, profil va kontaktlarni ochadi, bot uchun rasmiy BotFather’ni ochadi.",
+                        "🛡️ Nima qilmaydi", "Soxta kanal yoki guruh o‘ylab topmaydi va birovning hamjamiyatini sizniki deb belgilamaydi.",
+                        "🚀 So‘nggi yangilanishlar", "• O‘ngdan chapga kartalar silliq animatsiyasi va chiroyli chegaralar.\n• Qorong‘i va yorug‘ rejimda yuqori kontrastli aniq matnlar.\n• NG Hub ichidan to‘g‘ridan-to‘g‘ri jonli efir tugmasi.\n• Novagram uslubidagi jild kartalari va vektor ikonkalari."
+                };
             case 5:
-                return new String[]{"hi", "हिन्दी", "एनजी हब",
+                return new String[]{
+                        "hi", "हिन्दी", "एनजी हब",
                         "एनजी हब उन चैनल, ग्रुप और बॉट का निजी घर है जिन्हें आपने बनाया है, साथ में प्रोफ़ाइल और संपर्क सूची।",
-                        "उद्देश्य", "अपनी जगहें एक स्क्रीन पर रखना, और किसी और की कम्युनिटी को अपनी बताकर न दिखाना।",
-                        "यह क्या करता है", "इस खाते के बनाए चैनल और ग्रुप दिखाता है, प्रोफ़ाइल और संपर्क खोलता है, और आधिकारिक बॉटफादर खोलता है।",
-                        "यह नहीं करता", "नकली चैनल या ग्रुप नहीं गढ़ता, और किसी दूसरे की कम्युनिटी पर आपका नाम नहीं लगाता।"};
+                        "🎯 उद्देश्य", "अपनी जगहें एक स्क्रीन पर रखना, এবং किसी और की कम्युनिटी को अपनी बताकर न दिखाना।",
+                        "✨ यह क्या करता है", "इस खाते के बनाए चैनल और ग्रुप दिखाता है, प्रोफ़ाइल और संपर्क खोलता है, और आधिकारिक बॉटफादर खोलता है।",
+                        "🛡️ यह नहीं करता", "नकली चैनल या ग्रुप नहीं गढ़ता, और किसी दूसरे की कम्युनिटी पर आपका नाम नहीं लगाता।",
+                        "🚀 नवीनतम अपडेट और सुधार", "• दाएँ से बाएँ कार्ड स्लाइड एनीमेशन और आकर्षक टॉप-बॉटम बॉर्डर।\n• डार्क और लाइट मोड में स्पष्ट और चमकदार टेक्स्ट कंट्रास्ट।\n• NG Hub से सीधे एक-टैप लाइव स्ट्रीमिंग।\n• नोवाग्राम स्टाइल फोल्डर कार्ड्स और ऑटो-ऐड सपोर्ट।"
+                };
             case 6:
-                return new String[]{"ur", "اردو", "این جی ہب",
-                        "این جی ہب ان چینلز، گروپس اور بوٹس کا ذاتی گھر ہے جو آپ نے بنائے، ساتھ پروفائل اور رابطہ فہرست۔",
-                        "مقصد", "اپنی جگہوں کو ایک اسکرین پر رکھنا، اور کسی اور کی کمیونٹی کو اپنی بنا کر نہیں دکھانا۔",
-                        "یہ کیا کرتا ہے", "اس اکاؤنٹ کے بنائے چینل اور گروپ دکھاتا ہے، پروفائل اور رابطے کھولتا ہے، اور سرکاری بوٹ فادر کھولتا ہے۔",
-                        "یہ نہیں کرتا", "جعلی چینل یا گروپ نہیں بناتا، اور کسی دوسرے کی کمیونٹی کو آپ کی نہیں لکھتا۔"};
+                return new String[]{
+                        "ur", "اردو", "این جی ہب",
+                        "این جی ہب ان چینلز، گروپس اور بوٹس کا ذاتی گھر ہے جو آپ نے بنائے، ساتھ پروفائل اور رابطہ فہرست।",
+                        "🎯 مقصد", "اپنی جگہوں کو ایک اسکرین پر رکھنا, اور کسی اور کی کمیونٹی کو اپنی بنا کر نہیں دکھانا।",
+                        "✨ یہ کیا کرتا ہے", "اس اکاؤنٹ کے بنائے چینل اور گروپ دکھاتا ہے، پروفائل اور رابطے کھولتا ہے، اور سرکاری بوٹ فادر کھولتا ہے۔",
+                        "🛡️ یہ نہیں کرتا", "جعلی چینل یا گروپ نہیں بناتا، اور کسی دوسرے کی کمیونٹی کو آپ کی نہیں لکھتا।",
+                        "🚀 تازہ ترین اپڈیٹس اور سہولیات", "• دائیں سے بائیں کارڈز کی خوبصورت سلائیڈ اینیمیشن اور بارڈرز۔\n• ڈارک اور لائٹ موڈ میں واضح اور روشن ٹیکسٹ کنٹراسٹ।\n• این جی ہب سے براہ راست ون-ٹیپ لائیو اسٹریمنگ۔\n• نوواگرام اسٹائل فولڈر کارڈز اور آٹو-ایڈ سپورٹ।"
+                };
             default:
-                return new String[]{"en", "English", "NG Hub",
+                return new String[]{
+                        "en", "English", "NG Hub",
                         "NG Hub is your personal home for the channels, groups and bots you create, together with your profile and contact list.",
-                        "Purpose", "Keep your own Telegram places on one screen, and never present someone else’s community as yours.",
-                        "What it does", "It lists channels and groups this account created, opens your profile and contact list, and opens the official BotFather to create a bot.",
-                        "What it never does", "It does not invent channels or groups, and it does not label another person’s community as yours."};
+                        "🎯 Purpose", "Keep your own Telegram places on one screen, and never present someone else’s community as yours.",
+                        "✨ What it does", "It lists channels and groups this account created, opens your profile and contact list, and opens the official BotFather to create a bot.",
+                        "🛡️ What it never does", "It does not invent channels or groups, and it does not label another person’s community as yours.",
+                        "🚀 Latest Enhancements", "• Right-to-left cards slide animation with subtle top & bottom borders.\n• High-contrast crisp typography in Dark and Light modes.\n• One-tap Live Streaming shortcut directly from NG Hub.\n• Novagram-style folder cards with vector icons & auto-add support."
+                };
         }
     }
 
@@ -589,7 +707,7 @@ public class NGHubActivity extends BaseFragment {
 
         TextView note = new TextView(getContext());
         note.setTextSize(13);
-        note.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        note.setTextColor(Theme.isCurrentThemeDark() ? 0xFFCBD5E1 : 0xFF475569);
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
             note.setText(selectedSection == SECTION_BOTS
@@ -603,12 +721,36 @@ public class NGHubActivity extends BaseFragment {
         contentColumn.addView(note, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         if (horizontalCards) {
+            LinearLayout cardsWrapper = new LinearLayout(getContext());
+            cardsWrapper.setOrientation(LinearLayout.VERTICAL);
+
+            View topBorder = new View(getContext());
+            topBorder.setBackgroundColor(Theme.isCurrentThemeDark() ? 0x3300D4FF : 0x1F0088CC);
+            cardsWrapper.addView(topBorder, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 0, 6, 0, 6));
+
             HorizontalScrollView horizontal = new HorizontalScrollView(getContext());
             horizontal.setHorizontalScrollBarEnabled(false);
             activeRows = new LinearLayout(getContext());
             activeRows.setOrientation(LinearLayout.HORIZONTAL);
             horizontal.addView(activeRows, new HorizontalScrollView.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            contentColumn.addView(horizontal, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+            cardsWrapper.addView(horizontal, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            View bottomBorder = new View(getContext());
+            bottomBorder.setBackgroundColor(Theme.isCurrentThemeDark() ? 0x3300D4FF : 0x1F0088CC);
+            cardsWrapper.addView(bottomBorder, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 0, 6, 0, 6));
+
+            contentColumn.addView(cardsWrapper, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            if (!NayaConfig.getInstance().isReduceMotion()) {
+                cardsWrapper.setTranslationX(AndroidUtilities.dp(48));
+                cardsWrapper.setAlpha(0.2f);
+                cardsWrapper.animate()
+                        .translationX(0f)
+                        .alpha(1f)
+                        .setDuration(300)
+                        .setInterpolator(new android.view.animation.DecelerateInterpolator(1.4f))
+                        .start();
+            }
         } else {
             activeRows = contentColumn;
         }
@@ -695,7 +837,7 @@ public class NGHubActivity extends BaseFragment {
             empty.setTextSize(15);
             empty.setGravity(Gravity.CENTER);
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
-            empty.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            empty.setTextColor(Theme.isCurrentThemeDark() ? 0xFFCBD5E1 : 0xFF64748B);
             contentColumn.addView(empty, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
             if (selectedSection == SECTION_BOTS && mineOnly && query.isEmpty()) {
                 TextView botFather = coloredButton(getContext(), "Open official BotFather", COLOR_GREEN);
@@ -707,8 +849,9 @@ public class NGHubActivity extends BaseFragment {
 
     private void updateTabStyles() {
         if (tabs == null) return;
+        boolean isDark = Theme.isCurrentThemeDark();
         for (int i = 0; i < tabs.length; i++) {
-            tabs[i].setTextColor(i == selectedSection ? COLOR_CYAN : Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+            tabs[i].setTextColor(i == selectedSection ? COLOR_CYAN : (isDark ? 0xFFCBD5E1 : 0xFF64748B));
             tabs[i].setAlpha(i == selectedSection ? 1f : 0.78f);
         }
     }
@@ -716,11 +859,11 @@ public class NGHubActivity extends BaseFragment {
     private void addDialogRow(TLRPC.Dialog dialog, TLRPC.Chat chat, TLRPC.User user, String titleText, String previewText, MessageObject lastMessage) {
         Context context = getContext();
         if (context == null || activeRows == null) return;
+        boolean isDark = Theme.isCurrentThemeDark();
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(horizontalCards ? LinearLayout.VERTICAL : LinearLayout.HORIZONTAL);
         row.setGravity(horizontalCards ? Gravity.TOP : Gravity.CENTER_VERTICAL);
         row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
-        row.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
 
         AvatarDrawable avatarDrawable = new AvatarDrawable();
         BackupImageView avatar = new BackupImageView(context);
@@ -743,14 +886,21 @@ public class NGHubActivity extends BaseFragment {
         title.setText(titleText.isEmpty() ? "Untitled" : titleText);
         title.setTextSize(15);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         title.setMaxLines(1);
         title.setEllipsize(android.text.TextUtils.TruncateAt.END);
         textColumn.addView(title, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
         TextView preview = new TextView(context);
         preview.setText(previewText);
         preview.setTextSize(13);
-        preview.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        boolean isLiveStream = previewText != null && (previewText.startsWith("Live stream") || previewText.toLowerCase(Locale.ROOT).contains("live stream"));
+        if (isLiveStream) {
+            preview.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+            preview.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        } else {
+            preview.setTextColor(isDark ? 0xFFCBD5E1 : 0xFF475569);
+        }
         preview.setMaxLines(horizontalCards ? 3 : 2);
         preview.setEllipsize(android.text.TextUtils.TruncateAt.END);
         textColumn.addView(preview, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
@@ -780,9 +930,14 @@ public class NGHubActivity extends BaseFragment {
         if (horizontalCards) {
             rowParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(260), ViewGroup.LayoutParams.WRAP_CONTENT);
             rowParams.rightMargin = AndroidUtilities.dp(10);
-            row.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(16), Theme.getColor(Theme.key_windowBackgroundWhite)));
+            GradientDrawable cardBg = new GradientDrawable();
+            cardBg.setCornerRadius(AndroidUtilities.dp(16));
+            cardBg.setColor(isDark ? 0xFF1E293B : Theme.getColor(Theme.key_windowBackgroundWhite));
+            cardBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x2438BDF8 : 0x14000000);
+            row.setBackground(cardBg);
         } else {
             rowParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            row.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
         }
         activeRows.addView(row, rowParams);
     }

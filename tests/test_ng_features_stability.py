@@ -234,5 +234,36 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn("rowAutoAddText", ng_settings)
         self.assertIn("rowOneTimeVoiceVideo", ng_settings)
 
+
+    def test_dialogs_filter_icon_class_level_and_ng_hub_enhancements(self):
+        # 1. DialogsActivity getFilterIcon must be at class level, not inside updateFilterTabs
+        dialogs_code = (ROOT / "java/org/telegram/ui/DialogsActivity.java").read_text()
+        self.assertIn("public static int getFilterIcon(MessagesController.DialogFilter filter)", dialogs_code)
+        idx_update = dialogs_code.find("private void updateFilterTabs(")
+        idx_icon = dialogs_code.find("public static int getFilterIcon(")
+        idx_pan = dialogs_code.find("protected void onPanTranslationUpdate(")
+        self.assertTrue(idx_update < idx_icon < idx_pan, "getFilterIcon must be placed at class level after updateFilterTabs")
+
+        # 2. NGHubActivity Details article structure & updates
+        hub_code = (ROOT / "java/org/telegram/ui/NGHubActivity.java").read_text()
+        self.assertIn("buildSectionCard", hub_code)
+        self.assertIn("detailUpdatesHeader", hub_code)
+        self.assertIn("Latest Enhancements", hub_code)
+        self.assertIn("সর্বশেষ আপডেট ও নতুন সুবিধাসমূহ", hub_code)
+
+        # 3. Horizontal cards slide animation and top/bottom borders
+        self.assertIn("topBorder", hub_code)
+        self.assertIn("bottomBorder", hub_code)
+        self.assertIn("translationX(0f)", hub_code)
+        self.assertIn("cardsWrapper.setTranslationX(AndroidUtilities.dp(48));", hub_code)
+
+        # 4. Live Stream integration
+        self.assertIn("startLiveStream", hub_code)
+        self.assertIn("Live Stream", hub_code)
+        self.assertIn("StoryRecorder.MODE_LIVE", hub_code)
+
+        # 5. High contrast text styling in Dark/Light mode
+        self.assertIn("Theme.isCurrentThemeDark() ? 0xFFCBD5E1 : 0xFF475569", hub_code)
+
 if __name__ == '__main__':
     unittest.main()

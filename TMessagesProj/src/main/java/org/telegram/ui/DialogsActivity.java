@@ -6940,25 +6940,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     selectWithStableId = true;
                 }
                 filterTabsView.removeTabs();
-    public static int getFilterIcon(MessagesController.DialogFilter filter) {
-        if (filter == null || filter.isDefault()) {
-            return R.drawable.msg_folders;
-        }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0) {
-            return R.drawable.msg_folders_channels;
-        }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0) {
-            return R.drawable.msg_folders_groups;
-        }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
-            return R.drawable.msg_folders_bots;
-        }
-        if ((filter.flags & (MessagesController.DIALOG_FILTER_FLAG_CONTACTS | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS)) != 0) {
-            return R.drawable.msg_folders_private;
-        }
-        return R.drawable.msg_folders;
-    }
-
                 for (int a = 0, N = filters.size(); a < N; a++) {
                     final MessagesController.DialogFilter filter = filters.get(a);
                     int iconRes = getFilterIcon(filter);
@@ -7056,6 +7037,25 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
         }
+    }
+
+    public static int getFilterIcon(MessagesController.DialogFilter filter) {
+        if (filter == null || filter.isDefault()) {
+            return R.drawable.msg_folders;
+        }
+        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0) {
+            return R.drawable.msg_folders_channels;
+        }
+        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0) {
+            return R.drawable.msg_folders_groups;
+        }
+        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
+            return R.drawable.msg_folders_bots;
+        }
+        if ((filter.flags & (MessagesController.DIALOG_FILTER_FLAG_CONTACTS | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS)) != 0) {
+            return R.drawable.msg_folders_private;
+        }
+        return R.drawable.msg_folders;
     }
 
     @Override
