@@ -8,15 +8,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Fix NGSettingsActivity and ProfileActivity
+        with:
+          fetch-depth: 20
+      - name: Restore NGSettingsActivity from history then fix
         run: |
+          set -e
+          git show caedf17fee98f2c0fc52d4d0c550ebde9e1837bb:TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java > TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java
           python3 << 'END'
           from pathlib import Path
 
           p = Path("TMessagesProj/src/main/java/org/telegram/ui/NGSettingsActivity.java")
           t = p.read_text()
 
-          # 1) Click handler (first occurrence only)
           a = """                } else                 if (position == rowHidePhoneNumber) {
                     cfg.setHidePhoneNumberEnabled(!cfg.isHidePhoneNumberEnabled());
                     c.setChecked(cfg.isHidePhoneNumberEnabled());
@@ -31,7 +34,6 @@ jobs:
               raise SystemExit("NG click pattern missing")
           t = t.replace(a, b, 1)
 
-          # 2) Feature detail sheet
           a = """        } else                 if (position == rowHidePhoneNumber) {
                     cfg.setHidePhoneNumberEnabled(!cfg.isHidePhoneNumberEnabled());
                     c.setChecked(cfg.isHidePhoneNumberEnabled());
@@ -56,7 +58,6 @@ jobs:
               raise SystemExit("NG sheet pattern missing")
           t = t.replace(a, b, 1)
 
-          # 3) onBindViewHolder mixed click code
           a = """                } else if (position == rowOneTimeVoiceVideo) {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
@@ -108,7 +109,7 @@ jobs:
               raise SystemExit("NG bind pattern missing")
           t = t.replace(a, b, 1)
           p.write_text(t)
-          print("NGSettingsActivity OK")
+          print("NGSettingsActivity OK", len(t))
 
           pp = Path("TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java")
           tp = pp.read_text()
@@ -176,5 +177,5 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "fix: compile errors in NGSettingsActivity and ProfileActivity"
+          git commit -m "fix: restore NGSettingsActivity and fix compile errors (NGSettings + Profile)"
           git push origin HEAD:master
