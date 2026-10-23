@@ -54,23 +54,25 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Generate CI-Only Test Keystore
+      - name: Decode release keystore from GitHub Secrets
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
+          set -e
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "::error::Missing secret RELEASE_KEYSTORE_BASE64"
+            echo "Add repository secrets: RELEASE_KEYSTORE_BASE64, RELEASE_STORE_PASSWORD, RELEASE_KEY_PASSWORD, RELEASE_KEY_ALIAS"
+            exit 1
+          fi
           mkdir -p TMessagesProj/config
-          keytool -genkeypair -v \
-            -keystore TMessagesProj/config/nayagrampro.jks \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 3650 \
-            -alias nayagrampro_key \
-            -storepass 'NayaGramCI@Test2026' \
-            -keypass 'NayaGramCI@Test2026' \
-            -dname "CN=NayaGram CI Test, OU=CI, O=NayaGram Platform, L=Rangpur, ST=Rangpur, C=BD"
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > TMessagesProj/config/nayagrampro.jks
+          test -s TMessagesProj/config/nayagrampro.jks
+          ls -la TMessagesProj/config/nayagrampro.jks
 
       - name: Clean Gradle and native build outputs
         run: |
           chmod +x gradlew
-          ./gradlew --stop
+          ./gradlew --stop || true
           ./gradlew clean --no-build-cache --stacktrace
 
       - name: Assemble VoIP Native Libs (Fat Release, no cache)
@@ -79,13 +81,23 @@ jobs:
             --no-build-cache --rerun-tasks --stacktrace
 
       - name: Build Release AAB
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/TMessagesProj/config/nayagrampro.jks
         run: |
+          set -e
+          if [ -z "$RELEASE_STORE_PASSWORD" ] || [ -z "$RELEASE_KEY_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ]; then
+            echo "::error::Missing one of RELEASE_STORE_PASSWORD / RELEASE_KEY_PASSWORD / RELEASE_KEY_ALIAS secrets"
+            exit 1
+          fi
           chmod +x gradlew
           ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release \
-            -PRELEASE_STORE_PASSWORD="NayaGramCI@Test2026" \
-            -PRELEASE_KEY_PASSWORD="NayaGramCI@Test2026" \
-            -PRELEASE_KEY_ALIAS="nayagrampro_key" \
-            -PRELEASE_KEYSTORE_PATH="$(pwd)/TMessagesProj/config/nayagrampro.jks" \
+            -PRELEASE_STORE_PASSWORD="$RELEASE_STORE_PASSWORD" \
+            -PRELEASE_KEY_PASSWORD="$RELEASE_KEY_PASSWORD" \
+            -PRELEASE_KEY_ALIAS="$RELEASE_KEY_ALIAS" \
+            -PRELEASE_KEYSTORE_PATH="$RELEASE_KEYSTORE_PATH" \
             --no-build-cache --rerun-tasks --stacktrace
 
       - name: Verify freshly built native libraries in AAB
@@ -109,7 +121,12 @@ jobs:
           PY
 
       - name: Generate Signed Universal APK from AAB
+        env:
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
+          set -e
           curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           if [ -z "$AAB_FILE" ]; then
@@ -123,9 +140,9 @@ jobs:
             --output=build_output/app.apks \
             --mode=universal \
             --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:'NayaGramCI@Test2026' \
-            --ks-key-alias=nayagrampro_key \
-            --key-pass=pass:'NayaGramCI@Test2026'
+            --ks-pass=pass:"$RELEASE_STORE_PASSWORD" \
+            --ks-key-alias="$RELEASE_KEY_ALIAS" \
+            --key-pass=pass:"$RELEASE_KEY_PASSWORD"
           unzip -p build_output/app.apks universal.apk > build_output/NayaGram-Release.apk
           ls -lh build_output/
 
@@ -142,9 +159,9 @@ jobs:
             --output=build_output/phone.apks \
             --mode=default \
             --ks=TMessagesProj/config/nayagrampro.jks \
-            --ks-pass=pass:'NayaGramCI@Test2026' \
-            --ks-key-alias=nayagrampro_key \
-            --key-pass=pass:'NayaGramCI@Test2026'
+            --ks-pass=pass:"$RELEASE_STORE_PASSWORD" \
+            --ks-key-alias="$RELEASE_KEY_ALIAS" \
+            --key-pass=pass:"$RELEASE_KEY_PASSWORD"
           rm -rf build_output/phone-splits
           mkdir -p build_output/phone-splits
           java -jar bundletool-all-1.17.2.jar extract-apks \
