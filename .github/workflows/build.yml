@@ -61,31 +61,20 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
-          mkdir -p TMessagesProj/config
-          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$RELEASE_STORE_PASSWORD" ] && [ -n "$RELEASE_KEY_PASSWORD" ] && [ -n "$RELEASE_KEY_ALIAS" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > TMessagesProj/config/nayagrampro.jks
-            test -s TMessagesProj/config/nayagrampro.jks
-            keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" >/dev/null
-            echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
-            echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD" >> "$GITHUB_ENV"
-            echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD" >> "$GITHUB_ENV"
-            echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS" >> "$GITHUB_ENV"
-            echo "Using configured release keystore from GitHub Actions secrets."
-          else
-            echo "::warning::Release signing secrets are incomplete; generating a CI-only test keystore. Do not distribute these artifacts as Play Store releases."
-            keytool -genkeypair -v \
-              -keystore "$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" \
-              -keyalg RSA -keysize 2048 -validity 3650 \
-              -alias nayagrampro_key \
-              -storepass 'NayaGramCI@Test2026' \
-              -keypass 'NayaGramCI@Test2026' \
-              -dname "CN=NayaGram CI Test, OU=CI, O=NayaGram Platform, L=Rangpur, ST=Rangpur, C=BD"
-            echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
-            echo "RELEASE_STORE_PASSWORD=NayaGramCI@Test2026" >> "$GITHUB_ENV"
-            echo "RELEASE_KEY_PASSWORD=NayaGramCI@Test2026" >> "$GITHUB_ENV"
-            echo "RELEASE_KEY_ALIAS=nayagrampro_key" >> "$GITHUB_ENV"
+          set -euo pipefail
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_STORE_PASSWORD" ] || [ -z "$RELEASE_KEY_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ]; then
+            echo "::error::Release signing secrets are missing. Configure RELEASE_KEYSTORE_BASE64, RELEASE_STORE_PASSWORD, RELEASE_KEY_PASSWORD, and RELEASE_KEY_ALIAS in repository Actions secrets. No unsigned or test-key release artifact will be produced."
+            exit 1
           fi
-
+          mkdir -p TMessagesProj/config
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > TMessagesProj/config/nayagrampro.jks
+          test -s TMessagesProj/config/nayagrampro.jks
+          keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$RELEASE_STORE_PASSWORD" -alias "$RELEASE_KEY_ALIAS" >/dev/null
+          echo "RELEASE_KEYSTORE_PATH=$GITHUB_WORKSPACE/TMessagesProj/config/nayagrampro.jks" >> "$GITHUB_ENV"
+          echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "Configured release keystore and validated store password/alias."
       - name: Clean Gradle and native build outputs
         run: |
           chmod +x gradlew
