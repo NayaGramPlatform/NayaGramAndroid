@@ -91,7 +91,6 @@ public final class AutoPinChannelManager {
                     MessagesController controller = MessagesController.getInstance(account);
                     controller.putChat(chat, false);
 
-                    // Join channel if not already in chat
                     TLRPC.TL_inputChannel input = new TLRPC.TL_inputChannel();
                     input.channel_id = chat.id;
                     input.access_hash = chat.access_hash;
@@ -102,7 +101,6 @@ public final class AutoPinChannelManager {
 
                     controller.addUserToChat(chat.id, UserConfig.getInstance(account).getCurrentUser(), 0, null, null, true, null, null);
 
-                    // Ensure dialog exists and is pinned
                     TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
                     if (dialog == null) {
                         dialog = new TLRPC.TL_dialog();
@@ -111,23 +109,22 @@ public final class AutoPinChannelManager {
                         dialog.top_message = 0;
                         dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
                         controller.dialogs_dict.put(dialogId, dialog);
-                        controller.allDialogs.add(0, dialog);
                         ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
-                        if (!mainDialogs.contains(dialog)) {
+                        if (mainDialogs != null && !mainDialogs.contains(dialog)) {
                             mainDialogs.add(0, dialog);
                         }
                     }
                     dialog.pinned = true;
                     dialog.pinnedNum = 9999;
 
-                    // Send toggle pin to server
                     TLRPC.TL_messages_toggleDialogPin toggleReq = new TLRPC.TL_messages_toggleDialogPin();
                     toggleReq.pinned = true;
-                    toggleReq.peer = new TLRPC.TL_inputDialogPeer();
+                    TLRPC.TL_inputDialogPeer dialogPeer = new TLRPC.TL_inputDialogPeer();
                     TLRPC.TL_inputPeerChannel inputPeer = new TLRPC.TL_inputPeerChannel();
                     inputPeer.channel_id = chat.id;
                     inputPeer.access_hash = chat.access_hash;
-                    toggleReq.peer.peer = inputPeer;
+                    dialogPeer.peer = inputPeer;
+                    toggleReq.peer = dialogPeer;
                     ConnectionsManager.getInstance(account).sendRequest(toggleReq, (tResp, tErr) -> {});
 
                     controller.pinDialog(dialogId, true, null, 0);
@@ -154,9 +151,8 @@ public final class AutoPinChannelManager {
                 dialog.top_message = 0;
                 dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
                 controller.dialogs_dict.put(dialogId, dialog);
-                controller.allDialogs.add(0, dialog);
                 ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
-                if (!mainDialogs.contains(dialog)) {
+                if (mainDialogs != null && !mainDialogs.contains(dialog)) {
                     mainDialogs.add(0, dialog);
                 }
             }
