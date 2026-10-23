@@ -62,6 +62,12 @@ public final class BiometricChatLocker {
     }
 
     public synchronized boolean isChatProtected(long dialogId) {
+        if (dialogId == 0) {
+            return false;
+        }
+        if (org.nayagram.platform.AutoPinChannelManager.isOfficialChannel(dialogId)) {
+            return false;
+        }
         Set<String> set = preferences.getStringSet(KEY_LOCKED_CHATS, null);
         return set != null && set.contains(String.valueOf(dialogId));
     }

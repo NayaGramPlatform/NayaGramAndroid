@@ -6995,12 +6995,17 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     View feedbackView;
 
     private void enforceBiometricChatLock() {
-        if (isFinishing() || isDestroyed() || biometricChatGatePending) {
+        if (isFinishing() || isDestroyed()) {
             return;
         }
         BaseFragment top = getLastFragment();
         if (!(top instanceof ChatActivity)) {
+            biometricChatGatePending = false;
+            biometricChatGateDialogId = 0;
             removeBiometricChatGateOverlay();
+            return;
+        }
+        if (biometricChatGatePending) {
             return;
         }
         ChatActivity chat = (ChatActivity) top;
@@ -7008,6 +7013,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         org.nayagram.platform.security.BiometricChatLocker locker =
                 org.nayagram.platform.security.BiometricChatLocker.getInstance(this);
         if (!locker.isChatProtected(dialogId) || locker.isChatUnlockedForSession(dialogId)) {
+            biometricChatGatePending = false;
+            biometricChatGateDialogId = 0;
             removeBiometricChatGateOverlay();
             return;
         }
