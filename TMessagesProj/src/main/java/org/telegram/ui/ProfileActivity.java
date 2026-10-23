@@ -3847,10 +3847,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             musicView = new ProfileMusicView(context, resourcesProvider);
             balanceView = new ProfileBalanceView(context, resourcesProvider);
             balanceView.setAccount(currentAccount);
-            if (user != null) {
-                if (user.id == 777000 || "durov".equalsIgnoreCase(user.username) || "monk".equalsIgnoreCase(user.username)) {
+            TLRPC.User balanceUser = getMessagesController().getUser(userId);
+            if (balanceUser != null) {
+                if (balanceUser.id == 777000 || "durov".equalsIgnoreCase(balanceUser.username) || "monk".equalsIgnoreCase(balanceUser.username)) {
                     balanceView.setBalance("5,092.49");
-                } else if (UserObject.isUserSelf(user)) {
+                } else if (UserObject.isUserSelf(balanceUser)) {
                     try {
                         long stars = org.telegram.ui.Stars.StarsController.getInstance(currentAccount).getBalance(false);
                         balanceView.setBalance(stars > 0 ? LocaleController.formatNumber(stars, ',') : "0");
@@ -3860,10 +3861,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else {
                     balanceView.setBalance("0");
                 }
+            } else {
+                balanceView.setBalance("0");
             }
             balanceView.setOnClickListener(v -> {
                 try {
-                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, currentAccount, dialog_id, resourcesProvider);
+                    long did = dialogId != 0 ? dialogId : userId;
+                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, currentAccount, did, resourcesProvider);
                 } catch (Throwable e) {
                     try {
                         Browser.openUrl(getParentActivity(), "https://fragment.com");
