@@ -116,22 +116,36 @@ dependencies {
 
 def resolveTelegramApiId() {
     def v = System.getenv("TELEGRAM_API_ID")
-    if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
-    if (project.hasProperty("TELEGRAM_API_ID")) {
-        def p = project.property("TELEGRAM_API_ID")
-        if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
+    if (v == null || v.toString().trim().isEmpty()) {
+        if (project.hasProperty("TELEGRAM_API_ID")) {
+            v = project.property("TELEGRAM_API_ID")
+        }
     }
-    return "39273870"
+    def value = v == null ? "" : v.toString().trim()
+    if (value.isEmpty()) {
+        throw new GradleException("Missing TELEGRAM_API_ID. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_ID.")
+    }
+    if (!(value ==~ /[0-9]+/)) {
+        throw new GradleException("TELEGRAM_API_ID must contain digits only.")
+    }
+    return value
 }
 
 def resolveTelegramApiHash() {
     def v = System.getenv("TELEGRAM_API_HASH")
-    if (v != null && !v.toString().trim().isEmpty()) return v.toString().trim()
-    if (project.hasProperty("TELEGRAM_API_HASH")) {
-        def p = project.property("TELEGRAM_API_HASH")
-        if (p != null && !p.toString().trim().isEmpty()) return p.toString().trim()
+    if (v == null || v.toString().trim().isEmpty()) {
+        if (project.hasProperty("TELEGRAM_API_HASH")) {
+            v = project.property("TELEGRAM_API_HASH")
+        }
     }
-    return "87dd441b1eff5587925d0ea78bcc0e95"
+    def value = v == null ? "" : v.toString().trim()
+    if (value.isEmpty()) {
+        throw new GradleException("Missing TELEGRAM_API_HASH. Configure it as a GitHub Actions secret or pass -PTELEGRAM_API_HASH.")
+    }
+    if (!(value ==~ /[0-9a-fA-F]{32}/)) {
+        throw new GradleException("TELEGRAM_API_HASH must be a 32-character hexadecimal string.")
+    }
+    return value
 }
 
 android {
