@@ -227,6 +227,11 @@ public class TranscribeButton {
                 if (canTranscribeTrial(parent.getMessageObject()) || parent.getMessageObject() != null && parent.getMessageObject().messageOwner != null && !TextUtils.isEmpty(parent.getMessageObject().messageOwner.voiceTranscription)) {
                     transcribePressed(parent.getMessageObject(), toOpen, parent.getDelegate());
                 } else {
+                    setOpen(false, true);
+                    setLoading(false, true);
+                    if (parent != null) {
+                        parent.invalidate();
+                    }
                     if (parent.getDelegate() != null) {
                         if (MessagesController.getInstance(parent.currentAccount).transcribeAudioTrialWeeklyNumber > 0) {
                             parent.getDelegate().needShowPremiumBulletin(3);
