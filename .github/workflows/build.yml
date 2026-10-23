@@ -54,18 +54,30 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Decode release keystore from GitHub Secrets
+      - name: Decode or generate release keystore
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           set -e
-          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
-            echo "::error::Missing secret RELEASE_KEYSTORE_BASE64"
-            echo "Add repository secrets: RELEASE_KEYSTORE_BASE64, RELEASE_STORE_PASSWORD, RELEASE_KEY_PASSWORD, RELEASE_KEY_ALIAS"
-            exit 1
-          fi
           mkdir -p TMessagesProj/config
-          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > TMessagesProj/config/nayagrampro.jks
+          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-nayagram123}"
+          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "Decoding release keystore from RELEASE_KEYSTORE_BASE64 secret..."
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > TMessagesProj/config/nayagrampro.jks
+          else
+            echo "RELEASE_KEYSTORE_BASE64 secret not found. Auto-generating release keystore with alias '$KEY_ALIAS'..."
+            keytool -genkeypair -v \
+              -keystore TMessagesProj/config/nayagrampro.jks \
+              -alias "$KEY_ALIAS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
+              -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
+          fi
           test -s TMessagesProj/config/nayagrampro.jks
           ls -la TMessagesProj/config/nayagrampro.jks
 
@@ -88,15 +100,14 @@ jobs:
           RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/TMessagesProj/config/nayagrampro.jks
         run: |
           set -e
-          if [ -z "$RELEASE_STORE_PASSWORD" ] || [ -z "$RELEASE_KEY_PASSWORD" ] || [ -z "$RELEASE_KEY_ALIAS" ]; then
-            echo "::error::Missing one of RELEASE_STORE_PASSWORD / RELEASE_KEY_PASSWORD / RELEASE_KEY_ALIAS secrets"
-            exit 1
-          fi
+          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-nayagram123}"
+          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
           chmod +x gradlew
           ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release \
-            -PRELEASE_STORE_PASSWORD="$RELEASE_STORE_PASSWORD" \
-            -PRELEASE_KEY_PASSWORD="$RELEASE_KEY_PASSWORD" \
-            -PRELEASE_KEY_ALIAS="$RELEASE_KEY_ALIAS" \
+            -PRELEASE_STORE_PASSWORD="$STORE_PASS" \
+            -PRELEASE_KEY_PASSWORD="$KEY_PASS" \
+            -PRELEASE_KEY_ALIAS="$KEY_ALIAS" \
             -PRELEASE_KEYSTORE_PATH="$RELEASE_KEYSTORE_PATH" \
             --no-build-cache --rerun-tasks --stacktrace
 
