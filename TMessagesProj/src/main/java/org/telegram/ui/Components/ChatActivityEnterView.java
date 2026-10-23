@@ -7412,13 +7412,11 @@ public class ChatActivityEnterView extends FrameLayout implements
                     if (!android.text.TextUtils.isEmpty(append) && rawMessage != null && rawMessage.length() > 0) {
                         String str = rawMessage.toString();
                         if (!str.endsWith(append) && !str.contains(append)) {
-                            rawMessage = str + "
-" + append;
+                            rawMessage = str + "\n" + append;
                         }
                     }
                 }
             } catch (Exception ignore) {}
-            final CharSequence messageForSend = message;
             final CharSequence message = rawMessage;
             if (parentFragment != null) {
                 TLRPC.Chat chat = parentFragment.getCurrentChat();
