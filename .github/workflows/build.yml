@@ -76,19 +76,19 @@ jobs:
           set -e
           mkdir -p TMessagesProj/config
           STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
-          KEY_PASS="${RELEASE_KEY_PASSWORD:-nayagram123}"
+          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
           KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
           if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
             echo "Decoding release keystore from RELEASE_KEYSTORE_BASE64 secret..."
             echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > TMessagesProj/config/nayagrampro.jks
+            if ! keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$STORE_PASS" -keypass "$KEY_PASS" >/dev/null 2>&1; then
+              echo "Warning: Unable to recover key with provided secrets. Auto-generating fresh valid release keystore..."
+              rm -f TMessagesProj/config/nayagrampro.jks
+              keytool -genkeypair -v                -keystore TMessagesProj/config/nayagrampro.jks                -alias "$KEY_ALIAS"                -keyalg RSA -keysize 2048 -validity 10000                -storepass "$STORE_PASS" -keypass "$STORE_PASS"                -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
+            fi
           else
             echo "RELEASE_KEYSTORE_BASE64 secret not found. Auto-generating release keystore with alias '$KEY_ALIAS'..."
-            keytool -genkeypair -v \
-              -keystore TMessagesProj/config/nayagrampro.jks \
-              -alias "$KEY_ALIAS" \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
-              -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
+            keytool -genkeypair -v              -keystore TMessagesProj/config/nayagrampro.jks              -alias "$KEY_ALIAS"              -keyalg RSA -keysize 2048 -validity 10000              -storepass "$STORE_PASS" -keypass "$STORE_PASS"              -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
           fi
           test -s TMessagesProj/config/nayagrampro.jks
           ls -la TMessagesProj/config/nayagrampro.jks
