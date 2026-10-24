@@ -111,6 +111,14 @@ def test_advanced_feature_wiring():
     assert 'public String exportSettingsJson()' in config
     assert 'Custom auto-reply text and account/chat data are excluded.' in activity
     assert 'Are you sure you want to reset all NayaGram feature settings to their factory defaults?' in activity
+    settings_code = (root / "TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java").read_text(encoding="utf-8")
+    assert "org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled()" in settings_code
+    profile_code = (root / "TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java").read_text(encoding="utf-8")
+    assert "org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled()" in profile_code
+    dialogs_code = (root / "TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java").read_text(encoding="utf-8")
+    assert "AutoPinChannelManager.isLockedOfficialChannel" in dialogs_code
+    mc_code = (root / "TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java").read_text(encoding="utf-8")
+    assert "maxPinnedDialogsCountDefault = Math.max(10" in mc_code
 
     # Preference-only cards must never pretend to be functional ON/OFF toggles.
     assert 'private boolean isImplementationPending(FeatureItem item)' in adapter

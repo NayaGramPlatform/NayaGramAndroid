@@ -317,9 +317,15 @@ public class NayaConfig {
         if (!isHidden || phone == null || phone.isEmpty()) {
             return phone != null ? phone : "";
         }
-        if (phone.length() > 6) {
-            String start = phone.substring(0, 3);
-            String end = phone.substring(phone.length() - 4);
+        String clean = phone.trim();
+        int spaceIdx = clean.indexOf(' ');
+        if (spaceIdx > 1 && spaceIdx <= 5 && clean.length() > spaceIdx + 4) {
+            String country = clean.substring(0, spaceIdx);
+            String last4 = clean.substring(clean.length() - 4);
+            return country + " ••• ••• " + last4;
+        } else if (clean.length() > 7) {
+            String start = clean.startsWith("+") ? clean.substring(0, Math.min(4, clean.length())) : clean.substring(0, 3);
+            String end = clean.substring(clean.length() - 4);
             return start + " ••• ••• " + end;
         } else {
             return "••••••••••••";

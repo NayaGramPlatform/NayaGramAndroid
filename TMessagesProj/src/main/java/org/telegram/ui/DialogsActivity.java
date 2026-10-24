@@ -8784,6 +8784,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     continue;
                 }
                 if (isDialogPinned(dialog1)) {
+                    if (org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialog1.id)) {
+                        continue;
+                    }
                     if (DialogObject.isEncryptedDialog(dialog1.id)) {
                         pinnedSecretCount++;
                     } else {
@@ -8821,6 +8824,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             hasPinAction[0] = !(newPinnedSecretCount + pinnedSecretCount > maxPinnedCount || newPinnedCount + pinnedCount - alreadyAdded > maxPinnedCount);
+        }
+
+        if (hasPinAction[0]) {
+            if (org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialogId)) {
+                hasPinAction[0] = false;
+            }
         }
 
         if (hasPinAction[0]) {
@@ -9315,6 +9324,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     continue;
                 }
                 if (isDialogPinned(dialog)) {
+                    if (org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, dialog.id)) {
+                        continue;
+                    }
                     if (DialogObject.isEncryptedDialog(dialog.id)) {
                         pinnedSecretCount++;
                     } else {
@@ -9510,7 +9522,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
                 } else {
-                    if (!isDialogPinned(dialog)) {
+                    if (!isDialogPinned(dialog) || org.nayagram.platform.AutoPinChannelManager.isLockedOfficialChannel(currentAccount, selectedDialog)) {
                         continue;
                     }
                     pinnedActionCount++;

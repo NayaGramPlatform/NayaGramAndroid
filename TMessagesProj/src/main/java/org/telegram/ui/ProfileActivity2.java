@@ -563,9 +563,13 @@ public class ProfileActivity2 extends BaseFragment implements
         }
 
         final boolean isFragment = phoneNumber != null && phoneNumber.matches("888\\d{8}");
+        String formattedPhone = phoneNumber != null ? PhoneFormat.getInstance().format("+" + phoneNumber) : getString(R.string.PhoneHidden);
+        if (org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled() && (user != null && (user.self || user.id == getUserConfig().getClientUserId()))) {
+            formattedPhone = org.nayagram.platform.NayaConfig.formatPhoneNumberPrivacy(formattedPhone, true);
+        }
         items.add(TextDetailCell.Factory.of(
             ID_PHONE,
-            phoneNumber != null ? PhoneFormat.getInstance().format("+" + phoneNumber) : getString(R.string.PhoneHidden),
+            formattedPhone,
             isFragment ? getString(R.string.AnonymousNumber) : getString(R.string.PhoneMobile)
         ));
     }

@@ -93,7 +93,11 @@ public class SettingsSuggestionCell extends LinearLayout {
         currentType = type;
         if (type == TYPE_PHONE) {
             final TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(UserConfig.getInstance(currentAccount).clientUserId);
-            textView.setText(LocaleController.formatString(R.string.CheckPhoneNumber, PhoneFormat.getInstance().format("+" + user.phone)));
+            String formattedPhone = PhoneFormat.getInstance().format("+" + user.phone);
+            if (org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled()) {
+                formattedPhone = org.nayagram.platform.NayaConfig.formatPhoneNumberPrivacy(formattedPhone, true);
+            }
+            textView.setText(LocaleController.formatString(R.string.CheckPhoneNumber, formattedPhone));
             String text = LocaleController.getString(R.string.CheckPhoneNumberInfo);
             SpannableStringBuilder builder = new SpannableStringBuilder(text);
             int index1 = text.indexOf("**");

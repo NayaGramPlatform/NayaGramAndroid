@@ -1654,14 +1654,14 @@ public class MessagesController extends BaseController implements NotificationCe
         savedGifsLimitPremium = mainPreferences.getInt("savedGifsLimitPremium", 400);
         stickersFavedLimitDefault = mainPreferences.getInt("stickersFavedLimitDefault", 5);
         stickersFavedLimitPremium = mainPreferences.getInt("stickersFavedLimitPremium", 200);
-        maxPinnedDialogsCountDefault = mainPreferences.getInt("maxPinnedDialogsCountDefault", 5);
-        maxPinnedDialogsCountPremium = mainPreferences.getInt("maxPinnedDialogsCountPremium", 10);
+        maxPinnedDialogsCountDefault = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountDefault", 10));
+        maxPinnedDialogsCountPremium = Math.max(20, mainPreferences.getInt("maxPinnedDialogsCountPremium", 20));
         dialogFiltersLimitDefault = mainPreferences.getInt("dialogFiltersLimitDefault", 10);
         dialogFiltersLimitPremium = mainPreferences.getInt("dialogFiltersLimitPremium", 20);
         dialogFiltersChatsLimitDefault = mainPreferences.getInt("dialogFiltersChatsLimitDefault", 100);
         dialogFiltersChatsLimitPremium = mainPreferences.getInt("dialogFiltersChatsLimitPremium", 200);
-        dialogFiltersPinnedLimitDefault = 10;
-        dialogFiltersPinnedLimitPremium = 10;
+        dialogFiltersPinnedLimitDefault = Math.max(15, mainPreferences.getInt("dialogFiltersPinnedLimitDefault", 15));
+        dialogFiltersPinnedLimitPremium = Math.max(30, mainPreferences.getInt("dialogFiltersPinnedLimitPremium", 30));
         publicLinksLimitDefault = mainPreferences.getInt("publicLinksLimitDefault", 10);
         publicLinksLimitPremium = mainPreferences.getInt("publicLinksLimitPremium", 20);
         captionLengthLimitDefault = mainPreferences.getInt("captionLengthLimitDefault", 1024);
@@ -3494,13 +3494,13 @@ public class MessagesController extends BaseController implements NotificationCe
                 case "dialog_filters_pinned_limit_default":
                 case "dialog_filters_pinned_limit_premium": {
                     maxPinnedDialogsCountDefault = 10;
-                    maxPinnedDialogsCountPremium = 10;
-                    dialogFiltersPinnedLimitDefault = 10;
-                    dialogFiltersPinnedLimitPremium = 10;
+                    maxPinnedDialogsCountPremium = 20;
+                    dialogFiltersPinnedLimitDefault = 15;
+                    dialogFiltersPinnedLimitPremium = 30;
                     editor.putInt("maxPinnedDialogsCountDefault", 10);
-                    editor.putInt("maxPinnedDialogsCountPremium", 10);
-                    editor.putInt("dialogFiltersPinnedLimitDefault", 10);
-                    editor.putInt("dialogFiltersPinnedLimitPremium", 10);
+                    editor.putInt("maxPinnedDialogsCountPremium", 20);
+                    editor.putInt("dialogFiltersPinnedLimitDefault", 15);
+                    editor.putInt("dialogFiltersPinnedLimitPremium", 30);
                     break;
                 }
                 case "dialog_filters_limit_default": {

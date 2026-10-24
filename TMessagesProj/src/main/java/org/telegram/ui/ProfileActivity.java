@@ -13636,6 +13636,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             text = LocaleController.getString(R.string.PhoneHidden);
                             phoneNumber = null;
                         }
+                        if (org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled() && (userId == getUserConfig().getClientUserId() || (user != null && user.self))) {
+                            text = org.nayagram.platform.NayaConfig.formatPhoneNumberPrivacy(text, true);
+                        }
                         isFragmentPhoneNumber = phoneNumber != null && phoneNumber.matches("888\\d{8}");
                         detailCell.setTextAndValue(text, LocaleController.getString(isFragmentPhoneNumber ? R.string.AnonymousNumber : R.string.PhoneMobile), false);
                     } else if (position == noteRow) {
@@ -13727,6 +13730,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             value = PhoneFormat.getInstance().format("+" + user.phone);
                         } else {
                             value = LocaleController.getString(R.string.NumberUnknown);
+                        }
+                        if (org.nayagram.platform.NayaConfig.getInstance().isHidePhoneNumberEnabled()) {
+                            value = org.nayagram.platform.NayaConfig.formatPhoneNumberPrivacy(value, true);
                         }
                         detailCell.setTextAndValue(value, LocaleController.getString(R.string.TapToChangePhone), true);
                         detailCell.setContentDescriptionValueFirst(false);
