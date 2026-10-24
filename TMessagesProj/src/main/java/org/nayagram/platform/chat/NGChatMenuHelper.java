@@ -49,8 +49,6 @@ public final class NGChatMenuHelper {
                 .setColors(dark ? 0xFFFFFFFF : 0xFF7C3AED, dark ? 0xFFA78BFA : 0xFF7C3AED);
         headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings")
                 .setColors(dark ? 0xFFFFFFFF : 0xFF0284C7, dark ? 0xFF00D4FF : 0xFF0284C7);
-        headerItem.lazilyAddSubItem(ITEM_AUTO_TRANSLATE, R.drawable.settings_chat, "Auto-translate")
-                .setColors(dark ? 0xFFFFFFFF : 0xFF059669, dark ? 0xFF10B981 : 0xFF059669);
     }
 
     public static boolean handleItemClick(ChatActivity chatActivity, int id, long dialogId) {
@@ -61,11 +59,8 @@ public final class NGChatMenuHelper {
             AndroidUtilities.addToClipboard(String.valueOf(dialogId));
             Toast.makeText(activity, "Chat ID copied: " + dialogId, Toast.LENGTH_SHORT).show();
             return true;
-        } else if (id == ITEM_AUTO_TRANSLATE) {
-            showAutoTranslatePicker(activity, dialogId);
-            return true;
         } else if (id == ITEM_NG_SETTINGS) {
-            showInChatSettings(chatActivity, activity, dialogId);
+            chatActivity.presentFragment(new org.telegram.ui.NGSettingsActivity(org.telegram.ui.NGSettingsActivity.TYPE_FEATURES_HUB));
             return true;
         }
         return false;

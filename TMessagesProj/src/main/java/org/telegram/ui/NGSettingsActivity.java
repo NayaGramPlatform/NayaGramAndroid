@@ -170,7 +170,8 @@ public class NGSettingsActivity extends BaseFragment {
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);
         overflowItem.addSubItem(7, R.drawable.msg_admins, "Super Admin (@NGSupreme)").setIconColor(0xFF7C3AED);
-        overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram").setIconColor(0xFF00D4FF);
+        overflowItem.addSubItem(8, R.drawable.msg_admins, "Admin (@NG_HuzayfaSheikh)").setIconColor(0xFF0284C7);
+        overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram 💎").setIconColor(0xFF00D4FF);
         overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults").setIconColor(0xFFDB2777);
 
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -191,6 +192,8 @@ public class NGSettingsActivity extends BaseFragment {
                     } catch (Exception ignored) {}
                 } else if (id == 7) {
                     org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGSettingsActivity.this, 1);
+                } else if (id == 8) {
+                    org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGSettingsActivity.this, 1);
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {

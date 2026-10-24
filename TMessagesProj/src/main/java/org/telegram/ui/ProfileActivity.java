@@ -3845,39 +3845,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 //        sharedMediaLayout.setBackgroundColor(getThemedColor(Theme.key_windowBackgroundWhite));
         if (userId == 0 || imageUpdater == null || myProfile) {
             musicView = new ProfileMusicView(context, resourcesProvider);
-            balanceView = new ProfileBalanceView(context, resourcesProvider);
-            balanceView.setAccount(currentAccount);
-            TLRPC.User balanceUser = getMessagesController().getUser(userId);
-            if (balanceUser != null) {
-                if (balanceUser.id == 777000 || "durov".equalsIgnoreCase(balanceUser.username) || "monk".equalsIgnoreCase(balanceUser.username)) {
-                    balanceView.setBalance("5,092.49");
-                } else if (UserObject.isUserSelf(balanceUser)) {
-                    try {
-                        long stars = org.telegram.ui.Stars.StarsController.getInstance(currentAccount).getBalance(false);
-                        balanceView.setBalance(stars > 0 ? LocaleController.formatNumber(stars, ',') : "0");
-                    } catch (Throwable e) {
-                        balanceView.setBalance("0");
-                    }
-                } else {
-                    balanceView.setBalance("0");
-                }
-            } else {
-                balanceView.setBalance("0");
-            }
-            balanceView.setOnClickListener(v -> {
-                try {
-                    long targetDialogId = dialogId != 0 ? dialogId : userId;
-                    org.telegram.ui.Stars.StarsIntroActivity.showTransactionSheet(context, false, targetDialogId, currentAccount, null, resourcesProvider);
-                } catch (Throwable e) {
-                    try {
-                        presentFragment(new org.telegram.ui.Stars.StarsIntroActivity());
-                    } catch (Throwable e2) {
-                        try {
-                            Browser.openUrl(getParentActivity(), "https://fragment.com");
-                        } catch (Throwable ignored) {}
-                    }
-                }
-            });
+// balanceView removed per user request
             if (avatarsBlurView != null) {
                 avatarsBlurView.setMusicView(musicView);
             }
@@ -5535,9 +5503,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         if (musicView != null) {
             avatarsBlurView.setMusicView(musicView);
             avatarContainer2.addView(musicView, LayoutHelper.createFrame(-1, -1));
-        if (balanceView != null) {
-            avatarContainer2.addView(balanceView, LayoutHelper.createFrame(-1, -1));
-        }
+// balanceView not added
         }
         avatarImage.setAvatarsViewPager(avatarsViewPager);
 
@@ -11302,17 +11268,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             float bottom = extraHeight + newTop + dp(74);
             float height = Math.min(getActionsExtraHeight(), bottom - newTop);
             musicView.updatePosition(bottom - height, height - dp(74));
-            if (balanceView != null) {
-                balanceView.updatePosition(bottom - height, height - dp(74));
-                boolean hasMusic = musicView != null && musicView.getVisibility() == View.VISIBLE;
-                boolean hasBalance = balanceView != null && balanceView.getVisibility() == View.VISIBLE;
-                if (hasMusic && hasBalance) {
-                    musicView.setSideBySide(true, true);
-                    balanceView.setSideBySide(true, false);
-                } else {
-                    if (musicView != null) musicView.setSideBySide(false, false);
-                    balanceView.setSideBySide(false, false);
-                }
+            if (musicView != null) {
+                musicView.setSideBySide(false, false);
             }
         }
     }

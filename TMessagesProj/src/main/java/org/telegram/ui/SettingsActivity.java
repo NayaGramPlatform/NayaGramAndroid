@@ -725,11 +725,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(UItem.asHeader("NayaGram"));
         items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NayaGram Settings", "Stories, clean forward, translator, features", "\u2728"));
         items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Infonity AI 💎", "Official AI Assistant @InfonityAI_Bot", ""));
-        items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "Super Admin", "@NGSupreme • Official Owner", "👑"));
+        items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "Super Admin", "@NGSupreme • Founder & Owner", "👑"));
+        items.add(SettingCell.Factory.of(113, IconBackgroundColors.BLUE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "Admin", "@NG_HuzayfaSheikh • Co-Founder & Admin", "🛡️"));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
-        items.add(SettingCell.Factory.of(110, IconBackgroundColors.CYAN.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.ic_naya_info, "About", "v" + getInstalledAppVersionName() + " • Official Release & Rating", "💎"));
+        items.add(SettingCell.Factory.of(110, IconBackgroundColors.BLUE.top, IconBackgroundColors.CYAN.bottom, R.drawable.ic_naya_info, "About NayaGram 💎", "v" + getInstalledAppVersionName() + " • Features, Admins & Info", "✨"));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
         items.add(SettingCell.Factory.of(3, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_privacy, getString(R.string.SettingsPrivacySecurity), getString(R.string.SettingsPrivacySecurityInfo)));
@@ -865,6 +866,9 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 break;
             case 112:
                 MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", this, 1);
+                break;
+            case 113:
+                MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", this, 1);
                 break;
             case 110: {
                 presentFragment(new NayaAboutActivity());

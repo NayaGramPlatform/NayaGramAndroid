@@ -506,9 +506,62 @@ public class NGHubActivity extends BaseFragment {
         column.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(28));
         scroll.addView(column, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
+        LinearLayout topBar = new LinearLayout(context);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+        topBar.setGravity(Gravity.CENTER_VERTICAL);
+
         TextView back = coloredButton(context, "←  Back to NG Hub", COLOR_BLUE);
         back.setOnClickListener(v -> closeDetails());
-        column.addView(back, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 40, 0, 0, 0, 14));
+        topBar.addView(back, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 40, 0, 0, 0, 0));
+
+        View spacer = new View(context);
+        topBar.addView(spacer, LayoutHelper.createLinear(0, 1, 1f));
+
+        TextView topLangBtn = new TextView(context);
+        topLangBtn.setText("🌐 ভাষা / Lang");
+        topLangBtn.setTextSize(13);
+        topLangBtn.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        topLangBtn.setTextColor(Color.WHITE);
+        topLangBtn.setGravity(Gravity.CENTER);
+        GradientDrawable topLangBg = new GradientDrawable();
+        topLangBg.setColor(COLOR_CYAN);
+        topLangBg.setCornerRadius(AndroidUtilities.dp(16));
+        topLangBtn.setBackground(topLangBg);
+        topLangBtn.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(8), AndroidUtilities.dp(14), AndroidUtilities.dp(8));
+        topBar.addView(topLangBtn, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 36, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+
+        column.addView(topBar, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        TextView langLabel = new TextView(context);
+        langLabel.setText("🌐 Select Language / ভাষা পরিবর্তন:");
+        langLabel.setTextSize(13);
+        langLabel.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        langLabel.setTextColor(COLOR_CYAN);
+        langLabel.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(6));
+        column.addView(langLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        languageRow = new LinearLayout(context);
+        languageRow.setOrientation(LinearLayout.HORIZONTAL);
+        HorizontalScrollView languages = new HorizontalScrollView(context);
+        languages.setHorizontalScrollBarEnabled(false);
+        languages.addView(languageRow);
+        column.addView(languages, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 0, 0, 14));
+
+        String[] names = {"🇬🇧 English", "🇧🇩 বাংলা", "🇸🇦 العربية", "🇷🇺 Русский", "🇺🇿 Oʻzbekcha", "🇮🇳 हिन्दी", "🇵🇰 اردو"};
+        for (int i = 0; i < names.length; i++) {
+            final int index = i;
+            TextView chip = createTab(context, names[i]);
+            chip.setPadding(AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14), 0);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            if (i > 0) lp.leftMargin = AndroidUtilities.dp(6);
+            languageRow.addView(chip, lp);
+            chip.setOnClickListener(v -> applyDetails(index));
+        }
+
+        topLangBtn.setOnClickListener(v -> {
+            int next = (detailLang + 1) % names.length;
+            applyDetails(next);
+        });
 
         LinearLayout heroCard = new LinearLayout(context);
         heroCard.setOrientation(LinearLayout.VERTICAL);
@@ -551,30 +604,7 @@ public class NGHubActivity extends BaseFragment {
         detailUpdates = detailText(context, 14, Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFF334155, false);
         column.addView(buildSectionCard(context, detailUpdatesHeader, detailUpdates), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
 
-        TextView langLabel = new TextView(context);
-        langLabel.setText("🌐 Language Selection / ভাষা পরিবর্তন");
-        langLabel.setTextSize(13);
-        langLabel.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        langLabel.setTextColor(COLOR_CYAN);
-        langLabel.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(6));
-        column.addView(langLabel, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-        languageRow = new LinearLayout(context);
-        languageRow.setOrientation(LinearLayout.HORIZONTAL);
-        HorizontalScrollView languages = new HorizontalScrollView(context);
-        languages.setHorizontalScrollBarEnabled(false);
-        languages.addView(languageRow);
-        column.addView(languages, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 44, 0, 0, 0, 8));
-        String[] names = {"🇬🇧 English", "🇧🇩 বাংলা", "🇸🇦 العربية", "🇷🇺 Русский", "🇺🇿 Oʻzbekcha", "🇮🇳 हिन्दी", "🇵🇰 اردو"};
-        for (int i = 0; i < names.length; i++) {
-            final int index = i;
-            TextView chip = createTab(context, names[i]);
-            chip.setPadding(AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14), 0);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            if (i > 0) lp.leftMargin = AndroidUtilities.dp(6);
-            languageRow.addView(chip, lp);
-            chip.setOnClickListener(v -> applyDetails(index));
-        }
+// Language selector moved to top header
         applyDetails(0);
         return overlay;
     }

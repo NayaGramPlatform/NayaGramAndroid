@@ -333,20 +333,15 @@ public class FilterTabsView extends FrameLayout {
             cardStrokePaint.setStrokeWidth(dp(1.2f));
 
             if (isSelected) {
-                if (isDark) {
-                    cardBgPaint.setColor(0x3800D4FF);
-                    cardStrokePaint.setColor(0x9900D4FF);
-                } else {
-                    cardBgPaint.setColor(0x220284C7);
-                    cardStrokePaint.setColor(0x660284C7);
-                }
+                cardBgPaint.setColor(isDark ? 0xFF0284C7 : 0xFF0284C7);
+                cardStrokePaint.setColor(isDark ? 0xFF38BDF8 : 0xFF0369A1);
             } else {
                 if (isDark) {
-                    cardBgPaint.setColor(0x14FFFFFF);
-                    cardStrokePaint.setColor(0x22FFFFFF);
+                    cardBgPaint.setColor(0x1EFFFFFF);
+                    cardStrokePaint.setColor(0x3338BDF8);
                 } else {
-                    cardBgPaint.setColor(0x0C000000);
-                    cardStrokePaint.setColor(0x18000000);
+                    cardBgPaint.setColor(0xFFF1F5F9);
+                    cardStrokePaint.setColor(0xFFCBD5E1);
                 }
             }
             canvas.drawRoundRect(cardRect, cornerRadius, cornerRadius, cardBgPaint);
@@ -395,22 +390,10 @@ public class FilterTabsView extends FrameLayout {
                 unreadKey = Theme.key_chats_tabUnreadUnactiveBackground;
                 unreadOtherKey = Theme.key_chats_tabUnreadActiveBackground;
             }
-            if (animateToKey < 0) {
-                if ((animatingIndicator || manualScrollingToId != -1) && (currentTab.id == id1 || currentTab.id == id2)) {
-                    textPaint.setColor(ColorUtils.blendARGB(Theme.getColor(otherKey, resourcesProvider), Theme.getColor(key, resourcesProvider), animatingIndicatorProgress));
-                } else {
-                    textPaint.setColor(Theme.getColor(key, resourcesProvider));
-                }
+            if (isSelected) {
+                textPaint.setColor(0xFFFFFFFF);
             } else {
-                int color1 = Theme.getColor(key, resourcesProvider);
-                int color2 = Theme.getColor(animateToKey, resourcesProvider);
-                if ((animatingIndicator || manualScrollingToPosition != -1) && (currentTab.id == id1 || currentTab.id == id2)) {
-                    int color3 = Theme.getColor(otherKey, resourcesProvider);
-                    int color4 = Theme.getColor(animateToOtherKey, resourcesProvider);
-                    textPaint.setColor(ColorUtils.blendARGB(ColorUtils.blendARGB(color3, color4, animationValue), ColorUtils.blendARGB(color1, color2, animationValue), animatingIndicatorProgress));
-                } else {
-                    textPaint.setColor(ColorUtils.blendARGB(color1, color2, animationValue));
-                }
+                textPaint.setColor(isDark ? 0xFFF1F5F9 : 0xFF1E293B);
             }
             emojiColorFilter = new PorterDuffColorFilter(textPaint.getColor(), PorterDuff.Mode.SRC_IN);
 
@@ -450,7 +433,7 @@ public class FilterTabsView extends FrameLayout {
                 float iconX = (getMeasuredWidth() - tabWidth) / 2f;
                 float iconY = (getMeasuredHeight() - iconSize) / 2f;
                 iconDrawable.setBounds((int) iconX, (int) iconY, (int) (iconX + iconSize), (int) (iconY + iconSize));
-                int iconColor = isSelected ? (isDark ? 0xFF00D4FF : 0xFF0284C7) : (isDark ? 0xFFCBD5E1 : 0xFF64748B);
+                int iconColor = isSelected ? 0xFFFFFFFF : (isDark ? 0xFF38BDF8 : 0xFF0284C7);
                 iconDrawable.setColorFilter(new PorterDuffColorFilter(iconColor, PorterDuff.Mode.SRC_IN));
                 iconDrawable.draw(canvas);
             }
@@ -557,11 +540,11 @@ public class FilterTabsView extends FrameLayout {
                     canvas.scale(s, s, rect.centerX(), rect.centerY());
                 }
                 if (isSelected) {
-                    counterPaint.setColor(isDark ? 0xFF00D4FF : 0xFF0284C7);
-                    textCounterPaint.setColor(isDark ? 0xFF0F172A : 0xFFFFFFFF);
+                    counterPaint.setColor(isDark ? 0x4DFFFFFF : 0xFFFFFFFF);
+                    textCounterPaint.setColor(isDark ? 0xFF00D4FF : 0xFF0284C7);
                 } else {
-                    counterPaint.setColor(isDark ? 0x33FFFFFF : 0x1A000000);
-                    textCounterPaint.setColor(isDark ? 0xFFFFFFFF : 0xFF334155);
+                    counterPaint.setColor(isDark ? 0x2638BDF8 : 0xFFE0F2FE);
+                    textCounterPaint.setColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
                 }
                 canvas.drawRoundRect(rect, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, counterPaint);
 

@@ -7043,16 +7043,20 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (filter == null || filter.isDefault()) {
             return R.drawable.msg_folders;
         }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0) {
-            return R.drawable.msg_folders_channels;
-        }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0) {
+        String name = filter.name != null ? filter.name.toLowerCase() : "";
+        if (name.contains("group") || name.contains("গ্রুপ") || name.contains("দল") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_GROUPS) != 0) {
             return R.drawable.msg_folders_groups;
         }
-        if ((filter.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
+        if (name.contains("channel") || name.contains("চ্যানেল") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_CHANNELS) != 0) {
+            return R.drawable.msg_folders_channels;
+        }
+        if (name.contains("bot") || name.contains("বট") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
             return R.drawable.msg_folders_bots;
         }
-        if ((filter.flags & (MessagesController.DIALOG_FILTER_FLAG_CONTACTS | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS)) != 0) {
+        if (name.contains("unread") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_UNREAD) != 0) {
+            return R.drawable.msg_folders_unread;
+        }
+        if (name.contains("personal") || name.contains("private") || (filter.flags & (MessagesController.DIALOG_FILTER_FLAG_CONTACTS | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS)) != 0) {
             return R.drawable.msg_folders_private;
         }
         return R.drawable.msg_folders;

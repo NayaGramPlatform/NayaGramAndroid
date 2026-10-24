@@ -39,6 +39,7 @@ public class NayaAboutActivity extends BaseFragment {
     private static final String SUPPORT_EMAIL = "support.nayagram@gmail.com";
     private static final String PRIVACY_URL = "https://nayagramplatform.github.io/PrivacyArticleCenter/";
     private static final String SUPER_ADMIN_HANDLE = "NGSupreme";
+    private static final String ADMIN_2_HANDLE = "NG_HuzayfaSheikh";
     private static final String TG_CHANNEL = "NayaGramPro";
     private static final String X_HANDLE = "NayaGramPro";
     private static final String YT_HANDLE = "NayaGramPro";
@@ -247,12 +248,60 @@ public class NayaAboutActivity extends BaseFragment {
         adminActionPill.setBackground(adminPillBg);
         adminActionPill.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
         adminBtnCard.addView(adminActionPill, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
-        root.addView(adminBtnCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
+        root.addView(adminBtnCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        LinearLayout admin2Card = new LinearLayout(context);
+        admin2Card.setOrientation(LinearLayout.HORIZONTAL);
+        admin2Card.setGravity(Gravity.CENTER_VERTICAL);
+        GradientDrawable admin2Bg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFF0284C7, 0xFF0D9488}
+        );
+        admin2Bg.setCornerRadius(AndroidUtilities.dp(18));
+        admin2Bg.setStroke(AndroidUtilities.dp(1.5f), C_CYAN);
+        admin2Card.setBackground(admin2Bg);
+        admin2Card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        if (Build.VERSION.SDK_INT >= 21) admin2Card.setElevation(AndroidUtilities.dp(4));
+        admin2Card.setOnClickListener(v -> openAdmin2());
+
+        FrameLayout admin2IconWrap = new FrameLayout(context);
+        GradientDrawable admin2IconBg = new GradientDrawable();
+        admin2IconBg.setShape(GradientDrawable.OVAL);
+        admin2IconBg.setColor(0x33FFFFFF);
+        admin2IconBg.setStroke(AndroidUtilities.dp(1), 0x80FFFFFF);
+        admin2IconWrap.setBackground(admin2IconBg);
+        ImageView admin2Icon = new ImageView(context);
+        admin2Icon.setImageResource(R.drawable.msg_admins);
+        admin2Icon.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        admin2IconWrap.addView(admin2Icon, LayoutHelper.createFrame(24, 24, Gravity.CENTER));
+        admin2Card.addView(admin2IconWrap, LayoutHelper.createLinear(44, 44, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
+
+        LinearLayout admin2Col = new LinearLayout(context);
+        admin2Col.setOrientation(LinearLayout.VERTICAL);
+        TextView admin2RoleBadge = bold(context, "🛡️ CO-FOUNDER & ADMIN", 11, C_CYAN);
+        admin2Col.addView(admin2RoleBadge);
+        TextView admin2HandleView = bold(context, "@" + ADMIN_2_HANDLE, 16, Color.WHITE);
+        admin2Col.addView(admin2HandleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        TextView admin2SubView = normal(context, "Huzayfa Sheikh · Tap to message directly", 12, 0xE6FFFFFF);
+        admin2Col.addView(admin2SubView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+        admin2Card.addView(admin2Col, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+
+        TextView admin2ActionPill = bold(context, "Chat →", 13, Color.WHITE);
+        GradientDrawable admin2PillBg = new GradientDrawable();
+        admin2PillBg.setColor(0x33FFFFFF);
+        admin2PillBg.setCornerRadius(AndroidUtilities.dp(14));
+        admin2PillBg.setStroke(AndroidUtilities.dp(1), C_CYAN);
+        admin2ActionPill.setBackground(admin2PillBg);
+        admin2ActionPill.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
+        admin2Card.addView(admin2ActionPill, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+        root.addView(admin2Card, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
         // ════════ COMMUNITY ════════
         root.addView(section(context, "Community & updates"), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
         LinearLayout community = whiteCard(context);
         community.addView(row(context, R.drawable.msg_admins, C_PURPLE, "Super Admin", "@" + SUPER_ADMIN_HANDLE, v -> openSuperAdmin()));
+        community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
+        community.addView(row(context, R.drawable.msg_admins, C_TEAL, "Admin", "@" + ADMIN_2_HANDLE, v -> openAdmin2()));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
         community.addView(row(context, R.drawable.ic_social_telegram, C_TG, "Telegram", "@" + TG_CHANNEL, v -> openUrl("https://t.me/" + TG_CHANNEL)));
         community.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
@@ -556,6 +605,14 @@ public class NayaAboutActivity extends BaseFragment {
             org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName(SUPER_ADMIN_HANDLE, this, 1);
         } catch (Exception e) {
             openUrl("https://t.me/" + SUPER_ADMIN_HANDLE);
+        }
+    }
+
+    private void openAdmin2() {
+        try {
+            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName(ADMIN_2_HANDLE, this, 1);
+        } catch (Exception e) {
+            openUrl("https://t.me/" + ADMIN_2_HANDLE);
         }
     }
 
