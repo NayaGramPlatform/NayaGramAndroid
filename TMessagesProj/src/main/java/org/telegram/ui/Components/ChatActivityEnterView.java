@@ -7405,6 +7405,9 @@ public class ChatActivityEnterView extends FrameLayout implements
                 sendRichDraft(notify, scheduleDate, scheduleRepeatPeriod, payStars);
                 return;
             }
+            try {
+                org.nayagram.platform.textstyle.NGTextStyleHelper.applyStyle(messageEditText);
+            } catch (Exception ignore) {}
             CharSequence rawMessage = messageEditText == null ? "" : messageEditText.getTextToUse();
             try {
                 if (org.nayagram.platform.NayaConfig.getInstance().isAutoAddTextEnabled()) {

@@ -39,12 +39,15 @@ public final class NGChatMenuHelper {
     public static final int ITEM_CHAT_ID = 29001;
     public static final int ITEM_NG_SETTINGS = 29002;
     public static final int ITEM_AUTO_TRANSLATE = 29004;
+    public static final int ITEM_TEXT_STYLE = 29005;
 
     private static final String PREFS_CHAT = "nayagram_chat_prefs_";
 
     public static void addItems(ActionBarMenuItem headerItem, long dialogId) {
         if (headerItem == null) return;
         boolean dark = Theme.isCurrentThemeDark();
+        headerItem.lazilyAddSubItem(ITEM_TEXT_STYLE, R.drawable.msg_text_outlined, "Text style")
+                .setColors(dark ? 0xFFFFFFFF : 0xFF0284C7, dark ? 0xFF38BDF8 : 0xFF0284C7);
         headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId)
                 .setColors(dark ? 0xFFFFFFFF : 0xFF7C3AED, dark ? 0xFFA78BFA : 0xFF7C3AED);
         headerItem.lazilyAddSubItem(ITEM_NG_SETTINGS, R.drawable.settings_features, "NayaGram Settings")
@@ -58,6 +61,9 @@ public final class NGChatMenuHelper {
         if (id == ITEM_CHAT_ID) {
             AndroidUtilities.addToClipboard(String.valueOf(dialogId));
             Toast.makeText(activity, "Chat ID copied: " + dialogId, Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == ITEM_TEXT_STYLE) {
+            org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(activity);
             return true;
         } else if (id == ITEM_NG_SETTINGS) {
             chatActivity.presentFragment(new org.telegram.ui.NGSettingsActivity(org.telegram.ui.NGSettingsActivity.TYPE_FEATURES_HUB));

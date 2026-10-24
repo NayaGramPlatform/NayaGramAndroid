@@ -698,18 +698,17 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             items.add(UItem.asShadow(null));
         }
 
-        if (accountNumbers.size() > 0) {
+        final boolean canAddAccount = UserConfig.getActivatedAccountsCount() < UserConfig.MAX_ACCOUNT_COUNT;
+        if (accountNumbers.size() > 0 || canAddAccount) {
             items.add(UItem.asHeader(getString(R.string.SettingsAccounts)));
             for (int i = 0; i < accountNumbers.size(); ++i) {
                 items.add(AccountCell.Factory.of(i, accountNumbers.get(i)));
             }
+            if (canAddAccount) {
+                items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.AddAccount), "Sign in or create another account"));
+            }
             items.add(UItem.asShadow(null));
         }
-
-                // 1. Accounts card with Add Account at top
-        items.add(UItem.asHeader("Accounts"));
-        items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, "Add Account", "Sign in or create another account"));
-        items.add(UItem.asShadow(null));
 
         // 2. Account item (Number, Username, Bio)
         final boolean walletAbove = getConnectionsManager().getCurrentTime() - 1791538462 < 4 * 7 * 24 * 60 * 60;
@@ -852,9 +851,19 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             return;
         }
         switch (item.id) {
-            case 200:
-                presentSettingFragment(new LoginActivity());
+            case 200: {
+                int freeAccount = -1;
+                for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    if (!UserConfig.getInstance(a).isClientActivated()) {
+                        freeAccount = a;
+                        break;
+                    }
+                }
+                if (freeAccount >= 0) {
+                    presentFragment(new LoginActivity(freeAccount));
+                }
                 break;
+            }
             case 111:
                 presentSettingFragment(new NGSafetyActivity());
                 break;
@@ -1120,7 +1129,8 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         private BackupImageView avatarView;
         private SimpleTextView textView;
         private TextView counterView;
-        private ImageView arrowView;
+        public Switch switchView;
+        private int account;
 
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable botDrawable;
         private final AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable emojiStatusDrawable;
@@ -1164,27 +1174,25 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             counterView.setTextColor(Theme.getColor(Theme.key_featuredStickers_buttonText, resourcesProvider));
             counterView.setBackground(Theme.createRoundRectDrawable(dp(10), Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider)));
 
-            arrowView = new ImageView(context);
-            arrowView.setImageResource(R.drawable.msg_arrowright);
-            arrowView.setScaleType(ImageView.ScaleType.CENTER);
-            arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
+            switchView = new Switch(context, resourcesProvider);
+            switchView.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
+            switchView.setScaleX(0.85f);
+            switchView.setScaleY(0.85f);
+            switchView.setClickable(true);
+            switchView.setOnClickListener(v -> toggleNotifications());
 
             if (LocaleController.isRTL) {
                 textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.RIGHT);
-                arrowView.setScaleX(-1);
-
-                addView(arrowView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.LEFT, 12, 0, 0, 0));
-                addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
+                addView(switchView, LayoutHelper.createLinear(37, LayoutHelper.MATCH_PARENT, 0, Gravity.CENTER_VERTICAL | Gravity.LEFT, 15, 0, 0, 0));
+                addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
                 addView(textView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, Gravity.FILL, 18, 0, 0, 0));
                 addView(avatarView, LayoutHelper.createLinear(28, 28, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 18, 0, 18, 0));
-
             } else {
                 textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
-
                 addView(avatarView, LayoutHelper.createLinear(28, 28, Gravity.CENTER_VERTICAL | Gravity.LEFT, 18, 0, 18, 0));
                 addView(textView, LayoutHelper.createLinear(0, LayoutHelper.MATCH_PARENT, 1f, Gravity.FILL, 0, 0, 18, 0));
-                addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 0, 0, 0, 0));
-                addView(arrowView, LayoutHelper.createLinear(24, 24, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 12, 0));
+                addView(counterView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, 20, 0, Gravity.CENTER_VERTICAL, 0, 0, 8, 0));
+                addView(switchView, LayoutHelper.createLinear(37, LayoutHelper.MATCH_PARENT, 0, Gravity.CENTER_VERTICAL | Gravity.RIGHT, 0, 0, 15, 0));
             }
         }
 
@@ -1192,11 +1200,27 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         public void updateColors() {
             textView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider));
             counterView.setBackground(Theme.createRoundRectDrawable(dp(10), Theme.getColor(Theme.key_featuredStickers_addButton, resourcesProvider)));
-            arrowView.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayIcon, resourcesProvider), PorterDuff.Mode.SRC_IN));
             emojiStatusDrawable.setColor(Theme.getColor(Theme.key_profile_verifiedBackground, resourcesProvider));
         }
 
+        private void toggleNotifications() {
+            final boolean enabled = !NotificationsController.isAccountNotificationsEnabled(account);
+            MessagesController.getGlobalNotificationsSettings().edit()
+                    .putBoolean(NotificationsController.getAccountNotificationsKey(account), enabled)
+                    .apply();
+            switchView.setChecked(enabled, true);
+            if (enabled) {
+                NotificationsController.getInstance(account).showNotifications();
+                if (UserConfig.getInstance(account).isClientActivated()) {
+                    ConnectionsManager.getInstance(account).resumeNetworkMaybe();
+                }
+            } else {
+                NotificationsController.getInstance(account).hideNotifications();
+            }
+        }
+
         public void set(int account) {
+            this.account = account;
             final TLRPC.User user = UserConfig.getInstance(account).getCurrentUser();
 
             avatarDrawable.setInfo(account, user);
@@ -1228,6 +1252,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             int counter = MessagesStorage.getInstance(account).getMainUnreadCount();
             counterView.setVisibility(counter > 0 ? View.VISIBLE : View.GONE);
             counterView.setText(LocaleController.formatNumber(counter, ','));
+            switchView.setChecked(NotificationsController.isAccountNotificationsEnabled(account), false);
         }
 
         @Override
