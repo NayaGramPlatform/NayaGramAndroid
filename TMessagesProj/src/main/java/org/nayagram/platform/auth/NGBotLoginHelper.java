@@ -251,8 +251,4 @@ public class NGBotLoginHelper {
             LaunchActivity.instance.switchToAccount(currentAccount, true);
         }
     }
-                }),
-                ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin
-        );
-    }
 }
