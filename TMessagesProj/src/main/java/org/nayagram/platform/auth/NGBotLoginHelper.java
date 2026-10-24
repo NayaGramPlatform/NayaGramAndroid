@@ -18,6 +18,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.MessagesStorage;
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.ContactsController;
+import org.telegram.ui.LaunchActivity;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;

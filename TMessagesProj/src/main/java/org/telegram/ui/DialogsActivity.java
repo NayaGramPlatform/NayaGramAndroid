@@ -7053,8 +7053,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (name.contains("bot") || name.contains("বট") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_BOTS) != 0) {
             return R.drawable.msg_folders_bots;
         }
-        if (name.contains("unread") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_UNREAD) != 0) {
-            return R.drawable.msg_folders_unread;
+        if (name.contains("unread") || (filter.flags & MessagesController.DIALOG_FILTER_FLAG_EXCLUDE_READ) != 0) {
+            return R.drawable.msg_folders_read;
         }
         if (name.contains("personal") || name.contains("private") || (filter.flags & (MessagesController.DIALOG_FILTER_FLAG_CONTACTS | MessagesController.DIALOG_FILTER_FLAG_NON_CONTACTS)) != 0) {
             return R.drawable.msg_folders_private;

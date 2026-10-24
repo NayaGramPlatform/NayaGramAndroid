@@ -106,6 +106,7 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.Components.Switch;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.INavigationLayout;
 import org.telegram.ui.ActionBar.SimpleTextView;
@@ -854,7 +855,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                     builder.setTitle(getString(R.string.AddAccount));
                     CharSequence[] options = new CharSequence[] {
-                        LocaleController.getString("AddAccountUser", R.string.LoginPhoneTitle),
+                        "Log in with phone number",
                         LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
                     };
                     int[] icons = new int[] {

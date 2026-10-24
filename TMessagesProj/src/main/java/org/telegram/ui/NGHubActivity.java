@@ -37,6 +37,7 @@ import android.graphics.Color;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AvatarDrawable;
@@ -493,7 +494,7 @@ public class NGHubActivity extends BaseFragment {
                 AlertDialog.Builder addBuilder = new AlertDialog.Builder(getParentActivity());
                 addBuilder.setTitle(LocaleController.getString("AddAccount", R.string.AddAccount));
                 CharSequence[] options = new CharSequence[] {
-                    LocaleController.getString("AddAccountUser", R.string.LoginPhoneTitle),
+                    "Log in with phone number",
                     LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
                 };
                 int[] icons = new int[] {
