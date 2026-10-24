@@ -187,6 +187,14 @@ public class NotificationsController extends BaseController implements Notificat
         }
     }
 
+    public static boolean isAccountNotificationsEnabled(int account) {
+        return MessagesController.getNotificationsSettings(account).getBoolean("EnableAll", true);
+    }
+
+    public static String getAccountNotificationsKey(int account) {
+        return "EnableAll";
+    }
+
     public static NotificationsController getInstance(int num) {
         NotificationsController localInstance = Instance[num];
         if (localInstance == null) {
