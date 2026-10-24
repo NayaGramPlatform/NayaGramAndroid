@@ -101,10 +101,10 @@ public class NGBotLoginHelper {
     }
 
     public static void showBotLoginDialog(final BaseFragment fragment, final int currentAccount) {
-        if (activity == null || activity.getParentActivity() == null) {
+        if (fragment == null || fragment.getParentActivity() == null) {
             return;
         }
-        Context context = activity.getParentActivity();
+        Context context = fragment.getParentActivity();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
 

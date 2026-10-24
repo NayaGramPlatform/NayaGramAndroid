@@ -12,6 +12,7 @@ import android.widget.TextView;
 import org.nayagram.platform.translator.InstantTranslatorManager;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.Theme;
 
 
 /** Multilingual Feature Pipeline tutorial. Documentation only; it never activates feature engines. */
