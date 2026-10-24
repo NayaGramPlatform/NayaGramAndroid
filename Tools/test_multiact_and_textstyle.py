@@ -18,7 +18,11 @@ def test_multi_account_enhancements():
     assert "public Switch switchView;" in settings
     assert "switchView.setChecked(NotificationsController.isAccountNotificationsEnabled(account)" in settings
     assert "canAddAccount = UserConfig.getActivatedAccountsCount() < UserConfig.MAX_ACCOUNT_COUNT;" in settings
-    print("PASS: Multi-account (15 accounts + safe add account without overwriting)")
+    hub = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/NGHubActivity.java").read_text(encoding="utf-8")
+    assert "buildAccountSwitcherCard" in hub
+    assert "showAccountSwitchDialog" in hub
+    assert "Switch 👥" in hub
+    print("PASS: Multi-account (15 accounts + safe add account + NG Hub switcher)")
 
 def test_text_style_feature():
     helper = (ROOT / "TMessagesProj/src/main/java/org/nayagram/platform/textstyle/NGTextStyleHelper.java").read_text(encoding="utf-8")

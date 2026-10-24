@@ -31,6 +31,9 @@ import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
+import org.telegram.messenger.UserObject;
+import org.telegram.messenger.LocaleController;
+import android.graphics.Color;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -57,6 +60,9 @@ public class NGHubActivity extends BaseFragment {
     private static final int COLOR_GREEN = 0xFF16A34A;
     private static final int COLOR_BLUE = 0xFF0369A1;
 
+    private BackupImageView accountAvatar;
+    private TextView accountNameView;
+    private TextView accountSubView;
     private LinearLayout contentColumn;
     private LinearLayout activeRows;
     private TextView[] tabs;
@@ -119,6 +125,7 @@ public class NGHubActivity extends BaseFragment {
         scrollView.addView(page, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         page.addView(buildHero(context));
+        page.addView(buildAccountSwitcherCard(context));
         page.addView(buildShortcuts(context));
         page.addView(buildCreateRow(context));
 
@@ -254,6 +261,7 @@ public class NGHubActivity extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
+        updateAccountCard();
         showSection(selectedSection);
     }
 
@@ -288,6 +296,227 @@ public class NGHubActivity extends BaseFragment {
         LinearLayout.LayoutParams params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12);
         hero.setLayoutParams(params);
         return hero;
+    }
+
+    private void updateAccountCard() {
+        if (accountAvatar == null || accountNameView == null || accountSubView == null) return;
+        TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+        AvatarDrawable avatarDrawable = new AvatarDrawable();
+        avatarDrawable.setInfo(currentAccount, currentUser);
+        accountAvatar.getImageReceiver().setCurrentAccount(currentAccount);
+        accountAvatar.setForUserOrChat(currentUser, avatarDrawable);
+
+        accountNameView.setText(currentUser != null ? UserObject.getUserName(currentUser) : "Active Account");
+        int totalAccounts = UserConfig.getActivatedAccountsCount();
+        String subText = (currentUser != null && currentUser.username != null && !currentUser.username.isEmpty())
+                ? "@" + currentUser.username + " • " + totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active")
+                : totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active");
+        accountSubView.setText(subText);
+    }
+
+    private View buildAccountSwitcherCard(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+
+        boolean isDark = Theme.isCurrentThemeDark();
+        int cardBg = isDark ? 0xFF1E293B : Theme.getColor(Theme.key_windowBackgroundWhite);
+        GradientDrawable cardDrawable = new GradientDrawable();
+        cardDrawable.setColor(cardBg);
+        cardDrawable.setCornerRadius(AndroidUtilities.dp(18));
+        cardDrawable.setStroke(AndroidUtilities.dp(1), isDark ? 0x2E38BDF8 : 0x180284C7);
+        card.setBackground(cardDrawable);
+
+        TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+        AvatarDrawable avatarDrawable = new AvatarDrawable();
+        avatarDrawable.setInfo(currentAccount, currentUser);
+        accountAvatar = new BackupImageView(context);
+        accountAvatar.setRoundRadius(AndroidUtilities.dp(16));
+        accountAvatar.getImageReceiver().setCurrentAccount(currentAccount);
+        accountAvatar.setForUserOrChat(currentUser, avatarDrawable);
+        card.addView(accountAvatar, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
+
+        LinearLayout infoCol = new LinearLayout(context);
+        infoCol.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout nameRow = new LinearLayout(context);
+        nameRow.setOrientation(LinearLayout.HORIZONTAL);
+        nameRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        accountNameView = new TextView(context);
+        accountNameView.setText(currentUser != null ? UserObject.getUserName(currentUser) : "Active Account");
+        accountNameView.setTextSize(15);
+        accountNameView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        accountNameView.setTextColor(isDark ? 0xFFF1F5F9 : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        nameRow.addView(accountNameView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+
+        TextView activePill = new TextView(context);
+        activePill.setText("Active");
+        activePill.setTextSize(10);
+        activePill.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        activePill.setTextColor(0xFF0284C7);
+        GradientDrawable pillBg = new GradientDrawable();
+        pillBg.setColor(0x1F0284C7);
+        pillBg.setCornerRadius(AndroidUtilities.dp(8));
+        activePill.setBackground(pillBg);
+        activePill.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(2), AndroidUtilities.dp(6), AndroidUtilities.dp(2));
+        nameRow.addView(activePill, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 6, 0, 0, 0));
+
+        infoCol.addView(nameRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        accountSubView = new TextView(context);
+        int totalAccounts = UserConfig.getActivatedAccountsCount();
+        String subText = (currentUser != null && currentUser.username != null && !currentUser.username.isEmpty())
+                ? "@" + currentUser.username + " • " + totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active")
+                : totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active");
+        accountSubView.setText(subText);
+        accountSubView.setTextSize(12);
+        accountSubView.setTextColor(isDark ? 0xFF94A3B8 : Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        infoCol.addView(accountSubView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+        card.addView(infoCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+
+        TextView switchBtn = new TextView(context);
+        switchBtn.setText("Switch 👥 ⌵");
+        switchBtn.setTextSize(12);
+        switchBtn.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        switchBtn.setTextColor(Color.WHITE);
+        switchBtn.setGravity(Gravity.CENTER);
+        GradientDrawable btnBg = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{0xFF0284C7, 0xFF0369A1});
+        btnBg.setCornerRadius(AndroidUtilities.dp(14));
+        switchBtn.setBackground(btnBg);
+        switchBtn.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        card.addView(switchBtn, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+
+        card.setOnClickListener(v -> showAccountSwitchDialog(context));
+        switchBtn.setOnClickListener(v -> showAccountSwitchDialog(context));
+
+        LinearLayout.LayoutParams params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12);
+        card.setLayoutParams(params);
+        return card;
+    }
+
+    private void showAccountSwitchDialog(Context context) {
+        if (context == null || getParentActivity() == null) return;
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(14));
+
+        TextView header = new TextView(context);
+        header.setText("Switch Account (" + UserConfig.getActivatedAccountsCount() + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
+        header.setTextSize(17);
+        header.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        header.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        layout.addView(header, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
+
+        ScrollView scroll = new ScrollView(context);
+        LinearLayout list = new LinearLayout(context);
+        list.setOrientation(LinearLayout.VERTICAL);
+        scroll.addView(list, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        final AlertDialog[] dialogHolder = new AlertDialog[1];
+
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (!UserConfig.getInstance(a).isClientActivated()) continue;
+            final int accountIndex = a;
+            TLRPC.User user = UserConfig.getInstance(a).getCurrentUser();
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+            boolean isActive = (accountIndex == currentAccount);
+            row.setBackground(round(isActive ? (Theme.isCurrentThemeDark() ? 0xFF1E3A5F : 0xFFE0F2FE) : (Theme.isCurrentThemeDark() ? 0xFF1E293B : 0xFFF8FAFC), 14));
+
+            AvatarDrawable ad = new AvatarDrawable();
+            ad.setInfo(accountIndex, user);
+            BackupImageView av = new BackupImageView(context);
+            av.setRoundRadius(AndroidUtilities.dp(14));
+            av.getImageReceiver().setCurrentAccount(accountIndex);
+            av.setForUserOrChat(user, ad);
+            row.addView(av, LayoutHelper.createLinear(34, 34, Gravity.CENTER_VERTICAL, 0, 0, 10, 0));
+
+            LinearLayout textCol = new LinearLayout(context);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+            TextView uName = new TextView(context);
+            uName.setText(UserObject.getUserName(user));
+            uName.setTextSize(14);
+            uName.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            uName.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+            textCol.addView(uName);
+
+            TextView uStatus = new TextView(context);
+            uStatus.setText(isActive ? "Currently Active" : (user != null && user.username != null && !user.username.isEmpty() ? "@" + user.username : "Account #" + (accountIndex + 1)));
+            uStatus.setTextSize(11);
+            uStatus.setTextColor(isActive ? 0xFF0284C7 : Theme.getColor(Theme.key_dialogTextGray2));
+            textCol.addView(uStatus);
+
+            row.addView(textCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
+
+            if (isActive) {
+                TextView check = new TextView(context);
+                check.setText("✓");
+                check.setTextSize(18);
+                check.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                check.setTextColor(0xFF0284C7);
+                row.addView(check, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+            }
+
+            row.setOnClickListener(v -> {
+                if (dialogHolder[0] != null) dialogHolder[0].dismiss();
+                if (accountIndex != currentAccount && LaunchActivity.instance != null) {
+                    LaunchActivity.instance.switchToAccount(accountIndex, true);
+                    updateAccountCard();
+                }
+            });
+
+            LinearLayout.LayoutParams lp = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6);
+            list.addView(row, lp);
+        }
+
+        layout.addView(scroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, AndroidUtilities.dp(240), 0, 0, 0, 10));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setView(layout);
+        builder.setPositiveButton("Add Account", (d, w) -> {
+            int freeAccount = -1;
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                if (!UserConfig.getInstance(a).isClientActivated()) {
+                    freeAccount = a;
+                    break;
+                }
+            }
+            if (freeAccount >= 0) {
+                final int targetAccount = freeAccount;
+                AlertDialog.Builder addBuilder = new AlertDialog.Builder(getParentActivity());
+                addBuilder.setTitle(LocaleController.getString("AddAccount", R.string.AddAccount));
+                CharSequence[] options = new CharSequence[] {
+                    LocaleController.getString("AddAccountUser", R.string.LoginPhoneTitle),
+                    LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
+                };
+                int[] icons = new int[] {
+                    R.drawable.outline_add_account,
+                    R.drawable.msg_bot
+                };
+                addBuilder.setItems(options, icons, (ad, which) -> {
+                    if (which == 0) {
+                        presentFragment(new LoginActivity(targetAccount));
+                    } else {
+                        org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(NGHubActivity.this, targetAccount);
+                    }
+                });
+                addBuilder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                showDialog(addBuilder.create());
+            } else {
+                Toast.makeText(context, "Maximum 15 accounts reached", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Close", (d, w) -> d.dismiss());
+
+        dialogHolder[0] = builder.create();
+        dialogHolder[0].show();
     }
 
     private View buildShortcuts(Context context) {
@@ -670,7 +899,7 @@ public class NGHubActivity extends BaseFragment {
                         "🎯 উদ্দেশ্য", "নিজের টেলিগ্রাম জায়গাগুলো এক স্ক্রিনে রাখা, এবং অন্যের কমিউনিটিকে নিজের বলে না দেখানো।",
                         "✨ এটি যা করে", "এই অ্যাকাউন্টের তৈরি চ্যানেল ও গ্রুপ দেখায়, প্রোফাইল ও কন্টাক্ট লিস্ট খোলে, এবং বটের জন্য অফিসিয়াল বটফাদার খোলে।",
                         "🛡️ এটি যা করে না", "মিথ্যা চ্যানেল বা গ্রুপ বানায় না, এবং অন্য কারও কমিউনিটিকে আপনার বলে না।",
-                        "🚀 সর্বশেষ আপডেট ও নতুন সুবিধাসমূহ", "• ডান থেকে বামে কার্ড স্লাইড এনিমেশন ও প্রিমিয়াম টপ-বটম বর্ডার।\n• ডার্ক ও লাইট মোডে স্পষ্ট ও উজ্জ্বল টেক্সট কন্ট্রাস্ট।\n• এনজি হাব থেকে সরাসরি এক-ট্যাপ লাইভ স্ট্রিমিং ও ব্রডকাস্ট।\n• নোভাগ্রাম স্টাইল ফোল্ডার কার্ডস ও ডাইনামিক ভেক্টর আইকন।"
+                        "🚀 সর্বশেষ আপডেট ও নতুন সুবিধাসমূহ", "• এনজি হাব থেকে সরাসরি দ্রুত অ্যাকাউন্ট সুইচ ও ১৫টি অ্যাকাউন্ট সাপোর্ট।\n• অ্যাড অ্যাকাউন্ট ও লগইন স্ক্রিন থেকে সরাসরি বট টোকেন দিয়ে লগইন।\n• চ্যাটে স্থায়ী টেক্সট স্টাইলার (বোল্ড, ইটালিক, স্পয়লার, মনো, কোট)।\n• ডিটেইলস ও টিউটোরিয়ালের উপরে এক কোণে দ্রুত ভাষা পরিবর্তনের বাটন।\n• নোভাগ্রাম স্টাইল ফোল্ডার কার্ডস ও লাইভ স্ট্রিমিং শর্টকাট।"
                 };
             case 2:
                 return new String[]{
@@ -724,7 +953,7 @@ public class NGHubActivity extends BaseFragment {
                         "🎯 Purpose", "Keep your own Telegram places on one screen, and never present someone else’s community as yours.",
                         "✨ What it does", "It lists channels and groups this account created, opens your profile and contact list, and opens the official BotFather to create a bot.",
                         "🛡️ What it never does", "It does not invent channels or groups, and it does not label another person’s community as yours.",
-                        "🚀 Latest Enhancements", "• Right-to-left cards slide animation with subtle top & bottom borders.\n• High-contrast crisp typography in Dark and Light modes.\n• One-tap Live Streaming shortcut directly from NG Hub.\n• Novagram-style folder cards with vector icons & auto-add support."
+                        "🚀 Latest Enhancements", "• Instant Account Switcher inside NG Hub supporting up to 15 accounts.\n• Direct Bot Token login from Add Account & Login screens.\n• In-Chat Persistent Text Styler (Bold, Italic, Spoiler, Mono, Quote).\n• Quick top-corner Language Switcher in Details & Tutorials.\n• Novagram-style folder cards & Live Streaming shortcut."
                 };
         }
     }
@@ -1018,7 +1247,11 @@ public class NGHubActivity extends BaseFragment {
         button.setGravity(Gravity.CENTER);
         button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         button.setTextColor(0xFFF7FBFF);
-        button.setBackground(round(color, 16));
+        GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{color, Color.argb(230, Color.red(color), Color.green(color), Color.blue(color))});
+        gd.setCornerRadius(AndroidUtilities.dp(16));
+        gd.setStroke(AndroidUtilities.dp(1), 0x24FFFFFF);
+        button.setBackground(gd);
+        button.setElevation(AndroidUtilities.dp(2));
         button.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
         button.setContentDescription(label);
         return button;
