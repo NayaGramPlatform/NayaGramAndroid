@@ -12,7 +12,8 @@ def test_multi_account_enhancements():
     settings = (ROOT / "TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java").read_text(encoding="utf-8")
     # Verify freeAccount search and LoginActivity(freeAccount)
     assert "int freeAccount = -1;" in settings
-    assert "presentFragment(new LoginActivity(freeAccount));" in settings
+    assert "presentFragment(new LoginActivity(targetAccount));" in settings
+    assert "NGBotLoginHelper.showBotLoginDialog(SettingsActivity.this, targetAccount);" in settings
     # Verify AccountCell has switchView for per-account notification toggles
     assert "public Switch switchView;" in settings
     assert "switchView.setChecked(NotificationsController.isAccountNotificationsEnabled(account)" in settings

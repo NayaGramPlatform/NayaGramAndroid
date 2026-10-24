@@ -25,6 +25,7 @@ import org.telegram.messenger.R;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.AlertsCreator;
 import org.telegram.ui.Components.LayoutHelper;
@@ -91,6 +92,10 @@ public class NGBotLoginHelper {
     }
 
     public static void showBotLoginDialog(final LoginActivity activity, final int currentAccount) {
+        showBotLoginDialog((BaseFragment) activity, currentAccount);
+    }
+
+    public static void showBotLoginDialog(final BaseFragment fragment, final int currentAccount) {
         if (activity == null || activity.getParentActivity() == null) {
             return;
         }
@@ -167,44 +172,85 @@ public class NGBotLoginHelper {
                 return;
             }
             if (!isValidBotToken(token)) {
-                AlertsCreator.showSimpleAlert(activity, "Invalid Token Format",
+                AlertsCreator.showSimpleAlert(fragment, "Invalid Token Format",
                         "The token format is invalid. A bot token looks like: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ (obtainable from @BotFather).");
                 return;
             }
 
-            performBotLogin(activity, currentAccount, token);
+            performBotLogin(fragment, currentAccount, token);
         });
 
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
-    private static void performBotLogin(final LoginActivity activity, final int currentAccount, final String token) {
-        activity.showLoginProgress();
-
+    private static void performBotLogin(final BaseFragment fragment, final int currentAccount, final String token) {
+        final AlertDialog[] progress = new AlertDialog[1];
+        if (fragment instanceof LoginActivity) {
+            ((LoginActivity) fragment).showLoginProgress();
+        } else if (fragment != null && fragment.getParentActivity() != null) {
+            progress[0] = new AlertDialog(fragment.getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
+            progress[0].showDelayed(300);
+        }
         FileLog.d("NGBotLoginHelper: Initiating bot login with token " + NGBotSessionManager.maskToken(token));
-
         TL_auth_importBotAuthorization req = new TL_auth_importBotAuthorization();
         req.flags = 0;
         req.api_id = BuildVars.APP_ID;
         req.api_hash = BuildVars.APP_HASH;
         req.bot_auth_token = token;
-
         ConnectionsManager.getInstance(currentAccount).sendRequest(
                 req,
                 (response, error) -> AndroidUtilities.runOnUIThread(() -> {
-                    activity.hideLoginProgress();
-
+                    if (fragment instanceof LoginActivity) {
+                        ((LoginActivity) fragment).hideLoginProgress();
+                    } else if (progress[0] != null) {
+                        try { progress[0].dismiss(); } catch (Exception ignored) {}
+                    }
                     if (error == null && response instanceof TLRPC.TL_auth_authorization) {
                         FileLog.d("NGBotLoginHelper: Bot login succeeded for " + NGBotSessionManager.maskToken(token));
-                        activity.handleBotAuthSuccess((TLRPC.TL_auth_authorization) response, token);
+                        if (fragment instanceof LoginActivity) {
+                            ((LoginActivity) fragment).handleBotAuthSuccess((TLRPC.TL_auth_authorization) response, token);
+                        } else {
+                            handleBotAuthSuccessDirect(currentAccount, (TLRPC.TL_auth_authorization) response, token);
+                        }
                     } else {
                         String rawErr = error != null ? error.text : "null response";
                         String safeErr = rawErr != null ? rawErr.replaceAll("\\b\\d{6,12}:[A-Za-z0-9_-]{20,}\\b", "[REDACTED_TOKEN]") : "null";
                         FileLog.e("NGBotLoginHelper: Bot login failed: " + safeErr);
                         String errorMsg = getFriendlyErrorMessage(error);
-                        AlertsCreator.showSimpleAlert(activity, "Bot Login Failed", errorMsg);
+                        AlertsCreator.showSimpleAlert(fragment, "Bot Login Failed", errorMsg);
                     }
+                }),
+                ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin
+        );
+    }
+
+    public static void handleBotAuthSuccessDirect(int currentAccount, TLRPC.TL_auth_authorization res, String token) {
+        if (res == null || res.user == null) return;
+        MessagesController.getInstance(currentAccount).cleanup();
+        ConnectionsManager.getInstance(currentAccount).setUserId(res.user.id);
+        UserConfig.getInstance(currentAccount).clearConfig();
+        MessagesController.getInstance(currentAccount).cleanup();
+        UserConfig.getInstance(currentAccount).setCurrentUser(res.user);
+        UserConfig.getInstance(currentAccount).saveConfig(true);
+        MessagesStorage.getInstance(currentAccount).cleanup(true);
+        java.util.ArrayList<TLRPC.User> users = new java.util.ArrayList<>();
+        users.add(res.user);
+        MessagesStorage.getInstance(currentAccount).putUsersAndChats(users, null, true, true);
+        MessagesController.getInstance(currentAccount).putUser(res.user, false);
+        ContactsController.getInstance(currentAccount).checkAppAccount();
+        MessagesController.getInstance(currentAccount).checkPromoInfo(true);
+        ConnectionsManager.getInstance(currentAccount).updateDcSettings();
+        MessagesController.getInstance(currentAccount).loadAppConfig();
+        MessagesController.getInstance(currentAccount).loadWebBrowserConfig();
+        MessagesController.getInstance(currentAccount).checkPeerColors(false);
+        if (token != null) {
+            NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
+        }
+        if (LaunchActivity.instance != null) {
+            LaunchActivity.instance.switchToAccount(currentAccount, true);
+        }
+    }
                 }),
                 ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin
         );

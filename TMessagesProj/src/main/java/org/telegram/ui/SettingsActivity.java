@@ -705,18 +705,12 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 items.add(AccountCell.Factory.of(i, accountNumbers.get(i)));
             }
             if (canAddAccount) {
-                items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.AddAccount), "Sign in or create another account"));
+                items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.outline_add_account, getString(R.string.AddAccount)));
             }
             items.add(UItem.asShadow(null));
         }
 
         // 2. Account item (Number, Username, Bio)
-        final boolean walletAbove = getConnectionsManager().getCurrentTime() - 1791538462 < 4 * 7 * 24 * 60 * 60;
-        if (walletAbove && getMessagesController().config.walletAvailable.get()) {
-            final GramWallet wallet = GramWallet.getInstance(currentAccount);
-            items.add(SettingCell.Factory.of(25, 0, 0, Theme.isCurrentThemeDark() ? R.drawable.settings_wallet_dark : R.drawable.settings_wallet, TextCell.applyNewSpanTimed(getString(R.string.WalletAttachMoney), 1790679020), null, wallet.getBalance() > 0 ? GramWallet.formatGrams(wallet.getBalance()) : null));
-            items.add(UItem.asShadow(null));
-        }
 
         items.add(SettingCell.Factory.of(1, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.settings_account, getString(R.string.SettingsAccount), getString(R.string.SettingsAccountInfo)));
 
@@ -741,11 +735,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), getString(R.string.SettingsLanguageInfo), LocaleController.getCurrentLanguageName()));
 
         items.add(UItem.asShadow(null));
-        if (!walletAbove && getMessagesController().config.walletAvailable.get()) {
-            final GramWallet wallet = GramWallet.getInstance(currentAccount);
-            items.add(SettingCell.Factory.of(25, 0, 0, Theme.isCurrentThemeDark() ? R.drawable.settings_wallet_dark : R.drawable.settings_wallet, TextCell.applyNewSpanTimed(getString(R.string.WalletAttachMoney), 1790679020), null, wallet.getBalance() > 0 ? GramWallet.formatGrams(wallet.getBalance()) : null));
-            items.add(UItem.asShadow(null));
-        }
+
 
         if (!getMessagesController().premiumFeaturesBlocked()) {
             items.add(SettingCell.Factory.of(11, 0xFFB659FF, 0xFF617CFF, R.drawable.settings_premium, getString(R.string.NayaGramPremium)));
@@ -860,7 +850,26 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                     }
                 }
                 if (freeAccount >= 0) {
-                    presentFragment(new LoginActivity(freeAccount));
+                    final int targetAccount = freeAccount;
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+                    builder.setTitle(getString(R.string.AddAccount));
+                    CharSequence[] options = new CharSequence[] {
+                        LocaleController.getString("AddAccountUser", R.string.LoginPhoneTitle),
+                        LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
+                    };
+                    int[] icons = new int[] {
+                        R.drawable.outline_add_account,
+                        R.drawable.msg_bot
+                    };
+                    builder.setItems(options, icons, (dialog, which) -> {
+                        if (which == 0) {
+                            presentFragment(new LoginActivity(targetAccount));
+                        } else {
+                            org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(SettingsActivity.this, targetAccount);
+                        }
+                    });
+                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    showDialog(builder.create());
                 }
                 break;
             }

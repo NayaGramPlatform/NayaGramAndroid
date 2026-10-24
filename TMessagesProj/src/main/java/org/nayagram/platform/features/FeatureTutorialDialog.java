@@ -229,12 +229,58 @@ public final class FeatureTutorialDialog {
 
     private static void showTranslatedText(Context context, String text, String language, boolean fallback) {
         String heading = fallback ? "Translation unavailable; showing English tutorial.\n\n" : "Machine-translated tutorial · " + language + "\n\n";
-        new AlertDialog.Builder(context)
+        LinearLayout panel = new LinearLayout(context);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
+
+        // Quick language switcher placed right at the top corner so users do not have to scroll down!
+        LinearLayout topBar = new LinearLayout(context);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+        topBar.setGravity(Gravity.CENTER_VERTICAL);
+        topBar.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(8), AndroidUtilities.dp(12), AndroidUtilities.dp(8));
+        topBar.setBackground(roundRect(0xFFE0F2FE));
+
+        TextView langBadge = new TextView(context);
+        langBadge.setText("🌐 " + language);
+        langBadge.setTextColor(0xFF0369A1);
+        langBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        langBadge.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        topBar.addView(langBadge, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView changeBtn = new TextView(context);
+        changeBtn.setText("Change Language ⌵");
+        changeBtn.setTextColor(0xFF0284C7);
+        changeBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        changeBtn.setTypeface(android.graphics.Typeface.DEFAULT, android.graphics.Typeface.BOLD);
+        changeBtn.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(4));
+        topBar.addView(changeBtn, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        LinearLayout.LayoutParams topBarParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        topBarParams.bottomMargin = AndroidUtilities.dp(10);
+        panel.addView(topBar, topBarParams);
+
+        ScrollView scroll = new ScrollView(context);
+        TextView msg = new TextView(context);
+        msg.setText(heading + text);
+        msg.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        msg.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        msg.setLineSpacing(AndroidUtilities.dp(3), 1f);
+        scroll.addView(msg, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        panel.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(340)));
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("📖 Feature Pipeline · Details")
-                .setMessage(heading + text)
-                .setPositiveButton("Languages", (dialog, which) -> show(context))
+                .setView(panel)
+                .setPositiveButton("Languages", (d, which) -> show(context))
                 .setNegativeButton("Close", null)
-                .show();
+                .create();
+
+        topBar.setOnClickListener(v -> {
+            dialog.dismiss();
+            show(context);
+        });
+
+        dialog.show();
     }
 
     private static String getLanguageName(String code) {
