@@ -239,7 +239,7 @@ android {
             jniDebuggable false
             shrinkResources false
             multiDexEnabled true
-            ndk.debugSymbolLevel = 'FULL'
+            ndk.debugSymbolLevel = 'SYMBOL_TABLE'
             buildConfigField "String", "BUILD_VERSION_STRING", "\"" + APP_VERSION_NAME + "\""
             buildConfigField "String", "BETA_URL", "\"\""
             buildConfigField "boolean", "DEBUG_VERSION", "false"
