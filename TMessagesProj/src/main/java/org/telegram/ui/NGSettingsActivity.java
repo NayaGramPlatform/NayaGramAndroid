@@ -278,7 +278,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setAppThemeMode(nextMode);
                     try {
                         if (nextMode == NayaConfig.THEME_MODE_LIGHT) {
-                            Theme.applyTheme(Theme.getDefaultTheme());
+                            Theme.applyTheme(Theme.getCurrentTheme());
                         } else {
                             Theme.applyTheme(Theme.getCurrentNightTheme(), true);
                         }
