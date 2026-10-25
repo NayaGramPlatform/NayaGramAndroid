@@ -1,5 +1,5 @@
-import org.telegram.messenger.NotificationCenter;
 package org.telegram.ui;
+import org.telegram.messenger.NotificationCenter;
 
 import org.nayagram.platform.ui.NayaAboutActivity;
 
