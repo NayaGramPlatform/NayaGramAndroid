@@ -406,7 +406,7 @@ public class NGHubActivity extends BaseFragment {
         layout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(14));
 
         TextView header = new TextView(context);
-        header.setText("Switch Account (" + UserConfig.getActivatedAccountsCount() + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
+        header.setText("👥 Switch Account (" + UserConfig.getActivatedAccountsCount() + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
         header.setTextSize(17);
         header.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         header.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
@@ -437,7 +437,7 @@ public class NGHubActivity extends BaseFragment {
             av.setRoundRadius(AndroidUtilities.dp(14));
             av.getImageReceiver().setCurrentAccount(accountIndex);
             av.setForUserOrChat(user, ad);
-            row.addView(av, LayoutHelper.createLinear(34, 34, Gravity.CENTER_VERTICAL, 0, 0, 10, 0));
+            row.addView(av, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 10, 0));
 
             LinearLayout textCol = new LinearLayout(context);
             textCol.setOrientation(LinearLayout.VERTICAL);
@@ -449,7 +449,7 @@ public class NGHubActivity extends BaseFragment {
             textCol.addView(uName);
 
             TextView uStatus = new TextView(context);
-            uStatus.setText(isActive ? "Currently Active" : (user != null && user.username != null && !user.username.isEmpty() ? "@" + user.username : "Account #" + (accountIndex + 1)));
+            uStatus.setText(isActive ? "Active Account" : (user != null && user.username != null && !user.username.isEmpty() ? "@" + user.username : "Account #" + (accountIndex + 1)));
             uStatus.setTextSize(11);
             uStatus.setTextColor(isActive ? 0xFF0284C7 : Theme.getColor(Theme.key_dialogTextGray2));
             textCol.addView(uStatus);
@@ -457,12 +457,17 @@ public class NGHubActivity extends BaseFragment {
             row.addView(textCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
 
             if (isActive) {
-                TextView check = new TextView(context);
-                check.setText("✓");
-                check.setTextSize(18);
-                check.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-                check.setTextColor(0xFF0284C7);
-                row.addView(check, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT));
+                TextView checkBadge = new TextView(context);
+                checkBadge.setText("✓");
+                checkBadge.setTextSize(14);
+                checkBadge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                checkBadge.setTextColor(Color.WHITE);
+                checkBadge.setGravity(Gravity.CENTER);
+                GradientDrawable checkBg = new GradientDrawable();
+                checkBg.setColor(0xFF0284C7);
+                checkBg.setCornerRadius(AndroidUtilities.dp(12));
+                checkBadge.setBackground(checkBg);
+                row.addView(checkBadge, LayoutHelper.createLinear(24, 24, Gravity.CENTER_VERTICAL));
             }
 
             row.setOnClickListener(v -> {
@@ -477,47 +482,109 @@ public class NGHubActivity extends BaseFragment {
             list.addView(row, lp);
         }
 
-        layout.addView(scroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, AndroidUtilities.dp(240), 0, 0, 0, 10));
+        layout.addView(scroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, AndroidUtilities.dp(280), 0, 0, 0, 10));
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setView(layout);
-        builder.setPositiveButton("Add Account", (d, w) -> {
-            int freeAccount = -1;
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                if (!UserConfig.getInstance(a).isClientActivated()) {
-                    freeAccount = a;
-                    break;
-                }
-            }
-            if (freeAccount >= 0) {
-                final int targetAccount = freeAccount;
-                AlertDialog.Builder addBuilder = new AlertDialog.Builder(getParentActivity());
-                addBuilder.setTitle(LocaleController.getString("AddAccount", R.string.AddAccount));
-                CharSequence[] options = new CharSequence[] {
-                    "Log in with phone number",
-                    LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
-                };
-                int[] icons = new int[] {
-                    R.drawable.outline_add_account,
-                    R.drawable.msg_bot
-                };
-                addBuilder.setItems(options, icons, (ad, which) -> {
-                    if (which == 0) {
-                        presentFragment(new LoginActivity(targetAccount));
-                    } else {
-                        org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(NGHubActivity.this, targetAccount);
-                    }
-                });
-                addBuilder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                showDialog(addBuilder.create());
-            } else {
-                Toast.makeText(context, "Maximum 15 accounts reached", Toast.LENGTH_SHORT).show();
-            }
-        });
+        builder.setPositiveButton("Add Account", (d, w) -> showAddAccountDialog(context));
         builder.setNegativeButton("Close", (d, w) -> d.dismiss());
-
         dialogHolder[0] = builder.create();
         dialogHolder[0].show();
+    }
+
+    private void showAddAccountDialog(Context context) {
+        int freeAccount = -1;
+        for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+            if (!UserConfig.getInstance(a).isClientActivated()) {
+                freeAccount = a;
+                break;
+            }
+        }
+        if (freeAccount < 0) {
+            Toast.makeText(context, "Maximum 15 accounts reached", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final int targetAccount = freeAccount;
+        LinearLayout addLayout = new LinearLayout(context);
+        addLayout.setOrientation(LinearLayout.VERTICAL);
+        addLayout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(16));
+
+        TextView addHeader = new TextView(context);
+        addHeader.setText("➕ Add Account / একাউন্ট যোগ করুন");
+        addHeader.setTextSize(17);
+        addHeader.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        addHeader.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+        addLayout.addView(addHeader, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
+
+        final AlertDialog[] addDialogHolder = new AlertDialog[1];
+
+        // Card 1: Phone Login
+        LinearLayout phoneCard = new LinearLayout(context);
+        phoneCard.setOrientation(LinearLayout.VERTICAL);
+        phoneCard.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+        boolean dark = Theme.isCurrentThemeDark();
+        GradientDrawable phoneBg = new GradientDrawable();
+        phoneBg.setColor(dark ? 0xFF1E293B : 0xFFE0F2FE);
+        phoneBg.setCornerRadius(AndroidUtilities.dp(14));
+        phoneBg.setStroke(AndroidUtilities.dp(1), 0xFF0284C7);
+        phoneCard.setBackground(phoneBg);
+
+        TextView phoneTitle = new TextView(context);
+        phoneTitle.setText("📱 Phone Number Login (ফোন নম্বর দিয়ে লগইন)");
+        phoneTitle.setTextSize(14);
+        phoneTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        phoneTitle.setTextColor(0xFF0284C7);
+        phoneCard.addView(phoneTitle);
+
+        TextView phoneSub = new TextView(context);
+        phoneSub.setText("Standard Telegram SMS code / phone login verification");
+        phoneSub.setTextSize(12);
+        phoneSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
+        phoneCard.addView(phoneSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+        phoneCard.setOnClickListener(v -> {
+            if (addDialogHolder[0] != null) addDialogHolder[0].dismiss();
+            presentFragment(new LoginActivity(targetAccount));
+        });
+
+        addLayout.addView(phoneCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+        // Card 2: Bot Token Login
+        LinearLayout botCard = new LinearLayout(context);
+        botCard.setOrientation(LinearLayout.VERTICAL);
+        botCard.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+        GradientDrawable botBg = new GradientDrawable();
+        botBg.setColor(dark ? 0xFF1E293B : 0xFFF3E8FF);
+        botBg.setCornerRadius(AndroidUtilities.dp(14));
+        botBg.setStroke(AndroidUtilities.dp(1), 0xFF9333EA);
+        botCard.setBackground(botBg);
+
+        TextView botTitle = new TextView(context);
+        botTitle.setText("🤖 Bot Token Login (বট টোকেন দিয়ে লগইন)");
+        botTitle.setTextSize(14);
+        botTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        botTitle.setTextColor(0xFF9333EA);
+        botCard.addView(botTitle);
+
+        TextView botSub = new TextView(context);
+        botSub.setText("Instant BotFather API token login into NayaGram");
+        botSub.setTextSize(12);
+        botSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
+        botCard.addView(botSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+        botCard.setOnClickListener(v -> {
+            if (addDialogHolder[0] != null) addDialogHolder[0].dismiss();
+            org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(NGHubActivity.this, targetAccount);
+        });
+
+        addLayout.addView(botCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+        AlertDialog.Builder addBuilder = new AlertDialog.Builder(getParentActivity());
+        addBuilder.setView(addLayout);
+        addBuilder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+        addDialogHolder[0] = addBuilder.create();
+        addDialogHolder[0].show();
     }
 
     private View buildShortcuts(Context context) {

@@ -1052,6 +1052,8 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), null);
         layout.setAnimation(R.raw.copy, 36, 36, "NULL ROTATION", "Back", "Front");
+        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF0284C7, android.graphics.PorterDuff.Mode.SRC_IN));
+        layout.textView.setTextColor(0xFF0EA5E9);
         layout.textView.setText(message);
         return create(layout, Bulletin.DURATION_SHORT);
     }
@@ -1082,6 +1084,8 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.voip_invite, 36, 36, "Wibe", "Circle");
+        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF0284C7, android.graphics.PorterDuff.Mode.SRC_IN));
+        layout.textView.setTextColor(0xFF0EA5E9);
         layout.textView.setText(text);
         return create(layout, Bulletin.DURATION_SHORT);
     }

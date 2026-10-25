@@ -2,16 +2,25 @@ package org.nayagram.platform.textstyle;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StrikethroughSpan;
 import android.text.style.StyleSpan;
 import android.text.style.TypefaceSpan;
+import android.text.style.UnderlineSpan;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
@@ -28,6 +37,7 @@ import java.util.List;
  * Matches Novagram's Text Style feature:
  * - Allows users to pick a default persistent font/entity style (Regular, Spoiler, Bold, Italic, Mono, Strikethrough, Underline, Quote).
  * - Ticking any style automatically formats outgoing messages without having to select text and reformat each time.
+ * - Includes PC/Desktop keyboard shortcut guide.
  */
 public final class NGTextStyleHelper {
 
@@ -124,17 +134,15 @@ public final class NGTextStyleHelper {
     }
 
     /**
-     * Displays the "Text style" selection dialog matching Novagram's UI.
+     * Displays the "Text style" selection dialog matching Novagram's UI,
+     * with vibrant labels, instant selection persistence, and PC shortcuts.
      */
     public static void showDialog(Context context) {
         if (context == null) return;
 
-        LinearLayout layout = new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(8), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
-
-        RadioGroup radioGroup = new RadioGroup(context);
-        radioGroup.setOrientation(RadioGroup.VERTICAL);
+        LinearLayout root = new LinearLayout(context);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(12), AndroidUtilities.dp(20), AndroidUtilities.dp(12));
 
         int current = getSelectedStyle();
         int checkedIndex = 0;
@@ -145,66 +153,144 @@ public final class NGTextStyleHelper {
             }
         }
 
+        RadioGroup radioGroup = new RadioGroup(context);
+        radioGroup.setOrientation(RadioGroup.VERTICAL);
+
         List<CharSequence> labels = buildStyledLabels();
         for (int i = 0; i < labels.size(); i++) {
+            final int index = i;
             RadioButton rb = new RadioButton(context);
             rb.setText(labels.get(i));
-            rb.setTextSize(16);
-            rb.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
-            rb.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(12), 0, AndroidUtilities.dp(12));
-            rb.setId(i);
-            rb.setChecked(i == checkedIndex);
+            rb.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
+            rb.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
+            rb.setId(1000 + i);
+            if (i == checkedIndex) {
+                rb.setChecked(true);
+            }
+            rb.setOnClickListener(v -> {
+                setSelectedStyle(RADIO_STYLES[index]);
+                Toast.makeText(context, "Saved: " + STYLE_NAMES[index], Toast.LENGTH_SHORT).show();
+            });
             radioGroup.addView(rb, new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         ScrollView scroll = new ScrollView(context);
         scroll.addView(radioGroup);
-        layout.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(220)));
+
+        // Add Computer / Keyboard Shortcuts section
+        View keyboardGuideCard = buildKeyboardShortcutCard(context);
+        LinearLayout.LayoutParams guideParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        guideParams.topMargin = AndroidUtilities.dp(14);
+        root.addView(keyboardGuideCard, guideParams);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Text style");
         builder.setMessage("Select any style");
-        builder.setView(layout);
+        builder.setView(root);
         builder.setPositiveButton("Select", (d, w) -> {
             int selectedId = radioGroup.getCheckedRadioButtonId();
-            if (selectedId >= 0 && selectedId < RADIO_STYLES.length) {
-                int chosen = RADIO_STYLES[selectedId];
+            int idx = selectedId - 1000;
+            if (idx >= 0 && idx < RADIO_STYLES.length) {
+                int chosen = RADIO_STYLES[idx];
                 setSelectedStyle(chosen);
-                Toast.makeText(context, "Text style set to: " + STYLE_NAMES[selectedId], Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Text style set to: " + STYLE_NAMES[idx], Toast.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Close", (d, w) -> d.dismiss());
-
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
+    private static View buildKeyboardShortcutCard(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+
+        boolean isDark = Theme.isCurrentThemeDark();
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(isDark ? 0xFF1E293B : 0xFFF1F5F9);
+        gd.setCornerRadius(AndroidUtilities.dp(12));
+        gd.setStroke(AndroidUtilities.dp(1), isDark ? 0xFF334155 : 0xFFCBD5E1);
+        card.setBackground(gd);
+
+        TextView title = new TextView(context);
+        title.setText("💻 PC/Desktop Keyboard Shortcuts:");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+        card.addView(title);
+
+        String[] shortcuts = new String[]{
+            "Ctrl + B : Bold",
+            "Ctrl + I : Italic",
+            "Ctrl + U : Underline",
+            "Ctrl + Shift + M : Monospace",
+            "Ctrl + Shift + X : Strikethrough",
+            "Ctrl + Shift + P : Spoiler",
+            "Ctrl + Shift + > : Quote"
+        };
+
+        for (String s : shortcuts) {
+            TextView tv = new TextView(context);
+            tv.setText("• " + s);
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            tv.setTextColor(isDark ? 0xFF94A3B8 : 0xFF475569);
+            tv.setPadding(0, AndroidUtilities.dp(2), 0, 0);
+            card.addView(tv);
+        }
+
+        return card;
+    }
+
     private static List<CharSequence> buildStyledLabels() {
         List<CharSequence> list = new ArrayList<>();
-        list.add("Regular");
-        list.add("Spoiler");
 
-        SpannableStringBuilder bold = new SpannableStringBuilder("Bold");
+        // Regular
+        SpannableStringBuilder regular = new SpannableStringBuilder("Regular (সাধারণ)");
+        regular.setSpan(new ForegroundColorSpan(0xFF0EA5E9), 0, regular.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        list.add(regular);
+
+        // Spoiler
+        SpannableStringBuilder spoiler = new SpannableStringBuilder("Spoiler (স্পয়লার)");
+        spoiler.setSpan(new ForegroundColorSpan(0xFFF59E0B), 0, spoiler.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        list.add(spoiler);
+
+        // Bold
+        SpannableStringBuilder bold = new SpannableStringBuilder("Bold (বোল্ড)");
         bold.setSpan(new StyleSpan(Typeface.BOLD), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        bold.setSpan(new ForegroundColorSpan(0xFFEF4444), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(bold);
 
-        SpannableStringBuilder italic = new SpannableStringBuilder("Italic");
+        // Italic
+        SpannableStringBuilder italic = new SpannableStringBuilder("Italic (ইটালিক)");
         italic.setSpan(new StyleSpan(Typeface.ITALIC), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        italic.setSpan(new ForegroundColorSpan(0xFFA855F7), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(italic);
 
-        SpannableStringBuilder mono = new SpannableStringBuilder("Mono");
+        // Mono
+        SpannableStringBuilder mono = new SpannableStringBuilder("Mono (মনোস্পেস)");
         mono.setSpan(new TypefaceSpan("monospace"), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        mono.setSpan(new ForegroundColorSpan(0xFF10B981), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(mono);
 
-        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough");
-        strike.setSpan(new android.text.style.StrikethroughSpan(), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // Strikethrough
+        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough (মাঝখান কাটা)");
+        strike.setSpan(new StrikethroughSpan(), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        strike.setSpan(new ForegroundColorSpan(0xFFEC4899), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(strike);
 
-        SpannableStringBuilder underline = new SpannableStringBuilder("Underline");
-        underline.setSpan(new android.text.style.UnderlineSpan(), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // Underline
+        SpannableStringBuilder underline = new SpannableStringBuilder("Underline (নিচে দাগ)");
+        underline.setSpan(new UnderlineSpan(), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        underline.setSpan(new ForegroundColorSpan(0xFF3B82F6), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(underline);
 
-        list.add("Quote");
+        // Quote
+        SpannableStringBuilder quote = new SpannableStringBuilder("Quote (কোট)");
+        quote.setSpan(new ForegroundColorSpan(0xFF6366F1), 0, quote.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        list.add(quote);
+
         return list;
     }
 }

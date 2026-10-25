@@ -348,36 +348,22 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     private String getActionLabel(FeatureItem item) {
         if (item.number == 20) {
-            return currentLang == LANG_BN ? "স্ক্যান" : (currentLang == LANG_AR ? "فحص" : "SCAN");
+            return currentLang == LANG_BN ? "স্ক্যান ›" : (currentLang == LANG_AR ? "فحص ›" : "SCAN ›");
         }
         if (isImplementationPending(item)) {
-            return currentLang == LANG_BN ? "পরে" : (currentLang == LANG_AR ? "لاحقًا" : "SOON");
+            return currentLang == LANG_BN ? "পরে ›" : (currentLang == LANG_AR ? "لاحقًا" : "SOON");
         }
-        boolean enabled = isFeatureEnabled(item);
-        if (item.number == 3 && enabled) {
-            return currentLang == LANG_BN ? "সেট" : (currentLang == LANG_AR ? "ضبط" : "CONFIG");
-        }
-        if (enabled) {
-            return currentLang == LANG_BN ? "অন" : (currentLang == LANG_AR ? "مفعل" : "ON");
-        } else {
-            return currentLang == LANG_BN ? "অফ" : (currentLang == LANG_AR ? "معطل" : "OFF");
-        }
+        return currentLang == LANG_BN ? "বিবরণ ›" : (currentLang == LANG_AR ? "التفاصيل ›" : "Details ›");
     }
 
     private int getLabelTextColor(FeatureItem item) {
         if (item.number == 20) return 0xFF7C3AED;
-        if (isImplementationPending(item)) return 0xFF64748B;
-        boolean enabled = isFeatureEnabled(item);
-        if (item.number == 3 && enabled) return 0xFF0284C7;
-        return enabled ? 0xFF10B981 : 0xFF0284C7; // ON = Emerald Green, OFF = Royal Blue
+        return 0xFF0284C7;
     }
 
     private int getLabelBgColor(FeatureItem item) {
         if (item.number == 20) return 0x227C3AED;
-        if (isImplementationPending(item)) return 0x2264748B;
-        boolean enabled = isFeatureEnabled(item);
-        if (item.number == 3 && enabled) return 0x200EA5E9;
-        return enabled ? 0x2410B981 : 0x240284C7; // ON = Green Tint, OFF = Blue Tint
+        return 0x200EA5E9;
     }
 
     @Override
@@ -400,30 +386,19 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     }
 
     private void handleFeatureClick(FeatureItem item, int position) {
-        NayaConfig cfg = NayaConfig.getInstance();
-        if (cfg == null) return;
-
         if (item.number == 20) {
             showStorageDoctorScanDialog();
             return;
         }
-        if (isImplementationPending(item)) {
-            showFeatureDetailsDialog(item, position + 1);
-            return;
-        }
+        showFeatureDetailsDialog(item, position + 1);
+    }
 
-        if (item.number == 3 && cfg.isSmartAutoReply()) {
-            showAutoReplyConfigDialog();
-            return;
-        }
-
-        boolean newState = !isFeatureEnabled(item);
+    public void toggleFeatureState(FeatureItem item, boolean newState) {
+        NayaConfig cfg = NayaConfig.getInstance();
+        if (cfg == null) return;
         switch (item.number) {
             case 2: cfg.setMessageScheduler(newState); break;
-            case 3:
-                cfg.setSmartAutoReply(newState);
-                if (newState) showAutoReplyConfigDialog();
-                break;
+            case 3: cfg.setSmartAutoReply(newState); break;
             case 4: cfg.setStorySaverEnabled(newState); break;
             case 5: cfg.setAnonymousStories(newState); break;
             case 18: cfg.setDataSaverEnabled(newState); break;
@@ -431,16 +406,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
-        }
-
-        notifyItemChanged(position);
-
-        if (fragment != null) {
-            String status = newState ? "ON" : "OFF";
-            BulletinFactory.of(fragment).createSimpleBulletin(
-                    R.raw.done,
-                    item.getCatchyTitle(currentLang) + ": " + status
-            ).show();
         }
     }
 
