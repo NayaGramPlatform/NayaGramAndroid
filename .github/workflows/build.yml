@@ -69,30 +69,41 @@ jobs:
       - name: Decode or generate release keystore
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_KEY_STORE: ${{ secrets.RELEASE_KEY_STORE }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           set -e
           mkdir -p TMessagesProj/config
-          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
-          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
-          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
-          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
-            echo "Decoding release keystore from RELEASE_KEYSTORE_BASE64 secret..."
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > TMessagesProj/config/nayagrampro.jks
+          STORE_PASS=$(echo "${RELEASE_STORE_PASSWORD:-Naya\$Gram@2026&TGPremik}" | tr -d "\r\n")
+          KEY_PASS=$(echo "${RELEASE_KEY_PASSWORD:-$STORE_PASS}" | tr -d "\r\n")
+          KEY_ALIAS=$(echo "${RELEASE_KEY_ALIAS:-payagrampro_key}" | tr -d "\r\n")
+          B64_DATA="${RELEASE_KEYSTORE_BASE64:-$RELEASE_KEY_STORE}"
+          if [ -n "$B64_DATA" ]; then
+            echo "Decoding release keystore from Base64 secret..."
+            echo "$B64_DATA" | tr -d "\r\n " | base64 -d > TMessagesProj/config/nayagrampro.jks
             if ! keytool -list -keystore TMessagesProj/config/nayagrampro.jks -storepass "$STORE_PASS" -keypass "$KEY_PASS" >/dev/null 2>&1; then
-              echo "Warning: Unable to recover key with provided secrets. Auto-generating fresh valid release keystore..."
+              echo "Warning: Unable to recover key with provided secrets. Auto-generating fresh 38-year release keystore (13,880 days)..."
               rm -f TMessagesProj/config/nayagrampro.jks
-              keytool -genkeypair -v                -keystore TMessagesProj/config/nayagrampro.jks                -alias "$KEY_ALIAS"                -keyalg RSA -keysize 2048 -validity 10000                -storepass "$STORE_PASS" -keypass "$STORE_PASS"                -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
+              keytool -genkeypair -v \
+                -keystore TMessagesProj/config/nayagrampro.jks \
+                -alias "$KEY_ALIAS" \
+                -keyalg RSA -keysize 4096 -validity 13880 \
+                -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
+                -dname "CN=NayaGram, OU=NayaGram Mobile, O=NayaGram, L=Rangpur, ST=Rangpur, C=BD"
             fi
           else
-            echo "RELEASE_KEYSTORE_BASE64 secret not found. Auto-generating release keystore with alias '$KEY_ALIAS'..."
-            keytool -genkeypair -v              -keystore TMessagesProj/config/nayagrampro.jks              -alias "$KEY_ALIAS"              -keyalg RSA -keysize 2048 -validity 10000              -storepass "$STORE_PASS" -keypass "$STORE_PASS"              -dname "CN=NayaGram, OU=Engineering, O=NayaGram, L=Dhaka, S=Dhaka, C=BD"
+            echo "Keystore Base64 secret not provided. Auto-generating 38-year release keystore (13,880 days) with alias '$KEY_ALIAS'..."
+            keytool -genkeypair -v \
+              -keystore TMessagesProj/config/nayagrampro.jks \
+              -alias "$KEY_ALIAS" \
+              -keyalg RSA -keysize 4096 -validity 13880 \
+              -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
+              -dname "CN=NayaGram, OU=NayaGram Mobile, O=NayaGram, L=Rangpur, ST=Rangpur, C=BD"
           fi
           test -s TMessagesProj/config/nayagrampro.jks
           ls -la TMessagesProj/config/nayagrampro.jks
-
       - name: Clean Gradle and native build outputs
         run: |
           chmod +x gradlew
@@ -112,9 +123,9 @@ jobs:
           RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/TMessagesProj/config/nayagrampro.jks
         run: |
           set -e
-          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
-          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
-          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
+          STORE_PASS=$(echo "${RELEASE_STORE_PASSWORD:-Naya\$Gram@2026&TGPremik}" | tr -d "\r\n")
+          KEY_PASS=$(echo "${RELEASE_KEY_PASSWORD:-$STORE_PASS}" | tr -d "\r\n")
+          KEY_ALIAS=$(echo "${RELEASE_KEY_ALIAS:-payagrampro_key}" | tr -d "\r\n")
           chmod +x gradlew
           ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release \
             -PRELEASE_STORE_PASSWORD="$STORE_PASS" \
@@ -150,9 +161,9 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
         run: |
           set -e
-          STORE_PASS="${RELEASE_STORE_PASSWORD:-nayagram123}"
-          KEY_PASS="${RELEASE_KEY_PASSWORD:-$STORE_PASS}"
-          KEY_ALIAS="${RELEASE_KEY_ALIAS:-payagrampro_key}"
+          STORE_PASS=$(echo "${RELEASE_STORE_PASSWORD:-Naya\$Gram@2026&TGPremik}" | tr -d "\r\n")
+          KEY_PASS=$(echo "${RELEASE_KEY_PASSWORD:-$STORE_PASS}" | tr -d "\r\n")
+          KEY_ALIAS=$(echo "${RELEASE_KEY_ALIAS:-payagrampro_key}" | tr -d "\r\n")
           curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           if [ -z "$AAB_FILE" ]; then
