@@ -275,6 +275,14 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowThemeMode) {
                     int nextMode = (cfg.getAppThemeMode() + 1) % 3;
                     cfg.setAppThemeMode(nextMode);
+                    try {
+                        if (nextMode == NayaConfig.THEME_MODE_LIGHT) {
+                            Theme.applyTheme(Theme.getDefaultTheme(), true, false, false);
+                        } else {
+                            Theme.applyTheme(Theme.getCurrentNightTheme(), true, false, true);
+                        }
+                        NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme);
+                    } catch (Throwable ignored) {}
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
                     String modeName = nextMode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (nextMode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Theme: " + modeName).show();

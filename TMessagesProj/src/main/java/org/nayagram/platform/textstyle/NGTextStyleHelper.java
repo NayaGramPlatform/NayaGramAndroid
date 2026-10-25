@@ -2,7 +2,6 @@ package org.nayagram.platform.textstyle;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.SpannableStringBuilder;
@@ -25,6 +24,7 @@ import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
+import org.telegram.messenger.LocaleController;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.EditTextCaption;
@@ -36,7 +36,8 @@ import java.util.List;
  * NGTextStyleHelper - Persistent Text Formatting & Auto-Styler.
  * Matches Novagram's Text Style feature:
  * - Allows users to pick a default persistent font/entity style (Regular, Spoiler, Bold, Italic, Mono, Strikethrough, Underline, Quote).
- * - Ticking any style automatically formats outgoing messages without having to select text and reformat each time.
+ * - Automatically formats outgoing messages.
+ * - Clean English labels (Bengali only when language is set to 'bn').
  * - Includes PC/Desktop keyboard shortcut guide.
  */
 public final class NGTextStyleHelper {
@@ -135,7 +136,7 @@ public final class NGTextStyleHelper {
 
     /**
      * Displays the "Text style" selection dialog matching Novagram's UI,
-     * with vibrant labels, instant selection persistence, and PC shortcuts.
+     * with clean labels, instant selection persistence, and PC shortcuts.
      */
     public static void showDialog(Context context) {
         if (context == null) return;
@@ -162,7 +163,7 @@ public final class NGTextStyleHelper {
             RadioButton rb = new RadioButton(context);
             rb.setText(labels.get(i));
             rb.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-            rb.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
+            rb.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
             rb.setId(1000 + i);
             if (i == checkedIndex) {
                 rb.setChecked(true);
@@ -176,12 +177,12 @@ public final class NGTextStyleHelper {
 
         ScrollView scroll = new ScrollView(context);
         scroll.addView(radioGroup);
-        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(220)));
+        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(210)));
 
         // Add Computer / Keyboard Shortcuts section
         View keyboardGuideCard = buildKeyboardShortcutCard(context);
         LinearLayout.LayoutParams guideParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        guideParams.topMargin = AndroidUtilities.dp(14);
+        guideParams.topMargin = AndroidUtilities.dp(12);
         root.addView(keyboardGuideCard, guideParams);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -215,20 +216,20 @@ public final class NGTextStyleHelper {
         card.setBackground(gd);
 
         TextView title = new TextView(context);
-        title.setText("💻 PC/Desktop Keyboard Shortcuts:");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        title.setText("💻 Desktop / PC Keyboard Shortcuts:");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
         card.addView(title);
 
         String[] shortcuts = new String[]{
-            "Ctrl + B : Bold",
-            "Ctrl + I : Italic",
-            "Ctrl + U : Underline",
-            "Ctrl + Shift + M : Monospace",
-            "Ctrl + Shift + X : Strikethrough",
-            "Ctrl + Shift + P : Spoiler",
-            "Ctrl + Shift + > : Quote"
+            "Ctrl + B  ›  Bold",
+            "Ctrl + I  ›  Italic",
+            "Ctrl + U  ›  Underline",
+            "Ctrl + Shift + M  ›  Monospace",
+            "Ctrl + Shift + X  ›  Strikethrough",
+            "Ctrl + Shift + P  ›  Spoiler",
+            "Ctrl + Shift + >  ›  Quote"
         };
 
         for (String s : shortcuts) {
@@ -245,50 +246,56 @@ public final class NGTextStyleHelper {
 
     private static List<CharSequence> buildStyledLabels() {
         List<CharSequence> list = new ArrayList<>();
+        boolean isBn = false;
+        try {
+            if (LocaleController.getInstance() != null && LocaleController.getInstance().getCurrentLocale() != null) {
+                isBn = "bn".equalsIgnoreCase(LocaleController.getInstance().getCurrentLocale().getLanguage());
+            }
+        } catch (Throwable ignored) {}
 
         // Regular
-        SpannableStringBuilder regular = new SpannableStringBuilder("Regular (সাধারণ)");
+        SpannableStringBuilder regular = new SpannableStringBuilder("Regular" + (isBn ? " (সাধারণ)" : ""));
         regular.setSpan(new ForegroundColorSpan(0xFF0EA5E9), 0, regular.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(regular);
 
         // Spoiler
-        SpannableStringBuilder spoiler = new SpannableStringBuilder("Spoiler (স্পয়লার)");
-        spoiler.setSpan(new ForegroundColorSpan(0xFFF59E0B), 0, spoiler.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        SpannableStringBuilder spoiler = new SpannableStringBuilder("Spoiler" + (isBn ? " (স্পয়লার)" : ""));
+        spoiler.setSpan(new ForegroundColorSpan(0xFFD97706), 0, spoiler.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(spoiler);
 
         // Bold
-        SpannableStringBuilder bold = new SpannableStringBuilder("Bold (বোল্ড)");
+        SpannableStringBuilder bold = new SpannableStringBuilder("Bold" + (isBn ? " (বোল্ড)" : ""));
         bold.setSpan(new StyleSpan(Typeface.BOLD), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        bold.setSpan(new ForegroundColorSpan(0xFFEF4444), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        bold.setSpan(new ForegroundColorSpan(0xFF1D4ED8), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(bold);
 
         // Italic
-        SpannableStringBuilder italic = new SpannableStringBuilder("Italic (ইটালিক)");
+        SpannableStringBuilder italic = new SpannableStringBuilder("Italic" + (isBn ? " (ইটালিক)" : ""));
         italic.setSpan(new StyleSpan(Typeface.ITALIC), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        italic.setSpan(new ForegroundColorSpan(0xFFA855F7), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        italic.setSpan(new ForegroundColorSpan(0xFF7E22CE), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(italic);
 
         // Mono
-        SpannableStringBuilder mono = new SpannableStringBuilder("Mono (মনোস্পেস)");
+        SpannableStringBuilder mono = new SpannableStringBuilder("Mono" + (isBn ? " (মনোস্পেস)" : ""));
         mono.setSpan(new TypefaceSpan("monospace"), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        mono.setSpan(new ForegroundColorSpan(0xFF10B981), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        mono.setSpan(new ForegroundColorSpan(0xFF0D9488), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(mono);
 
         // Strikethrough
-        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough (মাঝখান কাটা)");
+        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough" + (isBn ? " (মাঝখান কাটা)" : ""));
         strike.setSpan(new StrikethroughSpan(), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        strike.setSpan(new ForegroundColorSpan(0xFFEC4899), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        strike.setSpan(new ForegroundColorSpan(0xFF475569), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(strike);
 
         // Underline
-        SpannableStringBuilder underline = new SpannableStringBuilder("Underline (নিচে দাগ)");
+        SpannableStringBuilder underline = new SpannableStringBuilder("Underline" + (isBn ? " (নিচে দাগ)" : ""));
         underline.setSpan(new UnderlineSpan(), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        underline.setSpan(new ForegroundColorSpan(0xFF3B82F6), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        underline.setSpan(new ForegroundColorSpan(0xFF0284C7), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(underline);
 
         // Quote
-        SpannableStringBuilder quote = new SpannableStringBuilder("Quote (কোট)");
-        quote.setSpan(new ForegroundColorSpan(0xFF6366F1), 0, quote.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        SpannableStringBuilder quote = new SpannableStringBuilder("Quote" + (isBn ? " (কোট)" : ""));
+        quote.setSpan(new ForegroundColorSpan(0xFF4338CA), 0, quote.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(quote);
 
         return list;

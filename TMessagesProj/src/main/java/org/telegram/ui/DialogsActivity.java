@@ -3263,7 +3263,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         // The actual Channels/Groups screen will be implemented in a separate step.
         if (!onlySelect && searchString == null && folderId == 0 && communityId == 0
                 && initialDialogsType == DIALOGS_TYPE_DEFAULT) {
-            ActionBarMenuItem ngHubItem = menu.addItem(9910, R.drawable.msg_add);
+            ActionBarMenuItem ngHubItem = menu.addItem(9910, R.drawable.msg_channel);
             ngHubItem.setContentDescription("NG Hub");
             org.telegram.ui.Components.RLottieImageView iconView = ngHubItem.getIconView();
             if (iconView != null) {
@@ -3274,9 +3274,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 circleBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
                 iconView.setBackground(circleBg);
                 iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
-                android.widget.FrameLayout.LayoutParams lp = LayoutHelper.createFrame(32, 32, Gravity.CENTER);
+                android.widget.FrameLayout.LayoutParams lp = LayoutHelper.createFrame(28, 28, Gravity.CENTER);
                 iconView.setLayoutParams(lp);
-                int pad = AndroidUtilities.dp(4);
+                int pad = AndroidUtilities.dp(5);
                 iconView.setPadding(pad, pad, pad, pad);
             }
             ngHubItem.setOnClickListener(v -> {

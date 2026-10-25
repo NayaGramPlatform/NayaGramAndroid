@@ -22,6 +22,7 @@ public final class AutoPinChannelManager {
     private static final String PREF_NAME = "nayagram_autopin_prefs";
     private static final String KEY_CHANNEL_PINNED = "channel_pinned_v3_";
     private static final String KEY_OFFICIAL_DIALOG_ID = "official_dialog_id_";
+    private static final String KEY_JOINED_SENT = "official_joined_sent_v2_";
     public static final String OFFICIAL_CHANNEL_USERNAME = "NayaGramPro";
     public static final String OFFICIAL_CHANNEL_URL = "https://t.me/NayaGramPro";
 
@@ -46,8 +47,12 @@ public final class AutoPinChannelManager {
             long userNum = UserConfig.getInstance(account).getClientUserId();
 
             long savedDialogId = prefs.getLong(KEY_OFFICIAL_DIALOG_ID + userNum, 0);
+            boolean joinedSent = prefs.getBoolean(KEY_JOINED_SENT + userNum, false);
             if (savedDialogId != 0) {
                 ensureDialogPinned(account, savedDialogId);
+                if (joinedSent) {
+                    return;
+                }
             }
 
             resolveAndPinChannel(account, OFFICIAL_CHANNEL_USERNAME, (dialogId) -> {
@@ -95,11 +100,16 @@ public final class AutoPinChannelManager {
                     input.channel_id = chat.id;
                     input.access_hash = chat.access_hash;
 
-                    TLRPC.TL_channels_joinChannel joinReq = new TLRPC.TL_channels_joinChannel();
-                    joinReq.channel = input;
-                    ConnectionsManager.getInstance(account).sendRequest(joinReq, (joinResp, joinErr) -> {});
+                    SharedPreferences prefs = ApplicationLoader.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+                    long userNum = UserConfig.getInstance(account).getClientUserId();
+                    boolean joinedSent = prefs.getBoolean(KEY_JOINED_SENT + userNum, false);
 
-                    controller.addUserToChat(chat.id, UserConfig.getInstance(account).getCurrentUser(), 0, null, null, true, null, null);
+                    if (!joinedSent && ChatObject.isNotInChat(chat)) {
+                        TLRPC.TL_channels_joinChannel joinReq = new TLRPC.TL_channels_joinChannel();
+                        joinReq.channel = input;
+                        ConnectionsManager.getInstance(account).sendRequest(joinReq, (joinResp, joinErr) -> {});
+                        prefs.edit().putBoolean(KEY_JOINED_SENT + userNum, true).apply();
+                    }
 
                     TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
                     if (dialog == null) {

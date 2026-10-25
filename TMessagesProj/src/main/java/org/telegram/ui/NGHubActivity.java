@@ -405,8 +405,9 @@ public class NGHubActivity extends BaseFragment {
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(14));
 
+        int activatedCount = UserConfig.getActivatedAccountsCount();
         TextView header = new TextView(context);
-        header.setText("👥 Switch Account (" + UserConfig.getActivatedAccountsCount() + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
+        header.setText("👥 Switch Account (" + activatedCount + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
         header.setTextSize(17);
         header.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         header.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
@@ -482,7 +483,8 @@ public class NGHubActivity extends BaseFragment {
             list.addView(row, lp);
         }
 
-        layout.addView(scroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, AndroidUtilities.dp(280), 0, 0, 0, 10));
+        int containerHeight = activatedCount > 5 ? AndroidUtilities.dp(240) : ViewGroup.LayoutParams.WRAP_CONTENT;
+        layout.addView(scroll, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, containerHeight, 0, 0, 0, 10));
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setView(layout);
@@ -505,13 +507,20 @@ public class NGHubActivity extends BaseFragment {
             return;
         }
 
+        boolean isBn = false;
+        try {
+            if (LocaleController.getInstance() != null && LocaleController.getInstance().getCurrentLocale() != null) {
+                isBn = "bn".equalsIgnoreCase(LocaleController.getInstance().getCurrentLocale().getLanguage());
+            }
+        } catch (Throwable ignored) {}
+
         final int targetAccount = freeAccount;
         LinearLayout addLayout = new LinearLayout(context);
         addLayout.setOrientation(LinearLayout.VERTICAL);
         addLayout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(16));
 
         TextView addHeader = new TextView(context);
-        addHeader.setText("➕ Add Account / একাউন্ট যোগ করুন");
+        addHeader.setText(isBn ? "➕ একাউন্ট যোগ করুন" : "➕ Add Account");
         addHeader.setTextSize(17);
         addHeader.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addHeader.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
@@ -531,14 +540,14 @@ public class NGHubActivity extends BaseFragment {
         phoneCard.setBackground(phoneBg);
 
         TextView phoneTitle = new TextView(context);
-        phoneTitle.setText("📱 Phone Number Login (ফোন নম্বর দিয়ে লগইন)");
+        phoneTitle.setText(isBn ? "📱 ফোন নম্বর দিয়ে লগইন" : "📱 Phone Number Login");
         phoneTitle.setTextSize(14);
         phoneTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         phoneTitle.setTextColor(0xFF0284C7);
         phoneCard.addView(phoneTitle);
 
         TextView phoneSub = new TextView(context);
-        phoneSub.setText("Standard Telegram SMS code / phone login verification");
+        phoneSub.setText(isBn ? "টেলিগ্রামের এসএমএস কোড বা ফোন ভেরিফিকেশন" : "Standard Telegram SMS code / phone verification");
         phoneSub.setTextSize(12);
         phoneSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
         phoneCard.addView(phoneSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
@@ -561,14 +570,14 @@ public class NGHubActivity extends BaseFragment {
         botCard.setBackground(botBg);
 
         TextView botTitle = new TextView(context);
-        botTitle.setText("🤖 Bot Token Login (বট টোকেন দিয়ে লগইন)");
+        botTitle.setText(isBn ? "🤖 বট টোকেন দিয়ে লগইন" : "🤖 Bot Token Login");
         botTitle.setTextSize(14);
         botTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         botTitle.setTextColor(0xFF9333EA);
         botCard.addView(botTitle);
 
         TextView botSub = new TextView(context);
-        botSub.setText("Instant BotFather API token login into NayaGram");
+        botSub.setText(isBn ? "বটফাদার এপিআই টোকেন দিয়ে ইনস্ট্যান্ট লগইন" : "Instant BotFather API token login into NayaGram");
         botSub.setTextSize(12);
         botSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
         botCard.addView(botSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));

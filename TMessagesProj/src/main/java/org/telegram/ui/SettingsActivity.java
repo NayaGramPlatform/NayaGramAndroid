@@ -853,25 +853,92 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 }
                 if (freeAccount >= 0) {
                     final int targetAccount = freeAccount;
-                    AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
-                    builder.setTitle(getString(R.string.AddAccount));
-                    CharSequence[] options = new CharSequence[] {
-                        "Log in with phone number",
-                        LocaleController.getString("LogInWithBotToken", R.string.LogInWithBotToken)
-                    };
-                    int[] icons = new int[] {
-                        R.drawable.outline_add_account,
-                        R.drawable.msg_bot
-                    };
-                    builder.setItems(options, icons, (dialog, which) -> {
-                        if (which == 0) {
-                            presentFragment(new LoginActivity(targetAccount));
-                        } else {
-                            org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(SettingsActivity.this, targetAccount);
+                    boolean isBn = false;
+                    try {
+                        if (LocaleController.getInstance() != null && LocaleController.getInstance().getCurrentLocale() != null) {
+                            isBn = "bn".equalsIgnoreCase(LocaleController.getInstance().getCurrentLocale().getLanguage());
                         }
+                    } catch (Throwable ignored) {}
+
+                    LinearLayout addLayout = new LinearLayout(getParentActivity());
+                    addLayout.setOrientation(LinearLayout.VERTICAL);
+                    addLayout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(16), AndroidUtilities.dp(20), AndroidUtilities.dp(16));
+
+                    TextView addHeader = new TextView(getParentActivity());
+                    addHeader.setText(isBn ? "➕ একাউন্ট যোগ করুন" : "➕ Add Account");
+                    addHeader.setTextSize(17);
+                    addHeader.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                    addHeader.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
+                    addLayout.addView(addHeader, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
+
+                    final AlertDialog[] addDialogHolder = new AlertDialog[1];
+
+                    // Card 1: Phone Login
+                    LinearLayout phoneCard = new LinearLayout(getParentActivity());
+                    phoneCard.setOrientation(LinearLayout.VERTICAL);
+                    phoneCard.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+                    boolean dark = Theme.isCurrentThemeDark();
+                    GradientDrawable phoneBg = new GradientDrawable();
+                    phoneBg.setColor(dark ? 0xFF1E293B : 0xFFE0F2FE);
+                    phoneBg.setCornerRadius(AndroidUtilities.dp(14));
+                    phoneBg.setStroke(AndroidUtilities.dp(1), 0xFF0284C7);
+                    phoneCard.setBackground(phoneBg);
+
+                    TextView phoneTitle = new TextView(getParentActivity());
+                    phoneTitle.setText(isBn ? "📱 ফোন নম্বর দিয়ে লগইন" : "📱 Phone Number Login");
+                    phoneTitle.setTextSize(14);
+                    phoneTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                    phoneTitle.setTextColor(0xFF0284C7);
+                    phoneCard.addView(phoneTitle);
+
+                    TextView phoneSub = new TextView(getParentActivity());
+                    phoneSub.setText(isBn ? "টেলিগ্রামের এসএমএস কোড বা ফোন ভেরিফিকেশন" : "Standard Telegram SMS code / phone verification");
+                    phoneSub.setTextSize(12);
+                    phoneSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
+                    phoneCard.addView(phoneSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+                    phoneCard.setOnClickListener(v -> {
+                        if (addDialogHolder[0] != null) addDialogHolder[0].dismiss();
+                        presentFragment(new LoginActivity(targetAccount));
                     });
-                    builder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
-                    showDialog(builder.create());
+
+                    addLayout.addView(phoneCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
+
+                    // Card 2: Bot Token Login
+                    LinearLayout botCard = new LinearLayout(getParentActivity());
+                    botCard.setOrientation(LinearLayout.VERTICAL);
+                    botCard.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+                    GradientDrawable botBg = new GradientDrawable();
+                    botBg.setColor(dark ? 0xFF1E293B : 0xFFF3E8FF);
+                    botBg.setCornerRadius(AndroidUtilities.dp(14));
+                    botBg.setStroke(AndroidUtilities.dp(1), 0xFF9333EA);
+                    botCard.setBackground(botBg);
+
+                    TextView botTitle = new TextView(getParentActivity());
+                    botTitle.setText(isBn ? "🤖 বট টোকেন দিয়ে লগইন" : "🤖 Bot Token Login");
+                    botTitle.setTextSize(14);
+                    botTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                    botTitle.setTextColor(0xFF9333EA);
+                    botCard.addView(botTitle);
+
+                    TextView botSub = new TextView(getParentActivity());
+                    botSub.setText(isBn ? "বটফাদার এপিআই টোকেন দিয়ে ইনস্ট্যান্ট লগইন" : "Instant BotFather API token login into NayaGram");
+                    botSub.setTextSize(12);
+                    botSub.setTextColor(dark ? 0xFF94A3B8 : 0xFF475569);
+                    botCard.addView(botSub, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+
+                    botCard.setOnClickListener(v -> {
+                        if (addDialogHolder[0] != null) addDialogHolder[0].dismiss();
+                        org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(SettingsActivity.this, targetAccount);
+                    });
+
+                    addLayout.addView(botCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+                    AlertDialog.Builder addBuilder = new AlertDialog.Builder(getParentActivity());
+                    addBuilder.setView(addLayout);
+                    addBuilder.setNegativeButton(LocaleController.getString("Cancel", R.string.Cancel), null);
+                    addDialogHolder[0] = addBuilder.create();
+                    showDialog(addDialogHolder[0]);
                 }
                 break;
             }
