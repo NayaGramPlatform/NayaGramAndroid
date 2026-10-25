@@ -1,3 +1,4 @@
+import org.telegram.messenger.NotificationCenter;
 package org.telegram.ui;
 
 import org.nayagram.platform.ui.NayaAboutActivity;
@@ -277,9 +278,9 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setAppThemeMode(nextMode);
                     try {
                         if (nextMode == NayaConfig.THEME_MODE_LIGHT) {
-                            Theme.applyTheme(Theme.getDefaultTheme(), true, false, false);
+                            Theme.applyTheme(Theme.getDefaultTheme());
                         } else {
-                            Theme.applyTheme(Theme.getCurrentNightTheme(), true, false, true);
+                            Theme.applyTheme(Theme.getCurrentNightTheme(), true);
                         }
                         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.needSetDayNightTheme);
                     } catch (Throwable ignored) {}
