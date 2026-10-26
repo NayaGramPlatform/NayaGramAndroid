@@ -91,7 +91,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         addCard.setBackground(createCardBg(Theme.isCurrentThemeDark() ? 0xFF1E293B : 0xFFFFFFFF, 0xFF0284C7, 16));
 
         TextView addTitle = new TextView(context);
-        addTitle.setText("➕ Add New Account");
+        addTitle.setText("➕ Add Account");
         addTitle.setTextSize(15);
         addTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addTitle.setTextColor(0xFF0284C7);
@@ -104,7 +104,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         addCard.addView(addDesc, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
 
         TextView addBtn = new TextView(context);
-        addBtn.setText("Add Account Options");
+        addBtn.setText("Add Account");
         addBtn.setTextSize(14);
         addBtn.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         addBtn.setTextColor(Color.WHITE);
@@ -203,23 +203,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
             BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "Maximum 15 accounts limit reached").show();
             return;
         }
-
-        final int targetAccount = freeAccount;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("➕ Add Account Option");
-        CharSequence[] options = new CharSequence[] {
-            "📱 Phone Number Login",
-            "🤖 Bot Token Login"
-        };
-        builder.setItems(options, (dialog, which) -> {
-            if (which == 0) {
-                presentFragment(new LoginActivity(targetAccount));
-            } else if (which == 1) {
-                org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(NGAccountSwitcherActivity.this, targetAccount);
-            }
-        });
-        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-        showDialog(builder.create());
+        presentFragment(new LoginActivity(freeAccount));
     }
 
     private GradientDrawable createCardBg(int bgColor, int borderColor, int radiusDp) {
