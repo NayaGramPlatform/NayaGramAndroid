@@ -20,6 +20,18 @@ import java.util.Locale;
 
 public class UserObject {
 
+    public static boolean isVerified(TLRPC.User user) {
+        if (user == null) return false;
+        if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled) {
+            if (user.id == UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId()) {
+                return true;
+            }
+        }
+        return user.verified;
+    }
+
+
+
     public static final long REPLY_BOT = 1271266957L;
     public static final long ANONYMOUS = 2666000L;
     public static final long VERIFY = 489000L;
