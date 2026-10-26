@@ -1052,11 +1052,9 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.copy, 36, 36, "NULL ROTATION", "Back", "Front");
-        boolean dark = Theme.isCurrentThemeDark();
-        int iconColor = dark ? 0xFF38BDF8 : 0xFF0284C7;
-        int textColor = dark ? 0xFFF8FAFC : 0xFF0F172A;
-        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
-        layout.textView.setTextColor(textColor);
+        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF1E293B));
+        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF38BDF8, android.graphics.PorterDuff.Mode.SRC_IN));
+        layout.textView.setTextColor(0xFFFFFFFF);
         layout.textView.setText(message);
         return create(layout, Bulletin.DURATION_SHORT);
     }
@@ -1087,8 +1085,9 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.voip_invite, 36, 36, "Wibe", "Circle");
-        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF0284C7, android.graphics.PorterDuff.Mode.SRC_IN));
-        layout.textView.setTextColor(0xFF0EA5E9);
+        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF1E293B));
+        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF38BDF8, android.graphics.PorterDuff.Mode.SRC_IN));
+        layout.textView.setTextColor(0xFFFFFFFF);
         layout.textView.setText(text);
         return create(layout, Bulletin.DURATION_SHORT);
     }

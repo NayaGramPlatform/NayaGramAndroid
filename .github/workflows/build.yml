@@ -104,6 +104,13 @@ jobs:
           fi
           test -s TMessagesProj/config/nayagrampro.jks
           ls -la TMessagesProj/config/nayagrampro.jks
+      - name: Print Build Version Info
+        run: |
+          echo "=================================================="
+          echo " NayaGram v2.1.4 NG - Build 4018 "
+          echo " Target SDK: 36 | Min SDK: 24 (Google Play Compliant)"
+          echo "=================================================="
+
       - name: Clean Gradle and native build outputs
         run: |
           chmod +x gradlew
