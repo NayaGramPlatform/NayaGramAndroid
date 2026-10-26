@@ -242,13 +242,18 @@ public class NGSettingsActivity extends BaseFragment {
                 boolean checked = !cell.isChecked();
 
                 if (position == rowVerifiedBadge) {
-                cfg.isVerifiedBadgeEnabled = !cfg.isVerifiedBadgeEnabled;
-                if (view instanceof TextCheckCell) {
-                    ((TextCheckCell) view).setChecked(cfg.isVerifiedBadgeEnabled);
-                }
-                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
-            } else if (position == rowVerifiedBadge) {
-                    checkCell.setTextAndCheck("Blue Verified Badge", "Show blue checkmark verification badge on profile", cfg.isVerifiedBadgeEnabled, true);
+                    cfg.isVerifiedBadgeEnabled = checked;
+                    cell.setChecked(checked);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Blue Verified Badge: " + (checked ? "Enabled" : "Disabled")).show();
+                } else if (position == rowVerifiedBadge) {
+                    cell.setFeature(
+                        R.drawable.outline_shield_check,
+                        "Blue Verified Badge",
+                        "Show blue checkmark verification badge on profile and name",
+                        cfg.isVerifiedBadgeEnabled,
+                        true
+                    );
                 } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
                     cell.setChecked(checked);
