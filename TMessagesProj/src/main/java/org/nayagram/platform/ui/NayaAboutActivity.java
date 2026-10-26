@@ -542,7 +542,7 @@ public class NayaAboutActivity extends BaseFragment {
         FrameLayout wrap = new FrameLayout(context);
         GradientDrawable bg = new GradientDrawable();
         bg.setCornerRadius(AndroidUtilities.dp(sizeDp * 0.28f));
-        bg.setColor(Color.argb(28, Color.red(color), Color.green(color), Color.blue(color)));
+        bg.setColor(Color.argb(55, Color.red(color), Color.green(color), Color.blue(color)));
         wrap.setBackground(bg);
         ImageView icon = new ImageView(context);
         try {

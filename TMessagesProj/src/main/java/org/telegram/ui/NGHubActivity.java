@@ -399,6 +399,8 @@ public class NGHubActivity extends BaseFragment {
     }
 
     private void showAccountSwitchDialog(Context context) {
+        presentFragment(new org.nayagram.platform.ui.NGAccountSwitcherActivity());
+        if (true) return;
         if (context == null || getParentActivity() == null) return;
 
         LinearLayout layout = new LinearLayout(context);
@@ -974,7 +976,7 @@ public class NGHubActivity extends BaseFragment {
                         "bn", "বাংলা", "এনজি হাব",
                         "এনজি হাব আপনার নিজের তৈরি চ্যানেল, গ্রুপ ও বট, আর প্রোফাইল ও কন্টাক্ট লিস্টের একটি ব্যক্তিগত ঘর।",
                         "🎯 উদ্দেশ্য", "নিজের টেলিগ্রাম জায়গাগুলো এক স্ক্রিনে রাখা, এবং অন্যের কমিউনিটিকে নিজের বলে না দেখানো।",
-                        "✨ এটি যা করে", "এই অ্যাকাউন্টের তৈরি চ্যানেল ও গ্রুপ দেখায়, প্রোফাইল ও কন্টাক্ট লিস্ট খোলে, এবং বটের জন্য অফিসিয়াল বটফাদার খোলে।",
+                        "এটি যা করে", "এই অ্যাকাউন্টের তৈরি চ্যানেল ও গ্রুপ দেখায়, প্রোফাইল ও কন্টাক্ট লিস্ট খোলে, এবং বটের জন্য অফিসিয়াল বটফাদার খোলে।",
                         "🛡️ এটি যা করে না", "মিথ্যা চ্যানেল বা গ্রুপ বানায় না, এবং অন্য কারও কমিউনিটিকে আপনার বলে না।",
                         "🚀 সর্বশেষ আপডেট ও নতুন সুবিধাসমূহ", "• এনজি হাব থেকে সরাসরি দ্রুত অ্যাকাউন্ট সুইচ ও ১৫টি অ্যাকাউন্ট সাপোর্ট।\n• অ্যাড অ্যাকাউন্ট ও লগইন স্ক্রিন থেকে সরাসরি বট টোকেন দিয়ে লগইন।\n• চ্যাটে স্থায়ী টেক্সট স্টাইলার (বোল্ড, ইটালিক, স্পয়লার, মনো, কোট)।\n• ডিটেইলস ও টিউটোরিয়ালের উপরে এক কোণে দ্রুত ভাষা পরিবর্তনের বাটন।\n• নোভাগ্রাম স্টাইল ফোল্ডার কার্ডস ও লাইভ স্ট্রিমিং শর্টকাট।"
                 };
@@ -983,7 +985,7 @@ public class NGHubActivity extends BaseFragment {
                         "ar", "العربية", "إن جي هب",
                         "إن جي هب هو بيتك الشخصي للقنوات والمجموعات والبوتات التي تنشئها، مع ملفك وقائمة جهات الاتصال.",
                         "🎯 الغاية", "أن تبقى أماكنك في شاشة واحدة، وألا تُعرض مجتمعات الآخرين كأنها ملكك.",
-                        "✨ ماذا يفعل", "يعرض ما أنشأه هذا الحساب، ويفتح ملفك وجهات الاتصال، ويفتح بوت فادر الرسمي.",
+                        "ماذا يفعل", "يعرض ما أنشأه هذا الحساب، ويفتح ملفك وجهات الاتصال، ويفتح بوت فادر الرسمي.",
                         "🛡️ ما لا يفعله", "لا يخترع قنوات أو مجموعات، ولا يضع اسمك على مجتمع شخص آخر.",
                         "🚀 آخر التحديثات والتحسينات", "• حركة انزلاقية للبطاقات من اليمين إلى اليسار مع حدود علوية وسفلية أنيقة.\n• تباين نصوص فائق الوضوح في الوضعين الداكن والفاتح.\n• اختصار مباشر لبدء البث المباشر من إن جي هب.\n• بطاقات مجلدات مستوحاة من نوفاغرام مع أيقونات ديناميكية."
                 };
@@ -992,7 +994,7 @@ public class NGHubActivity extends BaseFragment {
                         "ru", "Русский", "NG Hub",
                         "NG Hub — личный экран для каналов, групп и ботов, которые создали вы, а также профиля и контактов.",
                         "🎯 Задача", "Держать свои места на одном экране и не показывать чужие сообщества как ваши.",
-                        "✨ Что делает", "Показывает созданное этим аккаунтом, открывает профиль и контакты и официального BotFather.",
+                        "Что делает", "Показывает созданное этим аккаунтом, открывает профиль и контакты и официального BotFather.",
                         "🛡️ Чего не делает", "Не придумывает каналы или группы и не выдаёт чужое сообщество за ваше.",
                         "🚀 Новые улучшения", "• Плавная анимация карточек справа налево с верхней и нижней границей.\n• Высококонтрастный четкий текст в темной и светлой темах.\n• Быстрый запуск прямого эфира прямо из NG Hub.\n• Карточки папок в стиле Novagram с векторными иконками."
                 };
@@ -1001,7 +1003,7 @@ public class NGHubActivity extends BaseFragment {
                         "uz", "Oʻzbekcha", "NG Hub",
                         "NG Hub — o‘zingiz yaratgan kanal, guruh va botlar, hamda profil va kontaktlar uchun shaxsiy joy.",
                         "🎯 Maqsad", "O‘z joylaringizni bitta ekranda saqlash va begona hamjamiyatni sizniki deb ko‘rsatmaslik.",
-                        "✨ Nima qiladi", "Bu hisob yaratgan joylarni ko‘rsatadi, profil va kontaktlarni ochadi, bot uchun rasmiy BotFather’ni ochadi.",
+                        "Nima qiladi", "Bu hisob yaratgan joylarni ko‘rsatadi, profil va kontaktlarni ochadi, bot uchun rasmiy BotFather’ni ochadi.",
                         "🛡️ Nima qilmaydi", "Soxta kanal yoki guruh o‘ylab topmaydi va birovning hamjamiyatini sizniki deb belgilamaydi.",
                         "🚀 So‘nggi yangilanishlar", "• O‘ngdan chapga kartalar silliq animatsiyasi va chiroyli chegaralar.\n• Qorong‘i va yorug‘ rejimda yuqori kontrastli aniq matnlar.\n• NG Hub ichidan to‘g‘ridan-to‘g‘ri jonli efir tugmasi.\n• Novagram uslubidagi jild kartalari va vektor ikonkalari."
                 };
@@ -1010,7 +1012,7 @@ public class NGHubActivity extends BaseFragment {
                         "hi", "हिन्दी", "एनजी हब",
                         "एनजी हब उन चैनल, ग्रुप और बॉट का निजी घर है जिन्हें आपने बनाया है, साथ में प्रोफ़ाइल और संपर्क सूची।",
                         "🎯 उद्देश्य", "अपनी जगहें एक स्क्रीन पर रखना, এবং किसी और की कम्युनिटी को अपनी बताकर न दिखाना।",
-                        "✨ यह क्या करता है", "इस खाते के बनाए चैनल और ग्रुप दिखाता है, प्रोफ़ाइल और संपर्क खोलता है, और आधिकारिक बॉटफादर खोलता है।",
+                        "यह क्या करता है", "इस खाते के बनाए चैनल और ग्रुप दिखाता है, प्रोफ़ाइल और संपर्क खोलता है, और आधिकारिक बॉटफादर खोलता है।",
                         "🛡️ यह नहीं करता", "नकली चैनल या ग्रुप नहीं गढ़ता, और किसी दूसरे की कम्युनिटी पर आपका नाम नहीं लगाता।",
                         "🚀 नवीनतम अपडेट और सुधार", "• दाएँ से बाएँ कार्ड स्लाइड एनीमेशन और आकर्षक टॉप-बॉटम बॉर्डर।\n• डार्क और लाइट मोड में स्पष्ट और चमकदार टेक्स्ट कंट्रास्ट।\n• NG Hub से सीधे एक-टैप लाइव स्ट्रीमिंग।\n• नोवाग्राम स्टाइल फोल्डर कार्ड्स और ऑटो-ऐड सपोर्ट।"
                 };
@@ -1019,7 +1021,7 @@ public class NGHubActivity extends BaseFragment {
                         "ur", "اردو", "این جی ہب",
                         "این جی ہب ان چینلز، گروپس اور بوٹس کا ذاتی گھر ہے جو آپ نے بنائے، ساتھ پروفائل اور رابطہ فہرست।",
                         "🎯 مقصد", "اپنی جگہوں کو ایک اسکرین پر رکھنا, اور کسی اور کی کمیونٹی کو اپنی بنا کر نہیں دکھانا।",
-                        "✨ یہ کیا کرتا ہے", "اس اکاؤنٹ کے بنائے چینل اور گروپ دکھاتا ہے، پروفائل اور رابطے کھولتا ہے، اور سرکاری بوٹ فادر کھولتا ہے۔",
+                        "یہ کیا کرتا ہے", "اس اکاؤنٹ کے بنائے چینل اور گروپ دکھاتا ہے، پروفائل اور رابطے کھولتا ہے، اور سرکاری بوٹ فادر کھولتا ہے۔",
                         "🛡️ یہ نہیں کرتا", "جعلی چینل یا گروپ نہیں بناتا، اور کسی دوسرے کی کمیونٹی کو آپ کی نہیں لکھتا।",
                         "🚀 تازہ ترین اپڈیٹس اور سہولیات", "• دائیں سے بائیں کارڈز کی خوبصورت سلائیڈ اینیمیشن اور بارڈرز۔\n• ڈارک اور لائٹ موڈ میں واضح اور روشن ٹیکسٹ کنٹراسٹ।\n• این جی ہب سے براہ راست ون-ٹیپ لائیو اسٹریمنگ۔\n• نوواگرام اسٹائل فولڈر کارڈز اور آٹو-ایڈ سپورٹ।"
                 };
@@ -1028,7 +1030,7 @@ public class NGHubActivity extends BaseFragment {
                         "en", "English", "NG Hub",
                         "NG Hub is your personal home for the channels, groups and bots you create, together with your profile and contact list.",
                         "🎯 Purpose", "Keep your own Telegram places on one screen, and never present someone else’s community as yours.",
-                        "✨ What it does", "It lists channels and groups this account created, opens your profile and contact list, and opens the official BotFather to create a bot.",
+                        "What it does", "It lists channels and groups this account created, opens your profile and contact list, and opens the official BotFather to create a bot.",
                         "🛡️ What it never does", "It does not invent channels or groups, and it does not label another person’s community as yours.",
                         "🚀 Latest Enhancements", "• Instant Account Switcher inside NG Hub supporting up to 15 accounts.\n• Direct Bot Token login from Add Account & Login screens.\n• In-Chat Persistent Text Styler (Bold, Italic, Spoiler, Mono, Quote).\n• Quick top-corner Language Switcher in Details & Tutorials.\n• Novagram-style folder cards & Live Streaming shortcut."
                 };

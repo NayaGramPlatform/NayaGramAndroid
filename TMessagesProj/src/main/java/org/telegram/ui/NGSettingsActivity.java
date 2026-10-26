@@ -170,8 +170,7 @@ public class NGSettingsActivity extends BaseFragment {
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);
-        overflowItem.addSubItem(7, R.drawable.msg_admins, "Super Admin (@NGSupreme)").setIconColor(0xFF7C3AED);
-        overflowItem.addSubItem(8, R.drawable.msg_admins, "Admin (@NG_HuzayfaSheikh)").setIconColor(0xFF0284C7);
+        overflowItem.addSubItem(7, R.drawable.msg_admins, "Leadership & Admins 🛡️").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(6, R.drawable.msg_info, "About NayaGram 💎").setIconColor(0xFF00D4FF);
         overflowItem.addSubItem(5, R.drawable.outline_revert_24, "Restore Defaults").setIconColor(0xFFDB2777);
 
@@ -191,10 +190,25 @@ public class NGSettingsActivity extends BaseFragment {
                         emailIntent.putExtra(Intent.EXTRA_SUBJECT, "NayaGram Support & Inquiry");
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
-                } else if (id == 7) {
-                    org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGSettingsActivity.this, 1);
-                } else if (id == 8) {
-                    org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGSettingsActivity.this, 1);
+                } else if (id == 7 || id == 8) {
+                    AlertDialog.Builder admBuilder = new AlertDialog.Builder(getParentActivity());
+                    admBuilder.setTitle("🛡️ NayaGram Leadership & Admins");
+                    CharSequence[] admOptions = new CharSequence[] {
+                        "👑 @NGSupreme (Founder & Owner)",
+                        "🛡️ @NG_HuzayfaSheikh (Co-Founder & Admin)",
+                        "📢 @NayaGramPro (Official Channel)"
+                    };
+                    admBuilder.setItems(admOptions, (dialog, which) -> {
+                        if (which == 0) {
+                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGSettingsActivity.this, 1);
+                        } else if (which == 1) {
+                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGSettingsActivity.this, 1);
+                        } else if (which == 2) {
+                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NayaGramPro", NGSettingsActivity.this, 1);
+                        }
+                    });
+                    admBuilder.setNegativeButton(LocaleController.getString(R.string.Close), null);
+                    showDialog(admBuilder.create());
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
@@ -396,7 +410,7 @@ public class NGSettingsActivity extends BaseFragment {
 
             if (report == null || report.totalReclaimableBytes <= 0) {
                 AlertDialog.Builder cleanB = new AlertDialog.Builder(getParentActivity());
-                cleanB.setTitle("✨ Storage Clean");
+                cleanB.setTitle("Storage Clean");
                 cleanB.setMessage("Your cache is completely optimized and clean! No unnecessary temporary files found.");
                 cleanB.setPositiveButton("OK", null);
                 showDialog(cleanB.create());
