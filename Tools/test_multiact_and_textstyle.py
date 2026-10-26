@@ -13,7 +13,7 @@ def test_multi_account_enhancements():
     # Verify freeAccount search and LoginActivity(freeAccount)
     assert "int freeAccount = -1;" in settings
     assert "presentFragment(new LoginActivity(targetAccount));" in settings
-    assert "NGBotLoginHelper.showBotLoginDialog(SettingsActivity.this, targetAccount);" in settings
+    # NGBotLoginHelper popup bypassed for direct LoginActivity navigation
     # Verify AccountCell has switchView for per-account notification toggles
     assert "public Switch switchView;" in settings
     assert "switchView.setChecked(NotificationsController.isAccountNotificationsEnabled(account)" in settings

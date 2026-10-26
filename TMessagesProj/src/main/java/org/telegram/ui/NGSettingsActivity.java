@@ -192,7 +192,7 @@ public class NGSettingsActivity extends BaseFragment {
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
                 } else if (id == 7 || id == 8) {
-                    org.nayagram.platform.ui.NGAdminDialogHelper.showAdminSheet(NGSettingsActivity.this, getParentActivity(), currentAccount);
+                    presentFragment(new org.nayagram.platform.ui.NGAdminActivity());
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
