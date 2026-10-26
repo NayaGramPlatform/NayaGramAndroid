@@ -1050,10 +1050,13 @@ public final class BulletinFactory {
         if (!AndroidUtilities.shouldShowClipboardToast()) {
             return new Bulletin.EmptyBulletin();
         }
-        final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), null);
+        final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.copy, 36, 36, "NULL ROTATION", "Back", "Front");
-        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF0284C7, android.graphics.PorterDuff.Mode.SRC_IN));
-        layout.textView.setTextColor(0xFF0EA5E9);
+        boolean dark = Theme.isCurrentThemeDark();
+        int iconColor = dark ? 0xFF38BDF8 : 0xFF0284C7;
+        int textColor = dark ? 0xFFF8FAFC : 0xFF0F172A;
+        layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(iconColor, android.graphics.PorterDuff.Mode.SRC_IN));
+        layout.textView.setTextColor(textColor);
         layout.textView.setText(message);
         return create(layout, Bulletin.DURATION_SHORT);
     }

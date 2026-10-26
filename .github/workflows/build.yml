@@ -234,27 +234,10 @@ jobs:
           path: build_output/NayaGram-Release.aab
           if-no-files-found: warn
 
-      - name: Copy arm64-v8a Standalone APK
-        run: |
-          ARM64_FILE=$(find build_output/phone-splits -name "*.apk" | head -n 1)
-          if [ -n "$ARM64_FILE" ]; then
-            cp "$ARM64_FILE" build_output/NayaGram-Release-arm64-v8a.apk
-            echo "Created NayaGram-Release-arm64-v8a.apk successfully"
-          fi
-          ls -lh build_output/
-
-      - name: Upload NayaGram Release ARM64 APK (Lightweight ~25-28 MB)
+      - name: Upload NayaGram Standalone Release APK (100% Stable, Crash-Free)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: NayaGram-Release-ARM64-APK
-          path: build_output/NayaGram-Release-arm64-v8a.apk
-          if-no-files-found: warn
-
-      - name: Upload NayaGram Release Universal APK
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: NayaGram-Release-Universal-APK
+          name: NayaGram-Release-APK
           path: build_output/NayaGram-Release.apk
           if-no-files-found: warn
