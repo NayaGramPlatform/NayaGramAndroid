@@ -507,7 +507,7 @@ public class NGHubActivity extends BaseFragment {
         if (freeAccount >= 0) {
             presentFragment(new LoginActivity(freeAccount));
         } else {
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.error, "Maximum 15 accounts limit reached").show();
+            android.widget.Toast.makeText(context, "Maximum 15 accounts limit reached", android.widget.Toast.LENGTH_SHORT).show();
         }
         if (true) return;
 

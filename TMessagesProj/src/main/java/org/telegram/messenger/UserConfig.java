@@ -255,7 +255,7 @@ public class UserConfig extends BaseController {
     public TLRPC.User getCurrentUser() {
         synchronized (sync) {
             if (currentUser != null) {
-                currentUser.verified = true;
+                currentUser.verified = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled;
             }
             return currentUser;
         }

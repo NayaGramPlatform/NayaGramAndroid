@@ -68,6 +68,7 @@ public class NGSettingsActivity extends BaseFragment {
     private ListAdapter listAdapter;
 
     private int headerStealth;
+    private int rowVerifiedBadge;
     private int rowAnonymousStories;
     private int rowGhostMode = -1;
     private int rowApkBlock = -1;
@@ -240,7 +241,15 @@ public class NGSettingsActivity extends BaseFragment {
                 }
                 boolean checked = !cell.isChecked();
 
-                if (position == rowAnonymousStories) {
+                if (position == rowVerifiedBadge) {
+                cfg.isVerifiedBadgeEnabled = !cfg.isVerifiedBadgeEnabled;
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(cfg.isVerifiedBadgeEnabled);
+                }
+                NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+            } else if (position == rowVerifiedBadge) {
+                    checkCell.setTextAndCheck("Blue Verified Badge", "Show blue checkmark verification badge on profile", cfg.isVerifiedBadgeEnabled, true);
+                } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
