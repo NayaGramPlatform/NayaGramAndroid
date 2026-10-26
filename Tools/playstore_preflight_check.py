@@ -70,6 +70,16 @@ def run_preflight(repo_dir="."):
         with open(app_gradle, "r", encoding="utf-8") as f:
             gradle_content = f.read()
 
+        # Min SDK Compliance (>= 24 required for Play automatic protection)
+        min_sdk_match = re.search(r"minSdkVersion\s+(\d+)", gradle_content)
+        if min_sdk_match:
+            min_sdk = int(min_sdk_match.group(1))
+            if min_sdk >= 24:
+                log_pass(f"minSdkVersion: {min_sdk} (Google Play automatic protection requires >= 24)")
+            else:
+                log_fail(f"minSdkVersion: {min_sdk} (Must be >= 24 for Google Play automatic protection)")
+                failures += 1
+
         # Target SDK
         target_sdk_match = re.search(r"targetSdkVersion\s+(\d+)", gradle_content)
         if target_sdk_match:
