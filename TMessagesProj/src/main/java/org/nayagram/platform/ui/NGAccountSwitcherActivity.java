@@ -55,8 +55,8 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
 
-        ScrollView scrollView = new ScrollView(context);
-        scrollView.setFillViewport(true);
+        ScrollView pageScrollView = new ScrollView(context);
+        pageScrollView.setFillViewport(true);
 
         LinearLayout content = new LinearLayout(context);
         content.setOrientation(LinearLayout.VERTICAL);
@@ -71,17 +71,24 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         content.addView(titleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 12));
 
+        // Accounts Scroll Container (5 items visible, 6+ scrollable)
+        ScrollView accountsScrollView = new ScrollView(context);
+        accountsScrollView.setNestedScrollingEnabled(true);
+
         accountsContainer = new LinearLayout(context);
         accountsContainer.setOrientation(LinearLayout.VERTICAL);
-        content.addView(accountsContainer, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 16));
+        accountsScrollView.addView(accountsContainer, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         refreshAccountsList(context);
+
+        int maxScrollHeight = activatedCount > 5 ? AndroidUtilities.dp(360) : ViewGroup.LayoutParams.WRAP_CONTENT;
+        content.addView(accountsScrollView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, maxScrollHeight, 0, 0, 0, 16));
 
         // Add Account Card
         LinearLayout addCard = new LinearLayout(context);
         addCard.setOrientation(LinearLayout.VERTICAL);
         addCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
-        addCard.setBackground(createRoundBg(Theme.isCurrentThemeDark() ? 0xFF1E293B : 0xFFFFFFFF, 16));
+        addCard.setBackground(createCardBg(Theme.isCurrentThemeDark() ? 0xFF1E293B : 0xFFFFFFFF, 0xFF0284C7, 16));
 
         TextView addTitle = new TextView(context);
         addTitle.setText("➕ Add New Account");
@@ -109,8 +116,8 @@ public class NGAccountSwitcherActivity extends BaseFragment {
 
         content.addView(addCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
-        scrollView.addView(content, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        ((FrameLayout) fragmentView).addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
+        pageScrollView.addView(content, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        ((FrameLayout) fragmentView).addView(pageScrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         return fragmentView;
     }
@@ -129,7 +136,12 @@ public class NGAccountSwitcherActivity extends BaseFragment {
             row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
             boolean isActive = (accountIndex == currentAccount);
-            row.setBackground(createRoundBg(isActive ? (Theme.isCurrentThemeDark() ? 0xFF1E3A5F : 0xFFE0F2FE) : (Theme.isCurrentThemeDark() ? 0xFF1E293B : 0xFFFFFFFF), 14));
+            boolean dark = Theme.isCurrentThemeDark();
+
+            int cardBgColor = isActive ? (dark ? 0xFF1E3A5F : 0xFFE0F2FE) : (dark ? 0xFF1E293B : 0xFFFFFFFF);
+            int borderColor = isActive ? 0xFF0284C7 : (dark ? 0xFF334155 : 0xFFE2E8F0);
+
+            row.setBackground(createCardBg(cardBgColor, borderColor, 16));
 
             AvatarDrawable ad = new AvatarDrawable();
             ad.setInfo(accountIndex, user);
@@ -208,6 +220,14 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         });
         builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
         showDialog(builder.create());
+    }
+
+    private GradientDrawable createCardBg(int bgColor, int borderColor, int radiusDp) {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(bgColor);
+        gd.setCornerRadius(AndroidUtilities.dp(radiusDp));
+        gd.setStroke(AndroidUtilities.dp(1), borderColor);
+        return gd;
     }
 
     private GradientDrawable createRoundBg(int color, int radiusDp) {
