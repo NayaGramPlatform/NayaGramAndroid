@@ -22,6 +22,8 @@ import org.telegram.messenger.ApplicationLoader;
  *   anonymous stories, forward-without-quote and voice transcription are removed from the UI.
  */
 public class NayaConfig {
+    public boolean isVerifiedBadgeEnabled = true;
+
     private static final String PREF_NAME = "nayagram_config_prefs";
 
     /** Experimental rows (Ghost Mode, APK Block) stay in code but are hidden. */
