@@ -954,24 +954,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 MessagesController.getInstance(currentAccount).openByUserName("InfonityAI_Bot", this, 1);
                 break;
             case 112: {
-                AlertDialog.Builder admBuilder = new AlertDialog.Builder(getParentActivity());
-                admBuilder.setTitle("🛡️ NG Admin");
-                CharSequence[] admOptions = new CharSequence[] {
-                    "👑 @NGSupreme (Founder & Owner)",
-                    "🛡️ @NG_HuzayfaSheikh (Co-Founder & Admin)",
-                    "📢 @NayaGramPro (Official Channel)"
-                };
-                admBuilder.setItems(admOptions, (dialog, which) -> {
-                    if (which == 0) {
-                        MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", SettingsActivity.this, 1);
-                    } else if (which == 1) {
-                        MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", SettingsActivity.this, 1);
-                    } else if (which == 2) {
-                        MessagesController.getInstance(currentAccount).openByUserName("NayaGramPro", SettingsActivity.this, 1);
-                    }
-                });
-                admBuilder.setNegativeButton(LocaleController.getString(R.string.Close), null);
-                showDialog(admBuilder.create());
+                org.nayagram.platform.ui.NGAdminDialogHelper.showAdminSheet(SettingsActivity.this, getParentActivity(), currentAccount);
                 break;
             }
             case 110: {

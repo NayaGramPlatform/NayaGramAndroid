@@ -6694,7 +6694,14 @@ public class MessagesController extends BaseController implements NotificationCe
         if (id == 0) {
             return UserConfig.getInstance(currentAccount).getCurrentUser();
         }
-        return users.get(id);
+        TLRPC.User u = users.get(id);
+        if (u != null && u.id == UserConfig.getInstance(currentAccount).getClientUserId()) {
+            if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled) {
+                u.verified = true;
+                u.flags |= 131072;
+            }
+        }
+        return u;
     }
 
     public TLObject getUserOrChat(long dialogId) {

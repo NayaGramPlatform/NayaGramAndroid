@@ -192,24 +192,7 @@ public class NGSettingsActivity extends BaseFragment {
                         context.startActivity(emailIntent);
                     } catch (Exception ignored) {}
                 } else if (id == 7 || id == 8) {
-                    AlertDialog.Builder admBuilder = new AlertDialog.Builder(getParentActivity());
-                    admBuilder.setTitle("🛡️ NG Admin");
-                    CharSequence[] admOptions = new CharSequence[] {
-                        "👑 @NGSupreme (Founder & Owner)",
-                        "🛡️ @NG_HuzayfaSheikh (Co-Founder & Admin)",
-                        "📢 @NayaGramPro (Official Channel)"
-                    };
-                    admBuilder.setItems(admOptions, (dialog, which) -> {
-                        if (which == 0) {
-                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGSettingsActivity.this, 1);
-                        } else if (which == 1) {
-                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGSettingsActivity.this, 1);
-                        } else if (which == 2) {
-                            org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName("NayaGramPro", NGSettingsActivity.this, 1);
-                        }
-                    });
-                    admBuilder.setNegativeButton(LocaleController.getString(R.string.Close), null);
-                    showDialog(admBuilder.create());
+                    org.nayagram.platform.ui.NGAdminDialogHelper.showAdminSheet(NGSettingsActivity.this, getParentActivity(), currentAccount);
                 } else if (id == 6) {
                     presentFragment(new NayaAboutActivity());
                 } else if (id == 5) {
