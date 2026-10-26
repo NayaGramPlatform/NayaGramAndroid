@@ -249,6 +249,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowVerifiedBadge) {
                     cell.setFeature(
                         R.drawable.outline_shield_check,
+                        0xFF059669,
                         "Blue Verified Badge",
                         "Show blue checkmark verification badge on profile and name",
                         cfg.isVerifiedBadgeEnabled,
