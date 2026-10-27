@@ -1761,7 +1761,7 @@ public class UndoView extends FrameLayout {
             return 0xFFFFFFFF;
         }
         if (key == Theme.key_undo_cancelColor) {
-            return Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;
+            return 0xFF38BDF8;
         }
         return Theme.getColor(key, resourcesProvider);
     }

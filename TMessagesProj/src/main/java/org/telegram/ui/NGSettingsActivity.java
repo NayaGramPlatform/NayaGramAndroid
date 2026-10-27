@@ -1,4 +1,9 @@
 package org.telegram.ui;
+
+import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.TLRPC;
+
 import org.telegram.messenger.NotificationCenter;
 
 import org.nayagram.platform.ui.NayaAboutActivity;
@@ -499,12 +504,11 @@ public class NGSettingsActivity extends BaseFragment {
         String title;
         String body;
         if (position == rowVerifiedBadge) {
-            showSheet(
-                "Blue Verified Badge",
-                "When enabled, your NayaGram account will display the official blue verification checkmark badge next to your name across chats, group messages, and user profile.",
-                R.drawable.outline_shield_check,
-                0xFF0284C7
-            );
+            AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+            b.setTitle("Blue Verified Badge");
+            b.setMessage("When enabled, your NayaGram account will display the official blue verification checkmark badge next to your name across chats, group messages, and user profile.");
+            b.setPositiveButton("Got it", null);
+            showDialog(b.create());
             return;
         }
         if (position == rowAnonymousStories) {
