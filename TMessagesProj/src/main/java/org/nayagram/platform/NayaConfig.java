@@ -54,6 +54,7 @@ public class NayaConfig {
     private static final String KEY_AUTO_ADD_TEXT_VALUE = "feature_auto_add_text_value";
     private static final String KEY_ONE_TIME_VOICE_VIDEO = "feature_one_time_voice_video";
     private static final String KEY_HIDE_PHONE_NUMBER = "feature_hide_phone_number";
+    private static final String KEY_VERIFIED_BADGE = "feature_verified_badge";
     private static final String KEY_APP_THEME_MODE = "feature_app_theme_mode";
 
     public static final int THEME_MODE_LIGHT = 0;
@@ -66,6 +67,7 @@ public class NayaConfig {
 
     private NayaConfig(Context context) {
         this.preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        this.isVerifiedBadgeEnabled = this.preferences != null ? this.preferences.getBoolean(KEY_VERIFIED_BADGE, true) : true;
         migrateLegacyPreferences();
     }
 
@@ -314,6 +316,17 @@ public class NayaConfig {
 
     public int getAppThemeMode() { return preferences.getInt(KEY_APP_THEME_MODE, THEME_MODE_DARK_SLATE); }
     public void setAppThemeMode(int mode) { preferences.edit().putInt(KEY_APP_THEME_MODE, mode).apply(); }
+    public boolean isVerifiedBadgeEnabled() {
+        return preferences != null ? preferences.getBoolean(KEY_VERIFIED_BADGE, true) : isVerifiedBadgeEnabled;
+    }
+
+    public void setVerifiedBadgeEnabled(boolean enabled) {
+        this.isVerifiedBadgeEnabled = enabled;
+        if (preferences != null) {
+            preferences.edit().putBoolean(KEY_VERIFIED_BADGE, enabled).apply();
+        }
+    }
+
 
     public static String formatPhoneNumberPrivacy(String phone, boolean isHidden) {
         if (!isHidden || phone == null || phone.isEmpty()) {

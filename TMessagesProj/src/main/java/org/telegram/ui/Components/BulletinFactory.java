@@ -1052,7 +1052,7 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.copy, 36, 36, "NULL ROTATION", "Back", "Front");
-        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF1E293B));
+        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF0284C7));
         layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF38BDF8, android.graphics.PorterDuff.Mode.SRC_IN));
         layout.textView.setTextColor(0xFFFFFFFF);
         layout.textView.setText(message);
@@ -1073,6 +1073,9 @@ public final class BulletinFactory {
         } else {
             final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
             layout.setAnimation(R.raw.voip_invite, 36, 36, "Wibe", "Circle");
+            layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF0284C7));
+            layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF38BDF8, android.graphics.PorterDuff.Mode.SRC_IN));
+            layout.textView.setTextColor(0xFFFFFFFF);
             layout.textView.setText(LocaleController.getString(R.string.LinkCopied));
             return create(layout, Bulletin.DURATION_SHORT);
         }
@@ -1085,7 +1088,7 @@ public final class BulletinFactory {
         }
         final Bulletin.LottieLayout layout = new Bulletin.LottieLayout(getContext(), resourcesProvider);
         layout.setAnimation(R.raw.voip_invite, 36, 36, "Wibe", "Circle");
-        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF1E293B));
+        layout.setBackground(Theme.createRoundRectDrawable(AndroidUtilities.dp(12), 0xFF0284C7));
         layout.imageView.setColorFilter(new android.graphics.PorterDuffColorFilter(0xFF38BDF8, android.graphics.PorterDuff.Mode.SRC_IN));
         layout.textView.setTextColor(0xFFFFFFFF);
         layout.textView.setText(text);

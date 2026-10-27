@@ -333,8 +333,8 @@ public class UndoView extends FrameLayout {
         setWillNotDraw(false);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(AndroidUtilities.dp(10));
-        gd.setColor(getThemedColor(Theme.key_undo_background));
-        gd.setStroke(AndroidUtilities.dp(1.5f), 0xFF00D4FF);
+        gd.setColor(0xFF0284C7);
+        gd.setStroke(AndroidUtilities.dp(1.5f), 0xFF38BDF8);
         backgroundDrawable = gd;
 
         setOnTouchListener((v, event) -> true);
@@ -1755,10 +1755,10 @@ public class UndoView extends FrameLayout {
 
     private int getThemedColor(int key) {
         if (key == Theme.key_undo_background) {
-            return Theme.isCurrentThemeDark() ? 0xFF0F172A : 0xFFFFFFFF;
+            return 0xFF0284C7;
         }
         if (key == Theme.key_undo_infoColor) {
-            return Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0F172A;
+            return 0xFFFFFFFF;
         }
         if (key == Theme.key_undo_cancelColor) {
             return Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;

@@ -815,16 +815,10 @@ public class Bulletin {
 
         public void setBackground(int color, int rounding) {
             if (!hasCustomBackground) {
-                boolean dark = Theme.isCurrentThemeDark();
                 GradientDrawable gd = new GradientDrawable();
                 gd.setCornerRadius(dp(rounding));
-                if (dark) {
-                    gd.setColor(0xFA0F172A);
-                    gd.setStroke(dp(1.5f), 0xFF00D4FF);
-                } else {
-                    gd.setColor(0xFFFFFFFF);
-                    gd.setStroke(dp(1.5f), 0xFF00D4FF);
-                }
+                gd.setColor(0xFF0284C7);
+                gd.setStroke(dp(1.5f), 0xFF38BDF8);
                 background = gd;
             }
         }
@@ -1279,13 +1273,13 @@ public class Bulletin {
 
         protected int getThemedColor(int key) {
             if (key == Theme.key_undo_background) {
-                return Theme.isCurrentThemeDark() ? 0xFF0F172A : 0xFFFFFFFF;
+                return 0xFF0284C7;
             }
             if (key == Theme.key_undo_infoColor) {
-                return Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0F172A;
+                return 0xFFFFFFFF;
             }
             if (key == Theme.key_undo_cancelColor) {
-                return Theme.isCurrentThemeDark() ? 0xFF00D4FF : 0xFF0284C7;
+                return 0xFF38BDF8;
             }
             return Theme.getColor(key, resourcesProvider);
         }
@@ -2025,9 +2019,9 @@ public class Bulletin {
             textView.setPadding(0, dp(8), 0, dp(8));
             addView(textView, LayoutHelper.createFrameRelatively(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL, 56, 0, 16, 0));
 
-            textView.setLinkTextColor(getThemedColor(Theme.key_undo_cancelColor));
-            setTextColor(Theme.isCurrentThemeDark() ? 0xFFFFFFFF : 0xFF0284C7);
-            setBackground(getThemedColor(Theme.key_undo_background));
+            textView.setLinkTextColor(0xFF38BDF8);
+            setTextColor(0xFFFFFFFF);
+            setBackground(0xFF0284C7);
         }
 
         public LottieLayout(@NonNull Context context, Theme.ResourcesProvider resourcesProvider, int backgroundColor, int textColor) {

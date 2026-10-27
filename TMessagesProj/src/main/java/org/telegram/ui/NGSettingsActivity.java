@@ -117,7 +117,8 @@ public class NGSettingsActivity extends BaseFragment {
 
     private void updateRows() {
         rowCount = 0;
-        headerStealth = -1;
+        headerStealth = rowCount++;
+        rowVerifiedBadge = rowCount++;
         rowAnonymousStories = -1;
         rowGhostMode = -1;
         rowApkBlock = -1;
@@ -225,19 +226,24 @@ public class NGSettingsActivity extends BaseFragment {
                 boolean checked = !cell.isChecked();
 
                 if (position == rowVerifiedBadge) {
-                    cfg.isVerifiedBadgeEnabled = checked;
+                    cfg.setVerifiedBadgeEnabled(checked);
                     cell.setChecked(checked);
+                    TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+                    if (currentUser != null) {
+                        currentUser.verified = checked;
+                        if (checked) {
+                            currentUser.flags |= 131072;
+                        } else {
+                            currentUser.flags &= ~131072;
+                        }
+                    }
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Blue Verified Badge: " + (checked ? "Enabled" : "Disabled")).show();
-                } else if (position == rowVerifiedBadge) {
-                    cell.setFeature(
+                    BulletinFactory.of(this).createSimpleBulletin(
                         R.drawable.outline_shield_check,
-                        0xFF059669,
-                        "Blue Verified Badge",
-                        "Show blue checkmark verification badge on profile and name",
-                        cfg.isVerifiedBadgeEnabled,
-                        true
-                    );
+                        "Blue Verified Badge: " + (checked ? "Enabled" : "Disabled")
+                    ).show();
                 } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
                     cell.setChecked(checked);
@@ -492,6 +498,15 @@ public class NGSettingsActivity extends BaseFragment {
         if (getParentActivity() == null) return;
         String title;
         String body;
+        if (position == rowVerifiedBadge) {
+            showSheet(
+                "Blue Verified Badge",
+                "When enabled, your NayaGram account will display the official blue verification checkmark badge next to your name across chats, group messages, and user profile.",
+                R.drawable.outline_shield_check,
+                0xFF0284C7
+            );
+            return;
+        }
         if (position == rowAnonymousStories) {
             title = "Anonymous Stories";
             body = "Privacy preference for story views.\n\nStory view behavior still follows Telegram server rules. This toggle does not hide you from Telegram if the server requires a view receipt.";
@@ -773,7 +788,7 @@ public class NGSettingsActivity extends BaseFragment {
             int type = holder.getItemViewType();
             if (type == 0) {
                 HeaderCell h = (HeaderCell) holder.itemView;
-                if (position == headerStealth) h.setText("Privacy & Control");
+                if (position == headerStealth) h.setText("Account & Verification");
                 else if (position == headerMessaging) h.setText("Messaging & Tools");
                 else if (position == headerSecurity) h.setText("Security & Protection");
                 else if (position == headerOptimization) h.setText("Optimization");
@@ -781,7 +796,16 @@ public class NGSettingsActivity extends BaseFragment {
                 else if (position == headerSystem) h.setText("System");
             } else if (type == 1) {
                 NGFeatureCell c = (NGFeatureCell) holder.itemView;
-                if (position == rowAnonymousStories) {
+                if (position == rowVerifiedBadge) {
+                    c.setFeature(
+                        R.drawable.outline_shield_check,
+                        0xFF0284C7,
+                        "Blue Verified Badge",
+                        "Show official blue checkmark badge on your profile and name",
+                        cfg.isVerifiedBadgeEnabled(),
+                        true
+                    );
+                } else if (position == rowAnonymousStories) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);

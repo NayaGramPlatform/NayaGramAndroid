@@ -6696,9 +6696,12 @@ public class MessagesController extends BaseController implements NotificationCe
         }
         TLRPC.User u = users.get(id);
         if (u != null && u.id == UserConfig.getInstance(currentAccount).getClientUserId()) {
-            if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled) {
-                u.verified = true;
+            boolean enabled = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();
+            u.verified = enabled;
+            if (enabled) {
                 u.flags |= 131072;
+            } else {
+                u.flags &= ~131072;
             }
         }
         return u;
