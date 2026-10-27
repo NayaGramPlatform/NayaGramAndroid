@@ -11865,7 +11865,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
                         nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.ScamMessage);
-                    } else if (chat.verified) {
+                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
                         nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
                         nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.AccDescrVerified);
                     } else {
@@ -11894,7 +11894,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else if (!copyFromChatActivity) {
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
-                    } else if (chat.verified) {
+                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
                         nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
                     } else if (getMessagesController().isDialogMuted(-chatId, topicId)) {
                         nameTextView[a].setRightDrawable2(getThemedDrawable(Theme.key_drawable_muteIconDrawable));
@@ -14080,11 +14080,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLObject obj = getMessagesController().getUserOrChat(did);
                         TL_bots.BotVerification bot_verification = userInfo != null ? userInfo.bot_verification : chatInfo != null ? chatInfo.bot_verification : null;
                         Long bot_manager_id = userInfo != null && TLObject.hasFlag(userInfo.flags2, TLObject.FLAG_25) ? userInfo.bot_manager_id : null;
-                        final TLRPC.User profileUser = user != null ? user : getMessagesController().getUser(userId);
-                        boolean isVerified = (profileUser != null && UserObject.isVerified(profileUser)) || (currentChat != null && currentChat.verified);
+                        final TLRPC.User user = getMessagesController().getUser(userId);
+                        boolean isVerified = (user != null && UserObject.isVerified(user)) || (currentChat != null && (currentChat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()));
                         if (botAppRow >= 0 || bot_verification != null || bot_manager_id != null || isVerified) {
                             cell.setFixedSize(0);
-                            final TLRPC.User user = getMessagesController().getUser(userId);
                             final boolean botOwner = user != null && user.bot && user.bot_can_edit;
                             SpannableStringBuilder sb = new SpannableStringBuilder();
 
@@ -14100,8 +14099,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 sb.append("x");
                                 sb.setSpan(new AnimatedEmojiSpan(bot_verification.icon, cell.getTextView().getPaint().getFontMetricsInt()), sb.length() - 1, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 sb.append(" ");
-                                String rawDesc = bot_verification.description != null ? bot_verification.description.replace("Telegram", "NayaGram") : "";
-                                SpannableString description = new SpannableString(MessageObject.formatTextWithEntities(rawDesc));
+                                CharSequence formatted = MessageObject.formatTextWithEntities(bot_verification.description);
+                                String rawDesc = formatted != null ? formatted.toString().replace("Telegram", "NayaGram") : "";
+                                SpannableString description = new SpannableString(rawDesc);
                                 int botDescTextColor = Theme.isCurrentThemeDark() ? 0xFFC084FC : 0xFF059669;
                                 description.setSpan(new ForegroundColorSpan(botDescTextColor), 0, description.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 try {

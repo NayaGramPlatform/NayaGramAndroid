@@ -6695,13 +6695,11 @@ public class MessagesController extends BaseController implements NotificationCe
             return UserConfig.getInstance(currentAccount).getCurrentUser();
         }
         TLRPC.User u = users.get(id);
-        if (u != null && u.id == UserConfig.getInstance(currentAccount).getClientUserId()) {
+        if (u != null) {
             boolean enabled = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();
-            u.verified = enabled;
             if (enabled) {
+                u.verified = true;
                 u.flags |= 131072;
-            } else {
-                u.flags &= ~131072;
             }
         }
         return u;
@@ -6739,7 +6737,12 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public TLRPC.Chat getChat(Long id) {
-        return chats.get(id);
+        TLRPC.Chat c = chats.get(id);
+        if (c != null && org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+            c.verified = true;
+            c.flags |= 131072;
+        }
+        return c;
     }
 
     public TLRPC.EncryptedChat getEncryptedChat(Integer id) {
@@ -6829,6 +6832,10 @@ public class MessagesController extends BaseController implements NotificationCe
             return false;
         }
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
+        if (user != null && org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+            user.verified = true;
+            user.flags |= 131072;
+        }
         TLRPC.User oldUser = users.get(user.id);
         if (oldUser == user && !force) {
             return false;
@@ -6962,6 +6969,10 @@ public class MessagesController extends BaseController implements NotificationCe
     public void putChat(final TLRPC.Chat chat, boolean fromCache) {
         if (chat == null) {
             return;
+        }
+        if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+            chat.verified = true;
+            chat.flags |= 131072;
         }
         TLRPC.Chat oldChat = chats.get(chat.id);
         if (oldChat == chat) {

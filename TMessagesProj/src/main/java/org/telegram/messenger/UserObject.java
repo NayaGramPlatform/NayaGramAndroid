@@ -23,9 +23,7 @@ public class UserObject {
     public static boolean isVerified(TLRPC.User user) {
         if (user == null) return false;
         if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
-            if (user.id == UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId()) {
-                return true;
-            }
+            return true;
         }
         return user.verified;
     }
