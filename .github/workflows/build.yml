@@ -107,7 +107,7 @@ jobs:
       - name: Print Build Version Info
         run: |
           echo "=================================================="
-          echo " NayaGram v2.1.4 NG - Build 4018 "
+          echo " NayaGram v4.16.45 NG - Build 4048 "
           echo " Target SDK: 36 | Min SDK: 24 (Google Play Compliant)"
           echo "=================================================="
 

@@ -1064,7 +1064,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "2.1.4 NG";
+        return "4.16.45 NG";
     }
 
     public String getVersionName() {

@@ -25,7 +25,7 @@ public class BuildVars {
     public static boolean CHECK_UPDATES = true;
     public static boolean NO_SCOPED_STORAGE = Build.VERSION.SDK_INT <= 29;
     /** Internal NayaGram number. Play's uploaded versionCode is this times 10 plus the ABI digit. */
-    public static final int BUILD_VERSION = 4018;
+    public static final int BUILD_VERSION = 4048;
     public static String BUILD_VERSION_STRING = BuildConfig.BUILD_VERSION_STRING;
 
     // Injected at build time from TELEGRAM_API_ID / TELEGRAM_API_HASH env or -P flags.

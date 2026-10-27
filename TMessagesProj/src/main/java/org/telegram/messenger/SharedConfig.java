@@ -825,13 +825,16 @@ public class SharedConfig {
         return true;
     }
 
-    // returns a >= b
+    // returns a >= b. Numeric prefix only, so a suffix such as " NG" does not crash the compare.
     public static boolean versionBiggerOrEqual(String a, String b) {
+        if (a == null || b == null) {
+            return false;
+        }
         String[] partsA = a.split("\\.");
         String[] partsB = b.split("\\.");
         for (int i = 0; i < Math.min(partsA.length, partsB.length); ++i) {
-            int numA = Integer.parseInt(partsA[i]);
-            int numB = Integer.parseInt(partsB[i]);
+            int numA = parseVersionPart(partsA[i]);
+            int numB = parseVersionPart(partsB[i]);
             if (numA < numB) {
                 return false;
             } else if (numA > numB) {
@@ -839,6 +842,24 @@ public class SharedConfig {
             }
         }
         return true;
+    }
+
+    private static int parseVersionPart(String part) {
+        if (part == null || part.isEmpty()) {
+            return 0;
+        }
+        int n = 0;
+        boolean any = false;
+        for (int i = 0; i < part.length(); i++) {
+            char c = part.charAt(i);
+            if (c >= '0' && c <= '9') {
+                any = true;
+                n = n * 10 + (c - '0');
+            } else if (any) {
+                break;
+            }
+        }
+        return n;
     }
 
     public static boolean checkPasscode(String passcode) {
