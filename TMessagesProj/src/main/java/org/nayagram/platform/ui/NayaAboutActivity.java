@@ -232,7 +232,7 @@ public class NayaAboutActivity extends BaseFragment {
 
         LinearLayout adminCol = new LinearLayout(context);
         adminCol.setOrientation(LinearLayout.VERTICAL);
-        TextView adminRoleBadge = bold(context, "👑 FOUNDER & OWNER (SUPER ADMIN)", 11, C_CYAN);
+        TextView adminRoleBadge = bold(context, "FOUNDER & SUPER ADMIN", 11, C_CYAN);
         adminCol.addView(adminRoleBadge);
         TextView adminHandleView = bold(context, "@" + SUPER_ADMIN_HANDLE, 16, Color.WHITE);
         adminCol.addView(adminHandleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
@@ -278,7 +278,7 @@ public class NayaAboutActivity extends BaseFragment {
 
         LinearLayout admin2Col = new LinearLayout(context);
         admin2Col.setOrientation(LinearLayout.VERTICAL);
-        TextView admin2RoleBadge = bold(context, "🛡️ CO-FOUNDER & ADMIN", 11, C_CYAN);
+        TextView admin2RoleBadge = bold(context, "CO-FOUNDER & PLATFORM ADMIN", 11, C_CYAN);
         admin2Col.addView(admin2RoleBadge);
         TextView admin2HandleView = bold(context, "@" + ADMIN_2_HANDLE, 16, Color.WHITE);
         admin2Col.addView(admin2HandleView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));

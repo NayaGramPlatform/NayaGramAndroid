@@ -29,7 +29,7 @@ public class NGAdminActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("🛡️ NG Admin & Leadership");
+        actionBar.setTitle("NayaGram Leadership");
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -56,14 +56,14 @@ public class NGAdminActivity extends BaseFragment {
         banner.setBackground(createGradientBg(0xFF0284C7, 0xFF7C3AED, 18));
 
         TextView bTitle = new TextView(context);
-        bTitle.setText("🛡️ Official Leadership & Support");
+        bTitle.setText("Official Leadership & Support");
         bTitle.setTextSize(18);
         bTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         bTitle.setTextColor(Color.WHITE);
         banner.addView(bTitle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
 
         TextView bDesc = new TextView(context);
-        bDesc.setText("Direct access to official NayaGram founders, platform administrators, and support channels.");
+        bDesc.setText("Direct access to official NayaGram founders, platform administrators, and verified support channels.");
         bDesc.setTextSize(13);
         bDesc.setTextColor(0xFFE2E8F0);
         banner.addView(bDesc, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -81,30 +81,30 @@ public class NGAdminActivity extends BaseFragment {
         // Founder Card
         content.addView(createAdminCard(
             context,
-            "👑",
-            "Super Admin (Founder & Owner)",
+            R.drawable.msg_admins,
+            "Founder & Super Admin",
             "@NGSupreme",
             "Full platform owner & lead architect of NayaGram.",
-            0xFFF59E0B,
+            0xFF0284C7,
             v -> MessagesController.getInstance(currentAccount).openByUserName("NGSupreme", NGAdminActivity.this, 1)
         ), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
 
         // Co-Founder Card
         content.addView(createAdminCard(
             context,
-            "🛡️",
-            "Admin (Co-Founder & Admin)",
+            R.drawable.outline_shield_check,
+            "Co-Founder & Platform Admin",
             "@NG_HuzayfaSheikh",
             "Co-founder, platform administration & community supervisor.",
-            0xFF0284C7,
+            0xFF7C3AED,
             v -> MessagesController.getInstance(currentAccount).openByUserName("NG_HuzayfaSheikh", NGAdminActivity.this, 1)
         ), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 10));
 
         // Official Channel Card
         content.addView(createAdminCard(
             context,
-            "📢",
-            "Official Support & Updates Channel",
+            R.drawable.msg_channel,
+            "Official Announcements & Updates",
             "@NayaGramPro",
             "Official updates, feature announcements & releases.",
             0xFF10B981,
@@ -119,7 +119,7 @@ public class NGAdminActivity extends BaseFragment {
         emailCard.setBackground(createCardBg(dark ? 0xFF1E293B : 0xFFFFFFFF, dark ? 0xFF334155 : 0xFFE2E8F0, 16));
 
         TextView eTitle = new TextView(context);
-        eTitle.setText("✉️ Direct Email Inquiry");
+        eTitle.setText("Direct Support Inquiry");
         eTitle.setTextSize(15);
         eTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         eTitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
@@ -153,29 +153,35 @@ public class NGAdminActivity extends BaseFragment {
 
         scrollView.addView(content, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         ((FrameLayout) fragmentView).addView(scrollView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
-
         return fragmentView;
     }
 
-    private View createAdminCard(Context context, String emoji, String role, String username, String desc, int accentColor, View.OnClickListener clickListener) {
+    private View createAdminCard(Context context, int iconRes, String role, String username, String desc, int accentColor, View.OnClickListener clickListener) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
         boolean dark = Theme.isCurrentThemeDark();
-        card.setBackground(createCardBg(dark ? 0xFF1E293B : 0xFFFFFFFF, accentColor, 16));
+        card.setBackground(createCardBg(dark ? 0xFF1E293B : 0xFFFFFFFF, dark ? 0xFF334155 : 0xFFE2E8F0, 16));
 
         LinearLayout topRow = new LinearLayout(context);
         topRow.setOrientation(LinearLayout.HORIZONTAL);
         topRow.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView emojiBadge = new TextView(context);
-        emojiBadge.setText(emoji);
-        emojiBadge.setTextSize(20);
-        topRow.addView(emojiBadge, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, 0, 0, 10, 0));
+        FrameLayout iconWrap = new FrameLayout(context);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.OVAL);
+        iconBg.setColor(Theme.multAlpha(accentColor, 0.15f));
+        iconBg.setStroke(AndroidUtilities.dp(1), Theme.multAlpha(accentColor, 0.4f));
+        iconWrap.setBackground(iconBg);
+
+        ImageView iconView = new ImageView(context);
+        iconView.setImageResource(iconRes);
+        iconView.setColorFilter(new android.graphics.PorterDuffColorFilter(accentColor, android.graphics.PorterDuff.Mode.SRC_IN));
+        iconWrap.addView(iconView, LayoutHelper.createFrame(22, 22, Gravity.CENTER));
+        topRow.addView(iconWrap, LayoutHelper.createLinear(40, 40, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
 
         LinearLayout textCol = new LinearLayout(context);
         textCol.setOrientation(LinearLayout.VERTICAL);
-
         TextView roleText = new TextView(context);
         roleText.setText(role);
         roleText.setTextSize(15);
@@ -189,19 +195,18 @@ public class NGAdminActivity extends BaseFragment {
         userText.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         userText.setTextColor(accentColor);
         textCol.addView(userText);
-
         topRow.addView(textCol, LayoutHelper.createLinear(0, LayoutHelper.WRAP_CONTENT, 1f, Gravity.CENTER_VERTICAL));
 
         ImageView chevron = new ImageView(context);
         chevron.setImageResource(R.drawable.msg_arrowright);
-        chevron.setColorFilter(new android.graphics.PorterDuffColorFilter(accentColor, android.graphics.PorterDuff.Mode.SRC_IN));
+        chevron.setColorFilter(new android.graphics.PorterDuffColorFilter(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText3), android.graphics.PorterDuff.Mode.SRC_IN));
         topRow.addView(chevron, LayoutHelper.createLinear(18, 18, Gravity.CENTER_VERTICAL));
 
-        card.addView(topRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 6));
+        card.addView(topRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 8));
 
         TextView descText = new TextView(context);
         descText.setText(desc);
-        descText.setTextSize(12);
+        descText.setTextSize(13);
         descText.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText2));
         card.addView(descText, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 

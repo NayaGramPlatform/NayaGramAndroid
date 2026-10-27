@@ -2047,7 +2047,13 @@ public class Bulletin {
 
         public void setAnimation(int resId, int w, int h, String... layers) {
             imageView.setAnimation(resId, w, h);
-            int iconColor = 0xFFFFFFFF; // Pure white icon, crystal clear on blue background
+            if (resId == R.raw.done) {
+                imageView.setLayerColor("Oval", 0xFF38BDF8);
+                imageView.setLayerColor("info1", 0xFFFFFFFF);
+                imageView.clearColorFilter();
+                return;
+            }
+            int iconColor = 0xFFFFFFFF;
             if (layers != null && layers.length > 0) {
                 for (String layer : layers) {
                     imageView.setLayerColor(layer, iconColor);
