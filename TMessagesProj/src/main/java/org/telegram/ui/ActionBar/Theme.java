@@ -8975,12 +8975,12 @@ public class Theme {
     }
 
     public static int getColor(int key, ResourcesProvider provider) {
-        if (key == key_chats_verifiedBackground && isCurrentThemeDark()) {
+        if ((key == key_chats_verifiedBackground || key == key_profile_verifiedBackground) && isCurrentThemeDark()) {
             return 0xff9333ea; // Purple radiance in dark mode
         }
         if (provider != null) {
             int col = provider.getColor(key);
-            if (key == key_chats_verifiedBackground && isCurrentThemeDark()) {
+            if ((key == key_chats_verifiedBackground || key == key_profile_verifiedBackground) && isCurrentThemeDark()) {
                 return 0xff9333ea;
             }
             return col;
@@ -9001,7 +9001,7 @@ public class Theme {
     }
 
     public static int getColor(int key, boolean[] isDefault, boolean ignoreAnimation) {
-        if (key == key_chats_verifiedBackground && isCurrentThemeDark()) {
+        if ((key == key_chats_verifiedBackground || key == key_profile_verifiedBackground) && isCurrentThemeDark()) {
             return 0xff9333ea; // Purple radiance in dark mode
         }
         if (!ignoreAnimation && animatingColors != null) {
