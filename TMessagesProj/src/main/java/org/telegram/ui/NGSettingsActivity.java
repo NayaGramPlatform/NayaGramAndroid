@@ -174,6 +174,8 @@ public class NGSettingsActivity extends BaseFragment {
         actionBar.setTitle("NayaGram Settings");
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
+        int cornerIconColor = Theme.isCurrentThemeDark() ? 0xFF9333EA : 0xFF059669;
+        overflowItem.setIconColor(cornerIconColor);
         overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);

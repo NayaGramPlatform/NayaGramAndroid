@@ -19,6 +19,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -37,7 +38,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setAllowOverlayTitle(true);
-        actionBar.setTitle("👥 Switch Account");
+        actionBar.setTitle("Switch Account");
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -50,7 +51,9 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         });
 
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
-        menu.addItem(1, R.drawable.outline_add_account);
+        ActionBarMenuItem addItem = menu.addItem(1, R.drawable.outline_add_account);
+        int cornerIconColor = Theme.isCurrentThemeDark() ? 0xFF9333EA : 0xFF059669;
+        addItem.setIconColor(cornerIconColor);
 
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
@@ -65,7 +68,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         int activatedCount = UserConfig.getActivatedAccountsCount();
 
         TextView titleView = new TextView(context);
-        titleView.setText("👥 Active Accounts (" + activatedCount + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
+        titleView.setText("Active Accounts (" + activatedCount + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
         titleView.setTextSize(16);
         titleView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
