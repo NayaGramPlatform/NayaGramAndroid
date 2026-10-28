@@ -22,7 +22,7 @@ import org.telegram.messenger.ApplicationLoader;
  *   anonymous stories, forward-without-quote and voice transcription are removed from the UI.
  */
 public class NayaConfig {
-    public boolean isVerifiedBadgeEnabled = true;
+    public boolean isVerifiedBadgeEnabled = false;
 
     private static final String PREF_NAME = "nayagram_config_prefs";
 
@@ -67,7 +67,7 @@ public class NayaConfig {
 
     private NayaConfig(Context context) {
         this.preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        this.isVerifiedBadgeEnabled = this.preferences != null ? this.preferences.getBoolean(KEY_VERIFIED_BADGE, true) : true;
+        this.isVerifiedBadgeEnabled = this.preferences != null ? this.preferences.getBoolean(KEY_VERIFIED_BADGE, false) : true;
         migrateLegacyPreferences();
     }
 
@@ -316,8 +316,23 @@ public class NayaConfig {
 
     public int getAppThemeMode() { return preferences.getInt(KEY_APP_THEME_MODE, THEME_MODE_DARK_SLATE); }
     public void setAppThemeMode(int mode) { preferences.edit().putInt(KEY_APP_THEME_MODE, mode).apply(); }
+    
+    private static final String KEY_CHANNEL_VERIFIED_BADGE = "key_channel_verified_badge";
+    public boolean isChannelVerifiedBadgeEnabled = false;
+
+    public boolean isChannelVerifiedBadgeEnabled() {
+        return preferences != null ? preferences.getBoolean(KEY_CHANNEL_VERIFIED_BADGE, false) : false;
+    }
+
+    public void setChannelVerifiedBadgeEnabled(boolean enabled) {
+        this.isChannelVerifiedBadgeEnabled = enabled;
+        if (preferences != null) {
+            preferences.edit().putBoolean(KEY_CHANNEL_VERIFIED_BADGE, enabled).apply();
+        }
+    }
+
     public boolean isVerifiedBadgeEnabled() {
-        return preferences != null ? preferences.getBoolean(KEY_VERIFIED_BADGE, true) : isVerifiedBadgeEnabled;
+        return preferences != null ? preferences.getBoolean(KEY_VERIFIED_BADGE, false) : isVerifiedBadgeEnabled;
     }
 
     public void setVerifiedBadgeEnabled(boolean enabled) {

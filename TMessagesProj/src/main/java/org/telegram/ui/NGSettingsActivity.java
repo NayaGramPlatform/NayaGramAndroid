@@ -74,6 +74,7 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerStealth;
     private int rowVerifiedBadge;
+    private int rowChannelVerifiedBadge;
     private int rowAnonymousStories;
     private int rowGhostMode = -1;
     private int rowApkBlock = -1;
@@ -124,6 +125,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowCount = 0;
         headerStealth = rowCount++;
         rowVerifiedBadge = rowCount++;
+        rowChannelVerifiedBadge = rowCount++;
         rowAnonymousStories = -1;
         rowGhostMode = -1;
         rowApkBlock = -1;
@@ -806,9 +808,18 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(
                         R.drawable.outline_shield_check,
                         0xFF0284C7,
-                        "Blue Verified Badge",
-                        "Show official blue checkmark badge on your profile and name",
+                        "User Profile Verified Badge",
+                        "Show blue checkmark badge on user profile and name (Off by default)",
                         cfg.isVerifiedBadgeEnabled(),
+                        true
+                    );
+                } else if (position == rowChannelVerifiedBadge) {
+                    c.setFeature(
+                        R.drawable.msg_channel,
+                        0xFF7C3AED,
+                        "Channel & Group Verified Badge",
+                        "Show blue checkmark badge on channels and groups (Off by default)",
+                        cfg.isChannelVerifiedBadgeEnabled(),
                         true
                     );
                 } else if (position == rowAnonymousStories) {

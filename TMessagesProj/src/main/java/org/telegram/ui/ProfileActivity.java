@@ -11865,7 +11865,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
                         nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.ScamMessage);
-                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled()) {
                         nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
                         nameTextViewRightDrawableContentDescription = LocaleController.getString(R.string.AccDescrVerified);
                     } else {
@@ -11894,7 +11894,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 } else if (!copyFromChatActivity) {
                     if (chat.scam || chat.fake) {
                         nameTextView[a].setRightDrawable2(getScamDrawable(chat.scam ? 0 : 1));
-                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+                    } else if (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled()) {
                         nameTextView[a].setRightDrawable2(getVerifiedCrossfadeDrawable(a));
                     } else if (getMessagesController().isDialogMuted(-chatId, topicId)) {
                         nameTextView[a].setRightDrawable2(getThemedDrawable(Theme.key_drawable_muteIconDrawable));

@@ -6738,7 +6738,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public TLRPC.Chat getChat(Long id) {
         TLRPC.Chat c = chats.get(id);
-        if (c != null && org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
+        if (c != null && org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled()) {
             c.verified = true;
             c.flags |= 131072;
         }

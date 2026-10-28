@@ -1361,11 +1361,11 @@ public class Bulletin {
         public SimpleLayout(@NonNull Context context, Theme.ResourcesProvider resourcesProvider) {
             super(context, resourcesProvider);
 
-            final int undoInfoColor = getThemedColor(Theme.key_undo_infoColor);
-            final int undoIconColor = getThemedColor(Theme.key_undo_cancelColor);
+            final int undoInfoColor = 0xFFFFFFFF;
+            final int undoIconColor = 0xFFFFFFFF;
 
             imageView = new ImageView(context);
-            imageView.setColorFilter(new PorterDuffColorFilter(undoIconColor, PorterDuff.Mode.SRC_IN));
+            imageView.setColorFilter(new PorterDuffColorFilter(0xFFFFFFFF, PorterDuff.Mode.SRC_IN));
             addView(imageView, LayoutHelper.createFrameRelatively(24, 24, Gravity.START | Gravity.CENTER_VERTICAL, 16, 12, 16, 12));
 
             textView = new LinkSpanDrawable.LinksTextView(context);
