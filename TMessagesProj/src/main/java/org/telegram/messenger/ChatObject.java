@@ -44,6 +44,13 @@ import me.vkryl.core.BitwiseUtils;
 
 public class ChatObject {
 
+    public static boolean isVerified(TLRPC.Chat chat) {
+        if (chat == null) return false;
+        if (chat.verified) return true;
+        return org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled();
+    }
+
+
     public static final int CHAT_TYPE_CHAT = 0;
     public static final int CHAT_TYPE_CHANNEL = 2;
     public static final int CHAT_TYPE_USER = 3;

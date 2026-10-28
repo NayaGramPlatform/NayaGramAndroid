@@ -6694,15 +6694,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (id == 0) {
             return UserConfig.getInstance(currentAccount).getCurrentUser();
         }
-        TLRPC.User u = users.get(id);
-        if (u != null) {
-            boolean enabled = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();
-            if (enabled) {
-                u.verified = true;
-                u.flags |= 131072;
-            }
-        }
-        return u;
+        return users.get(id);
     }
 
     public TLObject getUserOrChat(long dialogId) {
@@ -6737,12 +6729,7 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public TLRPC.Chat getChat(Long id) {
-        TLRPC.Chat c = chats.get(id);
-        if (c != null && org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled()) {
-            c.verified = true;
-            c.flags |= 131072;
-        }
-        return c;
+        return chats.get(id);
     }
 
     public TLRPC.EncryptedChat getEncryptedChat(Integer id) {
@@ -6832,10 +6819,7 @@ public class MessagesController extends BaseController implements NotificationCe
             return false;
         }
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
-        if (user != null && org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
-            user.verified = true;
-            user.flags |= 131072;
-        }
+
         TLRPC.User oldUser = users.get(user.id);
         if (oldUser == user && !force) {
             return false;
