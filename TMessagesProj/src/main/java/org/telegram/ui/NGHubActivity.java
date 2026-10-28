@@ -1,4 +1,6 @@
 package org.telegram.ui;
+
+import org.telegram.messenger.BuildVars;
 import org.telegram.ui.Stories.recorder.StoryRecorder;
 import org.telegram.messenger.FileLog;
 import android.app.Activity;
