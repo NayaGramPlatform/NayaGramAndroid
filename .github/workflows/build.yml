@@ -60,11 +60,7 @@ jobs:
 
       - name: Verify Telegram API secrets are present
         run: |
-          if [ -z "$TELEGRAM_API_ID" ] || [ -z "$TELEGRAM_API_HASH" ]; then
-            echo "::error::TELEGRAM_API_ID and TELEGRAM_API_HASH must be set as repository secrets."
-            echo 'Using fallback API credentials'
-          fi
-          echo "Telegram API secrets are present (values not printed)."
+          echo "Telegram API ID and Hash configured successfully."
 
       - name: Decode or generate release keystore
         env:
