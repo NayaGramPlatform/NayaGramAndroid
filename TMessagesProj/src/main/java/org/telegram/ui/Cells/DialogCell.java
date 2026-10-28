@@ -1486,8 +1486,7 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                             drawScam = 2;
                             Theme.dialogs_fakeDrawable.checkText();
                         } else {
-                            boolean isChatVerified = chat.verified || (chat.flags & 131072) != 0
-                                    || (chat.username != null && (chat.username.equalsIgnoreCase("durov") || chat.username.equalsIgnoreCase("telegram")));
+                            boolean isChatVerified = ChatObject.isVerified(chat);
                             if (isChatVerified) {
                                 drawVerified = !forbidVerified;
                                 drawBotVerified = !forbidVerified && chat.bot_verification_icon != 0;

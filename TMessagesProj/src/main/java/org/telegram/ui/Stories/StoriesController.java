@@ -1964,7 +1964,11 @@ public class StoriesController {
             intent.putExtra("path", path);
             intent.putExtra("currentAccount", currentAccount);
             try {
-                ApplicationLoader.applicationContext.startService(intent);
+                if (android.os.Build.VERSION.SDK_INT >= 26) {
+                    ApplicationLoader.applicationContext.startForegroundService(intent);
+                } else {
+                    ApplicationLoader.applicationContext.startService(intent);
+                }
             } catch (Throwable e) {
                 FileLog.e(e);
             }
