@@ -2005,6 +2005,14 @@ public class StoriesController {
                         boolean rename = new File(messageObject.videoEditedInfo.originalPath).renameTo(new File(path));
                         if (rename) {
                             FileLoader.getInstance(currentAccount).uploadFile(path, false, false, ConnectionsManager.FileTypeVideo);
+                        } else {
+                            try {
+                                AndroidUtilities.copyFile(new File(messageObject.videoEditedInfo.originalPath), new File(path));
+                                FileLoader.getInstance(currentAccount).uploadFile(path, false, false, ConnectionsManager.FileTypeVideo);
+                            } catch (Exception e) {
+                                FileLog.e(e);
+                                FileLoader.getInstance(currentAccount).uploadFile(messageObject.videoEditedInfo.originalPath, false, false, ConnectionsManager.FileTypeVideo);
+                            }
                         }
                     }
                 });

@@ -3040,7 +3040,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     @Override
                     public void draw(@NonNull Canvas canvas) {
                         canvas.save();
-                        canvas.translate(dp(-2), dp(1));
+                        canvas.translate(0, dp(1));
                         super.draw(canvas);
                         canvas.restore();
                     }
@@ -3555,8 +3555,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 communityAvatarImage.setForUserOrChat(community, communityAvatarDrawable);
                 actionBar.addView(communityAvatarImage, LayoutHelper.createFrame(32, 32, Gravity.BOTTOM | Gravity.LEFT, 58, 0, 0, 12f));
             } else {
-                statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(26));
-                statusDrawable.center = true;
+                statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, dp(22));
+                statusDrawable.center = false;
                 actionBar.setTitle(getString(R.string.AppName), statusDrawable);
             if (actionBar.getTitleTextView() != null) {
                 actionBar.getTitleTextView().setDrawablePadding(AndroidUtilities.dp(8));
