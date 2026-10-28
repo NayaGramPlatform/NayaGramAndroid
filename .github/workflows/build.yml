@@ -251,6 +251,7 @@ jobs:
 
       - name: Publish Direct GitHub Release (NayaGram v4.16.45 NG)
         uses: softprops/action-gh-release@v2
+        continue-on-error: true
         if: github.ref == 'refs/heads/master'
         with:
           tag_name: "v4.16.45-4048"
