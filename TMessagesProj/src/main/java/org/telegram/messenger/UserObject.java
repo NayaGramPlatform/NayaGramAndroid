@@ -20,34 +20,25 @@ import java.util.Locale;
 
 public class UserObject {
 
-        public static boolean isVerified(TLRPC.User user) {
+    public static boolean isVerified(TLRPC.User user) {
         if (user == null) {
             return false;
         }
-        // 1. Official Telegram verified flag (from server / protocol)
+        // Telegram's server-provided verification status remains authoritative.
         if (user.verified || (user.flags & 131072) != 0) {
             return true;
         }
-        // 2. Pavel Durov (user id 333000 or username durov)
+        // Preserve the recognizable official Telegram identities in the client UI.
         if (user.id == 333000L || (user.username != null && user.username.equalsIgnoreCase("durov"))) {
             return true;
         }
-        // 3. Telegram Official Service (user id 777000 or username telegram)
         if (user.id == 777000L || (user.username != null && user.username.equalsIgnoreCase("telegram"))) {
             return true;
         }
-        // 4. Client self account verification if enabled via NayaConfig
-        if (org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()) {
-            if (isUserSelf(user)) {
-                return true;
-            }
-            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                if (UserConfig.getInstance(a).isClientActivated() && UserConfig.getInstance(a).getClientUserId() == user.id && user.id != 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        // NayaGram's optional local badge applies only to the current user's own profile.
+        // Never mark other logged-in accounts or unrelated users as verified.
+        return org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()
+                && isUserSelf(user);
     }
 
 
