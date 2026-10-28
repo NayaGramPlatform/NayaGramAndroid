@@ -248,3 +248,27 @@ jobs:
           name: NayaGram-Release-APK
           path: build_output/NayaGram-Release.apk
           if-no-files-found: warn
+
+      - name: Publish Direct GitHub Release (NayaGram v4.16.45 NG)
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/master'
+        with:
+          tag_name: "v4.16.45-4048"
+          name: "NayaGram Release v4.16.45 NG (Build 4048)"
+          body: |
+            ### 🚀 NayaGram Release v4.16.45 NG (Build 4048)
+            
+            **Release Highlights:**
+            - **Version Code**: `4048`
+            - **Version Name**: `4.16.45 NG`
+            - **Public Universal Verified Badges**: Active for all users, groups, channels, chat lists, dialogs, and user profiles!
+            - **NG Hub & Switch Account Header**: Styled with green (light mode) and glowing radiant purple (dark mode).
+            - **High Contrast Popups**: Crisp white icons on Naya Blue background.
+          files: |
+            build_output/NayaGram-Release.apk
+            build_output/NayaGram-Release.aab
+          draft: false
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
