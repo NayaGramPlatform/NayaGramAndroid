@@ -612,11 +612,11 @@ public class NGSettingsActivity extends BaseFragment {
 
             badgeView = new BadgeView(context);
             badgeView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            addView(badgeView, LayoutHelper.createFrame(36, 36, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 0 : 16, LocaleController.isRTL ? 16 : 0, 0));
+            addView(badgeView, LayoutHelper.createFrameRelatively(36, 36, Gravity.START | Gravity.CENTER_VERTICAL, 16, 0, 0, 0));
 
             LinearLayout textLayout = new LinearLayout(context);
             textLayout.setOrientation(LinearLayout.VERTICAL);
-            addView(textLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 68 : 66, 10, LocaleController.isRTL ? 66 : 68, 10));
+            addView(textLayout, LayoutHelper.createFrameRelatively(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL, 66, 10, 68, 10));
 
             titleView = new TextView(context);
             titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
@@ -635,7 +635,7 @@ public class NGSettingsActivity extends BaseFragment {
 
             switchView = new Switch(context);
             switchView.setColors(Theme.key_switchTrack, Theme.key_switchTrackChecked, Theme.key_windowBackgroundWhite, Theme.key_windowBackgroundWhite);
-            addView(switchView, LayoutHelper.createFrame(37, 20, Gravity.RIGHT | Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
+            addView(switchView, LayoutHelper.createFrameRelatively(37, 20, Gravity.END | Gravity.CENTER_VERTICAL, 0, 0, 16, 0));
 
             setFocusable(true);
             setMinimumHeight(AndroidUtilities.dp(60));
