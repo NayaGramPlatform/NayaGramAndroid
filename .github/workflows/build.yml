@@ -250,8 +250,8 @@ jobs:
         continue-on-error: true
         if: github.ref == 'refs/heads/master'
         with:
-          tag_name: "v4.16.45-4048"
-          name: "NayaGram Release v4.16.45 NG (Build 4048)"
+          tag_name: "v4.16.45-b${{ github.run_number }}"
+          name: "NayaGram Release v4.16.45 NG (Build ${{ github.run_number }})"
           body: |
             ### 🚀 NayaGram Release v4.16.45 NG (Build 4048)
             

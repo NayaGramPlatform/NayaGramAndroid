@@ -6466,7 +6466,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 }
             }
             output = new FileOutputStream(f);
-            byte[] buffer = new byte[1024 * 20];
+            byte[] buffer = new byte[1024 * 128];
             int len;
             while ((len = inputStream.read(buffer)) != -1) {
                 output.write(buffer, 0, len);
