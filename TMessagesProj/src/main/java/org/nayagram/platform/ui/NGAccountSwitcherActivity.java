@@ -52,8 +52,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
 
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem addItem = menu.addItem(1, R.drawable.outline_add_account);
-        int cornerIconColor = Theme.isCurrentThemeDark() ? 0xFF9333EA : 0xFF059669;
-        addItem.setIconColor(cornerIconColor);
+        addItem.setIconColor(0xFF00D4FF);
 
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
