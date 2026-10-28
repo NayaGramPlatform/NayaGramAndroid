@@ -254,15 +254,8 @@ public class UserConfig extends BaseController {
 
     public TLRPC.User getCurrentUser() {
         synchronized (sync) {
-            if (currentUser != null) {
-                boolean verified = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();
-                currentUser.verified = verified;
-                if (verified) {
-                    currentUser.flags |= 131072;
-                } else {
-                    currentUser.flags &= ~131072;
-                }
-            }
+            // Keep the server-provided verification flag intact. A local UI preference
+            // must never manufacture or erase Telegram's authoritative verified status.
             return currentUser;
         }
     }
