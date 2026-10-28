@@ -236,21 +236,23 @@ public class NGSettingsActivity extends BaseFragment {
                 if (position == rowVerifiedBadge) {
                     cfg.setVerifiedBadgeEnabled(checked);
                     cell.setChecked(checked);
-                    TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
-                    if (currentUser != null) {
-                        currentUser.verified = checked;
-                        if (checked) {
-                            currentUser.flags |= 131072;
-                        } else {
-                            currentUser.flags &= ~131072;
-                        }
-                    }
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                     BulletinFactory.of(this).createSimpleBulletin(
                         R.drawable.outline_shield_check,
-                        "Blue Verified Badge: " + (checked ? "Enabled" : "Disabled")
+                        "User Profile Verified Badge: " + (checked ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowChannelVerifiedBadge) {
+                    cfg.setChannelVerifiedBadgeEnabled(checked);
+                    cell.setChecked(checked);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        R.drawable.msg_channel,
+                        "Channel & Group Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
@@ -610,11 +612,11 @@ public class NGSettingsActivity extends BaseFragment {
 
             badgeView = new BadgeView(context);
             badgeView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            addView(badgeView, LayoutHelper.createFrame(36, 36, Gravity.LEFT | Gravity.CENTER_VERTICAL, 16, 0, 0, 0));
+            addView(badgeView, LayoutHelper.createFrame(36, 36, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 0 : 16, LocaleController.isRTL ? 16 : 0, 0));
 
             LinearLayout textLayout = new LinearLayout(context);
             textLayout.setOrientation(LinearLayout.VERTICAL);
-            addView(textLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL, 66, 10, 68, 10));
+            addView(textLayout, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, (LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT) | Gravity.CENTER_VERTICAL, LocaleController.isRTL ? 68 : 66, 10, LocaleController.isRTL ? 66 : 68, 10));
 
             titleView = new TextView(context);
             titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);

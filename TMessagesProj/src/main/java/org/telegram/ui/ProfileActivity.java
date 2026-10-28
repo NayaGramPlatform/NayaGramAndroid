@@ -14159,8 +14159,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 sb.append(" ");
                                 int textStart = sb.length();
                                 String verifiedText = (currentChat != null)
-                                    ? "This community is verified as official by the representatives of NayaGram."
-                                    : "This account is verified as official by the representatives of NayaGram.";
+                                    ? "This community is verified as official by the representatives of Telegram."
+                                    : "This account is verified as official by the representatives of Telegram.";
                                 sb.append(verifiedText);
                                 sb.setSpan(new ForegroundColorSpan(textColor), textStart, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             }
