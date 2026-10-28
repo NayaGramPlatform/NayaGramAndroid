@@ -104,11 +104,34 @@ public class NGHubActivity extends BaseFragment {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setTitle("NG Hub");
         actionBar.setAllowOverlayTitle(true);
+        org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
+        org.telegram.ui.ActionBar.ActionBarMenuItem cornerItem = menu.addItem(9920, R.drawable.msg_channel);
+        cornerItem.setContentDescription("NG Hub Details");
+        org.telegram.ui.Components.RLottieImageView cornerIcon = cornerItem.getIconView();
+        if (cornerIcon != null) {
+            boolean isDarkTheme = Theme.isCurrentThemeDark();
+            int[] hubColors = isDarkTheme
+                    ? new int[]{0xFFA855F7, 0xFF7C3AED} // Dark mode: Beautiful Purple
+                    : new int[]{0xFF22C55E, 0xFF15803D}; // Light mode: Vibrant Green
+            android.graphics.drawable.GradientDrawable cornerBg = new android.graphics.drawable.GradientDrawable(
+                    android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                    hubColors
+            );
+            cornerBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            cornerIcon.setBackground(cornerBg);
+            cornerIcon.setColorFilter(new android.graphics.PorterDuffColorFilter(android.graphics.Color.WHITE, android.graphics.PorterDuff.Mode.SRC_IN));
+            android.widget.FrameLayout.LayoutParams lp = LayoutHelper.createFrame(28, 28, Gravity.CENTER);
+            cornerIcon.setLayoutParams(lp);
+            int pad = AndroidUtilities.dp(5);
+            cornerIcon.setPadding(pad, pad, pad, pad);
+        }
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
                 if (id == -1) {
                     closeAnimated();
+                } else if (id == 9920) {
+                    openDetails();
                 }
             }
         });
@@ -881,7 +904,7 @@ public class NGHubActivity extends BaseFragment {
         heroCard.setBackground(head);
 
         TextView versionBadge = new TextView(context);
-        versionBadge.setText("🚀 Version 2.2 • Enhanced October 2026 Edition");
+        versionBadge.setText("🚀 Version " + BuildVars.BUILD_VERSION_STRING + " (" + BuildVars.BUILD_VERSION + ") • Official Release");
         versionBadge.setTextSize(11);
         versionBadge.setTextColor(0xFFE0F2FE);
         versionBadge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);

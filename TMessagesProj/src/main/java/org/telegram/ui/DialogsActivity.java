@@ -3267,9 +3267,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             ngHubItem.setContentDescription("NG Hub");
             org.telegram.ui.Components.RLottieImageView iconView = ngHubItem.getIconView();
             if (iconView != null) {
+                boolean isDarkTheme = Theme.isCurrentThemeDark();
+                int[] hubColors = isDarkTheme
+                        ? new int[]{0xFFA855F7, 0xFF7C3AED} // Dark mode: Beautiful Purple
+                        : new int[]{0xFF22C55E, 0xFF15803D}; // Light mode: Vibrant Green
                 android.graphics.drawable.GradientDrawable circleBg = new android.graphics.drawable.GradientDrawable(
                         android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                        new int[]{0xFF00D4FF, 0xFF0284C7}
+                        hubColors
                 );
                 circleBg.setShape(android.graphics.drawable.GradientDrawable.OVAL);
                 iconView.setBackground(circleBg);

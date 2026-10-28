@@ -1485,15 +1485,22 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                         } else if (chat.fake) {
                             drawScam = 2;
                             Theme.dialogs_fakeDrawable.checkText();
-                        } else if (DialogObject.getEmojiStatusDocumentId(chat.emoji_status) != 0) {
-                            drawPremium = true;
-                            nameLayoutEllipsizeByGradient = true;
-                            emojiStatus.center = LocaleController.isRTL;
-                            emojiStatus.set(DialogObject.getEmojiStatusDocumentId(chat.emoji_status), false);
-                            emojiStatus.setParticles(DialogObject.isEmojiStatusCollectible(chat.emoji_status), false);
                         } else {
-                            drawVerified = !forbidVerified && (chat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled());
-                            drawBotVerified = !forbidVerified && chat.bot_verification_icon != 0;
+                            boolean isChatVerified = chat.verified || (chat.flags & 131072) != 0
+                                    || (chat.username != null && (chat.username.equalsIgnoreCase("durov") || chat.username.equalsIgnoreCase("telegram")));
+                            if (isChatVerified) {
+                                drawVerified = !forbidVerified;
+                                drawBotVerified = !forbidVerified && chat.bot_verification_icon != 0;
+                            } else if (DialogObject.getEmojiStatusDocumentId(chat.emoji_status) != 0) {
+                                drawPremium = true;
+                                nameLayoutEllipsizeByGradient = true;
+                                emojiStatus.center = LocaleController.isRTL;
+                                emojiStatus.set(DialogObject.getEmojiStatusDocumentId(chat.emoji_status), false);
+                                emojiStatus.setParticles(DialogObject.isEmojiStatusCollectible(chat.emoji_status), false);
+                            } else {
+                                drawVerified = false;
+                                drawBotVerified = !forbidVerified && chat.bot_verification_icon != 0;
+                            }
                         }
                     } else if (user != null) {
                         dialogBotVerificationIcon = DialogObject.getBotVerificationIcon(user);
@@ -1503,23 +1510,30 @@ public class DialogCell extends BaseCell implements StoriesListPlaceProvider.Ava
                         } else if (user.fake) {
                             drawScam = 2;
                             Theme.dialogs_fakeDrawable.checkText();
+                        } else if (UserObject.isVerified(user)) {
+                            drawVerified = !forbidVerified;
+                            drawBotVerified = !forbidVerified && !UserObject.isUserSelf(user) && user.bot_verification_icon != 0;
                         } else {
-                            drawVerified = !forbidVerified && UserObject.isVerified(user);
+                            drawVerified = false;
                             drawBotVerified = !forbidVerified && !UserObject.isUserSelf(user) && user.bot_verification_icon != 0;
                         }
-                        drawPremium = MessagesController.getInstance(currentAccount).isPremiumUser(user) && UserConfig.getInstance(currentAccount).clientUserId != user.id && user.id != 0;
-                        if (drawPremium) {
-                            Long emojiStatusId = UserObject.getEmojiStatusDocumentId(user);
-                            emojiStatus.center = LocaleController.isRTL;
-                            if (emojiStatusId != null) {
-                                nameLayoutEllipsizeByGradient = true;
-                                emojiStatus.set(emojiStatusId, false);
-                                emojiStatus.setParticles(DialogObject.isEmojiStatusCollectible(user.emoji_status), false);
-                            } else {
-                                nameLayoutEllipsizeByGradient = true;
-                                emojiStatus.set(PremiumGradient.getInstance().premiumStarDrawableMini, false);
-                                emojiStatus.setParticles(false, false);
+                        if (!drawVerified) {
+                            drawPremium = MessagesController.getInstance(currentAccount).isPremiumUser(user) && UserConfig.getInstance(currentAccount).clientUserId != user.id && user.id != 0;
+                            if (drawPremium) {
+                                Long emojiStatusId = UserObject.getEmojiStatusDocumentId(user);
+                                emojiStatus.center = LocaleController.isRTL;
+                                if (emojiStatusId != null) {
+                                    nameLayoutEllipsizeByGradient = true;
+                                    emojiStatus.set(emojiStatusId, false);
+                                    emojiStatus.setParticles(DialogObject.isEmojiStatusCollectible(user.emoji_status), false);
+                                } else {
+                                    nameLayoutEllipsizeByGradient = true;
+                                    emojiStatus.set(PremiumGradient.getInstance().premiumStarDrawableMini, false);
+                                    emojiStatus.setParticles(false, false);
+                                }
                             }
+                        } else {
+                            drawPremium = false;
                         }
                     }
                     if (dialogBotVerificationIcon != 0 && drawBotVerified) {

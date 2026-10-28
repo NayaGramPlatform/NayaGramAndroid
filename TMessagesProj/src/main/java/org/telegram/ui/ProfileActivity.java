@@ -14081,7 +14081,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TL_bots.BotVerification bot_verification = userInfo != null ? userInfo.bot_verification : chatInfo != null ? chatInfo.bot_verification : null;
                         Long bot_manager_id = userInfo != null && TLObject.hasFlag(userInfo.flags2, TLObject.FLAG_25) ? userInfo.bot_manager_id : null;
                         final TLRPC.User user = getMessagesController().getUser(userId);
-                        boolean isVerified = (user != null && UserObject.isVerified(user)) || (currentChat != null && (currentChat.verified || org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()));
+                        boolean isChatVerified = currentChat != null && (currentChat.verified || (currentChat.flags & 131072) != 0 || (currentChat.username != null && (currentChat.username.equalsIgnoreCase("durov") || currentChat.username.equalsIgnoreCase("telegram"))));
+                        boolean isVerified = (user != null && UserObject.isVerified(user)) || isChatVerified;
                         if (botAppRow >= 0 || bot_verification != null || bot_manager_id != null || isVerified) {
                             cell.setFixedSize(0);
                             final boolean botOwner = user != null && user.bot && user.bot_can_edit;
