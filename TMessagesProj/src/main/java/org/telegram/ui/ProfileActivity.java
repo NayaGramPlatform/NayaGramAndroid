@@ -14080,11 +14080,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         TLObject obj = getMessagesController().getUserOrChat(did);
                         TL_bots.BotVerification bot_verification = userInfo != null ? userInfo.bot_verification : chatInfo != null ? chatInfo.bot_verification : null;
                         Long bot_manager_id = userInfo != null && TLObject.hasFlag(userInfo.flags2, TLObject.FLAG_25) ? userInfo.bot_manager_id : null;
-                        final TLRPC.User user = getMessagesController().getUser(userId);
-                        boolean isChatVerified = ChatObject.isVerified(currentChat);
-                        boolean isVerified = (user != null && UserObject.isVerified(user)) || isChatVerified;
-                        if (botAppRow >= 0 || bot_verification != null || bot_manager_id != null || isVerified) {
+                        if (botAppRow >= 0 || bot_verification != null || bot_manager_id != null) {
                             cell.setFixedSize(0);
+                            final TLRPC.User user = getMessagesController().getUser(userId);
                             final boolean botOwner = user != null && user.bot && user.bot_can_edit;
                             SpannableStringBuilder sb = new SpannableStringBuilder();
 
@@ -14100,11 +14098,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 sb.append("x");
                                 sb.setSpan(new AnimatedEmojiSpan(bot_verification.icon, cell.getTextView().getPaint().getFontMetricsInt()), sb.length() - 1, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 sb.append(" ");
-                                CharSequence formatted = MessageObject.formatTextWithEntities(bot_verification.description);
-                                String rawDesc = formatted != null ? formatted.toString() : "";
-                                SpannableString description = new SpannableString(rawDesc);
-                                int botDescTextColor = Theme.isCurrentThemeDark() ? 0xFFC084FC : 0xFF059669;
-                                description.setSpan(new ForegroundColorSpan(botDescTextColor), 0, description.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                SpannableString description = new SpannableString(MessageObject.formatTextWithEntities(bot_verification.description));
                                 try {
                                     AndroidUtilities.addLinksSafe(description, Linkify.WEB_URLS, false, false);
                                     URLSpan[] spans = description.getSpans(0, description.length(), URLSpan.class);
@@ -14144,25 +14138,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                         () -> presentFragment(ProfileActivity.of(bot_manager_id))
                                     ));
                                 }
-                            } else if (isVerified) {
-                                if (sb.length() > 0) {
-                                    sb.append("\n\n\n");
-                                }
-                                int from = sb.length();
-                                sb.append("x");
-                                ColoredImageSpan badgeSpan = new ColoredImageSpan(R.drawable.verified_profile);
-                                int badgeColor = Theme.isCurrentThemeDark() ? 0xFF9333EA : 0xFF0284C7;
-                                int textColor = Theme.isCurrentThemeDark() ? 0xFFC084FC : 0xFF059669;
-                                badgeSpan.setOverrideColor(badgeColor);
-                                badgeSpan.setScale(0.85f);
-                                sb.setSpan(badgeSpan, from, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                                sb.append(" ");
-                                int textStart = sb.length();
-                                String verifiedText = (currentChat != null)
-                                    ? "This community is verified as official by the representatives of Telegram."
-                                    : "This account is verified as official by the representatives of Telegram.";
-                                sb.append(verifiedText);
-                                sb.setSpan(new ForegroundColorSpan(textColor), textStart, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             }
 
                             cell.setLinkTextRippleColor(Theme.multAlpha(getThemedColor(Theme.key_windowBackgroundWhiteGrayText4), 0.2f));
