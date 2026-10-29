@@ -160,6 +160,8 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
     ActionBarAnimatedSubtitleOverlayContainer subtitleOverlayContainer;
     ImageView telegramLogoView;
     ImageView emojiStatusView;
+    ImageView titleVerifiedBadgeView;
+    private Drawable titleVerifiedBadgeDrawable;
     AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable statusDrawable;
     boolean drawCircleForce;
     ArrayList<Runnable> afterNextLayout = new ArrayList<>();
@@ -349,6 +351,10 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         emojiStatusView.setScaleType(ImageView.ScaleType.CENTER);
         emojiStatusView.setImageDrawable(statusDrawable);
         addView(emojiStatusView, LayoutHelper.createFrame(40, 40));
+
+        titleVerifiedBadgeView = new ImageView(context);
+        titleVerifiedBadgeView.setScaleType(ImageView.ScaleType.CENTER);
+        addView(titleVerifiedBadgeView, LayoutHelper.createFrame(20, 20));
 
         subtitleOverlayContainer = new ActionBarAnimatedSubtitleOverlayContainer(context, null, ellipsizeSpanAnimator) {
             @Override
@@ -948,8 +954,22 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
             telegramLogoView.setTranslationX(titleView.getTranslationX() + dp(1));
             telegramLogoView.setTranslationY(bottomY + dp(14 + FAKE_TOP_PADDING + 4.333f) + translationOffset /*titleView.getTranslationY() + dpf2(37.33f)*/);
 
-            emojiStatusView.setTranslationX(titleView.getTranslationX() - dpf2(3.33f) + telegramLogoView.getMeasuredWidth());
+            float currentTitleWidth = titleView.getDrawable() != null ? titleView.getDrawable().getCurrentWidth() : 0;
+            if (currentTitleWidth <= 0 && titleView.getText() != null) {
+                currentTitleWidth = titleView.getPaint().measureText(titleView.getText().toString());
+            }
+            float statusX = titleView.getTranslationX() + currentTitleWidth + dp(4);
+            emojiStatusView.setTranslationX(statusX - dp(10));
             emojiStatusView.setTranslationY(bottomY + dp(14 - 11 + FAKE_TOP_PADDING + 4.333f) + translationOffset);
+
+            float verifiedX = statusX;
+            if (statusDrawable != null && statusDrawable.getIntrinsicWidth() > 0) {
+                verifiedX += dp(22);
+            }
+            if (titleVerifiedBadgeView != null) {
+                titleVerifiedBadgeView.setTranslationX(verifiedX);
+                titleVerifiedBadgeView.setTranslationY(bottomY + dp(14 + FAKE_TOP_PADDING + 4.333f) - dp(2) + translationOffset);
+            }
 
             subtitleOverlayContainer.setTranslationX(titleView.getTranslationX());
             subtitleOverlayContainer.setTranslationY(bottomY + dp(15 + FAKE_TOP_PADDING + 4.333f + 8));
@@ -1159,6 +1179,16 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         titleView.setTextColor(getTextLogoColor());
         if (subtitleOverlayContainer != null) {
             subtitleOverlayContainer.updateColors();
+        }
+        if (titleVerifiedBadgeDrawable instanceof CombinedDrawable) {
+            Drawable bg = ((CombinedDrawable) titleVerifiedBadgeDrawable).getBackground();
+            if (bg != null) {
+                bg.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+            }
+            Drawable icon = ((CombinedDrawable) titleVerifiedBadgeDrawable).getIcon();
+            if (icon != null) {
+                icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+            }
         }
         telegramLogoView.setColorFilter(getTextLogoColor(), PorterDuff.Mode.MULTIPLY);
         AndroidUtilities.forEachViews(recyclerListView, view -> {
@@ -2198,6 +2228,46 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         }
         statusDrawable.setColor(getThemedColor(Theme.key_profile_verifiedBackground));
         emojiStatusView.invalidate();
+        updateTitleVerifiedBadge();
+    }
+
+    public void updateTitleVerifiedBadge() {
+        if (titleVerifiedBadgeView == null) {
+            return;
+        }
+        TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+        boolean showBadge = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled() || (currentUser != null && currentUser.verified);
+        if (showBadge) {
+            if (titleVerifiedBadgeDrawable == null) {
+                Drawable verifyDrawable = ContextCompat.getDrawable(getContext(), R.drawable.verified_area);
+                Drawable checkDrawable = ContextCompat.getDrawable(getContext(), R.drawable.verified_check);
+                if (verifyDrawable != null && checkDrawable != null) {
+                    verifyDrawable = verifyDrawable.mutate();
+                    verifyDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+                    checkDrawable = checkDrawable.mutate();
+                    checkDrawable.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+                    CombinedDrawable combined = new CombinedDrawable(verifyDrawable, checkDrawable);
+                    combined.setFullsize(true);
+                    titleVerifiedBadgeDrawable = combined;
+                }
+            } else if (titleVerifiedBadgeDrawable instanceof CombinedDrawable) {
+                Drawable bg = ((CombinedDrawable) titleVerifiedBadgeDrawable).getBackground();
+                if (bg != null) {
+                    bg.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+                }
+                Drawable icon = ((CombinedDrawable) titleVerifiedBadgeDrawable).getIcon();
+                if (icon != null) {
+                    icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+                }
+            }
+            titleVerifiedBadgeView.setImageDrawable(titleVerifiedBadgeDrawable);
+            final float progress = MathUtils.clamp(Math.min(collapsedProgress, collapsedProgress2), 0, 1);
+            titleVerifiedBadgeView.setVisibility(progress > 0 ? VISIBLE : GONE);
+        } else {
+            titleVerifiedBadgeView.setImageDrawable(null);
+            titleVerifiedBadgeView.setVisibility(GONE);
+        }
+        invalidate();
     }
 
     private int getThemedColor(int key) {
@@ -2231,6 +2301,12 @@ public class DialogStoriesCell extends FrameLayout implements NotificationCenter
         if (emojiStatusView != null) {
             emojiStatusView.setAlpha(titleAlpha);
             emojiStatusView.setVisibility(titleAlpha > 0 ? VISIBLE : GONE);
+        }
+        TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+        boolean showVerified = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled() || (currentUser != null && currentUser.verified);
+        if (titleVerifiedBadgeView != null) {
+            titleVerifiedBadgeView.setAlpha(titleAlpha);
+            titleVerifiedBadgeView.setVisibility(showVerified && titleAlpha > 0 ? VISIBLE : GONE);
         }
         if (subtitleOverlayContainer != null) {
             subtitleOverlayContainer.setAlpha(progress);

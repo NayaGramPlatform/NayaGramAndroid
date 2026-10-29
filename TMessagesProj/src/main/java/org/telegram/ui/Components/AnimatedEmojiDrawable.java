@@ -1491,28 +1491,12 @@ public class AnimatedEmojiDrawable extends Drawable {
 
         @Override
         public int getIntrinsicWidth() {
-            if (drawables[0] != null) {
-                int w = drawables[0].getIntrinsicWidth();
-                return w > 0 ? w : size;
-            }
-            if (drawables[1] != null) {
-                int w = drawables[1].getIntrinsicWidth();
-                return w > 0 ? w : size;
-            }
-            return 0;
+            return (drawables[0] != null || drawables[1] != null) ? size : 0;
         }
 
         @Override
         public int getIntrinsicHeight() {
-            if (drawables[0] != null) {
-                int h = drawables[0].getIntrinsicHeight();
-                return h > 0 ? h : size;
-            }
-            if (drawables[1] != null) {
-                int h = drawables[1].getIntrinsicHeight();
-                return h > 0 ? h : size;
-            }
-            return 0;
+            return (drawables[0] != null || drawables[1] != null) ? size : 0;
         }
 
         @Override

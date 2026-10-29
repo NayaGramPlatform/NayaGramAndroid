@@ -3092,6 +3092,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         }
         if (folderId != 0 || communityId != 0 || onlySelect || searchString != null) {
             actionBar.setTitleRightDrawable2(null);
+            if (dialogStoriesCell != null) {
+                dialogStoriesCell.updateTitleVerifiedBadge();
+            }
             return;
         }
         TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
@@ -3133,6 +3136,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 actionBar.getTitleTextView().requestLayout();
                 actionBar.getTitleTextView().invalidate();
             }
+        }
+        if (dialogStoriesCell != null) {
+            dialogStoriesCell.updateTitleVerifiedBadge();
         }
     }
 
