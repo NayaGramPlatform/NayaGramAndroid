@@ -25,7 +25,7 @@ public class UserObject {
             return false;
         }
         // Telegram's server-provided verification status remains authoritative.
-        if (user.verified || (user.flags & 131072) != 0) {
+        if (user.verified) {
             return true;
         }
         // Preserve the recognizable official Telegram identities in the client UI.
