@@ -2929,7 +2929,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 .add(NotificationCenter.dialogsUnreadPollVotesCounterChanged)
                 .add(NotificationCenter.forceImportContactsStart)
                 .add(NotificationCenter.userEmojiStatusUpdated)
-                .add(NotificationCenter.currentUserPremiumStatusChanged);
+                .add(NotificationCenter.currentUserPremiumStatusChanged)
+                .add(NotificationCenter.mainUserInfoChanged);
+            observersGroup.addGlobal(NotificationCenter.reloadInterface);
 
             observersGroup.addGlobal(NotificationCenter.didSetPasscode);
         }
@@ -3025,6 +3027,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (isCollectible) {
                 statusDrawableGiftId = ((TLRPC.TL_emojiStatusCollectible) user.emoji_status).collectible_id;
             }
+            if (actionBar.getTitleTextView() != null) {
+                actionBar.getTitleTextView().setRightDrawable(statusDrawable);
+            }
             actionBar.setRightDrawableOnClick(e -> {
                 if (dialogStoriesCellVisible && dialogStoriesCell != null && !dialogStoriesCell.isExpanded()) {
                     scrollToTop(true, true);
@@ -3049,6 +3054,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             premiumStar.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
             statusDrawable.set(premiumStar, animated);
             statusDrawable.setParticles(false, animated);
+            if (actionBar.getTitleTextView() != null) {
+                actionBar.getTitleTextView().setRightDrawable(statusDrawable);
+            }
             actionBar.setRightDrawableOnClick(e -> {
                 if (dialogStoriesCellVisible && dialogStoriesCell != null && !dialogStoriesCell.isExpanded()) {
                     scrollToTop(true, true);
@@ -3060,6 +3068,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else {
             statusDrawable.set((Drawable) null, animated);
             statusDrawable.setParticles(false, animated);
+            if (actionBar.getTitleTextView() != null) {
+                actionBar.getTitleTextView().setRightDrawable(null);
+            }
             actionBar.setRightDrawableOnClick(null);
         }
         statusDrawable.setColor(getThemedColor(Theme.key_profile_verifiedBackground));
@@ -3069,6 +3080,42 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (selectAnimatedEmojiDialog != null && selectAnimatedEmojiDialog.getContentView() instanceof SelectAnimatedEmojiDialog) {
             SimpleTextView textView = actionBar.getTitleTextView();
             ((SelectAnimatedEmojiDialog) selectAnimatedEmojiDialog.getContentView()).setScrimDrawable(textView != null && textView.getRightDrawable() == statusDrawable ? statusDrawable : null, textView);
+        }
+        updateTitleVerifiedBadge();
+    }
+
+    private Drawable titleVerifiedDrawable;
+
+    private void updateTitleVerifiedBadge() {
+        if (actionBar == null) {
+            return;
+        }
+        if (folderId != 0 || communityId != 0 || onlySelect || searchString != null) {
+            actionBar.setTitleRightDrawable2(null);
+            return;
+        }
+        TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
+        boolean showBadge = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled() || (currentUser != null && currentUser.verified);
+        if (showBadge) {
+            if (titleVerifiedDrawable == null) {
+                Drawable verifiedBackground = getResources().getDrawable(R.drawable.verified_area).mutate();
+                verifiedBackground.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+                Drawable verifiedCheck = getResources().getDrawable(R.drawable.verified_check).mutate();
+                verifiedCheck.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+                titleVerifiedDrawable = new CombinedDrawable(verifiedBackground, verifiedCheck);
+            } else if (titleVerifiedDrawable instanceof CombinedDrawable) {
+                Drawable bg = ((CombinedDrawable) titleVerifiedDrawable).getBackground();
+                if (bg != null) {
+                    bg.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+                }
+                Drawable icon = ((CombinedDrawable) titleVerifiedDrawable).getIcon();
+                if (icon != null) {
+                    icon.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+                }
+            }
+            actionBar.setTitleRightDrawable2(titleVerifiedDrawable);
+        } else {
+            actionBar.setTitleRightDrawable2(null);
         }
     }
 
@@ -7113,6 +7160,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public void onResume() {
         super.onResume();
         org.nayagram.platform.AutoPinChannelManager.checkAndPinChannel();
+        if (folderId == 0 && communityId == 0 && !onlySelect && searchString == null) {
+            updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
+        }
         if (dialogStoriesCell != null) {
             dialogStoriesCell.onResume();
         }
@@ -10950,6 +11000,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.currentUserPremiumStatusChanged) {
             updateStatus(UserConfig.getInstance(account).getCurrentUser(), true);
             updateStoriesPosting();
+        } else if (id == NotificationCenter.reloadInterface || id == NotificationCenter.mainUserInfoChanged) {
+            updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), true);
         } else if (id == NotificationCenter.onDatabaseReset) {
             dialogsLoaded[currentAccount] = false;
             loadDialogs(getAccountInstance());
