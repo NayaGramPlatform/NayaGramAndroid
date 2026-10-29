@@ -11584,7 +11584,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     nameTextView[a].setLeftDrawableOutside(false);
                 }
                 nameTextView[a].setLeftDrawable(leftIcon);
-                if (a == 1 && (rightIconIsStatus || rightIconIsPremium)) {
+                if (a == 1 && (rightIconIsStatus || rightIconIsPremium || UserObject.isVerified(user) || nameTextView[a].getRightDrawable2() != null)) {
                     nameTextView[a].setRightDrawableOutside(true);
                 }
                 if (user.self && getMessagesController().isPremiumUser(user)) {
@@ -11871,6 +11871,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         nameTextView[a].setRightDrawable2(null);
                         nameTextViewRightDrawableContentDescription = null;
+                    }
+                    if (ChatObject.isVerified(chat) || nameTextView[a].getRightDrawable2() != null) {
+                        nameTextView[a].setRightDrawableOutside(true);
                     }
                     if (DialogObject.getEmojiStatusDocumentId(chat.emoji_status) != 0) {
                         nameTextView[a].setRightDrawable(getEmojiStatusDrawable(chat.emoji_status, true, false, a));

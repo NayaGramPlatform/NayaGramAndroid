@@ -75,6 +75,7 @@ public class NGSettingsActivity extends BaseFragment {
     private int headerStealth;
     private int rowVerifiedBadge;
     private int rowChannelVerifiedBadge;
+    private int rowBotVerifiedBadge;
     private int rowAnonymousStories;
     private int rowGhostMode = -1;
     private int rowApkBlock = -1;
@@ -126,6 +127,7 @@ public class NGSettingsActivity extends BaseFragment {
         headerStealth = rowCount++;
         rowVerifiedBadge = rowCount++;
         rowChannelVerifiedBadge = rowCount++;
+        rowBotVerifiedBadge = rowCount++;
         rowAnonymousStories = -1;
         rowGhostMode = -1;
         rowApkBlock = -1;
@@ -241,7 +243,7 @@ public class NGSettingsActivity extends BaseFragment {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                     BulletinFactory.of(this).createSimpleBulletin(
-                        R.drawable.outline_shield_check,
+                        checked ? R.raw.done : R.raw.chats_infotip,
                         "User Profile Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowChannelVerifiedBadge) {
@@ -251,8 +253,18 @@ public class NGSettingsActivity extends BaseFragment {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                     BulletinFactory.of(this).createSimpleBulletin(
-                        R.drawable.msg_channel,
+                        checked ? R.raw.done : R.raw.chats_infotip,
                         "Channel & Group Verified Badge: " + (checked ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowBotVerifiedBadge) {
+                    cfg.setBotVerifiedBadgeEnabled(checked);
+                    cell.setChecked(checked);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        checked ? R.raw.done : R.raw.chats_infotip,
+                        "Bot Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
@@ -508,10 +520,16 @@ public class NGSettingsActivity extends BaseFragment {
         if (getParentActivity() == null) return;
         String title;
         String body;
-        if (position == rowVerifiedBadge) {
+        if (position == rowVerifiedBadge || position == rowChannelVerifiedBadge || position == rowBotVerifiedBadge) {
             AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
-            b.setTitle("Blue Verified Badge");
-            b.setMessage("When enabled, your NayaGram account will display the official blue verification checkmark badge next to your name across chats, group messages, and user profile.");
+            b.setTitle("NayaGram Verified Badge");
+            b.setMessage("About NayaGram Verified Badge:
+
+" +
+                "• Purpose: An in-app visual personalization badge to highlight trusted community members, channels, groups, and bots across the NayaGram ecosystem.
+
+" +
+                "• Important Notice: This badge is exclusively an internal NayaGram customization feature. It is NOT official verification from Telegram (Telegram FZ-LLC), nor is it issued by any government or official regulatory authority. Official Telegram server verifications are independent and remain authoritative.");
             b.setPositiveButton("Got it", null);
             showDialog(b.create());
             return;
@@ -810,7 +828,7 @@ public class NGSettingsActivity extends BaseFragment {
                         R.drawable.outline_shield_check,
                         0xFF0284C7,
                         "User Profile Verified Badge",
-                        "Show blue checkmark badge on user profile and name (Off by default)",
+                        "Visual badge for profile (Internal NayaGram feature, not official/govt)",
                         cfg.isVerifiedBadgeEnabled(),
                         true
                     );
@@ -819,8 +837,17 @@ public class NGSettingsActivity extends BaseFragment {
                         R.drawable.msg_channel,
                         0xFF7C3AED,
                         "Channel & Group Verified Badge",
-                        "Show blue checkmark badge on channels and groups (Off by default)",
+                        "Visual badge for channels & groups (Internal NayaGram feature, not official/govt)",
                         cfg.isChannelVerifiedBadgeEnabled(),
+                        true
+                    );
+                } else if (position == rowBotVerifiedBadge) {
+                    c.setFeature(
+                        R.drawable.msg_bot,
+                        0xFF10B981,
+                        "Bot Verified Badge",
+                        "Visual badge for bots (Internal NayaGram feature, not official/govt)",
+                        cfg.isBotVerifiedBadgeEnabled(),
                         true
                     );
                 } else if (position == rowAnonymousStories) {

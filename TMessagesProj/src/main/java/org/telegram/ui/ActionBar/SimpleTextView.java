@@ -394,13 +394,15 @@ public class SimpleTextView extends View implements Drawable.Callback {
                 int rightDrawableWidth = 0;
                 if (!rightDrawableInside) {
                     if (rightDrawable != null && !rightDrawableOutside) {
-                        rightDrawableWidth += (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale);
-                        width -= rightDrawableWidth;
+                        int w = (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale);
+                        rightDrawableWidth += w;
+                        width -= w;
                         width -= drawablePadding;
                     }
                     if (rightDrawable2 != null && !rightDrawableOutside) {
-                        rightDrawableWidth += (int) (rightDrawable2.getIntrinsicWidth() * rightDrawableScale);
-                        width -= rightDrawableWidth;
+                        int w = (int) (rightDrawable2.getIntrinsicWidth() * rightDrawableScale);
+                        rightDrawableWidth += w;
+                        width -= w;
                         width -= drawablePadding;
                     }
                 }
@@ -523,7 +525,14 @@ public class SimpleTextView extends View implements Drawable.Callback {
         }
         if (widthWrapContent) {
 //            textWidth = (int) Math.ceil(layout.getLineWidth(0));
-            width = Math.min(width, getPaddingLeft() + textWidth + getPaddingRight() + minusWidth + (leftDrawableOutside && leftDrawable != null ? leftDrawable.getIntrinsicWidth() + drawablePadding : 0) + (rightDrawableOutside && rightDrawable != null ? rightDrawable.getIntrinsicWidth() + drawablePadding : 0) + (rightDrawableOutside && rightDrawable2 != null ? rightDrawable2.getIntrinsicWidth() + drawablePadding : 0));
+            int extraDrawablesWidth = (leftDrawableOutside && leftDrawable != null ? leftDrawable.getIntrinsicWidth() + drawablePadding : 0);
+            if (rightDrawable != null && rightDrawable.getIntrinsicWidth() > 0) {
+                extraDrawablesWidth += (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale) + drawablePadding;
+            }
+            if (rightDrawable2 != null && rightDrawable2.getIntrinsicWidth() > 0) {
+                extraDrawablesWidth += (int) (rightDrawable2.getIntrinsicWidth() * rightDrawableScale) + drawablePadding;
+            }
+            width = Math.min(width, getPaddingLeft() + textWidth + getPaddingRight() + minusWidth + extraDrawablesWidth);
             width = Math.max(width, 0);
         }
         setMeasuredDimension(width, finalHeight);
@@ -893,7 +902,12 @@ public class SimpleTextView extends View implements Drawable.Callback {
         }
 
         if (rightDrawable != null && !rightDrawableHidden && rightDrawableScale > 0 && !rightDrawableOutside && !rightDrawableInside) {
-            int x = textOffsetX + textWidth + drawablePadding + (int) -scrollingOffset;
+            int x;
+            if (scrollingOffset != 0 || textDoesNotFit) {
+                x = getMaxTextWidth() - paddingRight + drawablePadding;
+            } else {
+                x = textOffsetX + textWidth + drawablePadding;
+            }
             if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.CENTER_HORIZONTAL ||
                     (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.RIGHT) {
                 x += offsetX;
@@ -913,8 +927,13 @@ public class SimpleTextView extends View implements Drawable.Callback {
             totalWidth += drawablePadding + dw;
         }
         if (rightDrawable2 != null && !rightDrawableHidden && rightDrawableScale > 0 && !rightDrawableOutside && !rightDrawableInside) {
-            int x = textOffsetX + textWidth + drawablePadding + (int) -scrollingOffset;
-            if (rightDrawable != null) {
+            int x;
+            if (scrollingOffset != 0 || textDoesNotFit) {
+                x = getMaxTextWidth() - paddingRight + drawablePadding;
+            } else {
+                x = textOffsetX + textWidth + drawablePadding;
+            }
+            if (rightDrawable != null && rightDrawable.getIntrinsicWidth() > 0) {
                 x += (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale) + drawablePadding;
             }
             if ((gravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.CENTER_HORIZONTAL ||
@@ -1118,7 +1137,12 @@ public class SimpleTextView extends View implements Drawable.Callback {
             leftDrawable.draw(canvas);
         }
         if (rightDrawable != null && rightDrawableOutside) {
-            int x = Math.min(textOffsetX + textWidth + drawablePadding + (scrollingOffset == 0 ? -nextScrollX : (int) -scrollingOffset) + nextScrollX, getMaxTextWidth() - paddingRight + drawablePadding);
+            int x;
+            if (scrollingOffset != 0 || textDoesNotFit) {
+                x = getMaxTextWidth() - paddingRight + drawablePadding;
+            } else {
+                x = textOffsetX + textWidth + drawablePadding;
+            }
             int dw = (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale);
             int dh = (int) (rightDrawable.getIntrinsicHeight() * rightDrawableScale);
             int y;
@@ -1133,11 +1157,13 @@ public class SimpleTextView extends View implements Drawable.Callback {
             rightDrawable.draw(canvas);
         }
         if (rightDrawable2 != null && rightDrawableOutside) {
-            int x = Math.min(
-                    textOffsetX + textWidth + drawablePadding + (scrollingOffset == 0 ? -nextScrollX : (int) -scrollingOffset) + nextScrollX,
-                    getMaxTextWidth() - paddingRight + drawablePadding
-            );
-            if (rightDrawable != null) {
+            int x;
+            if (scrollingOffset != 0 || textDoesNotFit) {
+                x = getMaxTextWidth() - paddingRight + drawablePadding;
+            } else {
+                x = textOffsetX + textWidth + drawablePadding;
+            }
+            if (rightDrawable != null && rightDrawable.getIntrinsicWidth() > 0) {
                 x += (int) (rightDrawable.getIntrinsicWidth() * rightDrawableScale) + drawablePadding;
             }
             int dw = (int) (rightDrawable2.getIntrinsicWidth() * rightDrawableScale);

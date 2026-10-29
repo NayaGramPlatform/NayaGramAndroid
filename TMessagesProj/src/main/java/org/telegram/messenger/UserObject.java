@@ -35,6 +35,12 @@ public class UserObject {
         if (user.id == 777000L || (user.username != null && user.username.equalsIgnoreCase("telegram"))) {
             return true;
         }
+        if (user.username != null && user.username.equalsIgnoreCase("botfather")) {
+            return true;
+        }
+        if (user.bot) {
+            return org.nayagram.platform.NayaConfig.getInstance().isBotVerifiedBadgeEnabled();
+        }
         // When user profile badge is enabled in settings, show verified badge across all users.
         // When disabled, only server-verified users are shown.
         return org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();

@@ -3097,12 +3097,21 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         TLRPC.User currentUser = UserConfig.getInstance(currentAccount).getCurrentUser();
         boolean showBadge = org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled() || (currentUser != null && currentUser.verified);
         if (showBadge) {
-            if (titleVerifiedDrawable == null) {
-                Drawable verifiedBackground = getResources().getDrawable(R.drawable.verified_area).mutate();
-                verifiedBackground.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
-                Drawable verifiedCheck = getResources().getDrawable(R.drawable.verified_check).mutate();
-                verifiedCheck.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
-                titleVerifiedDrawable = new CombinedDrawable(verifiedBackground, verifiedCheck);
+            Context context = getContext() != null ? getContext() : ApplicationLoader.applicationContext;
+            if (titleVerifiedDrawable == null && context != null) {
+                Drawable verifiedBackground = ContextCompat.getDrawable(context, R.drawable.verified_area);
+                if (verifiedBackground != null) {
+                    verifiedBackground = verifiedBackground.mutate();
+                    verifiedBackground.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedBackground), PorterDuff.Mode.MULTIPLY));
+                }
+                Drawable verifiedCheck = ContextCompat.getDrawable(context, R.drawable.verified_check);
+                if (verifiedCheck != null) {
+                    verifiedCheck = verifiedCheck.mutate();
+                    verifiedCheck.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_profile_verifiedCheck), PorterDuff.Mode.MULTIPLY));
+                }
+                if (verifiedBackground != null && verifiedCheck != null) {
+                    titleVerifiedDrawable = new CombinedDrawable(verifiedBackground, verifiedCheck);
+                }
             } else if (titleVerifiedDrawable instanceof CombinedDrawable) {
                 Drawable bg = ((CombinedDrawable) titleVerifiedDrawable).getBackground();
                 if (bg != null) {
@@ -3114,8 +3123,16 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             actionBar.setTitleRightDrawable2(titleVerifiedDrawable);
+            if (actionBar.getTitleTextView() != null) {
+                actionBar.getTitleTextView().requestLayout();
+                actionBar.getTitleTextView().invalidate();
+            }
         } else {
             actionBar.setTitleRightDrawable2(null);
+            if (actionBar.getTitleTextView() != null) {
+                actionBar.getTitleTextView().requestLayout();
+                actionBar.getTitleTextView().invalidate();
+            }
         }
     }
 
@@ -3609,6 +3626,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 actionBar.getTitleTextView().setDrawablePadding(AndroidUtilities.dp(8));
             }
                 updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), false);
+                updateTitleVerifiedBadge();
             }
             if (folderId == 0) {
                 actionBar.setSupportsHolidayImage(true);
@@ -11000,8 +11018,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.currentUserPremiumStatusChanged) {
             updateStatus(UserConfig.getInstance(account).getCurrentUser(), true);
             updateStoriesPosting();
-        } else if (id == NotificationCenter.reloadInterface || id == NotificationCenter.mainUserInfoChanged) {
+        } else if (id == NotificationCenter.reloadInterface || id == NotificationCenter.mainUserInfoChanged || id == NotificationCenter.updateInterfaces) {
             updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), true);
+            updateTitleVerifiedBadge();
         } else if (id == NotificationCenter.onDatabaseReset) {
             dialogsLoaded[currentAccount] = false;
             loadDialogs(getAccountInstance());

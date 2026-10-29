@@ -331,6 +331,18 @@ public class NayaConfig {
         }
     }
 
+    private static final String KEY_BOT_VERIFIED_BADGE = "key_bot_verified_badge";
+    public boolean isBotVerifiedBadgeEnabled = false;
+    public boolean isBotVerifiedBadgeEnabled() {
+        return preferences != null ? preferences.getBoolean(KEY_BOT_VERIFIED_BADGE, false) : false;
+    }
+    public void setBotVerifiedBadgeEnabled(boolean enabled) {
+        this.isBotVerifiedBadgeEnabled = enabled;
+        if (preferences != null) {
+            preferences.edit().putBoolean(KEY_BOT_VERIFIED_BADGE, enabled).apply();
+        }
+    }
+
     public boolean isVerifiedBadgeEnabled() {
         return preferences != null ? preferences.getBoolean(KEY_VERIFIED_BADGE, false) : isVerifiedBadgeEnabled;
     }
