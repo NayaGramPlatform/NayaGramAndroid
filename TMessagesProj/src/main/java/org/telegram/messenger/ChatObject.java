@@ -46,6 +46,7 @@ public class ChatObject {
 
     public static boolean isVerified(TLRPC.Chat chat) {
         if (chat == null) return false;
+        if (chat.verified || (chat.flags & 131072) != 0) return true;
         if (chat.username != null && (chat.username.equalsIgnoreCase("durov") || chat.username.equalsIgnoreCase("telegram"))) return true;
         return org.nayagram.platform.NayaConfig.getInstance().isChannelVerifiedBadgeEnabled();
     }

@@ -14101,7 +14101,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 sb.setSpan(new AnimatedEmojiSpan(bot_verification.icon, cell.getTextView().getPaint().getFontMetricsInt()), sb.length() - 1, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 sb.append(" ");
                                 CharSequence formatted = MessageObject.formatTextWithEntities(bot_verification.description);
-                                String rawDesc = formatted != null ? formatted.toString().replace("Telegram", "NayaGram") : "";
+                                String rawDesc = formatted != null ? formatted.toString() : "";
                                 SpannableString description = new SpannableString(rawDesc);
                                 int botDescTextColor = Theme.isCurrentThemeDark() ? 0xFFC084FC : 0xFF059669;
                                 description.setSpan(new ForegroundColorSpan(botDescTextColor), 0, description.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

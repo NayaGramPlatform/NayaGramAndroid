@@ -35,10 +35,9 @@ public class UserObject {
         if (user.id == 777000L || (user.username != null && user.username.equalsIgnoreCase("telegram"))) {
             return true;
         }
-        // NayaGram's optional local badge applies only to the current user's own profile.
-        // Never mark other logged-in accounts or unrelated users as verified.
-        return org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled()
-                && isUserSelf(user);
+        // When user profile badge is enabled in settings, show verified badge across all users.
+        // When disabled, only server-verified users are shown.
+        return org.nayagram.platform.NayaConfig.getInstance().isVerifiedBadgeEnabled();
     }
 
 
