@@ -328,7 +328,7 @@ public class NayaAboutActivity extends BaseFragment {
             rateBtnCard.setBackground(rateBg);
             rateBtnCard.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
             if (Build.VERSION.SDK_INT >= 21) rateBtnCard.setElevation(AndroidUtilities.dp(4));
-            rateBtnCard.setOnClickListener(v -> openUrl(BuildVars.PLAYSTORE_APP_URL));
+            rateBtnCard.setOnClickListener(v -> openPlayStoreRating());
 
             FrameLayout rateIconWrap = new FrameLayout(context);
             GradientDrawable rateIconBg = new GradientDrawable();
@@ -381,7 +381,7 @@ public class NayaAboutActivity extends BaseFragment {
         support.addView(row(context, R.drawable.msg_msgbubble, C_GREEN, "Email", SUPPORT_EMAIL, v -> openEmail()));
         if (BuildVars.PLAYSTORE_APP_URL != null && !BuildVars.PLAYSTORE_APP_URL.isEmpty()) {
             support.addView(div(context), LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 58, 0, 0, 0));
-            support.addView(row(context, R.drawable.msg_premium_liststar, C_PURPLE, "Rate on Google Play", "Share honest feedback", v -> openUrl(BuildVars.PLAYSTORE_APP_URL)));
+            support.addView(row(context, R.drawable.msg_premium_liststar, C_PURPLE, "Rate on Google Play", "Share honest feedback", v -> openPlayStoreRating()));
         }
         root.addView(support, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 18));
 
@@ -613,6 +613,32 @@ public class NayaAboutActivity extends BaseFragment {
             org.telegram.messenger.MessagesController.getInstance(currentAccount).openByUserName(ADMIN_2_HANDLE, this, 1);
         } catch (Exception e) {
             openUrl("https://t.me/" + ADMIN_2_HANDLE);
+        }
+    }
+
+    private void openPlayStoreRating() {
+        if (getParentActivity() == null) return;
+        Context context = getParentActivity();
+        String packageName = context.getPackageName();
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+            intent.setPackage("com.android.vending");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e2) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + packageName));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception e3) {
+                    Browser.openUrl(context, "https://play.google.com/store/apps/details?id=" + packageName, true);
+                }
+            }
         }
     }
 

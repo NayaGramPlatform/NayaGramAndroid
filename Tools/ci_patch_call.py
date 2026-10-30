@@ -5,7 +5,7 @@ import re
 def patch_gradle():
     p = pathlib.Path("gradle.properties")
     t = p.read_text(encoding="utf-8")
-    t2, code_count = re.subn(r"(?m)^APP_VERSION_CODE=.*$", "APP_VERSION_CODE=4050", t, count=1)
+    t2, code_count = re.subn(r"(?m)^APP_VERSION_CODE=.*$", "APP_VERSION_CODE=4051", t, count=1)
     t2, name_count = re.subn(r"(?m)^APP_VERSION_NAME=.*$", "APP_VERSION_NAME=4.16.45 NG", t2, count=1)
     if code_count != 1 or name_count != 1:
         raise SystemExit("APP_VERSION_CODE / APP_VERSION_NAME setting missing or duplicated")

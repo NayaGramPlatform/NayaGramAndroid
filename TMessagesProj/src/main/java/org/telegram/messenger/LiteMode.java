@@ -50,18 +50,15 @@ public class LiteMode {
     public static final int FLAG_PARTICLES = 1 << 17;
 
     public static int PRESET_LOW = (
-        FLAG_ANIMATED_EMOJI_CHAT_PREMIUM |
-        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
-        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
+        FLAGS_ANIMATED_STICKERS |
+        FLAGS_ANIMATED_EMOJI |
         FLAG_AUTOPLAY_GIFS |
         FLAG_CHAT_THANOS |
         FLAG_PARTICLES
     ); // 198684
     public static int PRESET_MEDIUM = (
         FLAGS_ANIMATED_STICKERS |
-        FLAG_ANIMATED_EMOJI_KEYBOARD_PREMIUM |
-        FLAG_ANIMATED_EMOJI_REACTIONS_PREMIUM |
-        FLAG_ANIMATED_EMOJI_CHAT |
+        FLAGS_ANIMATED_EMOJI |
         FLAG_CHAT_FORUM_TWOCOLUMN |
         FLAG_CALLS_ANIMATIONS |
         FLAG_AUTOPLAY_VIDEOS |
@@ -149,6 +146,12 @@ public class LiteMode {
     public static boolean isEnabled(int flag) {
         if (flag == FLAG_CHAT_FORUM_TWOCOLUMN && AndroidUtilities.isTablet()) {
             // always enabled for tablets
+            return true;
+        }
+        if ((flag & FLAG_ANIMATED_EMOJI_CHAT) > 0 || flag == FLAG_ANIMATED_EMOJI_CHAT_NOT_PREMIUM || flag == FLAG_ANIMATED_EMOJI_CHAT_PREMIUM) {
+            if (loaded && (getValue(true) & FLAG_ANIMATED_EMOJI_CHAT) == 0 && (getValue(true) & FLAG_ANIMATED_EMOJI_CHAT_PREMIUM) == 0) {
+                return false;
+            }
             return true;
         }
         return (getValue() & preprocessFlag(flag)) > 0;
@@ -278,6 +281,7 @@ public class LiteMode {
 
         int prevValue = value;
         value = preferences.getInt("lite_mode6", defaultValue);
+        value |= (FLAGS_ANIMATED_EMOJI | FLAGS_ANIMATED_STICKERS);
         if (loaded) {
             onFlagsUpdate(prevValue, value);
         }
