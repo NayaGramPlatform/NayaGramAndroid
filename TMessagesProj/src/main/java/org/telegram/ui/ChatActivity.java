@@ -41717,7 +41717,7 @@ public class ChatActivity extends BaseFragment implements
                 } else {
                     toastForNotStackedDice.run();
                 }
-            } else if (message.isAnimatedEmoji() && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && currentUser != null) || message.isPremiumSticker()) {
+            } else if (message.isAnimatedEmoji() && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && (currentUser != null || getDialogId() == getUserConfig().getClientUserId())) || message.isPremiumSticker()) {
                 restartSticker(cell);
                 emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, true);
                 chatListView.cancelClickRunnables(false);

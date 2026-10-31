@@ -1984,7 +1984,10 @@ public class MessageObject {
         emojiAnimatedStickerId = null;
         if (emojiOnlyCount == 1 && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaWebPage) && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaInvoice) && (getMedia(messageOwner) instanceof TLRPC.TL_messageMediaEmpty || getMedia(messageOwner) == null) && this.messageOwner.grouped_id == 0) {
             if (messageOwner.entities.isEmpty()) {
-                CharSequence emoji = messageText;
+                CharSequence emoji = messageText != null ? messageText.toString().trim().replace("\uFE0F", "") : null;
+                if (TextUtils.isEmpty(emoji)) {
+                    emoji = messageText;
+                }
                 int index;
                 if ((index = TextUtils.indexOf(emoji, "\uD83C\uDFFB")) >= 0) {
                     emojiAnimatedStickerColor = "_c1";

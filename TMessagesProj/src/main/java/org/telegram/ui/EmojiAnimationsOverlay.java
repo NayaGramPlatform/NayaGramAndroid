@@ -427,7 +427,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (chatActivity.isSecretChat() || view.getMessageObject() == null || view.getMessageObject().getId() < 0) {
             return false;
         }
-        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null) {
+        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null && chatActivity.getDialogId() != chatActivity.getUserConfig().getClientUserId()) {
             return false;
         }
         boolean show = showAnimationForCell(view, -1, userTapped, false);
