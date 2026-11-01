@@ -22647,6 +22647,9 @@ public class ChatActivity extends BaseFragment implements
                         }
                     }
                     chatAdapter.updateRowWithMessageObject(obj, animateSendingViews.contains(cell), false);
+                    if (cell != null && obj != null && !obj.messageOwner.premiumEffectWasPlayed && (obj.isAnimatedAnimatedEmoji() || obj.isAnimatedEmojiStickerSingle() || obj.emojiOnlyCount == 1)) {
+                        emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, false);
+                    }
                 }
                 if (chatLayoutManager != null) {
                     if (mediaUpdated && chatLayoutManager.findFirstVisibleItemPosition() == 0) {
@@ -41026,6 +41029,10 @@ public class ChatActivity extends BaseFragment implements
         @Override
         public boolean didPressAnimatedEmoji(ChatMessageCell cell, AnimatedEmojiSpan span) {
             if (getMessagesController().premiumFeaturesBlocked() || span == null || span.standard) {
+                if (span != null && span.standard && cell != null && cell.getMessageObject() != null && (cell.getMessageObject().emojiOnlyCount == 1 || cell.getMessageObject().isAnimatedEmoji())) {
+                    didPressImage(cell, 0, 0, false);
+                    return true;
+                }
                 return false;
             }
             final long documentId = span.getDocumentId();

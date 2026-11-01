@@ -114,6 +114,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.diceStickersDidLoad);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.onEmojiInteractionsReceived);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
+        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
         for (int i = 0; i < drawingObjects.size(); i++) {
             drawingObjects.get(i).imageReceiver.onAttachedToWindow();
             if (drawingObjects.get(i).genericEffect != null) {
@@ -127,6 +128,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.diceStickersDidLoad);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.onEmojiInteractionsReceived);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
+        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
         for (int i = 0; i < drawingObjects.size(); i++) {
             drawingObjects.get(i).imageReceiver.onDetachedFromWindow();
             if (drawingObjects.get(i).genericEffect != null) {
@@ -208,6 +210,10 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             if (INTERACTIONS_STICKER_PACK.equals(name)) {
                 checkStickerPack();
             }
+        } else if (id == NotificationCenter.didUpdateConnectionState) {
+            if (!inited) {
+                checkStickerPack();
+            }
         } else if (id == NotificationCenter.onEmojiInteractionsReceived) {
             if (chatActivity == null) {
                 return;
@@ -246,7 +252,11 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
     }
 
     public boolean supports(String emoticon) {
-        return emojiInteractionsStickersMap.containsKey(unwrapEmoji(emoticon));
+        if (!inited) {
+            checkStickerPack();
+        }
+        String unwrapped = unwrapEmoji(emoticon);
+        return emojiInteractionsStickersMap.containsKey(unwrapped) || supportedEmoji.contains(unwrapped) || (emoticon != null && supportedEmoji.contains(emoticon));
     }
 
     private void findViewAndShowAnimation(int messageId, int animation) {
@@ -438,7 +448,10 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
     }
 
     public boolean onTapItem(ChatMessageCell view, ChatActivity chatActivity, boolean userTapped) {
-        if (chatActivity.isSecretChat() || view.getMessageObject() == null || view.getMessageObject().getId() < 0) {
+        if (!inited) {
+            checkStickerPack();
+        }
+        if (chatActivity.isSecretChat() || view.getMessageObject() == null) {
             return false;
         }
         if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null && chatActivity.getDialogId() != chatActivity.getUserConfig().getClientUserId()) {
@@ -802,7 +815,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
                 drawingObject.imageReceiver.setParentView(contentLayout);
                 contentLayout.invalidate();
 
-                if (sendTap && !isPremiumSticker && UserConfig.getInstance(currentAccount).clientUserId != dialogId) {
+                if (sendTap && !isPremiumSticker && UserConfig.getInstance(currentAccount).clientUserId != dialogId && viewId > 0) {
                     if (lastTappedMsgId != 0 && lastTappedMsgId != viewId) {
                         if (sentInteractionsRunnable != null) {
                             AndroidUtilities.cancelRunOnUIThread(sentInteractionsRunnable);
