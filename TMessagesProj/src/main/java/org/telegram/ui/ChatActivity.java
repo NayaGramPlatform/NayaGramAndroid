@@ -3011,6 +3011,7 @@ public class ChatActivity extends BaseFragment implements
             .add(NotificationCenter.videoLoadingStateChanged)
             .add(NotificationCenter.scheduledMessagesUpdated)
             .add(NotificationCenter.diceStickersDidLoad)
+            .add(NotificationCenter.stickersDidLoad)
             .add(NotificationCenter.dialogDeleted)
             .add(NotificationCenter.chatAvailableReactionsUpdated)
             .add(NotificationCenter.dialogsUnreadReactionsCounterChanged)
@@ -24321,6 +24322,24 @@ public class ChatActivity extends BaseFragment implements
                 ChatMessageCell cell = (ChatMessageCell) child;
                 if (cell.getMessageObject().isDice()) {
                     cell.setCurrentDiceValue(true);
+                }
+            }
+        } else if (id == NotificationCenter.stickersDidLoad) {
+            if (args != null && args.length > 0 && args[0] instanceof Integer) {
+                int type = (Integer) args[0];
+                if (type == MediaDataController.TYPE_EMOJI && chatAdapter != null && messages != null) {
+                    boolean updated = false;
+                    for (int a = 0; a < messages.size(); a++) {
+                        MessageObject msg = messages.get(a);
+                        if (msg != null && msg.emojiOnlyCount == 1 && msg.emojiAnimatedSticker == null) {
+                            msg.checkBigAnimatedEmoji();
+                            msg.setType();
+                            updated = true;
+                        }
+                    }
+                    if (updated) {
+                        chatAdapter.notifyDataSetChanged();
+                    }
                 }
             }
         } else if (id == NotificationCenter.dialogDeleted) {
