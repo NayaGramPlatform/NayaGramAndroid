@@ -24324,22 +24324,28 @@ public class ChatActivity extends BaseFragment implements
                     cell.setCurrentDiceValue(true);
                 }
             }
-        } else if (id == NotificationCenter.stickersDidLoad) {
-            if (args != null && args.length > 0 && args[0] instanceof Integer) {
+        } else if (id == NotificationCenter.stickersDidLoad || id == NotificationCenter.diceStickersDidLoad) {
+            boolean shouldUpdate = false;
+            if (id == NotificationCenter.diceStickersDidLoad) {
+                shouldUpdate = true;
+            } else if (args != null && args.length > 0 && args[0] instanceof Integer) {
                 int type = (Integer) args[0];
-                if (type == MediaDataController.TYPE_EMOJI && chatAdapter != null && messages != null) {
-                    boolean updated = false;
-                    for (int a = 0; a < messages.size(); a++) {
-                        MessageObject msg = messages.get(a);
-                        if (msg != null && msg.emojiOnlyCount == 1 && msg.emojiAnimatedSticker == null) {
-                            msg.checkBigAnimatedEmoji();
-                            msg.setType();
-                            updated = true;
-                        }
+                if (type == MediaDataController.TYPE_EMOJI) {
+                    shouldUpdate = true;
+                }
+            }
+            if (shouldUpdate && chatAdapter != null && messages != null) {
+                boolean updated = false;
+                for (int a = 0; a < messages.size(); a++) {
+                    MessageObject msg = messages.get(a);
+                    if (msg != null && msg.emojiOnlyCount == 1 && msg.emojiAnimatedSticker == null) {
+                        msg.checkBigAnimatedEmoji();
+                        msg.setType();
+                        updated = true;
                     }
-                    if (updated) {
-                        chatAdapter.notifyDataSetChanged();
-                    }
+                }
+                if (updated) {
+                    chatAdapter.notifyDataSetChanged();
                 }
             }
         } else if (id == NotificationCenter.dialogDeleted) {
@@ -41736,7 +41742,7 @@ public class ChatActivity extends BaseFragment implements
                 } else {
                     toastForNotStackedDice.run();
                 }
-            } else if (message.isAnimatedEmoji() && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && (currentUser != null || getDialogId() == getUserConfig().getClientUserId())) || message.isPremiumSticker()) {
+            } else if ((message.isAnimatedEmoji() || message.emojiOnlyCount == 1 || message.type == MessageObject.TYPE_EMOJIS) && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && (currentUser != null || getDialogId() == getUserConfig().getClientUserId())) || message.isPremiumSticker()) {
                 restartSticker(cell);
                 emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, true);
                 chatListView.cancelClickRunnables(false);

@@ -2449,6 +2449,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         if (link.length == 0 || link[0] instanceof URLSpanBotCommand && !URLSpanBotCommand.enabled) {
                             ignore = true;
                         }
+                        if (link.length == 0 && currentMessageObject != null && currentMessageObject.emojiOnlyCount == 1) {
+                            if (event.getAction() == MotionEvent.ACTION_UP && delegate != null) {
+                                delegate.didPressImage(this, lastTouchX, lastTouchY, false);
+                                return true;
+                            } else if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                                return true;
+                            }
+                        }
                         if (!ignore && !AndroidUtilities.isAccessibilityScreenReaderEnabled()) {
                             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                                 if (link[0] instanceof AnimatedEmojiSpan) {
@@ -2529,6 +2537,12 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             } else {
                                 if (link[0] instanceof AnimatedEmojiSpan && pressedEmoji == link[0]) {
                                     if (delegate.didPressAnimatedEmoji(this, pressedEmoji)) {
+                                        resetPressedLink(1);
+                                        pressedEmoji = null;
+                                        return true;
+                                    }
+                                    if (currentMessageObject != null && currentMessageObject.emojiOnlyCount == 1 && delegate != null) {
+                                        delegate.didPressImage(this, lastTouchX, lastTouchY, false);
                                         resetPressedLink(1);
                                         pressedEmoji = null;
                                         return true;

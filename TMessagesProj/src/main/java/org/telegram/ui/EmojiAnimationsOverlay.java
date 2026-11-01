@@ -156,7 +156,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             set = MediaDataController.getInstance(currentAccount).getStickerSetByEmojiOrName(INTERACTIONS_STICKER_PACK);
         }
         if (set == null) {
-            MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, true);
+            MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, false);
         }
         if (set != null) {
             HashMap<Long, TLRPC.Document> stickersMap = new HashMap<>();
@@ -167,17 +167,31 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
                 TLRPC.TL_stickerPack pack = set.packs.get(i);
                 if (!excludeEmojiFromPack.contains(pack.emoticon) && pack.documents.size() > 0) {
                     supportedEmoji.add(pack.emoticon);
+                    String unwrappedPack = unwrapEmoji(pack.emoticon);
+                    if (unwrappedPack != null) {
+                        supportedEmoji.add(unwrappedPack);
+                    }
+                    String noFe0f = pack.emoticon.replace("️", "");
+                    supportedEmoji.add(noFe0f);
+
                     ArrayList<TLRPC.Document> stickers = new ArrayList<>();
                     emojiInteractionsStickersMap.put(pack.emoticon, stickers);
+                    if (unwrappedPack != null) {
+                        emojiInteractionsStickersMap.put(unwrappedPack, stickers);
+                    }
+                    emojiInteractionsStickersMap.put(noFe0f, stickers);
+
                     for (int j = 0; j < pack.documents.size(); j++) {
                         stickers.add(stickersMap.get(pack.documents.get(j)));
                     }
 
-                    if (pack.emoticon.equals("❤")) {
+                    if (pack.emoticon.equals("❤") || pack.emoticon.equals("❤️")) {
                         String[] heartEmojies = new String[]{"🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎"};
                         for (String heart : heartEmojies) {
                             supportedEmoji.add(heart);
+                            supportedEmoji.add(heart.replace("️", ""));
                             emojiInteractionsStickersMap.put(heart, stickers);
+                            emojiInteractionsStickersMap.put(heart.replace("️", ""), stickers);
                         }
                     }
                 }
@@ -448,7 +462,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (printingType != null && printingType == 5) {
             canShowHint = false;
         }
-        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && (chatActivity.currentUser == null || UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id)) {
+        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && chatActivity.currentUser != null && UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id) {
             SharedConfig.updateEmojiInteractionsHintCount(SharedConfig.emojiInteractionsHintCount - 1);
             TLRPC.Document document;
             if (view.getMessageObject().isAnimatedAnimatedEmoji()) {
@@ -591,7 +605,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             return false;
         }
         MessageObject messageObject = view.getMessageObject();
-        if (view.getEffect() == null && !view.getPhotoImage().hasNotThumb()) {
+        if (view.getEffect() == null && !view.getPhotoImage().hasNotThumb() && !messageObject.isAnimatedEmoji() && messageObject.emojiOnlyCount != 1) {
             return false;
         }
         String emoji = messageObject.getStickerEmoji();
@@ -604,7 +618,8 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         float imageH = view.getPhotoImage().getImageHeight();
         float imageW = view.getPhotoImage().getImageWidth();
         if (view.getEffect() == null && (imageH <= 0 || imageW <= 0)) {
-            return false;
+            imageW = AndroidUtilities.dp(120);
+            imageH = AndroidUtilities.dp(120);
         }
 
         emoji = unwrapEmoji(emoji);
