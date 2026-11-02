@@ -215,6 +215,9 @@ public class MediaDataController extends BaseController {
         ringtoneDataStore = new RingtoneDataStore(currentAccount);
 
         menuBotsUpdateDate = getMessagesController().getMainSettings().getInt("menuBotsUpdateDate", 0);
+        loadStickers(TYPE_EMOJI, true, false);
+        loadStickersByEmojiOrName("EmojiAnimations", false, true);
+        loadStickers(TYPE_EMOJI, false, false);
     }
 
     private void loadRepliesOfDraftReplies(final ArrayList<TLRPC.Message> messages) {
@@ -1732,6 +1735,9 @@ public class MediaDataController extends BaseController {
         }
         String emoji = message.toString().replace("\uFE0F", "");
         ArrayList<TLRPC.TL_messages_stickerSet> arrayList = getStickerSets(MediaDataController.TYPE_EMOJI);
+        if (arrayList.isEmpty() && !loadingStickers[MediaDataController.TYPE_EMOJI]) {
+            loadStickers(MediaDataController.TYPE_EMOJI, false, false);
+        }
         for (int a = 0, N = arrayList.size(); a < N; a++) {
             TLRPC.TL_messages_stickerSet set = arrayList.get(a);
             for (int b = 0, N2 = set.packs.size(); b < N2; b++) {

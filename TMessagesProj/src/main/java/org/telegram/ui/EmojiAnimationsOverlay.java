@@ -427,7 +427,8 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (chatActivity.isSecretChat() || view.getMessageObject() == null || view.getMessageObject().getId() < 0) {
             return false;
         }
-        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null) {
+        boolean isSavedMessages = chatActivity != null && chatActivity.getDialogId() == UserConfig.getInstance(currentAccount).getClientUserId();
+        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null && !isSavedMessages) {
             return false;
         }
         boolean show = showAnimationForCell(view, -1, userTapped, false);
@@ -448,7 +449,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (printingType != null && printingType == 5) {
             canShowHint = false;
         }
-        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id) {
+        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && (chatActivity.currentUser == null || UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id)) {
             SharedConfig.updateEmojiInteractionsHintCount(SharedConfig.emojiInteractionsHintCount - 1);
             TLRPC.Document document;
             if (view.getMessageObject().isAnimatedAnimatedEmoji()) {

@@ -7406,7 +7406,12 @@ public class ChatActivityEnterView extends FrameLayout implements
                 return;
             }
             try {
-                org.nayagram.platform.textstyle.NGTextStyleHelper.applyStyle(messageEditText);
+                String rawStr = messageEditText != null ? messageEditText.getText().toString().trim() : "";
+                int[] emojiOnly = new int[1];
+                org.telegram.messenger.Emoji.replaceEmoji(rawStr, null, false, emojiOnly);
+                if (emojiOnly[0] == 0 && !org.telegram.messenger.Emoji.isValidEmoji(rawStr)) {
+                    org.nayagram.platform.textstyle.NGTextStyleHelper.applyStyle(messageEditText);
+                }
             } catch (Exception ignore) {}
             CharSequence rawMessage = messageEditText == null ? "" : messageEditText.getTextToUse();
             try {

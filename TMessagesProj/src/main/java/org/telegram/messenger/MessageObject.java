@@ -1979,11 +1979,12 @@ public class MessageObject {
         }
     }
 
-    protected void checkBigAnimatedEmoji() {
+    public void checkBigAnimatedEmoji() {
         emojiAnimatedSticker = null;
         emojiAnimatedStickerId = null;
         if (emojiOnlyCount == 1 && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaWebPage) && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaInvoice) && (getMedia(messageOwner) instanceof TLRPC.TL_messageMediaEmpty || getMedia(messageOwner) == null) && this.messageOwner.grouped_id == 0) {
-            if (messageOwner.entities.isEmpty()) {
+            boolean hasCustomEmoji = !messageOwner.entities.isEmpty() && messageOwner.entities.get(0) instanceof TLRPC.TL_messageEntityCustomEmoji;
+            if (messageOwner.entities.isEmpty() || !hasCustomEmoji) {
                 CharSequence emoji = messageText;
                 int index;
                 if ((index = TextUtils.indexOf(emoji, "\uD83C\uDFFB")) >= 0) {
@@ -2025,6 +2026,9 @@ public class MessageObject {
             }
         }
         if (emojiAnimatedSticker == null && emojiAnimatedStickerId == null) {
+            if (emojiOnlyCount == 1) {
+                type = TYPE_EMOJIS;
+            }
             generateLayout(null);
         } else if (isSticker()) {
             type = TYPE_STICKER;

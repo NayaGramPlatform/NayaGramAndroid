@@ -103,6 +103,15 @@ public final class NGTextStyleHelper {
         if (style == STYLE_NONE || style == STYLE_REGULAR) return;
 
         try {
+            String str = editField.getText() != null ? editField.getText().toString().trim() : "";
+            int[] emojiOnly = new int[1];
+            org.telegram.messenger.Emoji.replaceEmoji(str, null, false, emojiOnly);
+            if (emojiOnly[0] > 0 || org.telegram.messenger.Emoji.isValidEmoji(str)) {
+                return;
+            }
+        } catch (Exception ignored) {}
+
+        try {
             int length = editField.length();
             editField.setSelectionOverride(0, length);
             editField.makeSelectedRegular();
