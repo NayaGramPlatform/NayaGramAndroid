@@ -157,6 +157,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         }
         if (set == null) {
             MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, true);
+            MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, false);
         }
         if (set != null) {
             HashMap<Long, TLRPC.Document> stickersMap = new HashMap<>();
@@ -198,9 +199,16 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             if (chatActivity == null) {
                 return;
             }
+            if (!inited) {
+                checkStickerPack();
+            }
             long dialogId = (long) args[0];
             TLRPC.TL_sendMessageEmojiInteraction action = (TLRPC.TL_sendMessageEmojiInteraction) args[1];
-            if (dialogId == this.dialogId && supportedEmoji.contains(action.emoticon)) {
+            if (action == null) {
+                return;
+            }
+            String unwrapped = unwrapEmoji(action.emoticon);
+            if (dialogId == this.dialogId && (supportedEmoji.contains(action.emoticon) || (unwrapped != null && supportedEmoji.contains(unwrapped)))) {
                 int messageId = action.msg_id;
                 if (action.interaction.data != null) {
                     try {
@@ -248,11 +256,9 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
                 if (stickerEmoji == null) {
                     stickerEmoji = cell.getMessageObject().messageOwner.message;
                 }
-                if (cell.getPhotoImage().hasNotThumb() && stickerEmoji != null) {
-                    if (cell.getMessageObject().getId() == messageId) {
-                        bestView = cell;
-                        break;
-                    }
+                if (stickerEmoji != null && cell.getMessageObject().getId() == messageId) {
+                    bestView = cell;
+                    break;
                 }
             }
         }
