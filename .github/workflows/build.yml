@@ -106,7 +106,7 @@ jobs:
       - name: Print Build Version Info
         run: |
           echo "=================================================="
-          echo " NayaGram v4.16.45 NG - Build 4048 "
+          echo " NayaGram v4.16.45 NG - Build 4058 "
           echo " Target SDK: 36 | Min SDK: 24 (Google Play Compliant)"
           echo "=================================================="
 
@@ -256,7 +256,7 @@ jobs:
           tag_name: "v4.16.45-b${{ github.run_number }}"
           name: "NayaGram Release v4.16.45 NG (Build ${{ github.run_number }})"
           body: |
-            ### 🚀 NayaGram Release v4.16.45 NG (Build 4048)
+            ### 🚀 NayaGram Release v4.16.45 NG (Build 4058)
             
             **Release Highlights:**
             - **Version Code**: `4048`
