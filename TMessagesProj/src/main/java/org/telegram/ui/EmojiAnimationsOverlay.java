@@ -114,7 +114,6 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.diceStickersDidLoad);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.onEmojiInteractionsReceived);
         NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).addObserver(this, NotificationCenter.didUpdateConnectionState);
         for (int i = 0; i < drawingObjects.size(); i++) {
             drawingObjects.get(i).imageReceiver.onAttachedToWindow();
             if (drawingObjects.get(i).genericEffect != null) {
@@ -128,7 +127,6 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.diceStickersDidLoad);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.onEmojiInteractionsReceived);
         NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.updateInterfaces);
-        NotificationCenter.getInstance(currentAccount).removeObserver(this, NotificationCenter.didUpdateConnectionState);
         for (int i = 0; i < drawingObjects.size(); i++) {
             drawingObjects.get(i).imageReceiver.onDetachedFromWindow();
             if (drawingObjects.get(i).genericEffect != null) {
@@ -158,7 +156,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             set = MediaDataController.getInstance(currentAccount).getStickerSetByEmojiOrName(INTERACTIONS_STICKER_PACK);
         }
         if (set == null) {
-            MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, false);
+            MediaDataController.getInstance(currentAccount).loadStickersByEmojiOrName(INTERACTIONS_STICKER_PACK, false, true);
         }
         if (set != null) {
             HashMap<Long, TLRPC.Document> stickersMap = new HashMap<>();
@@ -169,31 +167,17 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
                 TLRPC.TL_stickerPack pack = set.packs.get(i);
                 if (!excludeEmojiFromPack.contains(pack.emoticon) && pack.documents.size() > 0) {
                     supportedEmoji.add(pack.emoticon);
-                    String unwrappedPack = unwrapEmoji(pack.emoticon);
-                    if (unwrappedPack != null) {
-                        supportedEmoji.add(unwrappedPack);
-                    }
-                    String noFe0f = pack.emoticon.replace("️", "");
-                    supportedEmoji.add(noFe0f);
-
                     ArrayList<TLRPC.Document> stickers = new ArrayList<>();
                     emojiInteractionsStickersMap.put(pack.emoticon, stickers);
-                    if (unwrappedPack != null) {
-                        emojiInteractionsStickersMap.put(unwrappedPack, stickers);
-                    }
-                    emojiInteractionsStickersMap.put(noFe0f, stickers);
-
                     for (int j = 0; j < pack.documents.size(); j++) {
                         stickers.add(stickersMap.get(pack.documents.get(j)));
                     }
 
-                    if (pack.emoticon.equals("❤") || pack.emoticon.equals("❤️")) {
+                    if (pack.emoticon.equals("❤")) {
                         String[] heartEmojies = new String[]{"🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎"};
                         for (String heart : heartEmojies) {
                             supportedEmoji.add(heart);
-                            supportedEmoji.add(heart.replace("️", ""));
                             emojiInteractionsStickersMap.put(heart, stickers);
-                            emojiInteractionsStickersMap.put(heart.replace("️", ""), stickers);
                         }
                     }
                 }
@@ -208,10 +192,6 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (id == NotificationCenter.diceStickersDidLoad) {
             String name = (String) args[0];
             if (INTERACTIONS_STICKER_PACK.equals(name)) {
-                checkStickerPack();
-            }
-        } else if (id == NotificationCenter.didUpdateConnectionState) {
-            if (!inited) {
                 checkStickerPack();
             }
         } else if (id == NotificationCenter.onEmojiInteractionsReceived) {
@@ -252,11 +232,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
     }
 
     public boolean supports(String emoticon) {
-        if (!inited) {
-            checkStickerPack();
-        }
-        String unwrapped = unwrapEmoji(emoticon);
-        return emojiInteractionsStickersMap.containsKey(unwrapped) || supportedEmoji.contains(unwrapped) || (emoticon != null && supportedEmoji.contains(emoticon));
+        return emojiInteractionsStickersMap.containsKey(unwrapEmoji(emoticon));
     }
 
     private void findViewAndShowAnimation(int messageId, int animation) {
@@ -448,13 +424,10 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
     }
 
     public boolean onTapItem(ChatMessageCell view, ChatActivity chatActivity, boolean userTapped) {
-        if (!inited) {
-            checkStickerPack();
-        }
-        if (chatActivity.isSecretChat() || view.getMessageObject() == null) {
+        if (chatActivity.isSecretChat() || view.getMessageObject() == null || view.getMessageObject().getId() < 0) {
             return false;
         }
-        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null && chatActivity.getDialogId() != chatActivity.getUserConfig().getClientUserId()) {
+        if (!view.getMessageObject().isPremiumSticker() && chatActivity.currentUser == null) {
             return false;
         }
         boolean show = showAnimationForCell(view, -1, userTapped, false);
@@ -475,7 +448,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         if (printingType != null && printingType == 5) {
             canShowHint = false;
         }
-        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && chatActivity.currentUser != null && UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id) {
+        if (canShowHint && hintRunnable == null && show && (Bulletin.getVisibleBulletin() == null || !Bulletin.getVisibleBulletin().isShowing()) && SharedConfig.emojiInteractionsHintCount > 0 && UserConfig.getInstance(currentAccount).getClientUserId() != chatActivity.currentUser.id) {
             SharedConfig.updateEmojiInteractionsHintCount(SharedConfig.emojiInteractionsHintCount - 1);
             TLRPC.Document document;
             if (view.getMessageObject().isAnimatedAnimatedEmoji()) {
@@ -618,7 +591,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
             return false;
         }
         MessageObject messageObject = view.getMessageObject();
-        if (view.getEffect() == null && !view.getPhotoImage().hasNotThumb() && !messageObject.isAnimatedEmoji() && messageObject.emojiOnlyCount != 1) {
+        if (view.getEffect() == null && !view.getPhotoImage().hasNotThumb()) {
             return false;
         }
         String emoji = messageObject.getStickerEmoji();
@@ -631,8 +604,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
         float imageH = view.getPhotoImage().getImageHeight();
         float imageW = view.getPhotoImage().getImageWidth();
         if (view.getEffect() == null && (imageH <= 0 || imageW <= 0)) {
-            imageW = AndroidUtilities.dp(120);
-            imageH = AndroidUtilities.dp(120);
+            return false;
         }
 
         emoji = unwrapEmoji(emoji);
@@ -815,7 +787,7 @@ public class EmojiAnimationsOverlay implements NotificationCenter.NotificationCe
                 drawingObject.imageReceiver.setParentView(contentLayout);
                 contentLayout.invalidate();
 
-                if (sendTap && !isPremiumSticker && UserConfig.getInstance(currentAccount).clientUserId != dialogId && viewId > 0) {
+                if (sendTap && !isPremiumSticker && UserConfig.getInstance(currentAccount).clientUserId != dialogId) {
                     if (lastTappedMsgId != 0 && lastTappedMsgId != viewId) {
                         if (sentInteractionsRunnable != null) {
                             AndroidUtilities.cancelRunOnUIThread(sentInteractionsRunnable);

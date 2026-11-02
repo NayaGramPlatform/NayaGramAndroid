@@ -215,11 +215,6 @@ public class MediaDataController extends BaseController {
         ringtoneDataStore = new RingtoneDataStore(currentAccount);
 
         menuBotsUpdateDate = getMessagesController().getMainSettings().getInt("menuBotsUpdateDate", 0);
-        loadStickers(TYPE_EMOJI, true, false);
-        loadStickersByEmojiOrName("EmojiAnimations", false, true);
-        loadStickers(TYPE_EMOJI, false, false);
-        loadStickersByEmojiOrName("EmojiAnimations", false, false);
-        loadStickersByEmojiOrName("AnimatedEmojies", false, false);
     }
 
     private void loadRepliesOfDraftReplies(final ArrayList<TLRPC.Message> messages) {
@@ -1735,42 +1730,15 @@ public class MediaDataController extends BaseController {
         if (message == null) {
             return null;
         }
-        String emoji = message.toString().trim().replace("️", "");
+        String emoji = message.toString().replace("\uFE0F", "");
         ArrayList<TLRPC.TL_messages_stickerSet> arrayList = getStickerSets(MediaDataController.TYPE_EMOJI);
-        if (arrayList.isEmpty() && !loadingStickers[MediaDataController.TYPE_EMOJI]) {
-            loadStickers(MediaDataController.TYPE_EMOJI, false, false);
-        }
-        if (arrayList.isEmpty()) {
-            TLRPC.TL_messages_stickerSet animatedEmojiesSet = getStickerSetByName("AnimatedEmojies");
-            if (animatedEmojiesSet == null) {
-                animatedEmojiesSet = getStickerSetByEmojiOrName("AnimatedEmojies");
-            }
-            if (animatedEmojiesSet != null) {
-                arrayList = new ArrayList<>();
-                arrayList.add(animatedEmojiesSet);
-            }
-        }
-        String unwrapped = org.telegram.ui.EmojiAnimationsOverlay.unwrapEmoji(emoji);
         for (int a = 0, N = arrayList.size(); a < N; a++) {
             TLRPC.TL_messages_stickerSet set = arrayList.get(a);
             for (int b = 0, N2 = set.packs.size(); b < N2; b++) {
                 TLRPC.TL_stickerPack pack = set.packs.get(b);
-                String packEmo = pack.emoticon != null ? pack.emoticon.replace("️", "") : "";
-                String packUnwrapped = org.telegram.ui.EmojiAnimationsOverlay.unwrapEmoji(pack.emoticon);
-                if (!pack.documents.isEmpty() && (TextUtils.equals(pack.emoticon, emoji) || TextUtils.equals(packEmo, emoji) || TextUtils.equals(packUnwrapped, unwrapped) || (unwrapped != null && unwrapped.equals(packEmo)))) {
+                if (!pack.documents.isEmpty() && TextUtils.equals(pack.emoticon, emoji)) {
                     LongSparseArray<TLRPC.Document> stickerByIds = getStickerByIds(MediaDataController.TYPE_EMOJI);
-                    TLRPC.Document doc = stickerByIds != null ? stickerByIds.get(pack.documents.get(0)) : null;
-                    if (doc == null && set.documents != null) {
-                        for (int d = 0; d < set.documents.size(); d++) {
-                            if (set.documents.get(d).id == pack.documents.get(0)) {
-                                doc = set.documents.get(d);
-                                break;
-                            }
-                        }
-                    }
-                    if (doc != null) {
-                        return doc;
-                    }
+                    return stickerByIds.get(pack.documents.get(0));
                 }
             }
         }

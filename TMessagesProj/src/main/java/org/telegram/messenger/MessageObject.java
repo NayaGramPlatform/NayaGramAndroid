@@ -1979,15 +1979,12 @@ public class MessageObject {
         }
     }
 
-    public void checkBigAnimatedEmoji() {
+    protected void checkBigAnimatedEmoji() {
         emojiAnimatedSticker = null;
         emojiAnimatedStickerId = null;
         if (emojiOnlyCount == 1 && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaWebPage) && !(getMedia(messageOwner) instanceof TLRPC.TL_messageMediaInvoice) && (getMedia(messageOwner) instanceof TLRPC.TL_messageMediaEmpty || getMedia(messageOwner) == null) && this.messageOwner.grouped_id == 0) {
             if (messageOwner.entities.isEmpty()) {
-                CharSequence emoji = messageText != null ? messageText.toString().trim().replace("\uFE0F", "") : null;
-                if (TextUtils.isEmpty(emoji)) {
-                    emoji = messageText;
-                }
+                CharSequence emoji = messageText;
                 int index;
                 if ((index = TextUtils.indexOf(emoji, "\uD83C\uDFFB")) >= 0) {
                     emojiAnimatedStickerColor = "_c1";
@@ -2028,9 +2025,6 @@ public class MessageObject {
             }
         }
         if (emojiAnimatedSticker == null && emojiAnimatedStickerId == null) {
-            if (emojiOnlyCount >= 1) {
-                type = TYPE_EMOJIS;
-            }
             generateLayout(null);
         } else if (isSticker()) {
             type = TYPE_STICKER;
@@ -2113,7 +2107,7 @@ public class MessageObject {
                     }
                 }
             }
-            hasUnwrappedEmoji = (emojiOnly != null && emojiOnly >= 1) ? false : (emojiOnlyCount - (spans == null ? 0 : spans.length) - (aspans == null ? 0 : aspans.length) > 0);
+            hasUnwrappedEmoji = emojiOnlyCount - (spans == null ? 0 : spans.length) - (aspans == null ? 0 : aspans.length) > 0;
             if (emojiOnlyCount == 0 || hasUnwrappedEmoji) {
                 if (aspans != null && aspans.length > 0) {
                     for (int a = 0; a < aspans.length; a++) {
@@ -6665,7 +6659,7 @@ public class MessageObject {
                 }
             } else if (messageOwner.media instanceof TLRPC.TL_messageMediaPaidMedia) {
                 type = TYPE_PAID_MEDIA;
-            } else if (isMediaEmpty(false) && !isDice() && !isSponsored() && emojiOnlyCount >= 1 && messageOwner != null && !hasNonEmojiEntities()) {
+            } else if (isMediaEmpty(false) && !isDice() && !isSponsored() && emojiOnlyCount >= 1 && !hasUnwrappedEmoji && messageOwner != null && !hasNonEmojiEntities()) {
                 type = TYPE_EMOJIS;
             } else if (isMediaEmpty()) {
                 type = TYPE_TEXT;

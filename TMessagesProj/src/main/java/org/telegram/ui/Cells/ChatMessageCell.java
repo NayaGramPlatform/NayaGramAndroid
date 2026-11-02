@@ -2449,14 +2449,6 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                         if (link.length == 0 || link[0] instanceof URLSpanBotCommand && !URLSpanBotCommand.enabled) {
                             ignore = true;
                         }
-                        if (link.length == 0 && currentMessageObject != null && currentMessageObject.emojiOnlyCount == 1) {
-                            if (event.getAction() == MotionEvent.ACTION_UP && delegate != null) {
-                                delegate.didPressImage(this, lastTouchX, lastTouchY, false);
-                                return true;
-                            } else if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                                return true;
-                            }
-                        }
                         if (!ignore && !AndroidUtilities.isAccessibilityScreenReaderEnabled()) {
                             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                                 if (link[0] instanceof AnimatedEmojiSpan) {
@@ -2537,12 +2529,6 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             } else {
                                 if (link[0] instanceof AnimatedEmojiSpan && pressedEmoji == link[0]) {
                                     if (delegate.didPressAnimatedEmoji(this, pressedEmoji)) {
-                                        resetPressedLink(1);
-                                        pressedEmoji = null;
-                                        return true;
-                                    }
-                                    if (currentMessageObject != null && currentMessageObject.emojiOnlyCount == 1 && delegate != null) {
-                                        delegate.didPressImage(this, lastTouchX, lastTouchY, false);
                                         resetPressedLink(1);
                                         pressedEmoji = null;
                                         return true;
@@ -3276,17 +3262,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                             ((ClickableSpan) pressedLink.getSpan()).onClick(this);
                         }
                         resetPressedLink(2);
-                    } else if (pressedEmoji != null) {
-                        if (delegate != null && delegate.didPressAnimatedEmoji(this, pressedEmoji)) {
-                            pressedEmoji = null;
-                            resetPressedLink(2);
-                        } else {
-                            if (currentMessageObject != null && (currentMessageObject.emojiOnlyCount == 1 || currentMessageObject.isAnimatedEmoji()) && delegate != null) {
-                                delegate.didPressImage(this, lastTouchX, lastTouchY, false);
-                            }
-                            pressedEmoji = null;
-                            resetPressedLink(2);
-                        }
+                    } else if (pressedEmoji != null && delegate.didPressAnimatedEmoji(this, pressedEmoji)) {
+                        pressedEmoji = null;
+                        resetPressedLink(2);
                     } else {
                         if (documentAttachType == DOCUMENT_ATTACH_TYPE_GIF && drawImageButton) {
                             if (buttonState == -1) {

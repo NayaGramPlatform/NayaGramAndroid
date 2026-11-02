@@ -3011,7 +3011,6 @@ public class ChatActivity extends BaseFragment implements
             .add(NotificationCenter.videoLoadingStateChanged)
             .add(NotificationCenter.scheduledMessagesUpdated)
             .add(NotificationCenter.diceStickersDidLoad)
-            .add(NotificationCenter.stickersDidLoad)
             .add(NotificationCenter.dialogDeleted)
             .add(NotificationCenter.chatAvailableReactionsUpdated)
             .add(NotificationCenter.dialogsUnreadReactionsCounterChanged)
@@ -22647,9 +22646,6 @@ public class ChatActivity extends BaseFragment implements
                         }
                     }
                     chatAdapter.updateRowWithMessageObject(obj, animateSendingViews.contains(cell), false);
-                    if (cell != null && obj != null && !obj.messageOwner.premiumEffectWasPlayed && (obj.isAnimatedAnimatedEmoji() || obj.isAnimatedEmojiStickerSingle() || obj.emojiOnlyCount == 1)) {
-                        emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, false);
-                    }
                 }
                 if (chatLayoutManager != null) {
                     if (mediaUpdated && chatLayoutManager.findFirstVisibleItemPosition() == 0) {
@@ -24325,30 +24321,6 @@ public class ChatActivity extends BaseFragment implements
                 ChatMessageCell cell = (ChatMessageCell) child;
                 if (cell.getMessageObject().isDice()) {
                     cell.setCurrentDiceValue(true);
-                }
-            }
-        } else if (id == NotificationCenter.stickersDidLoad || id == NotificationCenter.diceStickersDidLoad) {
-            boolean shouldUpdate = false;
-            if (id == NotificationCenter.diceStickersDidLoad) {
-                shouldUpdate = true;
-            } else if (args != null && args.length > 0 && args[0] instanceof Integer) {
-                int type = (Integer) args[0];
-                if (type == MediaDataController.TYPE_EMOJI) {
-                    shouldUpdate = true;
-                }
-            }
-            if (shouldUpdate && chatAdapter != null && messages != null) {
-                boolean updated = false;
-                for (int a = 0; a < messages.size(); a++) {
-                    MessageObject msg = messages.get(a);
-                    if (msg != null && msg.emojiOnlyCount == 1 && msg.emojiAnimatedSticker == null) {
-                        msg.checkBigAnimatedEmoji();
-                        msg.setType();
-                        updated = true;
-                    }
-                }
-                if (updated) {
-                    chatAdapter.notifyDataSetChanged();
                 }
             }
         } else if (id == NotificationCenter.dialogDeleted) {
@@ -41029,10 +41001,6 @@ public class ChatActivity extends BaseFragment implements
         @Override
         public boolean didPressAnimatedEmoji(ChatMessageCell cell, AnimatedEmojiSpan span) {
             if (getMessagesController().premiumFeaturesBlocked() || span == null || span.standard) {
-                if (span != null && span.standard && cell != null && cell.getMessageObject() != null && (cell.getMessageObject().emojiOnlyCount == 1 || cell.getMessageObject().isAnimatedEmoji())) {
-                    didPressImage(cell, 0, 0, false);
-                    return true;
-                }
                 return false;
             }
             final long documentId = span.getDocumentId();
@@ -41749,7 +41717,7 @@ public class ChatActivity extends BaseFragment implements
                 } else {
                     toastForNotStackedDice.run();
                 }
-            } else if ((message.isAnimatedEmoji() || message.emojiOnlyCount == 1 || message.type == MessageObject.TYPE_EMOJIS) && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && (currentUser != null || getDialogId() == getUserConfig().getClientUserId())) || message.isPremiumSticker()) {
+            } else if (message.isAnimatedEmoji() && (!message.isAnimatedAnimatedEmoji() || emojiAnimationsOverlay.supports(MessageObject.findAnimatedEmojiEmoticon(message.getDocument())) && currentUser != null) || message.isPremiumSticker()) {
                 restartSticker(cell);
                 emojiAnimationsOverlay.onTapItem(cell, ChatActivity.this, true);
                 chatListView.cancelClickRunnables(false);
