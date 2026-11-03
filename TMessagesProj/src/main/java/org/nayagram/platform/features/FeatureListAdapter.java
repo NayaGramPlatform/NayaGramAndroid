@@ -235,7 +235,21 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 }
         ));
 
-        // 23. Reduce Motion (functional: applies Telegram's animation preference)
+                // 24. Anti-Delete Messages (Prevent Message Deletion)
+        allFeatures.add(new FeatureItem(
+                24,
+                0xFF0EA5E9,
+                0xFF0284C7,
+                R.drawable.msg_secret,
+                new String[]{"Anti-Delete Messages", "ডিলিট মেসেজ প্রতিরোধ", "منع حذف الرسائل"},
+                new String[]{
+                        "Keep deleted messages visible in chat with a stylish cyan-blue tag indicator.",
+                        "প্রেরক মেসেজ ডিলিট করলেও চ্যাটে সায়ান-ব্লু ব্যাজসহ সেভ থাকবে।",
+                        "احفظ الرسائل المحذوفة في المحادثة مع شارة إشارة زرقاء أنيقة."
+                }
+        ));
+
+// 23. Reduce Motion (functional: applies Telegram's animation preference)
         allFeatures.add(new FeatureItem(
                 23,
                 0xFF64748B,
