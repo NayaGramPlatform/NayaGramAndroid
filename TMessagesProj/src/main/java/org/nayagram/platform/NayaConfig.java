@@ -302,6 +302,10 @@ public class NayaConfig {
     }
 
     // APK & ZIP File Security Shield
+        private static final String KEY_PREVENT_MESSAGE_DELETION = "feature_prevent_message_deletion";
+    public boolean isPreventMessageDeletionEnabled() { return preferences.getBoolean(KEY_PREVENT_MESSAGE_DELETION, true); }
+    public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
+
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
 
