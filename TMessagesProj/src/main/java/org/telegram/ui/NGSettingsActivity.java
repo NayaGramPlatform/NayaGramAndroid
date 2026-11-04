@@ -333,8 +333,6 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setPreventMessageDeletionEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anti-Delete Messages: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowAntiDelete) {
-                    c.setFeature(R.drawable.msg_secret, 0xFF0284C7, "Anti-Delete Messages", "Keep deleted messages in chat with cyan indicator", cfg.isPreventMessageDeletionEnabled(), true);
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
@@ -564,6 +562,9 @@ public class NGSettingsActivity extends BaseFragment {
         } else if (position == rowThemeMode) {
             title = "Naya Theme Mode";
             body = "Switch between Dark Slate, Light Slate, and Naya Neon Aurora themes.";
+        } else if (position == rowAntiDelete) {
+            title = "Anti-Delete Messages";
+            body = "Keep deleted incoming messages in chats with a stylish cyan-blue tag indicator. Messages remain preserved even if the sender deletes them for everyone.";
         } else if (position == rowShowIdDc) {
             title = "User ID & DC Display";
             body = "Shows Telegram user ID and data-center hints where the profile screen supports it.";
@@ -883,6 +884,8 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
                 } else if (position == rowSmartChatFolders) {
                     c.setActionFeature(R.drawable.outline_groups_24, 0xFF10B981, "Smart Chat Folders", "Create and manage Telegram chat folders", false);
+                } else if (position == rowAntiDelete) {
+                    c.setFeature(R.drawable.msg_secret, 0xFF0284C7, "Anti-Delete Messages", "Keep deleted messages in chat with cyan indicator", cfg.isPreventMessageDeletionEnabled(), true);
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
