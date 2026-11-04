@@ -316,7 +316,8 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 20: return false; // Action card: runs a scan instead of representing a toggle
             case 21: return cfg.isLinkGuardEnabled();
             case 22: return cfg.isReadableTextEnabled();
-            case 23: return cfg.isReduceMotion();
+            case 23:
+            case 24: return cfg.isReduceMotion();
             case 11: return cfg.isShowIdAndDc();
             case 14: return true;
             default: return false;
