@@ -202,7 +202,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 new String[]{"Smart Storage Guard", "স্মার্ট স্টোরেজ গার্ড", "حارس التخزين الذكي"},
                 new String[]{
                         "Scan app cache on demand and review the report before cleaning. No automatic storage limiter runs.",
-                        "প্রয়োজনে অ্যাপের ক্যাশ স্ক্যান করুন এবং পরিষ্কারের আগে রিপোর্ট দেখুন। স্বয়ংক্রিয় স্টোরেজ লিমিটার চলে না।",
+                        "প্রয়োজনে অ্যাপের ক্যাশ স্ক্যান করু�� এবং পরিষ্কারের আগে রিপোর্ট দেখুন। স্বয়ংক্রিয় স্টোরেজ লিমিটার চলে না।",
                         "افحص ذاكرة التطبيق عند الطلب وراجع التقرير قبل التنظيف. لا يعمل محدد تخزين تلقائي."
                 }
         ));
@@ -245,7 +245,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 new String[]{
                         "Keep deleted messages visible in chat with a stylish cyan-blue tag indicator.",
                         "প্রেরক মেসেজ ডিলিট করলেও চ্যাটে সায়ান-ব্লু ব্যাজসহ সেভ থাকবে।",
-                        "احفظ الرسائل المحذوفة في المحادثة مع شارة إشارة زرقاء أنيقة."
+                        "احفظ الرسائل المحذوفة في المحادثة مع ��ارة إشارة زرقاء أنيقة."
                 }
         ));
 
@@ -316,8 +316,8 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 20: return false; // Action card: runs a scan instead of representing a toggle
             case 21: return cfg.isLinkGuardEnabled();
             case 22: return cfg.isReadableTextEnabled();
-            case 23:
-            case 24: return cfg.isReduceMotion();
+            case 23: return cfg.isReduceMotion();
+            case 24: return cfg.isPreventMessageDeletionEnabled();
             case 11: return cfg.isShowIdAndDc();
             case 14: return true;
             default: return false;
@@ -336,6 +336,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 21: // External Link Guard
             case 22: // Telegram native message font size
             case 23: // Telegram interface animation preference
+            case 24: // Anti-Delete Messages
                 return true;
             default:
                 return false;
@@ -420,6 +421,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 21: cfg.setLinkGuardEnabled(newState); break;
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
+            case 24: cfg.setPreventMessageDeletionEnabled(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
         }
     }
@@ -497,7 +499,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(item.getCatchyTitle(currentLang));
         String availability = isImplementationPending(item)
-                ? (currentLang == LANG_BN ? "\n\nএই ফিচারটি এখনো কার্যকর নয়। নেটিভ বাস্তবায়ন ও পরীক্ষা শেষ না হওয়া পর্যন্ত এটি চালু করা যাবে না।"
+                ? (currentLang == LANG_BN ? "\n\nএই ফিচারটি এখনো কার্যকর নয়। নেটিভ বাস্তবায়ন ও পরীক্ষা শেষ না হওয়া পর্যন্ত এটি চা��ু করা যাবে না।"
                 : (currentLang == LANG_AR ? "\n\nهذه الميزة غير نشطة بعد. لن يتم تفعيلها قبل اكتمال التنفيذ والاختبار."
                 : "\n\nNot available yet. It will remain inactive until native implementation and testing are complete."))
                 : "";
