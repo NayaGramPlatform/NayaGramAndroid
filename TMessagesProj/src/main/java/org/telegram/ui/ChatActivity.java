@@ -26556,6 +26556,12 @@ public class ChatActivity extends BaseFragment implements
                 updateReplyMessageOwners(mid, null);
             }
             if (obj != null) {
+                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                    obj.deleted = false;
+                    obj.isAntiDeleted = true;
+                    updated = true;
+                    continue;
+                }
                 if (obj.messageOwner.reply_to != null && !(obj.messageOwner.action instanceof TLRPC.TL_messageActionPinMessage)) {
                     int replyId = obj.getReplyAnyMsgId();
                     if (threadMessageObject != null && threadMessageObject.getId() == replyId) {
