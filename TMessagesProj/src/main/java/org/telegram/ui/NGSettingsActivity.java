@@ -90,6 +90,7 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowSmartChatFolders;
 
     private int headerSecurity;
+    private int rowAntiDelete;
     private int rowShowIdDc;
     private int rowHidePhoneNumber;
     private int rowThemeMode;
@@ -142,6 +143,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowSmartChatFolders = rowCount++;
 
         headerSecurity = rowCount++;
+        rowAntiDelete = rowCount++;
         rowShowIdDc = rowCount++;
         rowHidePhoneNumber = rowCount++;
         rowThemeMode = rowCount++;
@@ -327,6 +329,12 @@ public class NGSettingsActivity extends BaseFragment {
                     if (listAdapter != null) listAdapter.notifyDataSetChanged();
                     String modeName = nextMode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (nextMode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Theme: " + modeName).show();
+                } else if (position == rowAntiDelete) {
+                    cfg.setPreventMessageDeletionEnabled(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anti-Delete Messages: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowAntiDelete) {
+                    c.setFeature(R.drawable.msg_secret, 0xFF0284C7, "Anti-Delete Messages", "Keep deleted messages in chat with cyan indicator", cfg.isPreventMessageDeletionEnabled(), true);
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
