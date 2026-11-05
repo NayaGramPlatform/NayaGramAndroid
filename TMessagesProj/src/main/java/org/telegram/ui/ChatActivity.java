@@ -26559,6 +26559,10 @@ public class ChatActivity extends BaseFragment implements
                 if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
                     obj.deleted = false;
                     obj.isAntiDeleted = true;
+                    if (obj.messageOwner != null) {
+                        obj.messageOwner.isAntiDeleted = true;
+                    }
+                    getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
                     updated = true;
                     continue;
                 }

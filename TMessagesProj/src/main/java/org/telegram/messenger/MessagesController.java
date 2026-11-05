@@ -21151,6 +21151,14 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                                    obj.deleted = false;
+                                    obj.isAntiDeleted = true;
+                                    if (obj.messageOwner != null) {
+                                        obj.messageOwner.isAntiDeleted = true;
+                                    }
+                                    continue;
+                                }
                                 obj.deleted = true;
                             }
                         }
@@ -21162,6 +21170,14 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (obj != null) {
                                     for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                                         if (obj.getId() == arrayList.get(b)) {
+                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                                                obj.deleted = false;
+                                                obj.isAntiDeleted = true;
+                                                if (obj.messageOwner != null) {
+                                                    obj.messageOwner.isAntiDeleted = true;
+                                                }
+                                                break;
+                                            }
                                             obj.deleted = true;
                                             break;
                                         }

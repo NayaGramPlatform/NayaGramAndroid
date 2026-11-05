@@ -5521,6 +5521,51 @@ public class MessagesStorage extends BaseController {
         });
     }
 
+    public void updateMessageAntiDeleted(long dialogId, int msgId, TLRPC.Message saveFromMessage) {
+        storageQueue.postRunnable(() -> {
+            SQLitePreparedStatement state = null;
+            try {
+                database.beginTransaction();
+                TLRPC.Message message = getMessageWithCustomParamsOnlyInternal(msgId, dialogId);
+                if (message != null) {
+                    message.isAntiDeleted = true;
+                    for (int i = 0; i < 2; i++) {
+                        if (i == 0) {
+                            state = database.executeFast("UPDATE messages_v2 SET custom_params = ? WHERE mid = ? AND uid = ?");
+                        } else {
+                            state = database.executeFast("UPDATE messages_topics SET custom_params = ? WHERE mid = ? AND uid = ?");
+                        }
+                        state.requery();
+                        NativeByteBuffer nativeByteBuffer = MessageCustomParamsHelper.writeLocalParams(message);
+                        if (nativeByteBuffer != null) {
+                            state.bindByteBuffer(1, nativeByteBuffer);
+                        } else {
+                            state.bindNull(1);
+                        }
+                        state.bindInteger(2, msgId);
+                        state.bindLong(3, dialogId);
+                        state.step();
+                        state.dispose();
+                        state = null;
+                        if (nativeByteBuffer != null) {
+                            nativeByteBuffer.reuse();
+                        }
+                    }
+                }
+                database.commitTransaction();
+            } catch (Exception e) {
+                checkSQLException(e);
+            } finally {
+                if (database != null) {
+                    database.commitTransaction();
+                }
+                if (state != null) {
+                    state.dispose();
+                }
+            }
+        });
+    }
+
     public void updateMessageVoiceTranscription(long dialogId, int messageId, String text, long transcriptionId, boolean isFinal) {
         storageQueue.postRunnable(() -> {
             SQLitePreparedStatement state = null;
@@ -14888,10 +14933,45 @@ public class MessagesStorage extends BaseController {
                     }
                     if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled()) {
                         database.executeFast(String.format(Locale.US, "DELETE FROM messages_v2 WHERE mid IN(%s) AND uid = %d AND out = 1", ids, did)).stepThis().dispose();
+                        database.executeFast(String.format(Locale.US, "DELETE FROM messages_topics WHERE mid IN(%s) AND uid = %d AND out = 1", ids, did)).stepThis().dispose();
+                        SQLiteCursor antiCur = null;
+                        try {
+                            antiCur = database.queryFinalized(String.format(Locale.US, "SELECT mid FROM messages_v2 WHERE mid IN(%s) AND uid = %d AND out = 0", ids, did));
+                            while (antiCur.next()) {
+                                int amid = antiCur.intValue(0);
+                                TLRPC.Message amsg = getMessageWithCustomParamsOnlyInternal(amid, did);
+                                if (amsg != null) {
+                                    amsg.isAntiDeleted = true;
+                                    NativeByteBuffer nativeByteBuffer = MessageCustomParamsHelper.writeLocalParams(amsg);
+                                    for (int i = 0; i < 2; i++) {
+                                        SQLitePreparedStatement st = database.executeFast(i == 0 ? "UPDATE messages_v2 SET custom_params = ? WHERE mid = ? AND uid = ?" : "UPDATE messages_topics SET custom_params = ? WHERE mid = ? AND uid = ?");
+                                        st.requery();
+                                        if (nativeByteBuffer != null) {
+                                            st.bindByteBuffer(1, nativeByteBuffer);
+                                        } else {
+                                            st.bindNull(1);
+                                        }
+                                        st.bindInteger(2, amid);
+                                        st.bindLong(3, did);
+                                        st.step();
+                                        st.dispose();
+                                    }
+                                    if (nativeByteBuffer != null) {
+                                        nativeByteBuffer.reuse();
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        } finally {
+                            if (antiCur != null) {
+                                antiCur.dispose();
+                            }
+                        }
                     } else {
                         database.executeFast(String.format(Locale.US, "DELETE FROM messages_v2 WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
+                        database.executeFast(String.format(Locale.US, "DELETE FROM messages_topics WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
                     }
-                    database.executeFast(String.format(Locale.US, "DELETE FROM messages_topics WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
                     database.executeFast(String.format(Locale.US, "DELETE FROM polls_v2 WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
                     database.executeFast(String.format(Locale.US, "DELETE FROM bot_keyboard WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
                     database.executeFast(String.format(Locale.US, "DELETE FROM bot_keyboard_topics WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();

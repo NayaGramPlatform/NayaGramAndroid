@@ -1869,6 +1869,7 @@ public class MessageObject {
         localUserName = userName;
         messageText = formattedMessage;
         messageOwner = message;
+        isAntiDeleted = messageOwner != null && messageOwner.isAntiDeleted;
         localChannel = isChannel;
         localSupergroup = supergroup;
         localEdit = edit;
@@ -1924,6 +1925,7 @@ public class MessageObject {
 
         currentAccount = accountNum;
         messageOwner = message;
+        isAntiDeleted = messageOwner != null && messageOwner.isAntiDeleted;
         replyMessageObject = replyToMessage;
         eventId = eid;
         wasUnread = !messageOwner.out && messageOwner.unread;
