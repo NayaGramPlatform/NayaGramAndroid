@@ -14688,7 +14688,7 @@ public class MessagesStorage extends BaseController {
                             }
                             data.reuse();
                             if (DialogObject.isEncryptedDialog(did) || deleteFiles) {
-                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || message.out || getMessagesController().localDeletedMessageIds.contains(message.id)) {
+                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || message.out || getMessagesController().isLocallyDeleted(did, message.id)) {
                                     addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                                 }
                             }
@@ -14941,6 +14941,14 @@ public class MessagesStorage extends BaseController {
                             antiCur = database.queryFinalized(String.format(Locale.US, "SELECT mid FROM messages_v2 WHERE mid IN(%s) AND uid = %d AND out = 0", ids, did));
                             while (antiCur.next()) {
                                 int amid = antiCur.intValue(0);
+                                if (getMessagesController().isLocallyDeleted(did, amid)) {
+                                    // The user deleted this incoming message themselves: remove it instead of keeping a ghost copy.
+                                    database.executeFast(String.format(Locale.US, "DELETE FROM messages_v2 WHERE mid = %d AND uid = %d", amid, did)).stepThis().dispose();
+                                    database.executeFast(String.format(Locale.US, "DELETE FROM messages_topics WHERE mid = %d AND uid = %d", amid, did)).stepThis().dispose();
+                                    database.executeFast(String.format(Locale.US, "DELETE FROM media_v4 WHERE mid = %d AND uid = %d", amid, did)).stepThis().dispose();
+                                    database.executeFast(String.format(Locale.US, "DELETE FROM media_topics WHERE mid = %d AND uid = %d", amid, did)).stepThis().dispose();
+                                    continue;
+                                }
                                 TLRPC.Message amsg = getMessageWithCustomParamsOnlyInternal(amid, did);
                                 if (amsg != null) {
                                     amsg.isAntiDeleted = true;

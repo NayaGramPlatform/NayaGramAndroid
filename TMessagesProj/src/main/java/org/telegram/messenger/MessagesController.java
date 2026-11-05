@@ -409,7 +409,31 @@ public class MessagesController extends BaseController implements NotificationCe
 
     private HashMap<String, Object> uploadingThemes = new HashMap<>();
 
-    public final java.util.HashSet<Integer> localDeletedMessageIds = new java.util.HashSet<>();
+    // Keyed by dialog + message id: message ids are only unique inside one chat, so a bare id would leak across chats.
+    private final java.util.Set<String> localDeletedKeys = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    private static String localDeleteKey(long dialogId, int messageId) {
+        return dialogId + ":" + messageId;
+    }
+
+    public void addLocallyDeleted(long dialogId, java.util.Collection<Integer> messageIds) {
+        if (messageIds == null) {
+            return;
+        }
+        for (Integer id : messageIds) {
+            if (id != null) {
+                localDeletedKeys.add(localDeleteKey(dialogId, id));
+            }
+        }
+    }
+
+    public boolean isLocallyDeleted(long dialogId, int messageId) {
+        return localDeletedKeys.contains(localDeleteKey(dialogId, messageId));
+    }
+
+    public void removeLocallyDeleted(long dialogId, int messageId) {
+        localDeletedKeys.remove(localDeleteKey(dialogId, messageId));
+    }
     public String uploadingWallpaper;
     public Theme.OverrideWallpaperInfo uploadingWallpaperInfo;
 
@@ -9286,7 +9310,7 @@ public class MessagesController extends BaseController implements NotificationCe
             return;
         }
         if (messages != null) {
-            localDeletedMessageIds.addAll(messages);
+            addLocallyDeleted(dialogId, messages);
         }
         ArrayList<Integer> toSend = null;
         long channelId;
@@ -21155,7 +21179,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
-                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !localDeletedMessageIds.contains(id)) {
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(obj.getDialogId(), id)) {
                                     obj.deleted = false;
                                     obj.isAntiDeleted = true;
                                     if (obj.messageOwner != null) {
@@ -21174,7 +21198,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (obj != null) {
                                     for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                                         if (obj.getId() == arrayList.get(b)) {
-                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !localDeletedMessageIds.contains(obj.getId())) {
+                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(dialogId, obj.getId())) {
                                                 obj.deleted = false;
                                                 obj.isAntiDeleted = true;
                                                 if (obj.messageOwner != null) {
