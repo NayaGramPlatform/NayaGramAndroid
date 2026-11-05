@@ -26557,14 +26557,18 @@ public class ChatActivity extends BaseFragment implements
             }
             if (obj != null) {
                 if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
-                    obj.deleted = false;
-                    obj.isAntiDeleted = true;
-                    if (obj.messageOwner != null) {
-                        obj.messageOwner.isAntiDeleted = true;
+                    if (getMessagesController().localDeletedMessageIds.contains(mid)) {
+                        getMessagesController().localDeletedMessageIds.remove(mid);
+                    } else {
+                        obj.deleted = false;
+                        obj.isAntiDeleted = true;
+                        if (obj.messageOwner != null) {
+                            obj.messageOwner.isAntiDeleted = true;
+                        }
+                        getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
+                        updated = true;
+                        continue;
                     }
-                    getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
-                    updated = true;
-                    continue;
                 }
                 if (obj.messageOwner.reply_to != null && !(obj.messageOwner.action instanceof TLRPC.TL_messageActionPinMessage)) {
                     int replyId = obj.getReplyAnyMsgId();

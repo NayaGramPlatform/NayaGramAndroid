@@ -409,6 +409,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
     private HashMap<String, Object> uploadingThemes = new HashMap<>();
 
+    public final java.util.HashSet<Integer> localDeletedMessageIds = new java.util.HashSet<>();
     public String uploadingWallpaper;
     public Theme.OverrideWallpaperInfo uploadingWallpaperInfo;
 
@@ -9283,6 +9284,9 @@ public class MessagesController extends BaseController implements NotificationCe
         final boolean welcomeMessages = mode == ChatActivity.MODE_WELCOME_MESSAGES;
         if ((messages == null || messages.isEmpty()) && taskId == 0) {
             return;
+        }
+        if (messages != null) {
+            localDeletedMessageIds.addAll(messages);
         }
         ArrayList<Integer> toSend = null;
         long channelId;
@@ -21151,7 +21155,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
-                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !localDeletedMessageIds.contains(id)) {
                                     obj.deleted = false;
                                     obj.isAntiDeleted = true;
                                     if (obj.messageOwner != null) {
@@ -21170,7 +21174,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (obj != null) {
                                     for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                                         if (obj.getId() == arrayList.get(b)) {
-                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !localDeletedMessageIds.contains(obj.getId())) {
                                                 obj.deleted = false;
                                                 obj.isAntiDeleted = true;
                                                 if (obj.messageOwner != null) {

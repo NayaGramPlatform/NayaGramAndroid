@@ -14688,7 +14688,9 @@ public class MessagesStorage extends BaseController {
                             }
                             data.reuse();
                             if (DialogObject.isEncryptedDialog(did) || deleteFiles) {
-                                addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
+                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || message.out || getMessagesController().localDeletedMessageIds.contains(message.id)) {
+                                    addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
+                                }
                             }
 
                             if (did == currentUser) {
@@ -15091,8 +15093,13 @@ public class MessagesStorage extends BaseController {
                             state = null;
                         }
                     }
-                    database.executeFast(String.format(Locale.US, "DELETE FROM media_v4 WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
-                    database.executeFast(String.format(Locale.US, "DELETE FROM media_topics WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
+                    if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled()) {
+                        database.executeFast(String.format(Locale.US, "DELETE FROM media_v4 WHERE mid IN(%s) AND uid = %d AND mid IN (SELECT mid FROM messages_v2 WHERE uid = %d AND out = 1)", ids, did, did)).stepThis().dispose();
+                        database.executeFast(String.format(Locale.US, "DELETE FROM media_topics WHERE mid IN(%s) AND uid = %d AND mid IN (SELECT mid FROM messages_v2 WHERE uid = %d AND out = 1)", ids, did, did)).stepThis().dispose();
+                    } else {
+                        database.executeFast(String.format(Locale.US, "DELETE FROM media_v4 WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
+                        database.executeFast(String.format(Locale.US, "DELETE FROM media_topics WHERE mid IN(%s) AND uid = %d", ids, did)).stepThis().dispose();
+                    }
                 }
                 if (!savedMessagesByDialogs.isEmpty()) {
                     AndroidUtilities.runOnUIThread(() -> getMessagesController().getSavedMessagesController().updateDeleted(savedMessagesByDialogs));
