@@ -303,9 +303,9 @@ public class NayaConfig {
 
     // APK & ZIP File Security Shield
         private static final String KEY_PREVENT_MESSAGE_DELETION = "feature_prevent_message_deletion";
-    // Anti-Delete is permanently disabled (policy decision). All call sites are gated by this switch.
-    public boolean isPreventMessageDeletionEnabled() { return false; }
-    public void setPreventMessageDeletionEnabled(boolean e) { /* disabled */ }
+    // Anti-Delete is OFF by default; the user can enable it from NayaGram Settings.
+    public boolean isPreventMessageDeletionEnabled() { return preferences.getBoolean(KEY_PREVENT_MESSAGE_DELETION, false); }
+    public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
 
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }

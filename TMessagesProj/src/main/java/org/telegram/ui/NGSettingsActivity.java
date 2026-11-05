@@ -143,7 +143,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowSmartChatFolders = rowCount++;
 
         headerSecurity = rowCount++;
-        rowAntiDelete = -1; // Anti-Delete hidden (disabled by policy)
+        rowAntiDelete = rowCount++;
         rowShowIdDc = rowCount++;
         rowHidePhoneNumber = rowCount++;
         rowThemeMode = rowCount++;

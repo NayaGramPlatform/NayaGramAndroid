@@ -68,10 +68,12 @@ import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.CharacterStyle;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ClickableSpan;
 import android.text.style.DynamicDrawableSpan;
 import android.text.style.LeadingMarginSpan;
 import android.text.style.StrikethroughSpan;
+import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.Pair;
 import android.util.Property;
@@ -18501,7 +18503,11 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentTimeString = timeString;
         }
         if (currentMessageObject != null && currentMessageObject.isAntiDeleted) {
-            currentTimeString = "🗑️ " + currentTimeString;
+            SpannableStringBuilder deletedTag = new SpannableStringBuilder("DELETED  ");
+            deletedTag.setSpan(new ForegroundColorSpan(0xFF0EA5E9), 0, deletedTag.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            deletedTag.setSpan(new StyleSpan(Typeface.BOLD), 0, deletedTag.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            deletedTag.append(currentTimeString);
+            currentTimeString = deletedTag;
         }
         if (currentMessageObject.isStakedDice()) {
             currentTimeString = TextUtils.concat("💎", StarsIntroActivity.formatTON(currentMessageObject.getStakedDiceAmount()), "  ", currentTimeString);
