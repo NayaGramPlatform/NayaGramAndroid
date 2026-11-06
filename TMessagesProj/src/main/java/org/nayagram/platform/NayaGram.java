@@ -7,6 +7,7 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 
+import java.io.File;
 import java.util.Locale;
 
 /**
@@ -40,6 +41,11 @@ public class NayaGram {
             }
         }
         return false;
+    }
+
+    /** After a download: true when the shield is on and an incoming file is an Android package under another name. */
+    public static boolean shouldBlockDownloadedPayload(boolean sentByMe, File file) {
+        return NayaArchiveInspector.shouldBlockIncomingPayload(isBlockApkZipEnabled(), sentByMe, file);
     }
 
     /** Shows the Bengali notice, at most once per cooldown so a burst of files does not spam the screen. */
