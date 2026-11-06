@@ -10,6 +10,7 @@ package org.telegram.messenger;
 
 import android.os.SystemClock;
 
+import org.nayagram.platform.NayaGram;
 import org.telegram.messenger.utils.ImmutableByteArrayOutputStream;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.NativeByteBuffer;
@@ -1624,6 +1625,16 @@ public class FileLoadOperation {
                         }
                     }
                     if (!ungzip) {
+                        boolean sentByMe = parentObject instanceof MessageObject && ((MessageObject) parentObject).isOutOwner();
+                        if (NayaGram.shouldBlockDownloadedPayload(sentByMe, cacheFileTempLocal)) {
+                            FileLog.d("NayaGram Security Shield: blocked incoming file hidden as an Android package " + cacheFileFinal);
+                            cacheFileTempLocal.delete();
+                            NayaGram.showBlockedNotice();
+                            Utilities.stageQueue.postRunnable(() -> {
+                                onFail(false, 0);
+                            });
+                            return;
+                        }
                         boolean renameResult;
                         if (parentObject instanceof TLRPC.TL_theme) {
                             try {
