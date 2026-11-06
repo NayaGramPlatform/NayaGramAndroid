@@ -138,7 +138,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowAutoAddText = rowCount++;
         rowEditText = rowCount++;
         rowMessageScheduler = -1;
-        rowSmartAutoReply = -1;
+        rowSmartAutoReply = rowCount++;
         rowStorySaver = -1;
         rowSmartChatFolders = rowCount++;
 
