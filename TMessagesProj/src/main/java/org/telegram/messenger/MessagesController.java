@@ -22083,7 +22083,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         if (replyText != null && !replyText.isEmpty()) {
                             long sendDid = msg.getDialogId();
                             AndroidUtilities.runOnUIThread(() -> {
-                                getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of(replyText, sendDid, null, null, null, true, 0, 0, null, true, 0, null, false));
+                                getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of(replyText, sendDid, null, null, null, true, null, null, null, true, 0, 0, null, false));
                             }, 500);
                         }
                     }
