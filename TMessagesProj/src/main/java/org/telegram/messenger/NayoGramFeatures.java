@@ -50,7 +50,6 @@ public class NayoGramFeatures {
         if (!isBlockApkZipEnabled() || fileName == null) {
             return false;
         }
-        String lower = fileName.toLowerCase();
-        return lower.endsWith(".apk") || lower.endsWith(".zip") || lower.endsWith(".jar") || lower.endsWith(".exe") || lower.endsWith(".rar") || lower.endsWith(".iso");
+        return org.nayagram.platform.NayaGram.shouldBlockFile(fileName);
     }
 }

@@ -148,8 +148,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowHidePhoneNumber = rowCount++;
         rowThemeMode = rowCount++;
         rowBiometricLocker = rowCount++;
-        // Hidden until the APK/ZIP protection behavior is implemented and verified.
-        rowApkBlock = -1;
+        rowApkBlock = rowCount++;
 
         // Hide inactive feature placeholders instead of showing non-working controls.
         headerOptimization = -1;
@@ -278,7 +277,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowApkBlock) {
                     cfg.setApkBlockEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "Enabled" : "Disabled")).show();
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK ও ZIP সুরক্ষা: " + (checked ? "চালু" : "বন্ধ")).show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
@@ -863,7 +862,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowApkBlock) {
-                    c.setFeature(R.drawable.outline_shield_check, 0xFF00D4FF, "APK & ZIP Security Shield", "Block downloading or receiving malicious files", cfg.isApkBlockEnabled(), true);
+                    c.setFeature(R.drawable.outline_shield_check, 0xFF00D4FF, "APK & ZIP Security Shield", "Blocks APK and ZIP files sent by others. Off by default.", cfg.isApkBlockEnabled(), true);
                 } else if (position == rowHidePhoneNumber) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF6366F1, "Screen Share Phone Privacy", "Blur & mask personal phone number with blue-purple background and eye toggle", cfg.isHidePhoneNumberEnabled(), true);
                 } else if (position == rowThemeMode) {

@@ -1,13 +1,23 @@
 package org.nayagram.platform;
 
+import android.os.SystemClock;
+import android.widget.Toast;
+
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.FileLog;
 
+import java.util.Locale;
+
 /**
- * NayaGram - Core Feature Manager for NayaGram Android Client.
- * Manages security blocking for APK, ZIP, EXE and other pro privacy features
- * matching Novagram / NayaGram architecture standards.
+ * NayaGram security shield: blocks incoming APK and ZIP files sent by other people.
+ * Off by default; the user turns it on in NayaGram Settings.
  */
 public class NayaGram {
+
+    private static final String[] BLOCKED_EXTENSIONS = {".apk", ".xapk", ".apks", ".zip"};
+    private static final long NOTICE_COOLDOWN_MS = 8000L;
+    private static volatile long lastNoticeTime;
 
     public static boolean isBlockApkZipEnabled() {
         try {
@@ -17,22 +27,35 @@ public class NayaGram {
         }
     }
 
+    /** True when the file name is an APK or ZIP and the shield is on. Callers must only pass incoming files. */
     public static boolean shouldBlockFile(String fileName) {
         if (!isBlockApkZipEnabled() || fileName == null) {
             return false;
         }
-        String lower = fileName.toLowerCase();
-        boolean blocked = lower.endsWith(".apk") || 
-                          lower.endsWith(".zip") || 
-                          lower.endsWith(".jar") || 
-                          lower.endsWith(".exe") || 
-                          lower.endsWith(".rar") || 
-                          lower.endsWith(".iso") ||
-                          lower.endsWith(".bat") ||
-                          lower.endsWith(".cmd");
-        if (blocked) {
-            FileLog.d("NayaGram Security Shield: Blocked malicious/restricted file -> " + fileName);
+        String lower = fileName.trim().toLowerCase(Locale.ROOT);
+        for (String ext : BLOCKED_EXTENSIONS) {
+            if (lower.endsWith(ext)) {
+                FileLog.d("NayaGram Security Shield: blocked incoming file " + fileName);
+                return true;
+            }
         }
-        return blocked;
+        return false;
+    }
+
+    /** Shows the Bengali notice, at most once per cooldown so a burst of files does not spam the screen. */
+    public static void showBlockedNotice() {
+        long now = SystemClock.elapsedRealtime();
+        if (now - lastNoticeTime < NOTICE_COOLDOWN_MS) {
+            return;
+        }
+        lastNoticeTime = now;
+        AndroidUtilities.runOnUIThread(() -> {
+            try {
+                Toast.makeText(ApplicationLoader.applicationContext,
+                        "নিরাপত্তার কারণে APK বা ZIP ফাইলটি ব্লক করা হয়েছে। Settings থেকে এই সুরক্ষা বন্ধ করা যাবে।",
+                        Toast.LENGTH_LONG).show();
+            } catch (Throwable ignored) {
+            }
+        });
     }
 }

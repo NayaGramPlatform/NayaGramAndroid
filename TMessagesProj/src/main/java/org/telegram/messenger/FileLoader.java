@@ -833,8 +833,10 @@ public class FileLoader extends BaseController {
         } else {
             fileName = null;
         }
-        if (NayaGram.shouldBlockFile(fileName) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document)))) {
+        boolean sentByMe = parentObject instanceof MessageObject && ((MessageObject) parentObject).isOutOwner();
+        if (!sentByMe && (NayaGram.shouldBlockFile(fileName) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document))))) {
             FileLog.d("Blocked download of blocked file type: " + fileName);
+            NayaGram.showBlockedNotice();
             return null;
         }
         if (fileName == null || fileName.contains("" + Integer.MIN_VALUE)) {
