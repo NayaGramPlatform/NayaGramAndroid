@@ -1,95 +1,75 @@
 package org.telegram.messenger;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import org.nayagram.platform.NayaConfig;
+import org.telegram.tgnet.ConnectionsManager;
+import org.telegram.tgnet.TLRPC;
+
 /**
- * IncomingMessageInterceptor - Handles auto-reply logic for incoming messages
- * Integrates AutoReplyManager with the message receive flow
+ * Sends the NayaGram Smart Auto-Reply to new incoming private messages.
+ * Rules: switch must be on, private 1:1 chats only, never bots or self,
+ * never service messages, never replies to another auto-reply, only fresh
+ * messages (not old backlog), and at most one reply per chat per cooldown.
  */
 public class IncomingMessageInterceptor {
     private static final String TAG = "IncomingMessageInterceptor";
+    private static final String PREFS_NAME = "nayagram_auto_reply_state";
+    private static final long MAX_MESSAGE_AGE_SECONDS = 300;
 
-    /**
-     * Process incoming message for auto-reply
-     * Call this when receiving a new incoming message
-     * 
-     * @param messageText The incoming message text
-     * @param fromUserId The sender user ID
-     * @param dialogId The chat/dialog ID
-     * @param accountId The account ID
-     * @return true if auto-reply was sent, false otherwise
-     */
-    public static boolean processIncomingMessage(String messageText, int fromUserId, 
-                                                  long dialogId, int accountId) {
+    public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         try {
-            // Check if auto-reply is globally enabled
-            AutoReplyManager autoReplyManager = AutoReplyManager.getInstance();
-            if (!autoReplyManager.isAutoReplyEnabled()) {
-                return false;
+            if (messageObject == null || messageObject.messageOwner == null) {
+                return;
             }
-
-            // Check if auto-reply is disabled for this specific chat
+            NayaConfig config = NayaConfig.getInstance();
+            if (!config.isSmartAutoReply()) {
+                return;
+            }
+            if (messageObject.isOutOwner() || messageObject.messageOwner.action != null) {
+                return;
+            }
+            long dialogId = messageObject.getDialogId();
+            if (dialogId <= 0) {
+                return; // private user chats only: groups, channels and secret chats are skipped
+            }
+            String incomingText = messageObject.messageOwner.message;
+            if (incomingText == null || incomingText.trim().isEmpty()) {
+                return;
+            }
+            String replyText = config.getAutoReplyText();
+            if (replyText == null || replyText.trim().isEmpty() || incomingText.equals(replyText)) {
+                return; // never answer another auto-reply
+            }
+            int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
+            if (now - messageObject.messageOwner.date > MAX_MESSAGE_AGE_SECONDS) {
+                return; // old backlog, not a live message
+            }
+            TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
+            if (user == null || user.bot || user.self) {
+                return;
+            }
             if (!PerChatAutoReplySettings.canAutoReplyForChat(dialogId)) {
-                FileLog.d(TAG + ": Auto-reply disabled for chat " + dialogId);
-                return false;
+                return;
             }
-
-            // Check if message is from user themselves or system
-            if (!OwnMessageFilter.canAutoReply(fromUserId, accountId)) {
-                FileLog.d(TAG + ": Skipping auto-reply for own/system message from user " + fromUserId);
-                return false;
+            Context context = ApplicationLoader.applicationContext;
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String key = "last_" + accountId + "_" + dialogId;
+            long nowMs = System.currentTimeMillis();
+            long cooldownMs = config.getAutoReplyCooldownHours() * 3600_000L;
+            if (nowMs - prefs.getLong(key, 0L) < cooldownMs) {
+                return;
             }
+            prefs.edit().putLong(key, nowMs).apply();
 
-            // Check if we already replied to this message
-            DuplicateReplyPrevention dupeChecker = DuplicateReplyPrevention.getInstance();
-            long messageHashId = hashMessageId(messageText, fromUserId, dialogId);
-            if (dupeChecker.hasAlreadyReplied(messageHashId)) {
-                FileLog.d(TAG + ": Already replied to this message");
-                return false;
-            }
-
-            // Find matching auto-reply rule
-            AutoReplyManager.AutoReplyRule matchingRule = autoReplyManager.findMatchingRule(messageText);
-            if (matchingRule == null) {
-                return false;
-            }
-
-            // Send auto-reply
-            String replyText = matchingRule.response;
-            if (replyText == null || replyText.isEmpty()) {
-                return false;
-            }
-
-            try {
-                SendMessagesHelper sendHelper = SendMessagesHelper.getInstance(accountId);
-                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-                        replyText, dialogId, null, null, null, true, null, null, 
-                        null, true, 0, 0, null, false);
-                sendHelper.sendMessage(params);
-
-                // Mark as replied to prevent duplicate
-                dupeChecker.markAsReplied(messageHashId);
-                FileLog.d(TAG + ": Auto-reply sent for message from user " + fromUserId + " in chat " + dialogId);
-                return true;
-            } catch (Exception e) {
-                FileLog.e(TAG + ": Error sending auto-reply", e);
-                return false;
-            }
-
+            final String text = replyText;
+            AndroidUtilities.runOnUIThread(() ->
+                    SendMessagesHelper.getInstance(accountId).sendMessage(
+                            SendMessagesHelper.SendMessageParams.of(text, dialogId)));
+            FileLog.d(TAG + ": auto-reply queued for dialog " + dialogId);
         } catch (Exception e) {
-            FileLog.e(TAG + ": Error processing incoming message for auto-reply", e);
-            return false;
-        }
-    }
-
-    /**
-     * Create a unique hash for a message to track duplicates
-     * Combines message text, sender, and dialog to create unique ID
-     */
-    private static long hashMessageId(String messageText, int fromUserId, long dialogId) {
-        try {
-            String combined = messageText + "|" + fromUserId + "|" + dialogId;
-            return combined.hashCode() & 0xFFFFFFFFL;
-        } catch (Exception e) {
-            return (messageText.hashCode() ^ fromUserId ^ (int)(dialogId & 0xFFFFFFFF)) & 0xFFFFFFFFL;
+            FileLog.e(TAG + ": auto-reply failed", e);
         }
     }
 }

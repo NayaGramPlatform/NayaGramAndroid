@@ -347,7 +347,6 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
     private boolean isImplementationPending(FeatureItem item) {
         switch (item.number) {
             case 2:  // Message Scheduler has no delivery engine
-            case 3:  // Auto-Reply has no sending engine
             case 4:  // Story Saver is disabled
             case 5:  // Anonymous Stories is disabled
             case 9:  // Smart Chat Folders
@@ -470,23 +469,146 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
 
     private void showAutoReplyConfigDialog() {
         if (context == null) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("💬 Smart Auto-Reply Message");
+        final NayaConfig cfg = NayaConfig.getInstance();
+        final int[] hourOptions = {1, 6, 24};
+        final String[] hourLabels = {"1 hour", "6 hours", "24 hours"};
+        final int[] selectedHours = {cfg.getAutoReplyCooldownHours()};
+
+        android.widget.LinearLayout root = new android.widget.LinearLayout(context);
+        root.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int pad = AndroidUtilities.dp(20);
+        root.setPadding(pad, pad, pad, AndroidUtilities.dp(14));
+
+        android.widget.TextView title = new android.widget.TextView(context);
+        title.setText("Smart Auto-Reply");
+        title.setTextSize(20);
+        title.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        title.setTextColor(0xFF0F172A);
+        root.addView(title);
+
+        android.widget.TextView subtitle = new android.widget.TextView(context);
+        subtitle.setText("Sent to people who message you in a private chat. Each chat gets a reply once per cooldown.");
+        subtitle.setTextSize(13);
+        subtitle.setTextColor(0xFF64748B);
+        subtitle.setPadding(0, AndroidUtilities.dp(6), 0, AndroidUtilities.dp(14));
+        root.addView(subtitle);
+
         final EditText et = new EditText(context);
-        et.setText(NayaConfig.getInstance().getAutoReplyText());
+        et.setText(cfg.getAutoReplyText());
         et.setSelection(et.getText().length());
-        builder.setView(et);
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        et.setMinLines(3);
+        et.setGravity(android.view.Gravity.TOP | android.view.Gravity.START);
+        et.setTextColor(0xFF0F172A);
+        et.setHintTextColor(0xFF94A3B8);
+        et.setHint("Type your auto-reply");
+        et.setTextSize(15);
+        et.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+        et.setBackground(roundedBox(0xFFF1F5F9, 0xFF38BDF8, 14, 1));
+        root.addView(et, matchWrap());
+
+        android.widget.TextView cooldownLabel = new android.widget.TextView(context);
+        cooldownLabel.setText("Reply again to the same person after");
+        cooldownLabel.setTextSize(13);
+        cooldownLabel.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        cooldownLabel.setTextColor(0xFF334155);
+        cooldownLabel.setPadding(0, AndroidUtilities.dp(16), 0, AndroidUtilities.dp(8));
+        root.addView(cooldownLabel);
+
+        android.widget.LinearLayout chipRow = new android.widget.LinearLayout(context);
+        chipRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        final android.widget.TextView[] chips = new android.widget.TextView[hourOptions.length];
+        for (int i = 0; i < hourOptions.length; i++) {
+            final int idx = i;
+            android.widget.TextView chip = new android.widget.TextView(context);
+            chip.setText(hourLabels[i]);
+            chip.setTextSize(13);
+            chip.setGravity(android.view.Gravity.CENTER);
+            chip.setPadding(0, AndroidUtilities.dp(10), 0, AndroidUtilities.dp(10));
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            if (i > 0) lp.leftMargin = AndroidUtilities.dp(8);
+            chipRow.addView(chip, lp);
+            chips[i] = chip;
+            chip.setOnClickListener(v -> {
+                selectedHours[0] = hourOptions[idx];
+                refreshCooldownChips(chips, hourOptions, selectedHours[0]);
+            });
+        }
+        refreshCooldownChips(chips, hourOptions, selectedHours[0]);
+        root.addView(chipRow, matchWrap());
+
+        android.widget.LinearLayout buttonRow = new android.widget.LinearLayout(context);
+        buttonRow.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+        buttonRow.setGravity(android.view.Gravity.END | android.view.Gravity.CENTER_VERTICAL);
+        buttonRow.setPadding(0, AndroidUtilities.dp(20), 0, 0);
+
+        final AlertDialog[] holder = new AlertDialog[1];
+        android.widget.TextView cancelBtn = makeDialogButton("Cancel", 0xFF0369A1, roundedBox(0xFFFFFFFF, 0xFF7DD3FC, 12, 1));
+        cancelBtn.setOnClickListener(v -> { if (holder[0] != null) holder[0].dismiss(); });
+        android.widget.TextView saveBtn = makeDialogButton("Save", 0xFFFFFFFF, gradientBox(0xFF38BDF8, 0xFF0284C7, 12));
+        saveBtn.setOnClickListener(v -> {
             String text = et.getText().toString().trim();
-            if (!text.isEmpty()) {
-                NayaConfig.getInstance().setAutoReplyText(text);
-                if (fragment != null) {
-                    BulletinFactory.of(fragment).createSimpleBulletin(R.raw.done, "Auto-reply message updated").show();
-                }
+            if (text.isEmpty()) {
+                et.setError("Write a message first");
+                return;
+            }
+            cfg.setAutoReplyText(text);
+            cfg.setAutoReplyCooldownHours(selectedHours[0]);
+            if (holder[0] != null) holder[0].dismiss();
+            if (fragment != null) {
+                BulletinFactory.of(fragment).createSimpleBulletin(R.raw.done, "Auto-reply saved").show();
             }
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        android.widget.LinearLayout.LayoutParams cancelLp = new android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        cancelLp.rightMargin = AndroidUtilities.dp(10);
+        buttonRow.addView(cancelBtn, cancelLp);
+        buttonRow.addView(saveBtn, new android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(buttonRow, matchWrap());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setView(root);
+        holder[0] = builder.show();
+    }
+
+    private void refreshCooldownChips(android.widget.TextView[] chips, int[] options, int selected) {
+        for (int i = 0; i < chips.length; i++) {
+            boolean on = options[i] == selected;
+            chips[i].setTextColor(on ? 0xFFFFFFFF : 0xFF0369A1);
+            chips[i].setTypeface(on ? android.graphics.Typeface.DEFAULT_BOLD : android.graphics.Typeface.DEFAULT);
+            chips[i].setBackground(on
+                    ? gradientBox(0xFF38BDF8, 0xFF0284C7, 12)
+                    : roundedBox(0xFFE0F2FE, 0xFF7DD3FC, 12, 1));
+        }
+    }
+
+    private android.widget.TextView makeDialogButton(String label, int textColor, android.graphics.drawable.Drawable background) {
+        android.widget.TextView button = new android.widget.TextView(context);
+        button.setText(label);
+        button.setTextSize(15);
+        button.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        button.setTextColor(textColor);
+        button.setGravity(android.view.Gravity.CENTER);
+        button.setPadding(AndroidUtilities.dp(22), AndroidUtilities.dp(10), AndroidUtilities.dp(22), AndroidUtilities.dp(10));
+        button.setBackground(background);
+        return button;
+    }
+
+    private android.graphics.drawable.GradientDrawable roundedBox(int fill, int stroke, int radiusDp, int strokeDp) {
+        android.graphics.drawable.GradientDrawable box = new android.graphics.drawable.GradientDrawable();
+        box.setColor(fill);
+        box.setCornerRadius(AndroidUtilities.dp(radiusDp));
+        box.setStroke(AndroidUtilities.dp(strokeDp), stroke);
+        return box;
+    }
+
+    private android.graphics.drawable.GradientDrawable gradientBox(int startColor, int endColor, int radiusDp) {
+        android.graphics.drawable.GradientDrawable box = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT, new int[]{startColor, endColor});
+        box.setCornerRadius(AndroidUtilities.dp(radiusDp));
+        return box;
+    }
+
+    private android.widget.LinearLayout.LayoutParams matchWrap() {
+        return new android.widget.LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
     }
 
     @Override
