@@ -21,7 +21,7 @@ public class IncomingMessageInterceptor {
     private static final String PREFS_NAME = "nayagram_auto_reply_state";
 
     private static final Pattern URL_PATTERN = Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)");
-    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\s_][^_]*?[^\\s_]|[^\\s_])_(?!_)");
+    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\\s_][^_]*?[^\\\s_]|[^\\\s_])_(?!_)");
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         Utilities.globalQueue.postRunnable(() -> {
