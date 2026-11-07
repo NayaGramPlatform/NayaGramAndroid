@@ -21,7 +21,7 @@ public class IncomingMessageInterceptor {
     private static final String PREFS_NAME = "nayagram_auto_reply_state";
 
     private static final Pattern URL_PATTERN = Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)");
-    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\s_][^_]*?[^\s_]|[^\s_])_(?!_)");
+    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\s_][^_]*?[^\\s_]|[^\\s_])_(?!_)");
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         Utilities.globalQueue.postRunnable(() -> {
@@ -86,7 +86,7 @@ public class IncomingMessageInterceptor {
                 String currentText = messageArr[0] != null ? messageArr[0].toString() : preprocessed;
 
                 // Step 3: Parse quote lines starting with "> " -> TL_messageEntityBlockquote
-                String[] lines = currentText.split("\n", -1);
+                String[] lines = currentText.split("\\n", -1);
                 StringBuilder newTextBuilder = new StringBuilder();
                 int lineStart = 0;
                 for (int i = 0; i < lines.length; i++) {
@@ -110,7 +110,7 @@ public class IncomingMessageInterceptor {
                         lineStart += line.length();
                     }
                     if (i < lines.length - 1) {
-                        newTextBuilder.append("\n");
+                        newTextBuilder.append("\\n");
                         lineStart += 1;
                     }
                 }
