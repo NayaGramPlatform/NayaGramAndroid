@@ -87,7 +87,6 @@ public class IncomingMessageInterceptor {
 
                 // Step 3: Parse quote lines starting with "> " -> TL_messageEntityBlockquote
                 String[] lines = currentText.split("\n", -1);
-", -1);
                 StringBuilder newTextBuilder = new StringBuilder();
                 int lineStart = 0;
                 for (int i = 0; i < lines.length; i++) {
@@ -112,7 +111,6 @@ public class IncomingMessageInterceptor {
                     }
                     if (i < lines.length - 1) {
                         newTextBuilder.append("\n");
-");
                         lineStart += 1;
                     }
                 }
