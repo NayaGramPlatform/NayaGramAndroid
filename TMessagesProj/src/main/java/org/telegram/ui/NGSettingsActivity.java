@@ -277,7 +277,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowApkBlock) {
                     cfg.setApkBlockEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK ও ZIP সুরক্ষা: " + (checked ? "চালু" : "বন্ধ")).show();
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);

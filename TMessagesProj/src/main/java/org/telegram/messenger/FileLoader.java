@@ -1025,6 +1025,14 @@ public class FileLoader extends BaseController {
                 }
 
                 if (!operation.isPreloadVideoOperation()) {
+                    if (NayaGram.shouldBlockDownloadedPayload(sentByMe, finalFile)) {
+                        FileLog.d("NayaGram Security Shield: blocked payload inside archive " + fileName);
+                        if (finalFile != null && finalFile.exists()) {
+                            finalFile.delete();
+                        }
+                        NayaGram.showBlockedNotice();
+                        return;
+                    }
                     loadOperationPathsUI.remove(fileName);
                     if (delegate != null) {
                         delegate.fileDidLoaded(fileName, finalFile, parentObject, finalType);

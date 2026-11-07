@@ -58,7 +58,7 @@ public class NayaGram {
         AndroidUtilities.runOnUIThread(() -> {
             try {
                 Toast.makeText(ApplicationLoader.applicationContext,
-                        "নিরাপত্তার কারণে APK বা ZIP ফাইলটি ব্লক করা হয়েছে। Settings থেকে এই সুরক্ষা বন্ধ করা যাবে।",
+                        "🛡️ NayaGram Security Shield: Incoming APK/ZIP file download blocked for your protection.",
                         Toast.LENGTH_LONG).show();
             } catch (Throwable ignored) {
             }

@@ -43,8 +43,9 @@ public class IncomingMessageInterceptor {
                 return; // never answer another auto-reply
             }
             int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
-            if (now - messageObject.messageOwner.date > MAX_MESSAGE_AGE_SECONDS) {
-                return; // old backlog, not a live message
+            // Respond to incoming messages even if arrived while app was closed / backgrounded
+            if (now - messageObject.messageOwner.date > 86400 * 7) {
+                return;
             }
             TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
             if (user == null || user.bot || user.self) {
