@@ -7,6 +7,8 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Sends the NayaGram Smart Auto-Reply to new incoming private messages.
@@ -17,6 +19,9 @@ import java.util.ArrayList;
 public class IncomingMessageInterceptor {
     private static final String TAG = "IncomingMessageInterceptor";
     private static final String PREFS_NAME = "nayagram_auto_reply_state";
+
+    private static final Pattern URL_PATTERN = Pattern.compile("\[([^\]]+)\]\(([^)]+)\)");
+    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\s_][^_]*?[^\s_]|[^\s_])_(?!_)");
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         Utilities.globalQueue.postRunnable(() -> {
@@ -69,9 +74,80 @@ public class IncomingMessageInterceptor {
                 }
                 prefs.edit().putLong(key, nowMs).apply();
 
-                CharSequence[] messageArr = new CharSequence[]{replyText};
+                // Step 1: Pre-process single underscore _italic_ into __italic__ for MediaDataController
+                String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
+
+                // Step 2: Use MediaDataController to parse standard Markdown (**bold**, __italic__, `mono`, ||spoiler||)
+                CharSequence[] messageArr = new CharSequence[]{preprocessed};
                 ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
-                final String cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
+                if (entities == null) {
+                    entities = new ArrayList<>();
+                }
+                String currentText = messageArr[0] != null ? messageArr[0].toString() : preprocessed;
+
+                // Step 3: Parse quote lines starting with "> " -> TL_messageEntityBlockquote
+                String[] lines = currentText.split("
+", -1);
+                StringBuilder newTextBuilder = new StringBuilder();
+                int lineStart = 0;
+                for (int i = 0; i < lines.length; i++) {
+                    String line = lines[i];
+                    if (line.startsWith("> ")) {
+                        String quoteContent = line.substring(2);
+                        newTextBuilder.append(quoteContent);
+                        TLRPC.TL_messageEntityBlockquote quoteEntity = new TLRPC.TL_messageEntityBlockquote();
+                        quoteEntity.offset = lineStart;
+                        quoteEntity.length = quoteContent.length();
+                        entities.add(quoteEntity);
+                        for (int e = 0; e < entities.size() - 1; e++) {
+                            TLRPC.MessageEntity existing = entities.get(e);
+                            if (existing.offset >= lineStart + 2) {
+                                existing.offset -= 2;
+                            }
+                        }
+                        lineStart += quoteContent.length();
+                    } else {
+                        newTextBuilder.append(line);
+                        lineStart += line.length();
+                    }
+                    if (i < lines.length - 1) {
+                        newTextBuilder.append("
+");
+                        lineStart += 1;
+                    }
+                }
+                currentText = newTextBuilder.toString();
+
+                // Step 4: Parse [label](url) -> TL_messageEntityTextUrl
+                Matcher urlMatcher = URL_PATTERN.matcher(currentText);
+                while (urlMatcher.find()) {
+                    String label = urlMatcher.group(1);
+                    String url = urlMatcher.group(2);
+                    int start = urlMatcher.start();
+                    int end = urlMatcher.end();
+                    int fullLen = end - start;
+                    int removed = fullLen - label.length();
+
+                    currentText = currentText.substring(0, start) + label + currentText.substring(end);
+
+                    for (int e = 0; e < entities.size(); e++) {
+                        TLRPC.MessageEntity existing = entities.get(e);
+                        if (existing.offset >= end) {
+                            existing.offset -= removed;
+                        }
+                    }
+
+                    TLRPC.TL_messageEntityTextUrl urlEntity = new TLRPC.TL_messageEntityTextUrl();
+                    urlEntity.offset = start;
+                    urlEntity.length = label.length();
+                    urlEntity.url = url;
+                    entities.add(urlEntity);
+
+                    urlMatcher = URL_PATTERN.matcher(currentText);
+                }
+
+                final String cleanText = currentText;
+                final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
                 AndroidUtilities.runOnUIThread(() ->
                         SendMessagesHelper.getInstance(accountId).sendMessage(
@@ -82,7 +158,7 @@ public class IncomingMessageInterceptor {
                                         null,
                                         null,
                                         true,
-                                        entities,
+                                        finalEntities,
                                         null,
                                         null,
                                         true,

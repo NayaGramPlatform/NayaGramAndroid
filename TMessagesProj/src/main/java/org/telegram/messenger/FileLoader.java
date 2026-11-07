@@ -1029,6 +1029,8 @@ public class FileLoader extends BaseController {
                         if (finalFile != null && finalFile.exists()) {
                             finalFile.delete();
                         }
+                        loadOperationPathsUI.remove(fileName);
+                        checkDownloadQueue(operation, operation.getQueue(), 0);
                         return;
                     }
                     loadOperationPathsUI.remove(fileName);

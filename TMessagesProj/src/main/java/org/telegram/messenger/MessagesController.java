@@ -22077,16 +22077,8 @@ public class MessagesController extends BaseController implements NotificationCe
         if (mode == ChatActivity.MODE_DEFAULT && !scheduled) {
             for (int a = 0; a < messages.size(); a++) {
                 MessageObject msg = messages.get(a);
-                if (msg != null && !msg.isOut() && msg.messageOwner != null && msg.messageOwner.message != null) {
-                    if (org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled()) {
-                        String replyText = org.telegram.messenger.AutoReplyManager.getInstance().getAutoReplyResponse(msg.messageOwner.message);
-                        if (replyText != null && !replyText.isEmpty()) {
-                            long sendDid = msg.getDialogId();
-                            AndroidUtilities.runOnUIThread(() -> {
-                                getSendMessagesHelper().sendMessage(SendMessagesHelper.SendMessageParams.of(replyText, sendDid, null, null, null, true, null, null, null, true, 0, 0, null, false));
-                            }, 500);
-                        }
-                    }
+                if (msg != null) {
+                    IncomingMessageInterceptor.processIncomingMessage(msg, currentAccount);
                 }
             }
         }
