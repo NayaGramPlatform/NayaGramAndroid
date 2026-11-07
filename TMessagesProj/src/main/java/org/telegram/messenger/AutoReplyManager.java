@@ -1,9 +1,9 @@
 package org.telegram.messenger;
 
 import android.content.SharedPreferences;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.nayagram.platform.NayaConfig;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -43,7 +43,11 @@ public class AutoReplyManager {
     }
 
     public synchronized boolean isAutoReplyEnabled() {
-        return autoReplyEnabled;
+        try {
+            return NayaConfig.getInstance().isSmartAutoReply() || autoReplyEnabled;
+        } catch (Throwable e) {
+            return autoReplyEnabled;
+        }
     }
 
     public synchronized void addRule(AutoReplyRule rule) {
@@ -68,7 +72,7 @@ public class AutoReplyManager {
     }
 
     public synchronized AutoReplyRule findMatchingRule(String messageText) {
-        if (!autoReplyEnabled || messageText == null) {
+        if (messageText == null) {
             return null;
         }
         for (AutoReplyRule rule : rules) {
@@ -103,7 +107,7 @@ public class AutoReplyManager {
     }
 
     public synchronized boolean shouldSendAutoReply(long dialogId, int accountId) {
-        return autoReplyEnabled;
+        return isAutoReplyEnabled();
     }
 
     private synchronized void saveRules() {
@@ -118,19 +122,43 @@ public class AutoReplyManager {
         autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
         String json = preferences.getString(KEY_RULES, null);
         if (json == null || json.isEmpty()) {
+            seedDefaultRules();
             return;
         }
         try {
             Type type = new TypeToken<List<AutoReplyRule>>() {}.getType();
             List<AutoReplyRule> storedRules = gson.fromJson(json, type);
-            if (storedRules != null) {
+            if (storedRules != null && !storedRules.isEmpty()) {
                 rules.clear();
                 rules.addAll(storedRules);
+            } else {
+                seedDefaultRules();
             }
         } catch (Exception e) {
             rules.clear();
+            seedDefaultRules();
             FileLog.e(TAG + ": failed to load rules", e);
         }
+    }
+
+    private void seedDefaultRules() {
+        rules.clear();
+        rules.add(new AutoReplyRule("Hi Rule", "hi", "Hello! How can I help you?"));
+        rules.add(new AutoReplyRule("Hello Rule", "hello", "Hello! I will reply soon."));
+        rules.add(new AutoReplyRule("Price Query", "price", "Please tell me which item you want the price for."));
+        rules.add(new AutoReplyRule("Dam Query", "dam", "দাম জানতে প্রোডাক্টের নাম লিখুন।"));
+        rules.add(new AutoReplyRule("Order Rule", "order", "Please send the product name and quantity."));
+        rules.add(new AutoReplyRule("Location Query", "location", "Please share your delivery location."));
+        rules.add(new AutoReplyRule("Address Query", "address", "Please send the full delivery address."));
+        rules.add(new AutoReplyRule("bKash Query", "bkash", "bKash payment details will be sent shortly."));
+        rules.add(new AutoReplyRule("Nagad Query", "nagad", "Nagad payment details will be sent shortly."));
+        rules.add(new AutoReplyRule("Delivery Rule", "delivery", "Delivery time will be confirmed shortly."));
+        rules.add(new AutoReplyRule("Help Rule", "help", "Tell me what you need help with."));
+        rules.add(new AutoReplyRule("Thanks Rule", "thanks", "You are welcome."));
+        rules.add(new AutoReplyRule("OK Rule", "ok", "Noted."));
+        rules.add(new AutoReplyRule("Salam Rule", "assalamu", "ওয়ালাইকুম আসসালাম।"));
+        rules.add(new AutoReplyRule("Bye Rule", "bye", "Talk to you soon."));
+        saveRules();
     }
 
     public synchronized void clearAllRules() {

@@ -597,7 +597,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "4.23.54 NG";
+        return "4.26.63 NG";
     }
 
     private void openSuperAdmin() {

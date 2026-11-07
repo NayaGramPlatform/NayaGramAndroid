@@ -836,7 +836,6 @@ public class FileLoader extends BaseController {
         boolean sentByMe = parentObject instanceof MessageObject && ((MessageObject) parentObject).isOutOwner();
         if (!sentByMe && (NayaGram.shouldBlockFile(fileName) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document))))) {
             FileLog.d("Blocked download of blocked file type: " + fileName);
-            NayaGram.showBlockedNotice();
             return null;
         }
         if (fileName == null || fileName.contains("" + Integer.MIN_VALUE)) {
@@ -1030,7 +1029,6 @@ public class FileLoader extends BaseController {
                         if (finalFile != null && finalFile.exists()) {
                             finalFile.delete();
                         }
-                        NayaGram.showBlockedNotice();
                         return;
                     }
                     loadOperationPathsUI.remove(fileName);

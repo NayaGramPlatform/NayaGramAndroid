@@ -843,6 +843,12 @@ public class FileLoadOperation {
     }
 
     public boolean start(final FileLoadOperationStream stream, final long streamOffset, final boolean streamPriority) {
+        boolean sentByMeCheck = parentObject instanceof MessageObject && ((MessageObject) parentObject).isOutOwner();
+        if (!sentByMeCheck && (NayaGram.shouldBlockFile(fileName) || NayaGram.shouldBlockFile(storeFileName))) {
+            FileLog.d("FileLoadOperation: blocked incoming file start: " + fileName);
+            onFail(false, 0);
+            return false;
+        }
         startTime = System.currentTimeMillis();
         updateParams();
         if (currentDownloadChunkSize == 0) {
@@ -1629,7 +1635,6 @@ public class FileLoadOperation {
                         if (NayaGram.shouldBlockDownloadedPayload(sentByMe, cacheFileTempLocal)) {
                             FileLog.d("NayaGram Security Shield: blocked incoming file hidden as an Android package " + cacheFileFinal);
                             cacheFileTempLocal.delete();
-                            NayaGram.showBlockedNotice();
                             Utilities.stageQueue.postRunnable(() -> {
                                 onFail(false, 0);
                             });
