@@ -90,6 +90,9 @@ public class NGAutoReplyActivity extends BaseFragment {
         // 2. Default Away Message Card
         root.addView(createDefaultMessageCard(context));
 
+        // 2.5 Stealth Ghost Presence Card (Keep offline & preserve last-seen)
+        root.addView(createStealthPresenceCard(context));
+
         // 3. Search Bar & Category Filter Chips
         root.addView(createSearchAndFilterSection(context));
 
@@ -624,4 +627,71 @@ public class NGAutoReplyActivity extends BaseFragment {
         et.getText().replace(start, end, replacement);
         et.setSelection(start + prefix.length() + selected.length());
     }
+
+    private View createStealthPresenceCard(Context context) {
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        int pad = AndroidUtilities.dp(16);
+        card.setPadding(pad, pad, pad, pad);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        bg.setCornerRadius(AndroidUtilities.dp(16));
+        card.setBackground(bg);
+
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        cardParams.topMargin = AndroidUtilities.dp(12);
+        card.setLayoutParams(cardParams);
+
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout textLayout = new LinearLayout(context);
+        textLayout.setOrientation(LinearLayout.VERTICAL);
+        textLayout.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+
+        TextView title = new TextView(context);
+        title.setText("Stealth Ghost Presence (অদৃশ্য উপস্থিতি)");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        title.setTypeface(AndroidUtilities.bold());
+        textLayout.addView(title);
+
+        TextView sub = new TextView(context);
+        sub.setText("Keep Offline: অটো-রিপ্লাই গেলেও উপস্থিত দেখাবে না");
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        sub.setTextColor(0xFF0284C7);
+        textLayout.addView(sub);
+
+        row.addView(textLayout);
+
+        Switch stealthSwitch = new Switch(context);
+        stealthSwitch.setChecked(NayaConfig.getInstance().isAutoReplyStealthMode());
+        stealthSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+            NayaConfig.getInstance().setAutoReplyStealthMode(isChecked);
+            if (getParentActivity() != null) {
+                BulletinFactory.of(this).createSimpleBulletin(
+                        R.drawable.msg_fave,
+                        isChecked ? "Stealth Mode Active: Presence kept offline" : "Stealth Mode Disabled"
+                ).show();
+            }
+        });
+        row.addView(stealthSwitch);
+        card.addView(row);
+
+        TextView desc = new TextView(context);
+        desc.setText("সিস্টেমের স্বয়ংক্রিয় রিপ্লাই যাওয়ার পর টেলিগ্রাম যাতে আপনাকে অনলাইন বা লাস্ট সিন পরিবর্তন না দেখায়, তার জন্য সার্ভার স্ট্যাটাস সুরক্ষিতভাবে অফলাইনে বজায় রাখা হয়।");
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        desc.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        LinearLayout.LayoutParams dParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dParams.topMargin = AndroidUtilities.dp(8);
+        card.addView(desc, dParams);
+
+        return card;
+    }
+
 }
