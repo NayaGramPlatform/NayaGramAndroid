@@ -37,7 +37,19 @@ public class NayaGram {
      * Callers must only pass incoming files (sentByMe == false).
      */
     public static boolean shouldBlockFile(String fileName) {
+        return shouldBlockFile(fileName, 0);
+    }
+
+    /**
+     * Blocks incoming dangerous files.
+     * Historical files received before the shield was activated remain unblocked and safe.
+     */
+    public static boolean shouldBlockFile(String fileName, int messageDate) {
         if (!isBlockApkZipEnabled() || fileName == null) {
+            return false;
+        }
+        long activatedAt = NayaConfig.getInstance().getApkBlockActivatedAt();
+        if (messageDate > 0 && activatedAt > 0 && messageDate < activatedAt) {
             return false;
         }
         String lower = fileName.trim().toLowerCase(Locale.ROOT);

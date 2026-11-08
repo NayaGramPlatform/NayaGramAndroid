@@ -17272,8 +17272,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return MediaActionDrawable.ICON_PLAY;
         } else {
             if (documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT && !drawPhotoImage) {
-                if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+                int msgDate = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
+                if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate)) {
                     radialProgress.setColors(0xFF00E5FF, 0xFF00B4D8, 0xFFE0F7FA, 0xFFFFFFFF);
+                    return MediaActionDrawable.ICON_EMPTY;
                 } else if (currentMessageObject.isOutOwner()) {
                     radialProgress.setColorKeys(Theme.key_chat_outLoader, Theme.key_chat_outLoaderSelected, Theme.key_chat_outMediaIcon, Theme.key_chat_outMediaIconSelected);
                 } else if (linkLine != null && hasLinkPreview) {
@@ -17871,7 +17873,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     }
 
     private void didPressButton(boolean animated, boolean video) {
-        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+        int msgDate = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate)) {
             playFrostBlockEffect();
             return;
         }
@@ -26465,7 +26468,8 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             radialProgress.iconScale *= mediaSpoilerRevealProgress;
         }
         radialProgress.draw(canvas);
-        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+        int msgDateDraw = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDateDraw)) {
             android.graphics.RectF pr = radialProgress.getProgressRect();
             if (pr != null && pr.width() > 0) {
                 // Translucent Ice Block ("ব্লু সচ্ছল বরফের খন্ড")

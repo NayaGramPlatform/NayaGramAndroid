@@ -41667,7 +41667,8 @@ public class ChatActivity extends BaseFragment implements
         @Override
         public void didPressImage(ChatMessageCell cell, float x, float y, boolean fullPreview) {
             MessageObject message = cell.getMessageObject();
-            if (message != null && !message.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(message.getDocumentName())) {
+            int msgDate = message != null && message.messageOwner != null ? message.messageOwner.date : 0;
+            if (message != null && !message.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(message.getDocumentName(), msgDate)) {
                 if (cell != null) {
                     cell.playFrostBlockEffect();
                 } else {
@@ -46335,7 +46336,8 @@ public class ChatActivity extends BaseFragment implements
                             options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
                             icons.add(R.drawable.msg_download);
                         } else if (selectedObject.isDocument() && !noforwardsOrPaidMedia && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()) {
-                            if (!selectedObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(selectedObject.getDocumentName())) {
+                            int msgDate = selectedObject.messageOwner != null ? selectedObject.messageOwner.date : 0;
+                            if (!selectedObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(selectedObject.getDocumentName(), msgDate)) {
                                 // Blocked by Frost Shield: do not allow save to downloads
                             } else {
                                 items.add(LocaleController.getString(R.string.SaveToDownloads));

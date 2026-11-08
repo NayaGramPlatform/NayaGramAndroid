@@ -52,6 +52,7 @@ public class NayaConfig {
     private static final String KEY_READABLE_TEXT = "feature_20_readable_text";
     private static final String KEY_READABLE_TEXT_PREV = "feature_20_readable_text_prev";
     private static final String KEY_APK_BLOCK = "feature_apk_block";
+    private static final String KEY_APK_BLOCK_ACTIVATED_AT = "feature_apk_block_activated_at";
     private static final String KEY_AUTO_ADD_TEXT_ENABLED = "feature_auto_add_text_enabled";
     private static final String KEY_AUTO_ADD_TEXT_VALUE = "feature_auto_add_text_value";
     private static final String KEY_ONE_TIME_VOICE_VIDEO = "feature_one_time_voice_video";
@@ -317,7 +318,21 @@ public class NayaConfig {
     public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
 
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, true); }
-    public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
+    public long getApkBlockActivatedAt() {
+        long ts = preferences.getLong(KEY_APK_BLOCK_ACTIVATED_AT, 0L);
+        if (ts == 0L && isApkBlockEnabled()) {
+            ts = System.currentTimeMillis() / 1000L;
+            preferences.edit().putLong(KEY_APK_BLOCK_ACTIVATED_AT, ts).apply();
+        }
+        return ts;
+    }
+    public void setApkBlockEnabled(boolean e) {
+        long activatedAt = e ? (System.currentTimeMillis() / 1000L) : 0L;
+        preferences.edit()
+            .putBoolean(KEY_APK_BLOCK, e)
+            .putLong(KEY_APK_BLOCK_ACTIVATED_AT, activatedAt)
+            .apply();
+    }
 
     public boolean isAutoAddTextEnabled() { return preferences.getBoolean(KEY_AUTO_ADD_TEXT_ENABLED, false); }
     public void setAutoAddTextEnabled(boolean e) { preferences.edit().putBoolean(KEY_AUTO_ADD_TEXT_ENABLED, e).apply(); }

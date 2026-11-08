@@ -6096,7 +6096,8 @@ public class MessageObject {
                     } else {
                         String name = FileLoader.getDocumentFileName(getDocument());
                         if (!TextUtils.isEmpty(name)) {
-                            if (!isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name)) {
+                            int msgDate = messageOwner != null ? messageOwner.date : 0;
+                            if (!isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name, msgDate)) {
                                 messageText = "[BLOCKED FILE] " + name;
                             } else {
                                 messageText = name;
@@ -10265,7 +10266,8 @@ public class MessageObject {
 
     public String getDocumentName() {
         String name = FileLoader.getDocumentFileName(getDocument());
-        if (name != null && !isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name)) {
+        int msgDate = messageOwner != null ? messageOwner.date : 0;
+        if (name != null && !isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name, msgDate)) {
             return "[BLOCKED FILE] " + name;
         }
         return name;

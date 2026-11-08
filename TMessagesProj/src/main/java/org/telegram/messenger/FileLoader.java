@@ -598,8 +598,10 @@ public class FileLoader extends BaseController {
             fileName = getAttachFileName(location, locationExt);
         } else if (document != null) {
             if (parentObject instanceof MessageObject && !((MessageObject) parentObject).isOutOwner()) {
+                MessageObject mo = (MessageObject) parentObject;
+                int msgDate = mo.messageOwner != null ? mo.messageOwner.date : 0;
                 String docName = getDocumentFileName(document);
-                if (org.nayagram.platform.NayaGram.shouldBlockFile(docName)) {
+                if (org.nayagram.platform.NayaGram.shouldBlockFile(docName, msgDate)) {
                     FileLog.d("NayaGram Security Shield: Prevented loadFileInternal for " + docName);
                     return null;
                 }
@@ -817,8 +819,10 @@ public class FileLoader extends BaseController {
             return;
         }
         if (parentObject instanceof MessageObject && !((MessageObject) parentObject).isOutOwner()) {
+            MessageObject mo = (MessageObject) parentObject;
+            int msgDate = mo.messageOwner != null ? mo.messageOwner.date : 0;
             String docName = getDocumentFileName(document);
-            if (org.nayagram.platform.NayaGram.shouldBlockFile(docName)) {
+            if (org.nayagram.platform.NayaGram.shouldBlockFile(docName, msgDate)) {
                 FileLog.d("NayaGram Security Shield: Prevented file load for " + docName);
                 return;
             }
