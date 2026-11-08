@@ -34,6 +34,7 @@ public class NayaConfig {
     private static final String KEY_SMART_AUTO_REPLY = "feature_03_auto_reply";
     private static final String KEY_AUTO_REPLY_TEXT = "feature_03_auto_reply_text";
     private static final String KEY_AUTO_REPLY_COOLDOWN_H = "feature_03_auto_reply_cooldown_h";
+    private static final String KEY_AUTO_REPLY_STEALTH = "feature_03_auto_reply_stealth";
     private static final String KEY_STORY_SAVER = "feature_04_story_saver";
     private static final String KEY_ANONYMOUS_STORIES = "feature_05_anonymous_stories";
     private static final String KEY_SMART_CHAT_FOLDERS = "feature_09_smart_chat_folders";
@@ -143,6 +144,10 @@ public class NayaConfig {
     public void setAutoReplyCooldownHours(int hours) { preferences.edit().putInt(KEY_AUTO_REPLY_COOLDOWN_H, Math.max(1, Math.min(168, hours))).apply(); }
     public String getAutoReplyText() { return preferences.getString(KEY_AUTO_REPLY_TEXT, "Hello! I am currently busy. I will get back to you soon. (Sent via NayaGram Auto-Reply)"); }
     public void setAutoReplyText(String t) { preferences.edit().putString(KEY_AUTO_REPLY_TEXT, t).apply(); }
+
+    /** Stealth Ghost Presence: Keep user offline and prevent auto-reply from pulling last-seen forward. */
+    public boolean isAutoReplyStealthMode() { return preferences.getBoolean(KEY_AUTO_REPLY_STEALTH, true); }
+    public void setAutoReplyStealthMode(boolean enabled) { preferences.edit().putBoolean(KEY_AUTO_REPLY_STEALTH, enabled).apply(); }
 
     // 4. Story Saver
     /** Removed for policy compliance: downloads other users' stories. Always off. */
