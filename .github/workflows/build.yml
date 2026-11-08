@@ -170,7 +170,6 @@ jobs:
           STORE_PASS=$(echo "${RELEASE_STORE_PASSWORD:-Naya\$Gram@2026&TGPremik}" | tr -d "\r\n")
           KEY_PASS=$(echo "${RELEASE_KEY_PASSWORD:-$STORE_PASS}" | tr -d "\r\n")
           KEY_ALIAS=$(echo "${RELEASE_KEY_ALIAS:-payagrampro_key}" | tr -d "\r\n")
-          curl -sLO https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           if [ -z "$AAB_FILE" ]; then
             echo "::error::No AAB found"
@@ -178,6 +177,13 @@ jobs:
           fi
           mkdir -p build_output
           cp "$AAB_FILE" build_output/NayaGram-Release.aab
+          echo "Secured release AAB: $(ls -lh build_output/NayaGram-Release.aab)"
+
+          # Download bundletool with exponential retries and wget fallback
+          if [ ! -f bundletool-all-1.17.2.jar ] || [ $(stat -c%s bundletool-all-1.17.2.jar 2>/dev/null || echo 0) -lt 10000000 ]; then
+            echo "Downloading bundletool 1.17.2 with retry..."
+            curl -fSL --connect-timeout 20 --retry 5 --retry-delay 3               -o bundletool-all-1.17.2.jar               https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar ||             wget -q -t 5 -w 3 -O bundletool-all-1.17.2.jar               https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar || true
+          fi
           java -jar bundletool-all-1.17.2.jar build-apks \
             --bundle="$AAB_FILE" \
             --output=build_output/app.apks \
