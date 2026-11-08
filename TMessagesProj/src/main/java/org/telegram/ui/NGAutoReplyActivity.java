@@ -4,7 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -30,12 +32,13 @@ import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * NayaGram Smart Auto-Reply Activity:
- * Complete UI/UX for managing the 15+ keyword rules, master toggle,
- * and default away message with Markdown styling.
+ * Complete UI/UX studio for managing 15+ keyword rules, master switch,
+ * search filter, categories, and Markdown away message editor.
  */
 public class NGAutoReplyActivity extends BaseFragment {
 
@@ -43,11 +46,13 @@ public class NGAutoReplyActivity extends BaseFragment {
     private TextView masterStatusText;
     private Switch masterSwitch;
     private TextView defaultMessagePreview;
+    private String currentSearchQuery = "";
+    private String currentCategoryFilter = "ALL";
 
     @Override
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
-        actionBar.setTitle("Smart Auto-Reply");
+        actionBar.setTitle("Smart Auto-Reply Studio");
         actionBar.setSubtitle("15+ Rules & Instant Replies");
         actionBar.setAllowOverlayTitle(true);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
@@ -73,7 +78,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         LinearLayout root = new LinearLayout(context);
         root.setOrientation(LinearLayout.VERTICAL);
         int pad = AndroidUtilities.dp(16);
-        root.setPadding(pad, pad, pad, AndroidUtilities.dp(32));
+        root.setPadding(pad, pad, pad, AndroidUtilities.dp(36));
         scrollView.addView(root, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -85,10 +90,13 @@ public class NGAutoReplyActivity extends BaseFragment {
         // 2. Default Away Message Card
         root.addView(createDefaultMessageCard(context));
 
-        // 3. Keyword Rules Section Header
-        root.addView(createSectionHeader(context, "Instant Keyword Rules", "Responds immediately to incoming queries"));
+        // 3. Search Bar & Category Filter Chips
+        root.addView(createSearchAndFilterSection(context));
 
-        // 4. Container for Rules List
+        // 4. Keyword Rules Section Header
+        root.addView(createSectionHeader(context, "Instant Keyword Rules", "Matches queries and replies immediately without cooldown"));
+
+        // 5. Container for Rules List
         rulesContainer = new LinearLayout(context);
         rulesContainer.setOrientation(LinearLayout.VERTICAL);
         root.addView(rulesContainer, new LinearLayout.LayoutParams(
@@ -96,7 +104,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // 5. Actions Card (Add Rule / Restore Defaults)
+        // 6. Actions Card (Add Rule / Restore Defaults)
         root.addView(createActionsCard(context));
 
         refreshRulesList(context);
@@ -211,15 +219,85 @@ public class NGAutoReplyActivity extends BaseFragment {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        cardParams.bottomMargin = AndroidUtilities.dp(20);
+        cardParams.bottomMargin = AndroidUtilities.dp(18);
         card.setLayoutParams(cardParams);
         return card;
+    }
+
+    private View createSearchAndFilterSection(Context context) {
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(0, 0, 0, AndroidUtilities.dp(14));
+
+        // Search Input
+        EditText etSearch = new EditText(context);
+        etSearch.setHint("🔍 Search rule by keyword or name...");
+        etSearch.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        etSearch.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(10), AndroidUtilities.dp(14), AndroidUtilities.dp(10));
+        GradientDrawable searchBg = new GradientDrawable();
+        searchBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        searchBg.setCornerRadius(AndroidUtilities.dp(12));
+        searchBg.setStroke(AndroidUtilities.dp(1), 0x26000000);
+        etSearch.setBackground(searchBg);
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                currentSearchQuery = s != null ? s.toString().trim().toLowerCase() : "";
+                refreshRulesList(context);
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+        layout.addView(etSearch);
+
+        // Filter Chips
+        HorizontalScrollView hsv = new HorizontalScrollView(context);
+        hsv.setHorizontalScrollBarEnabled(false);
+        LinearLayout chips = new LinearLayout(context);
+        chips.setOrientation(LinearLayout.HORIZONTAL);
+        chips.setPadding(0, AndroidUtilities.dp(8), 0, 0);
+
+        addCategoryChip(chips, "All Rules", "ALL", context);
+        addCategoryChip(chips, "🛒 Pricing & Orders", "SHOP", context);
+        addCategoryChip(chips, "👋 Greetings", "GREET", context);
+        addCategoryChip(chips, "💳 Payments (bKash/Nagad)", "PAY", context);
+
+        hsv.addView(chips);
+        layout.addView(hsv);
+
+        return layout;
+    }
+
+    private void addCategoryChip(LinearLayout parent, String label, final String cat, final Context context) {
+        TextView chip = new TextView(parent.getContext());
+        chip.setText(label);
+        chip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        boolean isSelected = currentCategoryFilter.equals(cat);
+        chip.setTextColor(isSelected ? 0xFFFFFFFF : 0xFF0284C7);
+        chip.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(6), AndroidUtilities.dp(12), AndroidUtilities.dp(6));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(isSelected ? 0xFF0284C7 : 0x1A0284C7);
+        bg.setCornerRadius(AndroidUtilities.dp(10));
+        chip.setBackground(bg);
+        chip.setOnClickListener(v -> {
+            currentCategoryFilter = cat;
+            refreshRulesList(context);
+        });
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.rightMargin = AndroidUtilities.dp(8);
+        parent.addView(chip, params);
     }
 
     private View createSectionHeader(Context context, String title, String subtitle) {
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(10));
+        layout.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(8));
 
         TextView tvTitle = new TextView(context);
         tvTitle.setText(title);
@@ -244,7 +322,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         card.setPadding(0, AndroidUtilities.dp(16), 0, 0);
 
         TextView btnAdd = new TextView(context);
-        btnAdd.setText("+ Add New Rule");
+        btnAdd.setText("+ Add Custom Rule");
         btnAdd.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         btnAdd.setTextColor(0xFFFFFFFF);
         btnAdd.setTypeface(AndroidUtilities.bold());
@@ -286,11 +364,38 @@ public class NGAutoReplyActivity extends BaseFragment {
             return;
         }
         rulesContainer.removeAllViews();
-        List<AutoReplyManager.AutoReplyRule> rules = AutoReplyManager.getInstance().getRules();
+        List<AutoReplyManager.AutoReplyRule> allRules = AutoReplyManager.getInstance().getRules();
 
-        for (int i = 0; i < rules.size(); i++) {
+        for (int i = 0; i < allRules.size(); i++) {
             final int index = i;
-            final AutoReplyManager.AutoReplyRule rule = rules.get(i);
+            final AutoReplyManager.AutoReplyRule rule = allRules.get(i);
+
+            // Search filter
+            if (!currentSearchQuery.isEmpty()) {
+                String kw = rule.keyword != null ? rule.keyword.toLowerCase() : "";
+                String nm = rule.name != null ? rule.name.toLowerCase() : "";
+                if (!kw.contains(currentSearchQuery) && !nm.contains(currentSearchQuery)) {
+                    continue;
+                }
+            }
+
+            // Category filter
+            if ("SHOP".equals(currentCategoryFilter)) {
+                String kw = rule.keyword != null ? rule.keyword.toLowerCase() : "";
+                if (!kw.contains("price") && !kw.contains("dam") && !kw.contains("order") && !kw.contains("delivery") && !kw.contains("location") && !kw.contains("address")) {
+                    continue;
+                }
+            } else if ("GREET".equals(currentCategoryFilter)) {
+                String kw = rule.keyword != null ? rule.keyword.toLowerCase() : "";
+                if (!kw.contains("hi") && !kw.contains("hello") && !kw.contains("assalamu") && !kw.contains("salam") && !kw.contains("bye") && !kw.contains("thanks") && !kw.contains("ok")) {
+                    continue;
+                }
+            } else if ("PAY".equals(currentCategoryFilter)) {
+                String kw = rule.keyword != null ? rule.keyword.toLowerCase() : "";
+                if (!kw.contains("bkash") && !kw.contains("nagad")) {
+                    continue;
+                }
+            }
 
             LinearLayout ruleCard = new LinearLayout(context);
             ruleCard.setOrientation(LinearLayout.HORIZONTAL);
@@ -417,7 +522,7 @@ public class NGAutoReplyActivity extends BaseFragment {
     private void showAddEditRuleDialog(final int index, final AutoReplyManager.AutoReplyRule existing) {
         if (getParentActivity() == null) return;
         AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
-        b.setTitle(existing == null ? "Add Keyword Rule" : "Edit Keyword Rule");
+        b.setTitle(existing == null ? "Add Custom Rule" : "Edit Keyword Rule");
 
         LinearLayout layout = new LinearLayout(getParentActivity());
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -425,20 +530,36 @@ public class NGAutoReplyActivity extends BaseFragment {
         layout.setPadding(pad, pad, pad, pad);
 
         final EditText etName = new EditText(getParentActivity());
-        etName.setHint("Rule Name (e.g. Price Query)");
+        etName.setHint("Rule Name (e.g. Price Query, bKash Info)");
         if (existing != null) etName.setText(existing.name);
         layout.addView(etName);
 
         final EditText etKw = new EditText(getParentActivity());
-        etKw.setHint("Keyword to match (e.g. price, dam, hi)");
+        etKw.setHint("Keyword to match (e.g. price, dam, bkash, hi)");
         if (existing != null) etKw.setText(existing.keyword);
         layout.addView(etKw);
 
         final EditText etResp = new EditText(getParentActivity());
-        etResp.setHint("Auto-Reply Response text");
+        etResp.setHint("Auto-Reply Response Message");
         if (existing != null) etResp.setText(existing.response);
-        etResp.setMinLines(2);
+        etResp.setMinLines(3);
         layout.addView(etResp);
+
+        // Markdown helper chips for rule response
+        HorizontalScrollView hsv = new HorizontalScrollView(getParentActivity());
+        hsv.setHorizontalScrollBarEnabled(false);
+        LinearLayout chips = new LinearLayout(getParentActivity());
+        chips.setOrientation(LinearLayout.HORIZONTAL);
+
+        addFormatChip(chips, "**Bold**", () -> insertFormatting(etResp, "**", "**"));
+        addFormatChip(chips, "_Italic_", () -> insertFormatting(etResp, "_", "_"));
+        addFormatChip(chips, "`Mono`", () -> insertFormatting(etResp, "`", "`"));
+        addFormatChip(chips, "||Spoiler||", () -> insertFormatting(etResp, "||", "||"));
+        addFormatChip(chips, "[Link](url)", () -> insertFormatting(etResp, "[Title](", "https://url)"));
+        addFormatChip(chips, "> Quote", () -> insertFormatting(etResp, "> ", ""));
+
+        hsv.addView(chips);
+        layout.addView(hsv);
 
         b.setView(layout);
         b.setPositiveButton("Save", (d, w) -> {
@@ -453,7 +574,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                     AutoReplyManager.getInstance().addRule(newRule);
                 }
                 refreshRulesList(getParentActivity());
-                BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Rule saved!").show();
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Rule saved successfully!").show();
             }
         });
 

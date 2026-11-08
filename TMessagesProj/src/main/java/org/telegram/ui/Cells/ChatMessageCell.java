@@ -26453,14 +26453,36 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
             android.graphics.RectF pr = radialProgress.getProgressRect();
             if (pr != null && pr.width() > 0) {
-                android.graphics.Paint frostPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-                frostPaint.setStyle(android.graphics.Paint.Style.STROKE);
-                frostPaint.setStrokeWidth(dp(2));
-                frostPaint.setColor(0xCC00E5FF);
-                canvas.drawCircle(pr.centerX(), pr.centerY(), pr.width() / 2f + dp(2), frostPaint);
+                // Translucent Ice Block ("ব্লু সচ্ছল বরফের খন্ড")
+                float iceLeft = pr.left - dp(5);
+                float iceTop = pr.top - dp(5);
+                float iceRight = pr.right + dp(5);
+                float iceBottom = pr.bottom + dp(5);
+                android.graphics.RectF iceRect = new android.graphics.RectF(iceLeft, iceTop, iceRight, iceBottom);
 
+                // 1. Crystal translucent ice blue fill (0x3300E5FF) - inside is clear & visible
+                android.graphics.Paint iceFill = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                iceFill.setStyle(android.graphics.Paint.Style.FILL);
+                iceFill.setColor(0x3300E5FF);
+                canvas.drawRoundRect(iceRect, dp(14), dp(14), iceFill);
+
+                // 2. Crystal ice stroke outline
+                android.graphics.Paint iceStroke = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                iceStroke.setStyle(android.graphics.Paint.Style.STROKE);
+                iceStroke.setStrokeWidth(dp(1.75f));
+                iceStroke.setColor(0xB380D8FF);
+                canvas.drawRoundRect(iceRect, dp(14), dp(14), iceStroke);
+
+                // 3. Top facet sheen reflection
+                android.graphics.Paint sheenPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                sheenPaint.setStyle(android.graphics.Paint.Style.STROKE);
+                sheenPaint.setStrokeWidth(dp(1.2f));
+                sheenPaint.setColor(0x80FFFFFF);
+                canvas.drawLine(iceLeft + dp(8), iceTop + dp(2), iceRight - dp(8), iceTop + dp(2), sheenPaint);
+
+                // 4. Sparkling Ice Crystal Star (❄)
                 android.graphics.Paint iceTextPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-                iceTextPaint.setColor(0xFFFFFFFF);
+                iceTextPaint.setColor(0xFFE0F7FA);
                 iceTextPaint.setTextSize(dp(13));
                 canvas.drawText("❄", pr.centerX() + dp(12), pr.centerY() + dp(16), iceTextPaint);
             }
