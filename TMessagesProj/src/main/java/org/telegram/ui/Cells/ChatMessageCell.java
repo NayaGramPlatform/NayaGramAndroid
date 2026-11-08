@@ -17862,12 +17862,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         lastFrostEffectTime = System.currentTimeMillis();
         invalidate();
         try {
-            if (delegate != null && delegate.getFragment() != null) {
-                org.telegram.ui.Components.BulletinFactory.of(delegate.getFragment()).createSimpleBulletin(
-                        R.drawable.msg_fave,
-                        "❄️ File Blocked: Preserved safely in ice block"
-                ).show();
-            }
+            org.telegram.ui.Components.BulletinFactory.global().createSimpleBulletin(
+                    R.drawable.msg_fave,
+                    "❄️ File Blocked: Preserved safely in ice block"
+            ).show();
         } catch (Throwable ignored) {
         }
     }

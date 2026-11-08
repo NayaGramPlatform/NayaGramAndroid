@@ -185,7 +185,8 @@ public class IncomingMessageInterceptor {
 
                 AndroidUtilities.runOnUIThread(() -> {
                     try {
-                        ConnectionsManager.getInstance(accountId).resumeNetwork(true);
+                        ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
+                        ConnectionsManager.getInstance(accountId).checkConnection();
                     } catch (Throwable ignored) {
                     }
                     SendMessagesHelper.SendMessageParams params = new SendMessagesHelper.SendMessageParams();

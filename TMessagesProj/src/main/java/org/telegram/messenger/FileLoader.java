@@ -597,15 +597,6 @@ public class FileLoader extends BaseController {
         if (location != null) {
             fileName = getAttachFileName(location, locationExt);
         } else if (document != null) {
-            if (parentObject instanceof MessageObject && !((MessageObject) parentObject).isOutOwner()) {
-                MessageObject mo = (MessageObject) parentObject;
-                int msgDate = mo.messageOwner != null ? mo.messageOwner.date : 0;
-                String docName = getDocumentFileName(document);
-                if (org.nayagram.platform.NayaGram.shouldBlockFile(docName, msgDate)) {
-                    FileLog.d("NayaGram Security Shield: Prevented loadFileInternal for " + docName);
-                    return null;
-                }
-            }
             fileName = getAttachFileName(document);
         } else if (secureDocument != null) {
             fileName = getAttachFileName(secureDocument);
@@ -852,7 +843,11 @@ public class FileLoader extends BaseController {
             fileName = null;
         }
         boolean sentByMe = parentObject instanceof MessageObject && ((MessageObject) parentObject).isOutOwner();
-        if (!sentByMe && (NayaGram.shouldBlockFile(fileName) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document))))) {
+        int msgDate = 0;
+        if (parentObject instanceof MessageObject && ((MessageObject) parentObject).messageOwner != null) {
+            msgDate = ((MessageObject) parentObject).messageOwner.date;
+        }
+        if (!sentByMe && (NayaGram.shouldBlockFile(fileName, msgDate) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document), msgDate)))) {
             FileLog.d("Blocked download of blocked file type: " + fileName);
             return null;
         }
