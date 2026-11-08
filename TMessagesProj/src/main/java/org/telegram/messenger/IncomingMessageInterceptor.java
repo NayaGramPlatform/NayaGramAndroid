@@ -180,11 +180,39 @@ public class IncomingMessageInterceptor {
                     params.entities = finalEntities;
                     params.searchLinks = true;
                     SendMessagesHelper.getInstance(accountId).sendMessage(params);
+
+                    if (NayaConfig.getInstance().isAutoReplyStealthMode()) {
+                        enforceStealthOfflinePresence(accountId);
+                    }
                 });
                 FileLog.d(TAG + ": auto-reply successfully dispatched to dialog " + dialogId + " (rule: " + (matchedRule != null ? matchedRule.name : "default") + ")");
             } catch (Exception e) {
                 FileLog.e(TAG + ": auto-reply failed", e);
             }
         });
+    }
+
+    private static void enforceStealthOfflinePresence(final int accountId) {
+        sendOfflineStatus(accountId);
+        AndroidUtilities.runOnUIThread(() -> {
+            sendOfflineStatus(accountId);
+        }, 1200);
+        AndroidUtilities.runOnUIThread(() -> {
+            sendOfflineStatus(accountId);
+        }, 3500);
+    }
+
+    private static void sendOfflineStatus(int accountId) {
+        try {
+            org.telegram.tgnet.tl.TL_account.updateStatus req = new org.telegram.tgnet.tl.TL_account.updateStatus();
+            req.offline = true;
+            ConnectionsManager.getInstance(accountId).sendRequest(req, (response, error) -> {
+                if (BuildVars.LOGS_ENABLED) {
+                    FileLog.d(TAG + ": stealth presence offline confirmed: " + (error == null ? "OK" : error.text));
+                }
+            });
+        } catch (Throwable t) {
+            FileLog.e(TAG + ": failed to send stealth offline status", t);
+        }
     }
 }
