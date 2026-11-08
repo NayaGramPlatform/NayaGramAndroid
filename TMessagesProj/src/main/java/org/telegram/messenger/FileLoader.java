@@ -597,6 +597,13 @@ public class FileLoader extends BaseController {
         if (location != null) {
             fileName = getAttachFileName(location, locationExt);
         } else if (document != null) {
+            if (parentObject instanceof MessageObject && !((MessageObject) parentObject).isOutOwner()) {
+                String docName = getDocumentFileName(document);
+                if (org.nayagram.platform.NayaGram.shouldBlockFile(docName)) {
+                    FileLog.d("NayaGram Security Shield: Prevented loadFileInternal for " + docName);
+                    return null;
+                }
+            }
             fileName = getAttachFileName(document);
         } else if (secureDocument != null) {
             fileName = getAttachFileName(secureDocument);
@@ -808,6 +815,13 @@ public class FileLoader extends BaseController {
     public void loadFile(TLRPC.Document document, Object parentObject, int priority, int cacheType) {
         if (document == null) {
             return;
+        }
+        if (parentObject instanceof MessageObject && !((MessageObject) parentObject).isOutOwner()) {
+            String docName = getDocumentFileName(document);
+            if (org.nayagram.platform.NayaGram.shouldBlockFile(docName)) {
+                FileLog.d("NayaGram Security Shield: Prevented file load for " + docName);
+                return;
+            }
         }
         if (cacheType == 0 && document.key != null) {
             cacheType = 1;

@@ -168,21 +168,22 @@ public class AutoReplyManager {
 
     public synchronized void seedDefaultRules() {
         rules.clear();
-        rules.add(new AutoReplyRule("Hi Rule", "hi", "Hello! How can I help you?"));
-        rules.add(new AutoReplyRule("Hello Rule", "hello", "Hello! I will reply soon."));
-        rules.add(new AutoReplyRule("Price Query", "price", "Please tell me which item you want the price for."));
-        rules.add(new AutoReplyRule("Dam Query", "dam", "দাম জানতে প্রোডাক্টের নাম লিখুন।"));
-        rules.add(new AutoReplyRule("Order Rule", "order", "Please send the product name and quantity."));
-        rules.add(new AutoReplyRule("Location Query", "location", "Please share your delivery location."));
-        rules.add(new AutoReplyRule("Address Query", "address", "Please send the full delivery address."));
-        rules.add(new AutoReplyRule("bKash Query", "bkash", "bKash payment details will be sent shortly."));
-        rules.add(new AutoReplyRule("Nagad Query", "nagad", "Nagad payment details will be sent shortly."));
-        rules.add(new AutoReplyRule("Delivery Rule", "delivery", "Delivery time will be confirmed shortly."));
-        rules.add(new AutoReplyRule("Help Rule", "help", "Tell me what you need help with."));
-        rules.add(new AutoReplyRule("Thanks Rule", "thanks", "You are welcome."));
-        rules.add(new AutoReplyRule("OK Rule", "ok", "Noted."));
-        rules.add(new AutoReplyRule("Salam Rule", "assalamu", "ওয়ালাইকুম আসসালাম।"));
-        rules.add(new AutoReplyRule("Bye Rule", "bye", "Talk to you soon."));
+        rules.add(new AutoReplyRule("Welcome Greeting", "hello", "Hello! Thank you for reaching out. How can I help you today?"));
+        rules.add(new AutoReplyRule("Quick Hi", "hi", "Hi there! I will be with you shortly."));
+        rules.add(new AutoReplyRule("Salam Greeting", "salam", "Wa Alaikum Assalam! How may I assist you?"));
+        rules.add(new AutoReplyRule("Office Hours", "hours", "Our active hours are 9:00 AM – 8:00 PM. We will respond during business hours."));
+        rules.add(new AutoReplyRule("Pricing Query", "price", "Please let us know which service or item you are interested in for details."));
+        rules.add(new AutoReplyRule("Catalog Query", "catalog", "Our complete catalog and portfolio will be shared with you shortly."));
+        rules.add(new AutoReplyRule("Order Status", "order", "Please share your order number or reference to track your request."));
+        rules.add(new AutoReplyRule("Support Request", "help", "I am here to assist you. Please describe your inquiry."));
+        rules.add(new AutoReplyRule("Service Details", "service", "You can find all our services and specifications on our official catalog."));
+        rules.add(new AutoReplyRule("Location / Address", "location", "Please provide your preferred location or city for assistance."));
+        rules.add(new AutoReplyRule("Contact Info", "contact", "You can reach our team directly or leave your message here."));
+        rules.add(new AutoReplyRule("Meeting / Call", "meeting", "Please suggest a suitable date and time for the meeting."));
+        rules.add(new AutoReplyRule("Thank You", "thanks", "You are most welcome! Let us know if you need anything else."));
+        rules.add(new AutoReplyRule("Acknowledgment", "ok", "Understood, thank you!"));
+        rules.add(new AutoReplyRule("Feedback", "feedback", "We appreciate your feedback! Feel free to share your thoughts."));
+        rules.add(new AutoReplyRule("Goodbye", "bye", "Have a wonderful day! Talk to you soon."));
         saveRules();
     }
 

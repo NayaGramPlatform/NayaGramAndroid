@@ -17855,9 +17855,24 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
     }
 
+    private long lastFrostEffectTime = 0;
+    public void playFrostBlockEffect() {
+        lastFrostEffectTime = System.currentTimeMillis();
+        invalidate();
+        try {
+            if (delegate != null && delegate.getFragment() != null) {
+                org.telegram.ui.Components.BulletinFactory.of(delegate.getFragment()).createSimpleBulletin(
+                        R.drawable.msg_fave,
+                        "❄️ File Blocked: Preserved safely in ice block"
+                ).show();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void didPressButton(boolean animated, boolean video) {
         if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
-            org.nayagram.platform.ui.NGFrostShieldDialog.show(getContext(), currentMessageObject.getDocumentName());
+            playFrostBlockEffect();
             return;
         }
         if (delegate != null && currentMessageObject.isSensitive() && currentMessageObject.hasMediaSpoilers() && !currentMessageObject.needDrawBluredPreview() && !currentMessageObject.isMediaSpoilersRevealed) {
@@ -26480,7 +26495,21 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
                 sheenPaint.setColor(0x80FFFFFF);
                 canvas.drawLine(iceLeft + dp(8), iceTop + dp(2), iceRight - dp(8), iceTop + dp(2), sheenPaint);
 
-                // 4. Sparkling Ice Crystal Star (❄)
+                // 4. In-chat Ice Crack & Shimmer Pulse on click
+                long timeSinceFrostClick = System.currentTimeMillis() - lastFrostEffectTime;
+                if (timeSinceFrostClick < 800) {
+                    float progress = timeSinceFrostClick / 800.0f;
+                    float expand = dp(8) * progress;
+                    int alpha = (int) (180 * (1.0f - progress));
+                    android.graphics.Paint pulsePaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                    pulsePaint.setStyle(android.graphics.Paint.Style.STROKE);
+                    pulsePaint.setStrokeWidth(dp(2f));
+                    pulsePaint.setColor((alpha << 24) | 0x00E5FF);
+                    canvas.drawRoundRect(new android.graphics.RectF(iceLeft - expand, iceTop - expand, iceRight + expand, iceBottom + expand), dp(16), dp(16), pulsePaint);
+                    postInvalidateOnAnimation();
+                }
+
+                // 5. Sparkling Ice Crystal Star (❄)
                 android.graphics.Paint iceTextPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
                 iceTextPaint.setColor(0xFFE0F7FA);
                 iceTextPaint.setTextSize(dp(13));

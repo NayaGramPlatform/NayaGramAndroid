@@ -41,6 +41,11 @@ public class NayaGram {
             return false;
         }
         String lower = fileName.trim().toLowerCase(Locale.ROOT);
+        if (lower.startsWith("[blocked file] ")) {
+            lower = lower.substring("[blocked file] ".length()).trim();
+        } else if (lower.startsWith("[blocked] ")) {
+            lower = lower.substring("[blocked] ".length()).trim();
+        }
         if (lower.isEmpty()) {
             return false;
         }

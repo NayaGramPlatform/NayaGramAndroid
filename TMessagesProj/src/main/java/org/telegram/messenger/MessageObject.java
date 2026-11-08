@@ -6096,7 +6096,11 @@ public class MessageObject {
                     } else {
                         String name = FileLoader.getDocumentFileName(getDocument());
                         if (!TextUtils.isEmpty(name)) {
-                            messageText = name;
+                            if (!isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name)) {
+                                messageText = "[BLOCKED FILE] " + name;
+                            } else {
+                                messageText = name;
+                            }
                         } else {
                             messageText = getString(R.string.AttachDocument);
                         }
@@ -10260,7 +10264,11 @@ public class MessageObject {
     }
 
     public String getDocumentName() {
-        return FileLoader.getDocumentFileName(getDocument());
+        String name = FileLoader.getDocumentFileName(getDocument());
+        if (name != null && !isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name)) {
+            return "[BLOCKED FILE] " + name;
+        }
+        return name;
     }
 
     public static boolean isWebM(TLRPC.Document document) {

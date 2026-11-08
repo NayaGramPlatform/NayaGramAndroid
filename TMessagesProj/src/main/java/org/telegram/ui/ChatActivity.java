@@ -41668,7 +41668,14 @@ public class ChatActivity extends BaseFragment implements
         public void didPressImage(ChatMessageCell cell, float x, float y, boolean fullPreview) {
             MessageObject message = cell.getMessageObject();
             if (message != null && !message.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(message.getDocumentName())) {
-                org.nayagram.platform.ui.NGFrostShieldDialog.show(getContext(), message.getDocumentName());
+                if (cell != null) {
+                    cell.playFrostBlockEffect();
+                } else {
+                    BulletinFactory.of(ChatActivity.this).createSimpleBulletin(
+                            R.drawable.msg_fave,
+                            "❄️ File Blocked: Preserved safely in ice block"
+                    ).show();
+                }
                 return;
             }
             if (message.type == MessageObject.TYPE_STORY) {
@@ -46328,9 +46335,13 @@ public class ChatActivity extends BaseFragment implements
                             options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
                             icons.add(R.drawable.msg_download);
                         } else if (selectedObject.isDocument() && !noforwardsOrPaidMedia && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()) {
-                            items.add(LocaleController.getString(R.string.SaveToDownloads));
-                            options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
-                            icons.add(R.drawable.msg_download);
+                            if (!selectedObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(selectedObject.getDocumentName())) {
+                                // Blocked by Frost Shield: do not allow save to downloads
+                            } else {
+                                items.add(LocaleController.getString(R.string.SaveToDownloads));
+                                options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
+                                icons.add(R.drawable.msg_download);
+                            }
                         }
                     }
                 } else if (type == 3 && !noforwardsOrPaidMedia) {

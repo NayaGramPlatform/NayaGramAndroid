@@ -58,14 +58,26 @@ public class IncomingMessageInterceptor {
                     return; // never answer another auto-reply or echo identical text
                 }
 
-                // Check message freshness: ignore old backlog messages (> 15 minutes)
+                // Check message freshness: ensure background tolerance (up to 1 hour)
                 int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
-                if (now > 0 && messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 900) {
+                if (now <= 0) {
+                    now = (int) (System.currentTimeMillis() / 1000L);
+                }
+                if (messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 3600) {
                     return;
                 }
 
                 // Skip known bots or self
                 TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
+                if (user == null) {
+                    try {
+                        user = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
+                        if (user != null) {
+                            MessagesController.getInstance(accountId).putUser(user, true);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
                 if (user != null && (user.bot || user.self)) {
                     return;
                 }
@@ -172,6 +184,10 @@ public class IncomingMessageInterceptor {
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
                 AndroidUtilities.runOnUIThread(() -> {
+                    try {
+                        ConnectionsManager.getInstance(accountId).resumeNetwork(true);
+                    } catch (Throwable ignored) {
+                    }
                     SendMessagesHelper.SendMessageParams params = new SendMessagesHelper.SendMessageParams();
                     params.message = cleanText;
                     params.peer = dialogId;
