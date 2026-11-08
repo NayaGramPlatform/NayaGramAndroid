@@ -41667,6 +41667,10 @@ public class ChatActivity extends BaseFragment implements
         @Override
         public void didPressImage(ChatMessageCell cell, float x, float y, boolean fullPreview) {
             MessageObject message = cell.getMessageObject();
+            if (message != null && !message.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(message.getDocumentName())) {
+                org.nayagram.platform.ui.NGFrostShieldDialog.show(getContext(), message.getDocumentName());
+                return;
+            }
             if (message.type == MessageObject.TYPE_STORY) {
                 if (message.messageOwner.media.storyItem != null && !(message.messageOwner.media.storyItem instanceof TL_stories.TL_storyItemDeleted)) {
                     TL_stories.StoryItem storyItem = message.messageOwner.media.storyItem;

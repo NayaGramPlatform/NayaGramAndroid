@@ -12,16 +12,21 @@ import java.util.regex.Pattern;
 
 /**
  * Sends the NayaGram Smart Auto-Reply to new incoming private messages.
- * Rules: switch must be on, private 1:1 chats only, never bots or self,
- * never service messages, never replies to another auto-reply, only fresh
- * messages (not old backlog), and at most one reply per chat per cooldown.
+ * Rules:
+ * 1. Switch must be on (either in NayaConfig or AutoReplyManager).
+ * 2. Private 1:1 chats only (dialogId > 0).
+ * 3. Never bots or self.
+ * 4. Never service messages or outgoing messages.
+ * 5. Rejects ancient backlog (> 15 minutes old).
+ * 6. Keyword rules trigger instantly with 2s loop-protection debounce.
+ * 7. Default away message uses the configured cooldown hours.
  */
 public class IncomingMessageInterceptor {
     private static final String TAG = "IncomingMessageInterceptor";
     private static final String PREFS_NAME = "nayagram_auto_reply_state";
 
-    private static final Pattern URL_PATTERN = Pattern.compile("\\[([^\\]+)\\]\\(([^)]+)\\)");
-    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\s_][^_]*?[^\\s_]|[^\\s_])_(?!_)");
+    private static final Pattern URL_PATTERN = Pattern.compile("\[([^\]]+)\]\(([^)]+)\)");
+    private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\s_][^_]*?[^\s_]|[^\s_])_(?!_)");
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         Utilities.globalQueue.postRunnable(() -> {
@@ -30,7 +35,8 @@ public class IncomingMessageInterceptor {
                     return;
                 }
                 NayaConfig config = NayaConfig.getInstance();
-                if (!config.isSmartAutoReply()) {
+                AutoReplyManager autoReplyManager = AutoReplyManager.getInstance();
+                if (!config.isSmartAutoReply() && !autoReplyManager.isAutoReplyEnabled()) {
                     return;
                 }
                 if (messageObject.isOutOwner() || messageObject.messageOwner.action != null) {
@@ -38,41 +44,59 @@ public class IncomingMessageInterceptor {
                 }
                 long dialogId = messageObject.getDialogId();
                 if (dialogId <= 0) {
-                    return; // private user chats only: groups, channels and secret chats are skipped
+                    return; // private 1:1 user chats only: groups, channels and secret chats are skipped
                 }
                 String incomingText = messageObject.messageOwner.message;
                 if (incomingText == null || incomingText.trim().isEmpty()) {
                     return;
                 }
 
-                AutoReplyManager autoReplyManager = AutoReplyManager.getInstance();
                 AutoReplyManager.AutoReplyRule matchedRule = autoReplyManager.findMatchingRule(incomingText);
                 String replyText = matchedRule != null ? matchedRule.response : config.getAutoReplyText();
 
-                if (replyText == null || replyText.trim().isEmpty() || incomingText.equals(replyText)) {
-                    return; // never answer another auto-reply
+                if (replyText == null || replyText.trim().isEmpty() || incomingText.trim().equalsIgnoreCase(replyText.trim())) {
+                    return; // never answer another auto-reply or echo identical text
                 }
+
+                // Check message freshness: ignore old backlog messages (> 15 minutes)
                 int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
-                // Reject old messages (> 300 seconds)
-                if (now - messageObject.messageOwner.date > 300) {
+                if (now > 0 && messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 900) {
                     return;
                 }
+
+                // Skip known bots or self
                 TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
-                if (user == null || user.bot || user.self) {
+                if (user != null && (user.bot || user.self)) {
                     return;
                 }
+
                 if (!PerChatAutoReplySettings.canAutoReplyForChat(dialogId)) {
                     return;
                 }
+
                 Context context = ApplicationLoader.applicationContext;
-                SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-                String key = "last_" + accountId + "_" + dialogId;
-                long nowMs = System.currentTimeMillis();
-                long cooldownMs = config.getAutoReplyCooldownHours() * 3600_000L;
-                if (nowMs - prefs.getLong(key, 0L) < cooldownMs) {
-                    return;
+                SharedPreferences prefs = context != null ? context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) : null;
+                if (prefs != null) {
+                    String key = "last_" + accountId + "_" + dialogId;
+                    long nowMs = System.currentTimeMillis();
+
+                    if (matchedRule != null) {
+                        // KEYWORD RULE: Instant reply! 2-second debounce prevents echo/feedback loops
+                        long lastKw = prefs.getLong(key + "_kw", 0L);
+                        if (nowMs - lastKw < 2000L) {
+                            return;
+                        }
+                        prefs.edit().putLong(key + "_kw", nowMs).apply();
+                    } else {
+                        // GENERIC AWAY MESSAGE: Use configured cooldown (e.g. 1 hour)
+                        long lastAway = prefs.getLong(key, 0L);
+                        long cooldownMs = Math.max(1, config.getAutoReplyCooldownHours()) * 3600_000L;
+                        if (nowMs - lastAway < cooldownMs) {
+                            return;
+                        }
+                        prefs.edit().putLong(key, nowMs).apply();
+                    }
                 }
-                prefs.edit().putLong(key, nowMs).apply();
 
                 // Step 1: Pre-process single underscore _italic_ into __italic__ for MediaDataController
                 String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
@@ -86,7 +110,8 @@ public class IncomingMessageInterceptor {
                 String currentText = messageArr[0] != null ? messageArr[0].toString() : preprocessed;
 
                 // Step 3: Parse quote lines starting with "> " -> TL_messageEntityBlockquote
-                String[] lines = currentText.split("\n", -1);
+                String[] lines = currentText.split("
+", -1);
                 StringBuilder newTextBuilder = new StringBuilder();
                 int lineStart = 0;
                 for (int i = 0; i < lines.length; i++) {
@@ -110,7 +135,8 @@ public class IncomingMessageInterceptor {
                         lineStart += line.length();
                     }
                     if (i < lines.length - 1) {
-                        newTextBuilder.append("\n");
+                        newTextBuilder.append("
+");
                         lineStart += 1;
                     }
                 }
@@ -147,27 +173,15 @@ public class IncomingMessageInterceptor {
                 final String cleanText = currentText;
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
-                AndroidUtilities.runOnUIThread(() ->
-                        SendMessagesHelper.getInstance(accountId).sendMessage(
-                                SendMessagesHelper.SendMessageParams.of(
-                                        cleanText,
-                                        dialogId,
-                                        null,
-                                        null,
-                                        null,
-                                        true,
-                                        finalEntities,
-                                        null,
-                                        null,
-                                        true,
-                                        0,
-                                        0,
-                                        null,
-                                        false
-                                )
-                        )
-                );
-                FileLog.d(TAG + ": auto-reply queued for dialog " + dialogId);
+                AndroidUtilities.runOnUIThread(() -> {
+                    SendMessagesHelper.SendMessageParams params = new SendMessagesHelper.SendMessageParams();
+                    params.message = cleanText;
+                    params.peer = dialogId;
+                    params.entities = finalEntities;
+                    params.searchLinks = true;
+                    SendMessagesHelper.getInstance(accountId).sendMessage(params);
+                });
+                FileLog.d(TAG + ": auto-reply successfully dispatched to dialog " + dialogId + " (rule: " + (matchedRule != null ? matchedRule.name : "default") + ")");
             } catch (Exception e) {
                 FileLog.e(TAG + ": auto-reply failed", e);
             }

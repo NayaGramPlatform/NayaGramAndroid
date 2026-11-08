@@ -17272,7 +17272,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             return MediaActionDrawable.ICON_PLAY;
         } else {
             if (documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT && !drawPhotoImage) {
-                if (currentMessageObject.isOutOwner()) {
+                if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+                    radialProgress.setColors(0xFF00E5FF, 0xFF00B4D8, 0xFFE0F7FA, 0xFFFFFFFF);
+                } else if (currentMessageObject.isOutOwner()) {
                     radialProgress.setColorKeys(Theme.key_chat_outLoader, Theme.key_chat_outLoaderSelected, Theme.key_chat_outMediaIcon, Theme.key_chat_outMediaIconSelected);
                 } else if (linkLine != null && hasLinkPreview) {
                     radialProgress.setColors(linkLine.getColor(), linkLine.getColor(), Theme.blendOver(0xffffffff, Theme.multAlpha(linkLine.getColor(), .01f)), Theme.blendOver(0xffffffff, Theme.multAlpha(linkLine.getColor(), .05f)));
@@ -17854,6 +17856,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     }
 
     private void didPressButton(boolean animated, boolean video) {
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+            org.nayagram.platform.ui.NGFrostShieldDialog.show(getContext(), currentMessageObject.getDocumentName());
+            return;
+        }
         if (delegate != null && currentMessageObject.isSensitive() && currentMessageObject.hasMediaSpoilers() && !currentMessageObject.needDrawBluredPreview() && !currentMessageObject.isMediaSpoilersRevealed) {
             delegate.didPressRevealSensitiveContent(this);
             return;
@@ -26444,6 +26450,21 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             radialProgress.iconScale *= mediaSpoilerRevealProgress;
         }
         radialProgress.draw(canvas);
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName())) {
+            android.graphics.RectF pr = radialProgress.getProgressRect();
+            if (pr != null && pr.width() > 0) {
+                android.graphics.Paint frostPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                frostPaint.setStyle(android.graphics.Paint.Style.STROKE);
+                frostPaint.setStrokeWidth(dp(2));
+                frostPaint.setColor(0xCC00E5FF);
+                canvas.drawCircle(pr.centerX(), pr.centerY(), pr.width() / 2f + dp(2), frostPaint);
+
+                android.graphics.Paint iceTextPaint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                iceTextPaint.setColor(0xFFFFFFFF);
+                iceTextPaint.setTextSize(dp(13));
+                canvas.drawText("❄", pr.centerX() + dp(12), pr.centerY() + dp(16), iceTextPaint);
+            }
+        }
 
         if (withPeriod) {
             canvas.save();

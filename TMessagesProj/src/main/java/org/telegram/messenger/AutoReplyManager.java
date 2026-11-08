@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/** Handles automatic replies for incoming messages. */
+/** Handles automatic replies for incoming messages and keyword rules. */
 public class AutoReplyManager {
     private static AutoReplyManager instance;
     private static final String TAG = "AutoReplyManager";
@@ -39,12 +39,15 @@ public class AutoReplyManager {
     public synchronized void setAutoReplyEnabled(boolean enabled) {
         autoReplyEnabled = enabled;
         preferences.edit().putBoolean(KEY_ENABLED, enabled).apply();
+        try {
+            NayaConfig.getInstance().setSmartAutoReply(enabled);
+        } catch (Throwable ignored) {}
         FileLog.d(TAG + ": Auto-reply " + (enabled ? "enabled" : "disabled"));
     }
 
     public synchronized boolean isAutoReplyEnabled() {
         try {
-            return NayaConfig.getInstance().isSmartAutoReply() || autoReplyEnabled;
+            return autoReplyEnabled || NayaConfig.getInstance().isSmartAutoReply();
         } catch (Throwable e) {
             return autoReplyEnabled;
         }
@@ -52,11 +55,32 @@ public class AutoReplyManager {
 
     public synchronized void addRule(AutoReplyRule rule) {
         if (rule == null || rule.name == null || rule.name.trim().isEmpty()
-                || rule.keyword == null || rule.keyword.isEmpty() || rule.response == null) {
+                || rule.keyword == null || rule.keyword.trim().isEmpty() || rule.response == null) {
             return;
         }
         rules.add(rule);
         saveRules();
+    }
+
+    public synchronized void updateRule(int index, AutoReplyRule rule) {
+        if (index >= 0 && index < rules.size() && rule != null) {
+            rules.set(index, rule);
+            saveRules();
+        }
+    }
+
+    public synchronized void setRuleEnabled(int index, boolean enabled) {
+        if (index >= 0 && index < rules.size()) {
+            rules.get(index).enabled = enabled;
+            saveRules();
+        }
+    }
+
+    public synchronized void deleteRule(int index) {
+        if (index >= 0 && index < rules.size()) {
+            rules.remove(index);
+            saveRules();
+        }
     }
 
     public synchronized void removeRule(String ruleName) {
@@ -75,11 +99,12 @@ public class AutoReplyManager {
         if (messageText == null) {
             return null;
         }
+        String lowerMessage = messageText.toLowerCase().trim();
         for (AutoReplyRule rule : rules) {
             if (rule == null || !rule.enabled || rule.keyword == null) {
                 continue;
             }
-            if (matchesKeyword(messageText, rule)) {
+            if (matchesKeyword(lowerMessage, rule)) {
                 return rule;
             }
         }
@@ -87,11 +112,11 @@ public class AutoReplyManager {
     }
 
     private boolean matchesKeyword(String message, AutoReplyRule rule) {
-        if (rule.keyword.isEmpty()) {
+        if (rule.keyword == null || rule.keyword.trim().isEmpty()) {
             return false;
         }
         if (!rule.regex) {
-            return message.toLowerCase().contains(rule.keyword.toLowerCase());
+            return message.contains(rule.keyword.toLowerCase().trim());
         }
         try {
             return Pattern.compile(rule.keyword, Pattern.CASE_INSENSITIVE).matcher(message).find();
@@ -141,7 +166,7 @@ public class AutoReplyManager {
         }
     }
 
-    private void seedDefaultRules() {
+    public synchronized void seedDefaultRules() {
         rules.clear();
         rules.add(new AutoReplyRule("Hi Rule", "hi", "Hello! How can I help you?"));
         rules.add(new AutoReplyRule("Hello Rule", "hello", "Hello! I will reply soon."));

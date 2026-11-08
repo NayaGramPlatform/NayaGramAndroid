@@ -311,7 +311,7 @@ public class NayaConfig {
     public boolean isPreventMessageDeletionEnabled() { return preferences.getBoolean(KEY_PREVENT_MESSAGE_DELETION, false); }
     public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
 
-    public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, false); }
+    public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, true); }
     public void setApkBlockEnabled(boolean e) { preferences.edit().putBoolean(KEY_APK_BLOCK, e).apply(); }
 
     public boolean isAutoAddTextEnabled() { return preferences.getBoolean(KEY_AUTO_ADD_TEXT_ENABLED, false); }
