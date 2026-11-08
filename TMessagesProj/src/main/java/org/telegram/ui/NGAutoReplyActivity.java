@@ -65,7 +65,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                 }
             }
         });
-        actionBar.createMenu().addItem(1, R.drawable.ic_ab_add);
+        actionBar.createMenu().addItem(1, R.drawable.msg_add);
 
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
