@@ -249,7 +249,7 @@ public class NGSettingsActivity extends BaseFragment {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.mainUserInfoChanged);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         checked ? R.raw.done : R.raw.chats_infotip,
                         "User Profile Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
@@ -259,7 +259,7 @@ public class NGSettingsActivity extends BaseFragment {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         checked ? R.raw.done : R.raw.chats_infotip,
                         "Channel & Group Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
@@ -269,36 +269,34 @@ public class NGSettingsActivity extends BaseFragment {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
                     NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         checked ? R.raw.done : R.raw.chats_infotip,
                         "Bot Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowAnonymousStories) {
                     cfg.setAnonymousStories(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
                 } else if (position == rowGhostMode) {
                     cell.setChecked(false);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
-                } else if (position == rowRadiantPresence) {
-                    c.setFeature(R.drawable.msg_filled_badge, 0xFF00E5FF, "Radiant Presence & Rainbow Online", "Capitalizes 'Online' / 'Offline' status and animates status dot through Green, Blue, Cyan, and Purple.", cfg.isRadiantPresenceEnabled(), true);
-                } else if (position == rowRadiantPresence) {
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
+                 else if (position == rowRadiantPresence) {
                     boolean newval = !cfg.isRadiantPresenceEnabled();
                     cfg.setRadiantPresenceEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowRadiantOnlineAura) {
-                    c.setFeature(R.drawable.msg_filled_badge, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                    c.setFeature(R.drawable.msg_verified, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
                 } else if (position == rowStealthOfflinePresence) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
                 } else if (position == rowRadiantOnlineAura) {
                     boolean newval = !cfg.isRadiantOnlineAuraEnabled();
                     cfg.setRadiantOnlineAuraEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
                     ).show();
@@ -306,50 +304,50 @@ public class NGSettingsActivity extends BaseFragment {
                     boolean newval = !cfg.isStealthOfflinePresenceEnabled();
                     cfg.setStealthOfflinePresenceEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowApkBlock) {
                     cfg.setApkBlockEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
                     cfg.setSmartAutoReply(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
                     if (checked) showAutoReplyConfigDialog();
                 } else if (position == rowOneTimeVoiceVideo) {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowAutoAddText) {
                     cfg.setAutoAddTextEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-add text: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Auto-add text: " + (checked ? "On" : "Off")).show();
                     if (checked) showAutoAddTextConfigDialog();
                 } else if (position == rowEditText) {
                     showAutoAddTextConfigDialog();
                 } else if (position == rowStorySaver) {
                     cfg.setStorySaverEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
 
                 } else if (position == rowSmartChatFolders) {
                     // Use Telegram's existing folder editor instead of a preference-only fake toggle.
                     cfg.setSmartFoldersEnabled(true);
                     cell.setChecked(true);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Opening native chat folder management").show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Opening native chat folder management").show();
                     presentFragment(new FiltersSetupActivity());
 
                 } else if (position == rowHidePhoneNumber) {
                     cfg.setHidePhoneNumberEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, checked ? "Phone Privacy Enabled" : "Phone Privacy Disabled").show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, checked ? "Phone Privacy Enabled" : "Phone Privacy Disabled").show();
                 } else if (position == rowThemeMode) {
                     int nextMode = (cfg.getAppThemeMode() + 1) % 3;
                     cfg.setAppThemeMode(nextMode);
@@ -367,11 +365,11 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowAntiDelete) {
                     cfg.setPreventMessageDeletionEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Anti-Delete Messages: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Anti-Delete Messages: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowShowIdDc) {
                     cfg.setShowIdAndDc(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "User ID & DC: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "User ID & DC: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowBiometricLocker) {
                     if (checked) {
                         if (!org.nayagram.platform.security.BiometricChatLocker.isDeviceSecurityAvailable(getParentActivity())) {
@@ -391,7 +389,7 @@ public class NGSettingsActivity extends BaseFragment {
                         }
                         cfg.setBiometricChatLockerEnabled(true);
                         cell.setChecked(true);
-                        BulletinFactory.of(this).createSimpleBulletin(R.raw.done,
+                        BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done,
                                 "Locker enabled. Open a chat's NayaGram In-Chat Settings to protect it.").show();
                     } else {
                         AlertDialog.Builder disableDialog = new AlertDialog.Builder(getParentActivity());
@@ -401,50 +399,50 @@ public class NGSettingsActivity extends BaseFragment {
                         disableDialog.setPositiveButton("Turn off", (dialog, which) -> {
                             cfg.setBiometricChatLockerEnabled(false);
                             cell.setChecked(false);
-                            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Biometric Chat Locker disabled for new locks").show();
+                            BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Biometric Chat Locker disabled for new locks").show();
                         });
                         showDialog(disableDialog.create());
                     }
                 } else if (position == rowFocusMode) {
                     cfg.setFocusModeEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Focus Mode: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Focus Mode: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowBatterySaver) {
                     cfg.setBatterySaverEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Battery Saver: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Battery Saver: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowInstantTranslator) {
                     cfg.setInstantTranslatorEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Instant Translator: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Instant Translator: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowIntlClock) {
                     cfg.setInternationalClock(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "24-hour clock: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "24-hour clock: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowLinkGuard) {
                     cfg.setLinkGuardEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Link check: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Link check: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowReadableText) {
                     cfg.setReadableTextEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Larger text: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Larger text: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowReduceMotion) {
                     cfg.setReduceMotion(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Reduce motion: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Reduce motion: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowChatListDetails) {
                     cfg.setChatListDetails(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Chat list details: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Chat list details: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowPauseGifs) {
                     cfg.setPauseGifAutoplay(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Pause GIFs: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Pause GIFs: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSaveData) {
                     cfg.setDataSaverEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Save mobile data: " + (checked ? "On" : "Off")).show();
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Save mobile data: " + (checked ? "On" : "Off")).show();
                 }
             } else if (position == rowStorageDoctor) {
                 runStorageDoctorScan();
@@ -492,7 +490,7 @@ public class NGSettingsActivity extends BaseFragment {
                     "Clean cache now to boost NayaGram speed?");
             cleanB.setPositiveButton("Clean Now", (d, w) -> {
                 org.nayagram.platform.storage.SmartStorageDoctor.getInstance().cleanCache(getParentActivity(), (freed, success) -> {
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                             R.raw.done,
                             "Cleaned " + org.nayagram.platform.storage.SmartStorageDoctor.formatSize(freed) + " cache!"
                     ).show();
@@ -516,7 +514,7 @@ public class NGSettingsActivity extends BaseFragment {
             String text = et.getText().toString().trim();
             NayaConfig.getInstance().setAutoAddText(text.isEmpty() ? "@NGSupreme" : text);
             if (listAdapter != null) listAdapter.notifyDataSetChanged();
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-add text saved").show();
+            BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Auto-add text saved").show();
         });
         b.setNegativeButton("Cancel", null);
         showDialog(b.create());
@@ -531,7 +529,7 @@ public class NGSettingsActivity extends BaseFragment {
         b.setView(et);
         b.setPositiveButton("Save", (d, w) -> {
             NayaConfig.getInstance().setAutoReplyText(et.getText().toString());
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Auto-reply message updated").show();
+            BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Auto-reply message updated").show();
         });
         b.setNegativeButton("Cancel", null);
         showDialog(b.create());
@@ -544,7 +542,7 @@ public class NGSettingsActivity extends BaseFragment {
         b.setPositiveButton("Reset", (d, w) -> {
             NayaConfig.getInstance().resetToDefaults();
             if (listAdapter != null) listAdapter.notifyDataSetChanged();
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Settings reset to default").show();
+            BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Settings reset to default").show();
         });
         b.setNegativeButton("Cancel", null);
         showDialog(b.create());
@@ -897,25 +895,23 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
-                } else if (position == rowRadiantPresence) {
-                    c.setFeature(R.drawable.msg_filled_badge, 0xFF00E5FF, "Radiant Presence & Rainbow Online", "Capitalizes 'Online' / 'Offline' status and animates status dot through Green, Blue, Cyan, and Purple.", cfg.isRadiantPresenceEnabled(), true);
-                } else if (position == rowRadiantPresence) {
+                 else if (position == rowRadiantPresence) {
                     boolean newval = !cfg.isRadiantPresenceEnabled();
                     cfg.setRadiantPresenceEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowRadiantOnlineAura) {
-                    c.setFeature(R.drawable.msg_filled_badge, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                    c.setFeature(R.drawable.msg_verified, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
                 } else if (position == rowStealthOfflinePresence) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
                 } else if (position == rowRadiantOnlineAura) {
                     boolean newval = !cfg.isRadiantOnlineAuraEnabled();
                     cfg.setRadiantOnlineAuraEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
                     ).show();
@@ -923,7 +919,7 @@ public class NGSettingsActivity extends BaseFragment {
                     boolean newval = !cfg.isStealthOfflinePresenceEnabled();
                     cfg.setStealthOfflinePresenceEnabled(newval);
                     c.setChecked(newval);
-                    BulletinFactory.of(this).createSimpleBulletin(
+                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
