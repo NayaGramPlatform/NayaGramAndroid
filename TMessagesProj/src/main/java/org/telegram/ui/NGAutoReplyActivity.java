@@ -822,6 +822,82 @@ public class NGAutoReplyActivity extends BaseFragment {
      * Regular, Spoiler, Bold, Italic, Mono, Strikethrough, Underline, Quote, Link
      * Complete with PC keyboard shortcut guide.
      */
+    
+    private void showCreateLinkDialog(final EditText target) {
+        if (getParentActivity() == null || target == null) return;
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        LinearLayout root = new LinearLayout(getParentActivity());
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = AndroidUtilities.dp(20);
+        root.setPadding(pad, pad, pad, pad);
+
+        TextView title = new TextView(getParentActivity());
+        title.setText("🔗 Create Link / Hyperlink");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        title.setTextColor(COLOR_CYAN_PRIMARY);
+        title.setTypeface(AndroidUtilities.bold());
+        root.addView(title);
+
+        TextView sub = new TextView(getParentActivity());
+        sub.setText("Enter URL and display title to create a Telegram formatted link");
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        sub.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        sub.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(14));
+        root.addView(sub);
+
+        int start = Math.max(target.getSelectionStart(), 0);
+        int end = Math.max(target.getSelectionEnd(), 0);
+        if (start > end) { int tmp = start; start = end; end = tmp; }
+        String existingSelection = target.getText().toString().substring(start, end);
+
+        final EditText etLabel = new EditText(getParentActivity());
+        etLabel.setHint("Link Display Title (e.g. Visit Channel)");
+        if (!TextUtils.isEmpty(existingSelection)) {
+            etLabel.setText(existingSelection);
+        }
+        etLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        etLabel.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(10), AndroidUtilities.dp(14), AndroidUtilities.dp(10));
+        GradientDrawable labelBg = new GradientDrawable();
+        labelBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        labelBg.setCornerRadius(AndroidUtilities.dp(12));
+        labelBg.setStroke(AndroidUtilities.dp(1), 0x260284C7);
+        etLabel.setBackground(labelBg);
+        root.addView(etLabel);
+
+        final EditText etUrl = new EditText(getParentActivity());
+        etUrl.setHint("URL (e.g. https://t.me/NayaGramOfficial)");
+        etUrl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        etUrl.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(10), AndroidUtilities.dp(14), AndroidUtilities.dp(10));
+        GradientDrawable urlBg = new GradientDrawable();
+        urlBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        urlBg.setCornerRadius(AndroidUtilities.dp(12));
+        urlBg.setStroke(AndroidUtilities.dp(1), 0x260284C7);
+        etUrl.setBackground(urlBg);
+        LinearLayout.LayoutParams urlLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        urlLp.topMargin = AndroidUtilities.dp(10);
+        root.addView(etUrl, urlLp);
+
+        b.setView(root);
+        final int finalStart = start;
+        final int finalEnd = end;
+        b.setPositiveButton("Insert Link", (dialog, which) -> {
+            String labelText = etLabel.getText().toString().trim();
+            String urlText = etUrl.getText().toString().trim();
+            if (urlText.isEmpty()) return;
+            if (!urlText.startsWith("http://") && !urlText.startsWith("https://") && !urlText.startsWith("tg://")) {
+                urlText = "https://" + urlText;
+            }
+            if (labelText.isEmpty()) labelText = urlText;
+            String formattedLink = "[" + labelText + "](" + urlText + ")";
+            Editable editable = target.getText();
+            if (editable != null) {
+                editable.replace(finalStart, finalEnd, formattedLink);
+            }
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
+    }
+
     private void showTextStyleDialog(final EditText target) {
         if (getParentActivity() == null || target == null) return;
 
@@ -951,7 +1027,10 @@ public class NGAutoReplyActivity extends BaseFragment {
         String selected = text.substring(start, end);
         String replacement;
 
-        if ("Regular".equals(style)) {
+        if ("Create Link".equals(style) || "Link".equals(style)) {
+            showCreateLinkDialog(et);
+            return;
+        } else if ("Regular".equals(style)) {
             replacement = selected.replaceAll("[*_~`>\\[\\]()]", "");
         } else if ("Bold".equals(style)) {
             replacement = "**" + (selected.isEmpty() ? "bold text" : selected) + "**";
