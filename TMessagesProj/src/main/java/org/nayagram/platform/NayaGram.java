@@ -74,7 +74,7 @@ public class NayaGram {
 
         // Double-extension cloaking check: split on '.' and check if ANY segment is in the set
         String nameToSplit = lower.startsWith(".") ? lower.substring(1) : lower;
-        String[] parts = nameToSplit.split(java.util.regex.Pattern.quote("."));
+        String[] parts = nameToSplit.split(java.util.regex.Pattern.quote(".")));
         for (String part : parts) {
             if (BLOCKED_EXTENSIONS.contains(part)) {
                 FileLog.d("NayaGram Security Shield: blocked incoming cloaked file " + fileName);
@@ -121,66 +121,62 @@ public class NayaGram {
         FileLog.d("NayaGram Security Shield: file blocked silently.");
     }
 
-    public static CharSequence formatUserStatusText(CharSequence statusText) {
-        if (statusText == null) {
-            return null;
-        }
-        String str = statusText.toString().trim();
-        if (isStatusWord(str, "online")) {
-            if (!NayaConfig.getInstance().isRadiantOnlineAuraEnabled()
-                    && !NayaConfig.getInstance().isRadiantPresenceEnabled()) {
-                return statusText;
-            }
-            return "Online" + str.substring("online".length());
-        }
-        if (isStatusWord(str, "offline")) {
-            if (!NayaConfig.getInstance().isStealthOfflinePresenceEnabled()
-                    && !NayaConfig.getInstance().isRadiantPresenceEnabled()) {
-                return statusText;
-            }
-            return "Offline" + str.substring("offline".length());
-        }
-        return statusText;
+    
+        return 0xFF00E5FF; // Radiant Cyan for Offline
     }
 
-    private static boolean isStatusWord(String value, String word) {
-        if (value.length() < word.length()) {
-            return false;
+
+    
+        return isDarkTheme ? 0xFF38BDF8 : 0xFF0284C7; // Vivid Sky Cyan
+    }
+
+
+    
+
+    
+
+    
+
+    
+
+
+    public static CharSequence formatUserStatusText(CharSequence statusText) {
+        if (statusText == null) return statusText;
+        String str = statusText.toString().trim();
+        if ("online".equalsIgnoreCase(str) || str.startsWith("online")) {
+            return "Online";
         }
-        if (!value.regionMatches(true, 0, word, 0, word.length())) {
-            return false;
+        if ("offline".equalsIgnoreCase(str) || str.startsWith("offline")) {
+            return "Offline";
         }
-        return value.length() == word.length() || !Character.isLetter(value.charAt(word.length()));
+        return statusText;
     }
 
     public static int getStatusTextColor(boolean isOnline, boolean isDarkTheme) {
         if (isOnline) {
             return isDarkTheme ? 0xFF34D399 : 0xFF059669;
+        } else {
+            return isDarkTheme ? 0xFF38BDF8 : 0xFF0284C7;
         }
-        return isDarkTheme ? 0xFF38BDF8 : 0xFF0284C7;
     }
 
     public static int getRadiantOnlineColor() {
-        if (!NayaConfig.getInstance().isRadiantOnlineAuraEnabled()
-                && !NayaConfig.getInstance().isRadiantPresenceEnabled()) {
+        if (!NayaConfig.getInstance().isRadiantOnlineAuraEnabled()) {
             return 0xFF10B981;
         }
-        int step = (int) ((System.currentTimeMillis() / 1500L) % 4);
+        long sec = System.currentTimeMillis() / 1500L;
+        int step = (int) (sec % 4);
         if (step == 0) return 0xFF10B981;
         if (step == 1) return 0xFF3B82F6;
         if (step == 2) return 0xFF00E5FF;
         return 0xFF8B5CF6;
     }
 
-    public static int getRadiantOfflineColor() {
-        return getRadiantOfflineColor(true);
-    }
-
     public static int getRadiantOfflineColor(boolean isDarkTheme) {
-        if (!NayaConfig.getInstance().isStealthOfflinePresenceEnabled()
-                && !NayaConfig.getInstance().isRadiantPresenceEnabled()) {
+        if (!NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
             return isDarkTheme ? 0xFF94A3B8 : 0xFF64748B;
         }
         return isDarkTheme ? 0xFF38BDF8 : 0xFF0284C7;
     }
+
 }
