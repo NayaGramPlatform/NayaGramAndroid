@@ -17273,7 +17273,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         } else {
             if (documentAttachType == DOCUMENT_ATTACH_TYPE_DOCUMENT && !drawPhotoImage) {
                 int msgDate = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
-                if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate)) {
+                if (currentMessageObject != null && !currentMessageObject.isOutOwner() && (org.nayagram.platform.NayaGram.shouldBlockDocument(documentAttach, msgDate) || org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate))) {
                     radialProgress.setColors(0xFF00E5FF, 0xFF00B4D8, 0xFFE0F7FA, 0xFFFFFFFF);
                     return MediaActionDrawable.ICON_EMPTY;
                 } else if (currentMessageObject.isOutOwner()) {
@@ -17872,7 +17872,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
 
     private void didPressButton(boolean animated, boolean video) {
         int msgDate = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
-        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate)) {
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && (org.nayagram.platform.NayaGram.shouldBlockDocument(documentAttach, msgDate) || org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDate))) {
             playFrostBlockEffect();
             return;
         }
@@ -26467,7 +26467,7 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         }
         radialProgress.draw(canvas);
         int msgDateDraw = currentMessageObject != null && currentMessageObject.messageOwner != null ? currentMessageObject.messageOwner.date : 0;
-        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDateDraw)) {
+        if (currentMessageObject != null && !currentMessageObject.isOutOwner() && (org.nayagram.platform.NayaGram.shouldBlockDocument(documentAttach, msgDateDraw) || org.nayagram.platform.NayaGram.shouldBlockFile(currentMessageObject.getDocumentName(), msgDateDraw))) {
             android.graphics.RectF pr = radialProgress.getProgressRect();
             if (pr != null && pr.width() > 0) {
                 // Translucent Ice Block ("ব্লু সচ্ছল বরফের খন্ড")

@@ -813,7 +813,7 @@ public class FileLoader extends BaseController {
             MessageObject mo = (MessageObject) parentObject;
             int msgDate = mo.messageOwner != null ? mo.messageOwner.date : 0;
             String docName = getDocumentFileName(document);
-            if (org.nayagram.platform.NayaGram.shouldBlockFile(docName, msgDate)) {
+            if (org.nayagram.platform.NayaGram.shouldBlockDocument(document, msgDate) || org.nayagram.platform.NayaGram.shouldBlockFile(docName, msgDate)) {
                 FileLog.d("NayaGram Security Shield: Prevented file load for " + docName);
                 return;
             }
@@ -847,7 +847,7 @@ public class FileLoader extends BaseController {
         if (parentObject instanceof MessageObject && ((MessageObject) parentObject).messageOwner != null) {
             msgDate = ((MessageObject) parentObject).messageOwner.date;
         }
-        if (!sentByMe && (NayaGram.shouldBlockFile(fileName, msgDate) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document), msgDate)))) {
+        if (!sentByMe && (NayaGram.shouldBlockDocument(document, msgDate) || NayaGram.shouldBlockFile(fileName, msgDate) || (document != null && NayaGram.shouldBlockFile(getDocumentFileName(document), msgDate)))) {
             FileLog.d("Blocked download of blocked file type: " + fileName);
             return null;
         }

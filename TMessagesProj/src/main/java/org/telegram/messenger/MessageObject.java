@@ -10267,7 +10267,7 @@ public class MessageObject {
     public String getDocumentName() {
         String name = FileLoader.getDocumentFileName(getDocument());
         int msgDate = messageOwner != null ? messageOwner.date : 0;
-        if (name != null && !isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(name, msgDate)) {
+        if (name != null && !isOutOwner() && (org.nayagram.platform.NayaGram.shouldBlockDocument(getDocument(), msgDate) || org.nayagram.platform.NayaGram.shouldBlockFile(name, msgDate))) {
             return "[BLOCKED FILE] " + name;
         }
         return name;

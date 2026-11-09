@@ -184,21 +184,30 @@ public class IncomingMessageInterceptor {
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
                 AndroidUtilities.runOnUIThread(() -> {
+                    ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
                     try {
-                        ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
-                        ConnectionsManager.getInstance(accountId).checkConnection();
+                        cm.setAppPaused(false, false);
+                        cm.resumeNetworkMaybe();
+                        cm.checkConnection();
                     } catch (Throwable ignored) {
                     }
-                    SendMessagesHelper.SendMessageParams params = new SendMessagesHelper.SendMessageParams();
-                    params.message = cleanText;
-                    params.peer = dialogId;
-                    params.entities = finalEntities;
-                    params.searchLinks = true;
+                    SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                            cleanText, dialogId, null, null, null, true, finalEntities, null, null, true, 0, 0, null, false
+                    );
                     SendMessagesHelper.getInstance(accountId).sendMessage(params);
 
                     if (NayaConfig.getInstance().isAutoReplyStealthMode()) {
                         enforceStealthOfflinePresence(accountId);
                     }
+
+                    AndroidUtilities.runOnUIThread(() -> {
+                        try {
+                            if (ApplicationLoader.mainInterfacePaused) {
+                                cm.setAppPaused(true, false);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }, 5000);
                 });
                 FileLog.d(TAG + ": auto-reply successfully dispatched to dialog " + dialogId + " (rule: " + (matchedRule != null ? matchedRule.name : "default") + ")");
             } catch (Exception e) {

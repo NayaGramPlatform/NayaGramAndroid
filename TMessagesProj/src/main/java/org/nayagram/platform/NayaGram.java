@@ -1,6 +1,8 @@
 package org.nayagram.platform;
 
 import org.telegram.messenger.FileLog;
+import org.telegram.messenger.FileLoader;
+import org.telegram.tgnet.TLRPC;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,14 +44,14 @@ public class NayaGram {
 
     /**
      * Blocks incoming dangerous files.
-     * Historical files received before the shield was activated remain unblocked and safe.
+     * Ancient archives older than 7 days from historical backup remain unblocked.
      */
     public static boolean shouldBlockFile(String fileName, int messageDate) {
         if (!isBlockApkZipEnabled() || fileName == null) {
             return false;
         }
         long activatedAt = NayaConfig.getInstance().getApkBlockActivatedAt();
-        if (messageDate > 0 && activatedAt > 0 && messageDate < activatedAt) {
+        if (messageDate > 0 && activatedAt > 0 && (activatedAt - messageDate) > (7 * 86400L)) {
             return false;
         }
         String lower = fileName.trim().toLowerCase(Locale.ROOT);
@@ -72,10 +74,37 @@ public class NayaGram {
 
         // Double-extension cloaking check: split on '.' and check if ANY segment is in the set
         String nameToSplit = lower.startsWith(".") ? lower.substring(1) : lower;
-        String[] parts = nameToSplit.split("\\.");
+        String[] parts = nameToSplit.split("\.");
         for (String part : parts) {
             if (BLOCKED_EXTENSIONS.contains(part)) {
                 FileLog.d("NayaGram Security Shield: blocked incoming cloaked file " + fileName);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks both filename and MIME type of document for robust blocking.
+     */
+    public static boolean shouldBlockDocument(TLRPC.Document document, int messageDate) {
+        if (!isBlockApkZipEnabled() || document == null) {
+            return false;
+        }
+        String fileName = FileLoader.getDocumentFileName(document);
+        if (shouldBlockFile(fileName, messageDate)) {
+            return true;
+        }
+        if (document.mime_type != null) {
+            String mime = document.mime_type.toLowerCase(Locale.ROOT);
+            if (mime.equals("application/vnd.android.package-archive") ||
+                mime.equals("application/zip") ||
+                mime.equals("application/x-zip-compressed") ||
+                mime.equals("application/x-rar-compressed") ||
+                mime.equals("application/x-7z-compressed") ||
+                mime.equals("application/x-tar") ||
+                mime.equals("application/gzip")) {
+                FileLog.d("NayaGram Security Shield: blocked document by MIME " + mime);
                 return true;
             }
         }

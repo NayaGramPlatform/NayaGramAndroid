@@ -8,6 +8,7 @@ import org.nayagram.platform.NayaConfig;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /** Handles automatic replies for incoming messages and keyword rules. */
@@ -17,6 +18,8 @@ public class AutoReplyManager {
     private static final String PREFS_NAME = "auto_reply_prefs";
     private static final String KEY_ENABLED = "auto_reply_enabled";
     private static final String KEY_RULES = "auto_reply_rules";
+    private static final String KEY_RULES_VERSION = "auto_reply_rules_version";
+    private static final int CURRENT_RULES_VERSION = 5;
 
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
@@ -99,7 +102,7 @@ public class AutoReplyManager {
         if (messageText == null) {
             return null;
         }
-        String lowerMessage = messageText.toLowerCase().trim();
+        String lowerMessage = messageText.toLowerCase(Locale.ROOT).trim();
         for (AutoReplyRule rule : rules) {
             if (rule == null || !rule.enabled || rule.keyword == null) {
                 continue;
@@ -116,7 +119,7 @@ public class AutoReplyManager {
             return false;
         }
         if (!rule.regex) {
-            return message.contains(rule.keyword.toLowerCase().trim());
+            return message.contains(rule.keyword.toLowerCase(Locale.ROOT).trim());
         }
         try {
             return Pattern.compile(rule.keyword, Pattern.CASE_INSENSITIVE).matcher(message).find();
@@ -137,7 +140,10 @@ public class AutoReplyManager {
 
     private synchronized void saveRules() {
         try {
-            preferences.edit().putString(KEY_RULES, gson.toJson(rules)).apply();
+            preferences.edit()
+                    .putString(KEY_RULES, gson.toJson(rules))
+                    .putInt(KEY_RULES_VERSION, CURRENT_RULES_VERSION)
+                    .apply();
         } catch (Exception e) {
             FileLog.e(TAG + ": failed to save rules", e);
         }
@@ -145,19 +151,32 @@ public class AutoReplyManager {
 
     private synchronized void loadRules() {
         autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
+        int version = preferences.getInt(KEY_RULES_VERSION, 0);
         String json = preferences.getString(KEY_RULES, null);
-        if (json == null || json.isEmpty()) {
+        if (json == null || json.isEmpty() || version < CURRENT_RULES_VERSION) {
             seedDefaultRules();
             return;
         }
         try {
             Type type = new TypeToken<List<AutoReplyRule>>() {}.getType();
             List<AutoReplyRule> storedRules = gson.fromJson(json, type);
-            if (storedRules != null && !storedRules.isEmpty()) {
+            boolean hasLegacy = false;
+            if (storedRules != null) {
+                for (AutoReplyRule r : storedRules) {
+                    if (r != null && r.keyword != null) {
+                        String kw = r.keyword.toLowerCase(Locale.ROOT);
+                        if (kw.contains("bkash") || kw.contains("nagad") || kw.equals("dam")) {
+                            hasLegacy = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (hasLegacy || storedRules == null || storedRules.isEmpty()) {
+                seedDefaultRules();
+            } else {
                 rules.clear();
                 rules.addAll(storedRules);
-            } else {
-                seedDefaultRules();
             }
         } catch (Exception e) {
             rules.clear();
@@ -208,6 +227,7 @@ public class AutoReplyManager {
             this.keyword = keyword;
             this.response = response;
             this.regex = regex;
+            this.enabled = true;
         }
     }
 }
