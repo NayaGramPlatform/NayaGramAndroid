@@ -317,6 +317,11 @@ public class NayaConfig {
     public boolean isPreventMessageDeletionEnabled() { return preferences.getBoolean(KEY_PREVENT_MESSAGE_DELETION, false); }
     public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
 
+    
+    private static final String KEY_RADIANT_PRESENCE = "feature_radiant_presence";
+    public boolean isRadiantPresenceEnabled() { return preferences.getBoolean(KEY_RADIANT_PRESENCE, true); }
+    public void setRadiantPresenceEnabled(boolean e) { preferences.edit().putBoolean(KEY_RADIANT_PRESENCE, e).apply(); }
+
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, true); }
     public long getApkBlockActivatedAt() {
         long ts = preferences.getLong(KEY_APK_BLOCK_ACTIVATED_AT, 0L);

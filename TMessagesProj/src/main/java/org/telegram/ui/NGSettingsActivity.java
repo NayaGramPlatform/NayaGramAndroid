@@ -33,7 +33,6 @@ import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
-import org.telegram.messenger.AutoReplyManager;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
 import org.telegram.ui.ActionBar.ActionBarMenuItem;
@@ -80,6 +79,7 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowAnonymousStories;
     private int rowGhostMode = -1;
     private int rowApkBlock = -1;
+    private int rowRadiantPresence = -1;
 
     private int headerMessaging;
     private int rowOneTimeVoiceVideo;
@@ -127,6 +127,7 @@ public class NGSettingsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
         headerStealth = rowCount++;
+        rowRadiantPresence = rowCount++;
         rowVerifiedBadge = rowCount++;
         rowChannelVerifiedBadge = rowCount++;
         rowBotVerifiedBadge = rowCount++;
@@ -275,16 +276,29 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     cell.setChecked(false);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
+                } else if (position == rowRadiantPresence) {
+                    c.setFeature(R.drawable.msg_filled_badge, 0xFF00E5FF, "Radiant Presence & Rainbow Online", "Capitalizes 'Online' / 'Offline' status and animates status dot through Green, Blue, Cyan, and Purple.", cfg.isRadiantPresenceEnabled(), true);
+                } else if (position == rowRadiantPresence) {
+                    boolean newval = !cfg.isRadiantPresenceEnabled();
+                    cfg.setRadiantPresenceEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
                 } else if (position == rowApkBlock) {
                     cfg.setApkBlockEnabled(checked);
                     cell.setChecked(checked);
-                    BulletinFactory.of(this).createSimpleBulletin(checked ? R.raw.done : R.raw.chats_infotip, "APK & ZIP Frost Shield: " + (checked ? "Frozen" : "Off")).show();
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowMessageScheduler) {
                     cfg.setMessageScheduler(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
-                    presentFragment(new NGAutoReplyActivity());
+                    cfg.setSmartAutoReply(checked);
+                    cell.setChecked(checked);
+                    BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
+                    if (checked) showAutoReplyConfigDialog();
                 } else if (position == rowOneTimeVoiceVideo) {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
@@ -859,8 +873,18 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
+                } else if (position == rowRadiantPresence) {
+                    c.setFeature(R.drawable.msg_filled_badge, 0xFF00E5FF, "Radiant Presence & Rainbow Online", "Capitalizes 'Online' / 'Offline' status and animates status dot through Green, Blue, Cyan, and Purple.", cfg.isRadiantPresenceEnabled(), true);
+                } else if (position == rowRadiantPresence) {
+                    boolean newval = !cfg.isRadiantPresenceEnabled();
+                    cfg.setRadiantPresenceEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
                 } else if (position == rowApkBlock) {
-                    c.setFeature(R.drawable.outline_shield_check, 0xFF00E5FF, "APK & ZIP Frost Shield", "Freeze incoming APK & ZIP files with winter snow effect", cfg.isApkBlockEnabled(), true);
+                    c.setFeature(R.drawable.outline_shield_check, 0xFF00D4FF, "APK & ZIP Security Shield", "Blocks APK and ZIP files sent by others. Off by default.", cfg.isApkBlockEnabled(), true);
                 } else if (position == rowHidePhoneNumber) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF6366F1, "Screen Share Phone Privacy", "Blur & mask personal phone number with blue-purple background and eye toggle", cfg.isHidePhoneNumberEnabled(), true);
                 } else if (position == rowThemeMode) {
@@ -870,7 +894,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowMessageScheduler) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
-                    c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "15+ keyword rules & instant auto-replies", cfg.isSmartAutoReply() || AutoReplyManager.getInstance().isAutoReplyEnabled(), true);
+                    c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
                 } else if (position == rowAutoAddText) {

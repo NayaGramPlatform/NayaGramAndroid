@@ -120,4 +120,41 @@ public class NayaGram {
     public static void showBlockedNotice() {
         FileLog.d("NayaGram Security Shield: file blocked silently.");
     }
+
+    public static CharSequence formatUserStatusText(CharSequence statusText) {
+        if (statusText == null || !NayaConfig.getInstance().isRadiantPresenceEnabled()) {
+            return statusText;
+        }
+        String str = statusText.toString().trim();
+        if ("online".equalsIgnoreCase(str)) {
+            return "Online";
+        }
+        if ("offline".equalsIgnoreCase(str)) {
+            return "Offline";
+        }
+        if (str.startsWith("online")) {
+            return "Online" + str.substring(6);
+        }
+        return statusText;
+    }
+
+    public static int getRadiantOnlineColor() {
+        if (!NayaConfig.getInstance().isRadiantPresenceEnabled()) {
+            return 0xFF10B981; // Standard Emerald Green
+        }
+        long sec = System.currentTimeMillis() / 1500L;
+        int step = (int) (sec % 4);
+        if (step == 0) return 0xFF10B981; // Green
+        if (step == 1) return 0xFF3B82F6; // Blue
+        if (step == 2) return 0xFF00E5FF; // Radiant Cyan
+        return 0xFF8B5CF6; // Electric Purple
+    }
+
+    public static int getRadiantOfflineColor() {
+        if (!NayaConfig.getInstance().isRadiantPresenceEnabled()) {
+            return 0xFF94A3B8; // Standard Gray
+        }
+        return 0xFF00E5FF; // Radiant Cyan for Offline
+    }
+
 }
