@@ -85,6 +85,7 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerMessaging;
     private int rowOneTimeVoiceVideo;
+    private int rowVideoShape;
     private int rowAutoAddText;
     private int rowEditText;
     private int rowMessageScheduler;
@@ -141,6 +142,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerMessaging = rowCount++;
         rowOneTimeVoiceVideo = rowCount++;
+        rowVideoShape = rowCount++;
         rowAutoAddText = rowCount++;
         rowEditText = rowCount++;
         rowMessageScheduler = -1;
@@ -317,6 +319,8 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowVideoShape) {
+                    showVideoShapePickerDialog();
                 } else if (position == rowAutoAddText) {
                     cfg.setAutoAddTextEnabled(checked);
                     cell.setChecked(checked);
@@ -905,6 +909,8 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
+                } else if (position == rowVideoShape) {
+                    c.setActionFeature(R.drawable.menu_feature_voice, 0xFFEC4899, "Video Message Shapes", cfg.getVideoShapeName(cfg.getVideoShape()), true);
                 } else if (position == rowAutoAddText) {
                     c.setFeature(R.drawable.msg_edit, 0xFF8B5CF6, "Auto-add text", "Append your text to every message you send", cfg.isAutoAddTextEnabled(), true);
                 } else if (position == rowEditText) {
@@ -952,5 +958,45 @@ public class NGSettingsActivity extends BaseFragment {
                 info.setText("NayaGram Platform · Built with ❤️ in Bangladesh");
             }
         }
+    }
+
+    private void showVideoShapePickerDialog() {
+        if (getParentActivity() == null) return;
+        final String[] options = new String[]{
+            "Circle ⭕ (Default)",
+            "Heart 💖 (Love & Passion)",
+            "Star ⭐ (5-Point Star)",
+            "Cat 🐱 (Pet Silhouette)",
+            "Flower 🌸 (6-Petal Blossom)",
+            "Cloud ☁️ (Soft Fluffy Cloud)",
+            "Living Blob 🫠 (Organic Dynamic Blob)",
+            "Ghost 👻 (Seasonal Ghost)"
+        };
+        final int[] shapeValues = new int[]{
+            NayaConfig.VIDEO_SHAPE_CIRCLE,
+            NayaConfig.VIDEO_SHAPE_HEART,
+            NayaConfig.VIDEO_SHAPE_STAR,
+            NayaConfig.VIDEO_SHAPE_CAT,
+            NayaConfig.VIDEO_SHAPE_FLOWER,
+            NayaConfig.VIDEO_SHAPE_CLOUD,
+            NayaConfig.VIDEO_SHAPE_BLOB,
+            NayaConfig.VIDEO_SHAPE_GHOST
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Select Video Message Shape");
+        builder.setSingleChoiceItems(options, NayaConfig.getInstance().getVideoShape(), (dialog, which) -> {
+            NayaConfig.getInstance().setVideoShape(shapeValues[which]);
+            if (listAdapter != null) {
+                listAdapter.notifyItemChanged(rowVideoShape);
+            }
+            BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
+                R.raw.done,
+                "Video Message Shape: " + NayaConfig.getInstance().getVideoShapeName(shapeValues[which])
+            ).show();
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("Cancel", null);
+        showDialog(builder.create());
     }
 }

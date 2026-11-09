@@ -64,6 +64,15 @@ public class NayaConfig {
     public static final int THEME_MODE_DARK_SLATE = 1;
     public static final int THEME_MODE_NEON_AURORA = 2;
 
+    public static final int VIDEO_SHAPE_CIRCLE = 0;
+    public static final int VIDEO_SHAPE_HEART = 1;
+    public static final int VIDEO_SHAPE_STAR = 2;
+    public static final int VIDEO_SHAPE_CAT = 3;
+    public static final int VIDEO_SHAPE_FLOWER = 4;
+    public static final int VIDEO_SHAPE_CLOUD = 5;
+    public static final int VIDEO_SHAPE_BLOB = 6;
+    public static final int VIDEO_SHAPE_GHOST = 7;
+
 
     private static NayaConfig instance;
     private final SharedPreferences preferences;
@@ -360,6 +369,21 @@ public class NayaConfig {
 
     public int getAppThemeMode() { return preferences.getInt(KEY_APP_THEME_MODE, THEME_MODE_DARK_SLATE); }
     public void setAppThemeMode(int mode) { preferences.edit().putInt(KEY_APP_THEME_MODE, mode).apply(); }
+
+    public int getVideoShape() { return preferences.getInt("feature_video_shape", VIDEO_SHAPE_CIRCLE); }
+    public void setVideoShape(int shape) { preferences.edit().putInt("feature_video_shape", shape).apply(); }
+    public String getVideoShapeName(int shape) {
+        switch (shape) {
+            case VIDEO_SHAPE_HEART: return "Heart 💖";
+            case VIDEO_SHAPE_STAR: return "Star ⭐";
+            case VIDEO_SHAPE_CAT: return "Cat 🐱";
+            case VIDEO_SHAPE_FLOWER: return "Flower 🌸";
+            case VIDEO_SHAPE_CLOUD: return "Cloud ☁️";
+            case VIDEO_SHAPE_BLOB: return "Living Blob 🫠";
+            case VIDEO_SHAPE_GHOST: return "Ghost 👻";
+            default: return "Circle ⭕";
+        }
+    }
     
     private static final String KEY_CHANNEL_VERIFIED_BADGE = "key_channel_verified_badge";
     public boolean isChannelVerifiedBadgeEnabled = false;
