@@ -283,9 +283,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowRadiantOnlineAura) {
                     boolean newval = !cfg.isRadiantOnlineAuraEnabled();
                     cfg.setRadiantOnlineAuraEnabled(newval);
-                    if (view instanceof org.telegram.ui.Cells.TextCheckCell2) {
-                        ((org.telegram.ui.Cells.TextCheckCell2) view).setChecked(newval);
-                    }
+                    cell.setChecked(newval);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
@@ -293,9 +291,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowStealthOfflinePresence) {
                     boolean newval = !cfg.isStealthOfflinePresenceEnabled();
                     cfg.setStealthOfflinePresenceEnabled(newval);
-                    if (view instanceof org.telegram.ui.Cells.TextCheckCell2) {
-                        ((org.telegram.ui.Cells.TextCheckCell2) view).setChecked(newval);
-                    }
+                    cell.setChecked(newval);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
@@ -888,7 +884,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowRadiantOnlineAura) {
-                    c.setFeature(R.drawable.msg_verified, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                    c.setFeature(R.drawable.menu_verification, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
                 } else if (position == rowStealthOfflinePresence) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
                 } else if (position == rowApkBlock) {
