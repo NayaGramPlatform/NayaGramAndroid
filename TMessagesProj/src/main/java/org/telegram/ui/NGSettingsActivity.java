@@ -888,7 +888,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowGhostMode) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowRadiantOnlineAura) {
-                    c.setFeature(R.drawable.msg_verified, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                    c.setFeature(R.drawable.verified_profile, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
                 } else if (position == rowStealthOfflinePresence) {
                     c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
                 } else if (position == rowApkBlock) {
