@@ -74,7 +74,7 @@ public class NayaGram {
 
         // Double-extension cloaking check: split on '.' and check if ANY segment is in the set
         String nameToSplit = lower.startsWith(".") ? lower.substring(1) : lower;
-        String[] parts = nameToSplit.split("\.");
+        String[] parts = nameToSplit.split(java.util.regex.Pattern.quote("."));
         for (String part : parts) {
             if (BLOCKED_EXTENSIONS.contains(part)) {
                 FileLog.d("NayaGram Security Shield: blocked incoming cloaked file " + fileName);
