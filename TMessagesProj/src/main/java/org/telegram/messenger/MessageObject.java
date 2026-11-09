@@ -5973,6 +5973,9 @@ public class MessageObject {
             if (!TextUtils.isEmpty(restrictionReason)) {
                 messageText = restrictionReason;
                 isRestrictedMessage = true;
+            } else if (org.nayagram.platform.NayaGram.shouldHide(messageOwner)) {
+                messageText = "APK file blocked";
+                isRestrictedMessage = true;
             } else if (messageOwner.rich_message != null) {
                 messageText = formatRichMessage(messageOwner.rich_message, isOutOwner());
                 messageText = AndroidUtilities.replaceNewLines(messageText);

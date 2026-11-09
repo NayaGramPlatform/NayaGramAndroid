@@ -2942,6 +2942,21 @@ public class LocaleController {
     }
 
     public static String formatUserStatus(int currentAccount, TLRPC.User user, boolean[] isOnline, boolean[] madeShorter) {
+        String res = formatUserStatusInternal(currentAccount, user, isOnline, madeShorter);
+        if (org.nayagram.platform.NayaConfig.getInstance().isRadiantOnlineAuraEnabled()) {
+            if ("online".equalsIgnoreCase(res) || (res != null && res.startsWith("online"))) {
+                return "Online";
+            }
+        }
+        if (org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+            if (res != null && res.startsWith("last seen")) {
+                return "Offline • " + res.substring(9).trim();
+            }
+        }
+        return res;
+    }
+
+    private static String formatUserStatusInternal(int currentAccount, TLRPC.User user, boolean[] isOnline, boolean[] madeShorter) {
         if (user != null && user.status != null && user.status.expires == 0) {
             if (user.status instanceof TLRPC.TL_userStatusRecently) {
                 user.status.expires = user.status.by_me ? -1000 : -100;
@@ -2956,7 +2971,7 @@ public class LocaleController {
                 if (isOnline != null) {
                     isOnline[0] = true;
                 }
-                return getString("Online", R.string.Online);
+                return org.nayagram.platform.NayaConfig.getInstance().isRadiantOnlineAuraEnabled() ? "Online" : getString("Online", R.string.Online);
             }
         }
         if (user == null || user.status == null || user.status.expires == 0 || UserObject.isDeleted(user) || user instanceof TLRPC.TL_userEmpty) {
@@ -2967,7 +2982,7 @@ public class LocaleController {
                 if (isOnline != null) {
                     isOnline[0] = true;
                 }
-                return getString("Online", R.string.Online);
+                return org.nayagram.platform.NayaConfig.getInstance().isRadiantOnlineAuraEnabled() ? "Online" : getString("Online", R.string.Online);
             } else {
                 if (user.status.expires == -1) {
                     return getString("Invisible", R.string.Invisible);

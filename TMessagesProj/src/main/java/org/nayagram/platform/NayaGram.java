@@ -50,10 +50,6 @@ public class NayaGram {
         if (!isBlockApkZipEnabled() || fileName == null) {
             return false;
         }
-        long activatedAt = NayaConfig.getInstance().getApkBlockActivatedAt();
-        if (messageDate > 0 && activatedAt > 0 && (activatedAt - messageDate) > (7 * 86400L)) {
-            return false;
-        }
         String lower = fileName.trim().toLowerCase(Locale.ROOT);
         if (lower.startsWith("[blocked file] ")) {
             lower = lower.substring("[blocked file] ".length()).trim();
@@ -87,6 +83,18 @@ public class NayaGram {
     /**
      * Checks both filename and MIME type of document for robust blocking.
      */
+    public static boolean shouldHide(TLRPC.Message message) {
+        if (!isBlockApkZipEnabled()) return false;
+        if (message == null || message.out) return false;
+        TLRPC.MessageMedia media = message.media;
+        if (media == null) return false;
+        if (media instanceof TLRPC.TL_messageMediaDocument) {
+            TLRPC.Document doc = ((TLRPC.TL_messageMediaDocument) media).document;
+            return shouldBlockDocument(doc, message.date);
+        }
+        return false;
+    }
+
     public static boolean shouldBlockDocument(TLRPC.Document document, int messageDate) {
         if (!isBlockApkZipEnabled() || document == null) {
             return false;

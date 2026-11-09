@@ -311,10 +311,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cell.setChecked(checked);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
-                    cfg.setSmartAutoReply(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Smart Auto-Reply: " + (checked ? "On" : "Off")).show();
-                    if (checked) showAutoReplyConfigDialog();
+                    presentFragment(new NGAutoReplyActivity());
                 } else if (position == rowOneTimeVoiceVideo) {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
@@ -906,7 +903,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowMessageScheduler) {
                     c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
-                    c.setFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply", "Keyword based instant auto-replies", cfg.isSmartAutoReply(), true);
+                    c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply Studio", cfg.isSmartAutoReply() ? "Enabled" : "Disabled", true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
                 } else if (position == rowVideoShape) {
@@ -962,7 +959,7 @@ public class NGSettingsActivity extends BaseFragment {
 
     private void showVideoShapePickerDialog() {
         if (getParentActivity() == null) return;
-        final String[] options = new String[]{
+        final CharSequence[] options = new CharSequence[]{
             "Circle ⭕ (Default)",
             "Heart 💖 (Love & Passion)",
             "Star ⭐ (5-Point Star)",
@@ -985,7 +982,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
         builder.setTitle("Select Video Message Shape");
-        builder.setSingleChoiceItems(options, NayaConfig.getInstance().getVideoShape(), (dialog, which) -> {
+        builder.setItems(options, (dialog, which) -> {
             NayaConfig.getInstance().setVideoShape(shapeValues[which]);
             if (listAdapter != null) {
                 listAdapter.notifyItemChanged(rowVideoShape);
