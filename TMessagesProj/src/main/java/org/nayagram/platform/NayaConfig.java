@@ -322,6 +322,16 @@ public class NayaConfig {
     public boolean isRadiantPresenceEnabled() { return preferences.getBoolean(KEY_RADIANT_PRESENCE, true); }
     public void setRadiantPresenceEnabled(boolean e) { preferences.edit().putBoolean(KEY_RADIANT_PRESENCE, e).apply(); }
 
+    
+    private static final String KEY_RADIANT_ONLINE_AURA = "feature_radiant_online_aura";
+    private static final String KEY_STEALTH_OFFLINE_PRESENCE = "feature_stealth_offline_presence";
+
+    public boolean isRadiantOnlineAuraEnabled() { return preferences.getBoolean(KEY_RADIANT_ONLINE_AURA, true); }
+    public void setRadiantOnlineAuraEnabled(boolean e) { preferences.edit().putBoolean(KEY_RADIANT_ONLINE_AURA, e).apply(); }
+
+    public boolean isStealthOfflinePresenceEnabled() { return preferences.getBoolean(KEY_STEALTH_OFFLINE_PRESENCE, true); }
+    public void setStealthOfflinePresenceEnabled(boolean e) { preferences.edit().putBoolean(KEY_STEALTH_OFFLINE_PRESENCE, e).apply(); }
+
     public boolean isApkBlockEnabled() { return preferences.getBoolean(KEY_APK_BLOCK, true); }
     public long getApkBlockActivatedAt() {
         long ts = preferences.getLong(KEY_APK_BLOCK_ACTIVATED_AT, 0L);

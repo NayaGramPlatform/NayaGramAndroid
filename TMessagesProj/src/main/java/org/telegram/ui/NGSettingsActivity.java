@@ -79,6 +79,8 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowAnonymousStories;
     private int rowGhostMode = -1;
     private int rowApkBlock = -1;
+    private int rowRadiantOnlineAura = -1;
+    private int rowStealthOfflinePresence = -1;
     private int rowRadiantPresence = -1;
 
     private int headerMessaging;
@@ -127,6 +129,8 @@ public class NGSettingsActivity extends BaseFragment {
     private void updateRows() {
         rowCount = 0;
         headerStealth = rowCount++;
+        rowRadiantOnlineAura = rowCount++;
+        rowStealthOfflinePresence = rowCount++;
         rowRadiantPresence = rowCount++;
         rowVerifiedBadge = rowCount++;
         rowChannelVerifiedBadge = rowCount++;
@@ -285,6 +289,26 @@ public class NGSettingsActivity extends BaseFragment {
                     BulletinFactory.of(this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowRadiantOnlineAura) {
+                    c.setFeature(R.drawable.msg_filled_badge, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                } else if (position == rowStealthOfflinePresence) {
+                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
+                } else if (position == rowRadiantOnlineAura) {
+                    boolean newval = !cfg.isRadiantOnlineAuraEnabled();
+                    cfg.setRadiantOnlineAuraEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowStealthOfflinePresence) {
+                    boolean newval = !cfg.isStealthOfflinePresenceEnabled();
+                    cfg.setStealthOfflinePresenceEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowApkBlock) {
                     cfg.setApkBlockEnabled(checked);
@@ -882,6 +906,26 @@ public class NGSettingsActivity extends BaseFragment {
                     BulletinFactory.of(this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Presence: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowRadiantOnlineAura) {
+                    c.setFeature(R.drawable.msg_filled_badge, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
+                } else if (position == rowStealthOfflinePresence) {
+                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF00E5FF, "Stealth Offline Presence", "Bold 'Offline' status tag in vivid Cyan for high contrast in dark/light themes.", cfg.isStealthOfflinePresenceEnabled(), true);
+                } else if (position == rowRadiantOnlineAura) {
+                    boolean newval = !cfg.isRadiantOnlineAuraEnabled();
+                    cfg.setRadiantOnlineAuraEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
+                    ).show();
+                } else if (position == rowStealthOfflinePresence) {
+                    boolean newval = !cfg.isStealthOfflinePresenceEnabled();
+                    cfg.setStealthOfflinePresenceEnabled(newval);
+                    c.setChecked(newval);
+                    BulletinFactory.of(this).createSimpleBulletin(
+                        newval ? R.raw.done : R.raw.chats_infotip,
+                        "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
                     ).show();
                 } else if (position == rowApkBlock) {
                     c.setFeature(R.drawable.outline_shield_check, 0xFF00D4FF, "APK & ZIP Security Shield", "Blocks APK and ZIP files sent by others. Off by default.", cfg.isApkBlockEnabled(), true);
