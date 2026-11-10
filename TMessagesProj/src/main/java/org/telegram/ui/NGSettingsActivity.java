@@ -142,7 +142,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerMessaging = rowCount++;
         rowOneTimeVoiceVideo = rowCount++;
-        rowVideoShape = rowCount++;
+        rowVideoShape = -1;
         rowAutoAddText = rowCount++;
         rowEditText = rowCount++;
         rowMessageScheduler = -1;
@@ -304,7 +304,7 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowVideoShape) {
+                } else if (position == rowVideoShape && rowVideoShape != -1) {
                     showVideoShapePickerDialog();
                 } else if (position == rowAutoAddText) {
                     cfg.setAutoAddTextEnabled(checked);
@@ -883,7 +883,7 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply Studio", cfg.isSmartAutoReply() ? "Enabled" : "Disabled", true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
-                } else if (position == rowVideoShape) {
+                } else if (position == rowVideoShape && rowVideoShape != -1) {
                     c.setActionFeature(R.drawable.menu_feature_voice, 0xFFEC4899, "Video Message Shapes", cfg.getVideoShapeName(cfg.getVideoShape()), true);
                 } else if (position == rowAutoAddText) {
                     c.setFeature(R.drawable.msg_edit, 0xFF8B5CF6, "Auto-add text", "Append your text to every message you send", cfg.isAutoAddTextEnabled(), true);
@@ -960,7 +960,7 @@ public class NGSettingsActivity extends BaseFragment {
         builder.setItems(options, (dialog, which) -> {
             NayaConfig.getInstance().setVideoShape(shapeValues[which]);
             if (listAdapter != null) {
-                listAdapter.notifyItemChanged(rowVideoShape);
+                if (rowVideoShape != -1) listAdapter.notifyItemChanged(rowVideoShape);
             }
             BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                 R.raw.done,

@@ -2,6 +2,7 @@ package org.nayagram.platform.textstyle;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.SpannableStringBuilder;
@@ -15,9 +16,8 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,11 +34,11 @@ import java.util.List;
 
 /**
  * NGTextStyleHelper - Persistent Text Formatting & Auto-Styler.
- * Matches Novagram's Text Style feature:
- * - Allows users to pick a default persistent font/entity style (Regular, Spoiler, Bold, Italic, Mono, Strikethrough, Underline, Quote).
- * - Automatically formats outgoing messages.
- * - Clean English labels (Bengali only when language is set to 'bn').
- * - Includes PC/Desktop keyboard shortcut guide.
+ * Features:
+ * - Direct style picker across 1-on-1 chats, groups, channels, and bots.
+ * - Radiant checkmark badge (উজ্জ্বল রঙের টিক চিহ্ন ✓) for the active selection.
+ * - Prominent, beautifully styled Desktop/PC keyboard shortcuts guide card.
+ * - Automatically applies chosen text style to outgoing messages.
  */
 public final class NGTextStyleHelper {
 
@@ -63,6 +63,32 @@ public final class NGTextStyleHelper {
     public static final String[] STYLE_NAMES = new String[] {
         "Regular", "Spoiler", "Bold", "Italic",
         "Mono", "Strikethrough", "Underline", "Quote"
+    };
+
+    public static final String[] STYLE_DESCS = new String[] {
+        "Standard readable plain text",
+        "Hidden covered text revealed on tap",
+        "Bold emphasized text",
+        "Slanted italic font style",
+        "Fixed-width monospace coding font",
+        "Strikethrough crossed line format",
+        "Underlined bottom accent format",
+        "Prominent blockquote format"
+    };
+
+    public static final int[] STYLE_COLORS = new int[] {
+        0xFF0EA5E9, // Regular: Sky blue
+        0xFFF59E0B, // Spoiler: Amber
+        0xFF2563EB, // Bold: Royal blue
+        0xFF9333EA, // Italic: Purple
+        0xFF0D9488, // Mono: Teal
+        0xFF64748B, // Strikethrough: Slate
+        0xFF0284C7, // Underline: Ocean
+        0xFF4F46E5  // Quote: Indigo
+    };
+
+    public static final String[] STYLE_ICONS = new String[] {
+        "Aa", "✦", "B", "I", "</>", "S̶", "U̲", "❝"
     };
 
     private static SharedPreferences getPrefs() {
@@ -95,7 +121,6 @@ public final class NGTextStyleHelper {
 
     /**
      * Applies the user's chosen text style to the entire message field before sending.
-     * Operates once per send — O(1) zero-overhead formatting.
      */
     public static void applyStyle(EditTextCaption editField) {
         if (editField == null || editField.length() == 0) return;
@@ -144,51 +169,120 @@ public final class NGTextStyleHelper {
     }
 
     /**
-     * Displays the "Text style" selection dialog matching Novagram's UI,
-     * with clean labels, instant selection persistence, and PC shortcuts.
+     * Displays the modernized "Text style" selection dialog across all chats, groups, channels, and bots.
+     * Features vibrant radiant checkmark badges (উজ্জ্বল রঙের টিক চিহ্ন ✓) and an enlarged Desktop/PC shortcuts cheatsheet.
      */
     public static void showDialog(Context context) {
         if (context == null) return;
 
-        LinearLayout root = new LinearLayout(context);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(12), AndroidUtilities.dp(20), AndroidUtilities.dp(12));
-
-        int current = getSelectedStyle();
-        int checkedIndex = 0;
+        final boolean isDark = Theme.isCurrentThemeDark();
+        final int current = getSelectedStyle();
+        final int[] checkedIndex = new int[] { 0 };
         for (int i = 0; i < RADIO_STYLES.length; i++) {
             if (RADIO_STYLES[i] == current) {
-                checkedIndex = i;
+                checkedIndex[0] = i;
                 break;
             }
         }
 
-        RadioGroup radioGroup = new RadioGroup(context);
-        radioGroup.setOrientation(RadioGroup.VERTICAL);
+        LinearLayout root = new LinearLayout(context);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
 
-        List<CharSequence> labels = buildStyledLabels();
-        for (int i = 0; i < labels.size(); i++) {
+        // Subtitle guide
+        TextView subTitle = new TextView(context);
+        subTitle.setText("Choose default text style for messages & replies");
+        subTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        subTitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
+        subTitle.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(10));
+        root.addView(subTitle);
+
+        final LinearLayout itemsList = new LinearLayout(context);
+        itemsList.setOrientation(LinearLayout.VERTICAL);
+
+        final List<CharSequence> labels = buildStyledLabels();
+        final View[] rowViews = new View[RADIO_STYLES.length];
+        final TextView[] tickViews = new TextView[RADIO_STYLES.length];
+
+        for (int i = 0; i < RADIO_STYLES.length; i++) {
             final int index = i;
-            RadioButton rb = new RadioButton(context);
-            rb.setText(labels.get(i));
-            rb.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16);
-            rb.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
-            rb.setId(1000 + i);
-            if (i == checkedIndex) {
-                rb.setChecked(true);
-            }
-            rb.setOnClickListener(v -> {
+            final int styleColor = STYLE_COLORS[i];
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+
+            LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            rowParams.bottomMargin = AndroidUtilities.dp(8);
+            row.setLayoutParams(rowParams);
+
+            // Left icon badge
+            TextView iconBadge = new TextView(context);
+            iconBadge.setText(STYLE_ICONS[i]);
+            iconBadge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+            iconBadge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            iconBadge.setTextColor(Color.WHITE);
+            iconBadge.setGravity(Gravity.CENTER);
+
+            GradientDrawable iconBg = new GradientDrawable();
+            iconBg.setShape(GradientDrawable.OVAL);
+            iconBg.setColor(styleColor);
+            iconBadge.setBackground(iconBg);
+
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(34), AndroidUtilities.dp(34));
+            iconParams.rightMargin = AndroidUtilities.dp(12);
+            row.addView(iconBadge, iconParams);
+
+            // Middle text container
+            LinearLayout textCol = new LinearLayout(context);
+            textCol.setOrientation(LinearLayout.VERTICAL);
+
+            TextView titleView = new TextView(context);
+            titleView.setText(labels.get(i));
+            titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            textCol.addView(titleView);
+
+            TextView descView = new TextView(context);
+            descView.setText(STYLE_DESCS[i]);
+            descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            descView.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
+            descView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
+            textCol.addView(descView);
+
+            row.addView(textCol, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+
+            // Right selection badge (উজ্জ্বল রঙের টিক চিহ্ন ✓)
+            TextView tickBadge = new TextView(context);
+            tickBadge.setGravity(Gravity.CENTER);
+            tickViews[i] = tickBadge;
+
+            LinearLayout.LayoutParams tickParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(28), AndroidUtilities.dp(28));
+            tickParams.leftMargin = AndroidUtilities.dp(8);
+            row.addView(tickBadge, tickParams);
+
+            rowViews[i] = row;
+
+            row.setOnClickListener(v -> {
+                checkedIndex[0] = index;
                 setSelectedStyle(RADIO_STYLES[index]);
-                Toast.makeText(context, "Saved: " + STYLE_NAMES[index], Toast.LENGTH_SHORT).show();
+                updateRowStates(rowViews, tickViews, checkedIndex[0], isDark);
+                Toast.makeText(context, "Style active: " + STYLE_NAMES[index] + " ✓", Toast.LENGTH_SHORT).show();
             });
-            radioGroup.addView(rb, new RadioGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            itemsList.addView(row);
         }
 
-        ScrollView scroll = new ScrollView(context);
-        scroll.addView(radioGroup);
-        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(210)));
+        updateRowStates(rowViews, tickViews, checkedIndex[0], isDark);
 
-        // Add Computer / Keyboard Shortcuts section
+        ScrollView scroll = new ScrollView(context);
+        scroll.setVerticalScrollBarEnabled(true);
+        scroll.addView(itemsList);
+        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(230)));
+
+        // Prominent Desktop / PC Keyboard Shortcuts Section
         View keyboardGuideCard = buildKeyboardShortcutCard(context);
         LinearLayout.LayoutParams guideParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         guideParams.topMargin = AndroidUtilities.dp(12);
@@ -196,58 +290,146 @@ public final class NGTextStyleHelper {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Text style");
-        builder.setMessage("Select any style");
         builder.setView(root);
         builder.setPositiveButton("Select", (d, w) -> {
-            int selectedId = radioGroup.getCheckedRadioButtonId();
-            int idx = selectedId - 1000;
-            if (idx >= 0 && idx < RADIO_STYLES.length) {
-                int chosen = RADIO_STYLES[idx];
+            int chosenIdx = checkedIndex[0];
+            if (chosenIdx >= 0 && chosenIdx < RADIO_STYLES.length) {
+                int chosen = RADIO_STYLES[chosenIdx];
                 setSelectedStyle(chosen);
-                Toast.makeText(context, "Text style set to: " + STYLE_NAMES[idx], Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Text style set to: " + STYLE_NAMES[chosenIdx] + " ✓", Toast.LENGTH_SHORT).show();
             }
+            d.dismiss();
         });
         builder.setNegativeButton("Close", (d, w) -> d.dismiss());
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
+    /**
+     * Updates visual state: selected row receives glowing border and vibrant checkmark (✓).
+     */
+    private static void updateRowStates(View[] rowViews, TextView[] tickViews, int selectedIndex, boolean isDark) {
+        for (int i = 0; i < rowViews.length; i++) {
+            boolean isSelected = (i == selectedIndex);
+            View row = rowViews[i];
+            TextView tick = tickViews[i];
+
+            GradientDrawable rowBg = new GradientDrawable();
+            rowBg.setCornerRadius(AndroidUtilities.dp(14));
+
+            if (isSelected) {
+                // Vibrant glowing accent background + cyan border
+                rowBg.setColor(isDark ? 0x3300D4FF : 0x180284C7);
+                rowBg.setStroke(AndroidUtilities.dp(1.8f), isDark ? 0xFF00D4FF : 0xFF0284C7);
+
+                // Radiant emerald checkmark badge (উজ্জ্বল সবুজ টিক চিহ্ন ✓)
+                GradientDrawable tickBg = new GradientDrawable();
+                tickBg.setShape(GradientDrawable.OVAL);
+                tickBg.setColor(0xFF10B981); // Emerald Green
+                tick.setBackground(tickBg);
+                tick.setText("✓");
+                tick.setTextColor(Color.WHITE);
+                tick.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+                tick.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            } else {
+                rowBg.setColor(isDark ? 0xFF1E293B : 0xFFF8FAFC);
+                rowBg.setStroke(AndroidUtilities.dp(1f), isDark ? 0xFF334155 : 0xFFE2E8F0);
+
+                // Empty ring
+                GradientDrawable ringBg = new GradientDrawable();
+                ringBg.setShape(GradientDrawable.OVAL);
+                ringBg.setColor(Color.TRANSPARENT);
+                ringBg.setStroke(AndroidUtilities.dp(1.2f), isDark ? 0xFF475569 : 0xFFCBD5E1);
+                tick.setBackground(ringBg);
+                tick.setText("");
+            }
+            row.setBackground(rowBg);
+        }
+    }
+
+    /**
+     * Builds an enlarged, beautifully styled Desktop / PC Keyboard Shortcuts cheatsheet card.
+     */
     private static View buildKeyboardShortcutCard(Context context) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        card.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         boolean isDark = Theme.isCurrentThemeDark();
         GradientDrawable gd = new GradientDrawable();
-        gd.setColor(isDark ? 0xFF1E293B : 0xFFF1F5F9);
-        gd.setCornerRadius(AndroidUtilities.dp(12));
-        gd.setStroke(AndroidUtilities.dp(1), isDark ? 0xFF334155 : 0xFFCBD5E1);
+        gd.setColor(isDark ? 0xFF0F172A : 0xFFF1F5F9);
+        gd.setCornerRadius(AndroidUtilities.dp(14));
+        gd.setStroke(AndroidUtilities.dp(1.5f), isDark ? 0xFF38BDF8 : 0xFF0284C7);
         card.setBackground(gd);
 
+        // Header Title
+        LinearLayout titleRow = new LinearLayout(context);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
         TextView title = new TextView(context);
-        title.setText("💻 Desktop / PC Keyboard Shortcuts:");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        title.setText("💻 Desktop / PC Keyboard Shortcuts");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
-        card.addView(title);
+        titleRow.addView(title);
 
-        String[] shortcuts = new String[]{
-            "Ctrl + B  ›  Bold",
-            "Ctrl + I  ›  Italic",
-            "Ctrl + U  ›  Underline",
-            "Ctrl + Shift + M  ›  Monospace",
-            "Ctrl + Shift + X  ›  Strikethrough",
-            "Ctrl + Shift + P  ›  Spoiler",
-            "Ctrl + Shift + >  ›  Quote"
+        card.addView(titleRow);
+
+        TextView subtitle = new TextView(context);
+        subtitle.setText("Quick formatting keys for Telegram Desktop, Web & Mac:");
+        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+        subtitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
+        subtitle.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(8));
+        card.addView(subtitle);
+
+        String[][] shortcuts = new String[][]{
+            {"Ctrl + B", "Bold (বোল্ড)"},
+            {"Ctrl + I", "Italic (ইটালিক)"},
+            {"Ctrl + U", "Underline (নিচে দাগ)"},
+            {"Ctrl + Shift + M", "Monospace (মনোস্পেস)"},
+            {"Ctrl + Shift + X", "Strikethrough (মাঝখান কাটা)"},
+            {"Ctrl + Shift + P", "Spoiler (স্পয়লার)"},
+            {"Ctrl + Shift + >", "Quote (কোট / উদ্ধৃতি)"}
         };
 
-        for (String s : shortcuts) {
-            TextView tv = new TextView(context);
-            tv.setText("• " + s);
-            tv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
-            tv.setTextColor(isDark ? 0xFF94A3B8 : 0xFF475569);
-            tv.setPadding(0, AndroidUtilities.dp(2), 0, 0);
-            card.addView(tv);
+        for (String[] pair : shortcuts) {
+            LinearLayout item = new LinearLayout(context);
+            item.setOrientation(LinearLayout.HORIZONTAL);
+            item.setGravity(Gravity.CENTER_VERTICAL);
+            item.setPadding(0, AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3));
+
+            // Key cap badge
+            TextView keyBadge = new TextView(context);
+            keyBadge.setText(pair[0]);
+            keyBadge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            keyBadge.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+            keyBadge.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0369A1);
+            keyBadge.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(2), AndroidUtilities.dp(6), AndroidUtilities.dp(2));
+
+            GradientDrawable keyBg = new GradientDrawable();
+            keyBg.setColor(isDark ? 0xFF1E293B : 0xFFE2E8F0);
+            keyBg.setCornerRadius(AndroidUtilities.dp(6));
+            keyBg.setStroke(AndroidUtilities.dp(1), isDark ? 0xFF334155 : 0xFFCBD5E1);
+            keyBadge.setBackground(keyBg);
+            item.addView(keyBadge);
+
+            // Arrow
+            TextView arrow = new TextView(context);
+            arrow.setText(" › ");
+            arrow.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            arrow.setTextColor(isDark ? 0xFF00D4FF : 0xFF0284C7);
+            item.addView(arrow);
+
+            // Action name
+            TextView action = new TextView(context);
+            action.setText(pair[1]);
+            action.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            action.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            action.setTextColor(isDark ? 0xFFE2E8F0 : 0xFF1E293B);
+            item.addView(action);
+
+            card.addView(item);
         }
 
         return card;
