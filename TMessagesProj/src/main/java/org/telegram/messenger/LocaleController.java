@@ -2944,13 +2944,15 @@ public class LocaleController {
     public static String formatUserStatus(int currentAccount, TLRPC.User user, boolean[] isOnline, boolean[] madeShorter) {
         String res = formatUserStatusInternal(currentAccount, user, isOnline, madeShorter);
         if (org.nayagram.platform.NayaConfig.getInstance().isRadiantOnlineAuraEnabled()) {
-            if ("online".equalsIgnoreCase(res) || (res != null && res.startsWith("online"))) {
+            if (isOnline != null && isOnline[0]) {
                 return "Online";
             }
         }
         if (org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
-            if (res != null && res.startsWith("last seen")) {
-                return "Offline • " + res.substring(9).trim();
+            if (isOnline != null && !isOnline[0] && res != null && !res.isEmpty()) {
+                if (!res.startsWith("Offline")) {
+                    return "Offline • " + res;
+                }
             }
         }
         return res;

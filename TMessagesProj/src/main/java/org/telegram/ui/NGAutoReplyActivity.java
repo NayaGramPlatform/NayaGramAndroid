@@ -1,6 +1,5 @@
 package org.telegram.ui;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
@@ -30,7 +29,9 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.R;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
+import org.telegram.ui.ActionBar.BottomSheet;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
@@ -41,8 +42,15 @@ import java.util.List;
 /**
  * NayaGram Smart Auto-Reply Activity:
  * High-end, spacious and professional UI/UX for managing auto-reply rules.
- * Generous breathing room, vibrant colors (Emerald Green, Radiant Cyan, Royal Purple),
- * zero clutter, and native Telegram Text Style modal with PC shortcuts.
+ * Features:
+ * - Master Switch card with status indicator
+ * - Default Away Message card with live preview & formatting
+ * - Stealth Ghost Presence card (keeps last seen intact)
+ * - Clean search bar for rules
+ * - Dynamic Keyword Rules list with single-tap switch toggle & edit dialog
+ * - Quick 1-tap horizontal formatting toolbar (Bold, Italic, Spoiler, Mono, Quote, Link, Shutter)
+ * - Native sliding BottomSheet shutter for all rich text styles and PC shortcuts
+ * - Zero clutter: 16 legacy preset rules and category chips completely removed!
  */
 public class NGAutoReplyActivity extends BaseFragment {
 
@@ -51,7 +59,6 @@ public class NGAutoReplyActivity extends BaseFragment {
     private Switch masterSwitch;
     private TextView defaultMessagePreview;
     private String currentSearchQuery = "";
-    private String currentCategoryFilter = "ALL";
 
     // Vibrant Modern Color Palette
     private static final int COLOR_CYAN_PRIMARY = 0xFF0284C7;
@@ -66,7 +73,7 @@ public class NGAutoReplyActivity extends BaseFragment {
     public View createView(Context context) {
         actionBar.setBackButtonImage(R.drawable.ic_ab_back);
         actionBar.setTitle("Smart Auto-Reply Studio");
-        actionBar.setSubtitle("16 Clean Rules & Instant Replies");
+        actionBar.setSubtitle("Instant Keyword Replies");
         actionBar.setAllowOverlayTitle(true);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -98,7 +105,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // 1. Master Toggle Card (Spacious Radiant Cyan to Emerald Gradient)
+        // 1. Master Toggle Card (Radiant Cyan to Emerald Gradient)
         root.addView(createMasterCard(context));
 
         // 2. Default Away Message Card (Spacious white card with Emerald pill button)
@@ -107,18 +114,18 @@ public class NGAutoReplyActivity extends BaseFragment {
         // 2.5 Stealth Ghost Presence Card (Spacious Royal Purple accent)
         root.addView(createStealthPresenceCard(context));
 
-        // 3. Search Bar & Category Filter Chips (Airy, smooth pill chips)
-        root.addView(createSearchAndFilterSection(context));
+        // 3. Search Bar for Rules
+        root.addView(createSearchSection(context));
 
         // 4. Keyword Rules Section Header
-        root.addView(createSectionHeader(context, "Instant Keyword Rules", "Matches incoming queries and replies immediately without cooldown"));
+        root.addView(createSectionHeader(context, "Instant Keyword Rules", "Matches incoming messages by keyword and replies immediately"));
 
         // 5. Container for Dynamic Rule Cards
         rulesContainer = new LinearLayout(context);
         rulesContainer.setOrientation(LinearLayout.VERTICAL);
         root.addView(rulesContainer);
 
-        // 6. Action Buttons (+ Add Rule, Reset to Clean 16 Rules)
+        // 6. Action Button (+ Add Custom Keyword Rule)
         root.addView(createBottomActions(context));
 
         refreshRulesList(context);
@@ -140,16 +147,19 @@ public class NGAutoReplyActivity extends BaseFragment {
 
     private View createMasterCard(Context context) {
         LinearLayout card = new LinearLayout(context);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        int pad = AndroidUtilities.dp(20);
+        card.setOrientation(LinearLayout.VERTICAL);
+        int pad = AndroidUtilities.dp(22);
         card.setPadding(pad, pad, pad, pad);
 
         GradientDrawable bg = new GradientDrawable();
-        bg.setOrientation(GradientDrawable.Orientation.LEFT_RIGHT);
-        bg.setColors(new int[]{0xFF0284C7, 0xFF059669}); // Cyan to Emerald Green
-        bg.setCornerRadius(AndroidUtilities.dp(18));
+        bg.setOrientation(GradientDrawable.Orientation.TL_BR);
+        bg.setColors(new int[]{0xFF0284C7, 0xFF059669});
+        bg.setCornerRadius(AndroidUtilities.dp(20));
         card.setBackground(bg);
+
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
 
         LinearLayout textLayout = new LinearLayout(context);
         textLayout.setOrientation(LinearLayout.VERTICAL);
@@ -157,34 +167,46 @@ public class NGAutoReplyActivity extends BaseFragment {
 
         TextView title = new TextView(context);
         title.setText("Smart Auto-Reply Master Switch");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
         title.setTextColor(0xFFFFFFFF);
         title.setTypeface(AndroidUtilities.bold());
         textLayout.addView(title);
 
         masterStatusText = new TextView(context);
-        boolean isEnabled = NayaConfig.getInstance().isSmartAutoReply() || AutoReplyManager.getInstance().isAutoReplyEnabled();
-        masterStatusText.setText(isEnabled ? "Active: Automatically replying to 1:1 private chats" : "Disabled: No auto-replies will be sent");
+        masterStatusText.setText(AutoReplyManager.getInstance().isAutoReplyEnabled() ? "🟢 Currently Active & Listening" : "⚪ Disabled (Auto-replies paused)");
         masterStatusText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        masterStatusText.setTextColor(0xFFE0F2FE);
-        masterStatusText.setPadding(0, AndroidUtilities.dp(6), 0, 0);
+        masterStatusText.setTextColor(0xEEFFFFFF);
+        masterStatusText.setPadding(0, AndroidUtilities.dp(4), 0, 0);
         textLayout.addView(masterStatusText);
 
-        card.addView(textLayout);
+        row.addView(textLayout);
 
         masterSwitch = new Switch(context);
-        masterSwitch.setChecked(isEnabled);
-        applySwitchTint(masterSwitch, COLOR_CYAN_LIGHT, 0x9900E5FF, 0xFFE2E8F0, 0x66CBD5E1);
-        masterSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            NayaConfig.getInstance().setSmartAutoReply(isChecked);
+        masterSwitch.setChecked(AutoReplyManager.getInstance().isAutoReplyEnabled());
+        applySwitchTint(masterSwitch, 0xFFFFFFFF, 0x9900E5FF, 0xFFE2E8F0, 0x66CBD5E1);
+        masterSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
             AutoReplyManager.getInstance().setAutoReplyEnabled(isChecked);
-            masterStatusText.setText(isChecked ? "Active: Automatically replying to 1:1 private chats" : "Disabled: No auto-replies will be sent");
-            BulletinFactory.of(this).createSimpleBulletin(
-                    isChecked ? R.raw.done : R.raw.chats_infotip,
-                    "Smart Auto-Reply: " + (isChecked ? "Enabled" : "Disabled")
-            ).show();
+            NayaConfig.getInstance().setSmartAutoReply(isChecked);
+            masterStatusText.setText(isChecked ? "🟢 Currently Active & Listening" : "⚪ Disabled (Auto-replies paused)");
+            if (getParentActivity() != null) {
+                BulletinFactory.of(this).createSimpleBulletin(
+                        isChecked ? R.raw.done : R.raw.chats_infotip,
+                        "Smart Auto-Reply: " + (isChecked ? "Enabled" : "Disabled")
+                ).show();
+            }
         });
-        card.addView(masterSwitch);
+        row.addView(masterSwitch);
+        card.addView(row);
+
+        TextView info = new TextView(context);
+        info.setText("Automates replies for 1-on-1 private chats without disturbing channels or groups. Responses trigger instantly upon incoming messages.");
+        info.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        info.setTextColor(0xDDFFFFFF);
+        info.setLineSpacing(AndroidUtilities.dp(3), 1.0f);
+        LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        infoParams.topMargin = AndroidUtilities.dp(14);
+        info.setLayoutParams(infoParams);
+        card.addView(info);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -199,84 +221,103 @@ public class NGAutoReplyActivity extends BaseFragment {
     private View createDefaultMessageCard(Context context) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        int pad = AndroidUtilities.dp(18);
+        int pad = AndroidUtilities.dp(20);
         card.setPadding(pad, pad, pad, pad);
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         bg.setCornerRadius(AndroidUtilities.dp(18));
-        bg.setStroke(AndroidUtilities.dp(1.5f), 0x260284C7);
+        bg.setStroke(AndroidUtilities.dp(1.5f), 0x330284C7);
         card.setBackground(bg);
 
-        LinearLayout topRow = new LinearLayout(context);
-        topRow.setOrientation(LinearLayout.HORIZONTAL);
-        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout header = new LinearLayout(context);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
 
-        LinearLayout textLayout = new LinearLayout(context);
-        textLayout.setOrientation(LinearLayout.VERTICAL);
-        textLayout.setLayoutParams(new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
+        ImageView icon = new ImageView(context);
+        icon.setImageResource(R.drawable.msg_edit);
+        icon.setColorFilter(COLOR_CYAN_PRIMARY);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(22), AndroidUtilities.dp(22));
+        iconParams.rightMargin = AndroidUtilities.dp(10);
+        header.addView(icon, iconParams);
 
         TextView title = new TextView(context);
-        title.setText("Default Away Message");
+        title.setText("Default Away Message (অটো-রিপ্লাই মেসেজ)");
         title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
         title.setTypeface(AndroidUtilities.bold());
-        textLayout.addView(title);
+        header.addView(title);
 
-        TextView sub = new TextView(context);
-        sub.setText("Sent once per hour when no specific keyword rule matches");
-        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        sub.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        sub.setPadding(0, AndroidUtilities.dp(2), 0, 0);
-        textLayout.addView(sub);
+        card.addView(header);
 
-        topRow.addView(textLayout);
-        card.addView(topRow);
+        TextView desc = new TextView(context);
+        desc.setText("Sent automatically when someone messages you and no specific keyword matches.");
+        desc.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        desc.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        desc.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(12));
+        card.addView(desc);
 
-        // Preview Box with comfortable padding
+        // Preview Box
         LinearLayout previewBox = new LinearLayout(context);
         previewBox.setOrientation(LinearLayout.VERTICAL);
         previewBox.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
-        GradientDrawable pBg = new GradientDrawable();
-        pBg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
-        pBg.setCornerRadius(AndroidUtilities.dp(12));
-        previewBox.setBackground(pBg);
-
-        LinearLayout.LayoutParams pParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        pParams.topMargin = AndroidUtilities.dp(12);
-        previewBox.setLayoutParams(pParams);
+        GradientDrawable pbBg = new GradientDrawable();
+        pbBg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
+        pbBg.setCornerRadius(AndroidUtilities.dp(12));
+        previewBox.setBackground(pbBg);
 
         defaultMessagePreview = new TextView(context);
         defaultMessagePreview.setText(NayaConfig.getInstance().getAutoReplyText());
         defaultMessagePreview.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         defaultMessagePreview.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        defaultMessagePreview.setLineSpacing(AndroidUtilities.dp(3), 1.0f);
+        defaultMessagePreview.setLineSpacing(AndroidUtilities.dp(2), 1.0f);
         previewBox.addView(defaultMessagePreview);
-
         card.addView(previewBox);
 
-        // Vibrant Emerald Action Pill Button
+        // Cooldown row
+        LinearLayout cdRow = new LinearLayout(context);
+        cdRow.setOrientation(LinearLayout.HORIZONTAL);
+        cdRow.setGravity(Gravity.CENTER_VERTICAL);
+        cdRow.setPadding(0, AndroidUtilities.dp(14), 0, AndroidUtilities.dp(14));
+
+        TextView cdLabel = new TextView(context);
+        cdLabel.setText("⏱️ Per-Chat Cooldown: ");
+        cdLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        cdLabel.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        cdRow.addView(cdLabel);
+
+        int hours = NayaConfig.getInstance().getAutoReplyCooldownHours();
+        final TextView cdVal = new TextView(context);
+        cdVal.setText(hours + " Hour" + (hours > 1 ? "s" : ""));
+        cdVal.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        cdVal.setTextColor(COLOR_CYAN_PRIMARY);
+        cdVal.setTypeface(AndroidUtilities.bold());
+        cdVal.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(4));
+        GradientDrawable cdValBg = new GradientDrawable();
+        cdValBg.setColor(0x1F0284C7);
+        cdValBg.setCornerRadius(AndroidUtilities.dp(8));
+        cdVal.setBackground(cdValBg);
+        cdVal.setOnClickListener(v -> showCooldownPickerDialog(cdVal));
+        cdRow.addView(cdVal);
+        card.addView(cdRow);
+
+        // Edit Button (Emerald Green Pill)
         LinearLayout editBtn = new LinearLayout(context);
         editBtn.setOrientation(LinearLayout.HORIZONTAL);
         editBtn.setGravity(Gravity.CENTER);
-        editBtn.setPadding(AndroidUtilities.dp(18), AndroidUtilities.dp(12), AndroidUtilities.dp(18), AndroidUtilities.dp(12));
-        GradientDrawable btnBg = new GradientDrawable();
-        btnBg.setColor(COLOR_GREEN_PRIMARY);
-        btnBg.setCornerRadius(AndroidUtilities.dp(12));
-        editBtn.setBackground(btnBg);
+        editBtn.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(10));
+        GradientDrawable editBg = new GradientDrawable();
+        editBg.setColor(COLOR_GREEN_PRIMARY);
+        editBg.setCornerRadius(AndroidUtilities.dp(12));
+        editBtn.setBackground(editBg);
 
-        TextView editLabel = new TextView(context);
-        editLabel.setText("✏️ Edit Away Message & Formatting");
-        editLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        editLabel.setTextColor(0xFFFFFFFF);
-        editLabel.setTypeface(AndroidUtilities.bold());
-        editBtn.addView(editLabel);
-
-        LinearLayout.LayoutParams bParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        bParams.topMargin = AndroidUtilities.dp(14);
-        editBtn.setLayoutParams(bParams);
+        TextView editText = new TextView(context);
+        editText.setText("✏️ Edit Away Message & Formatting");
+        editText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        editText.setTextColor(0xFFFFFFFF);
+        editText.setTypeface(AndroidUtilities.bold());
+        editBtn.addView(editText);
         editBtn.setOnClickListener(v -> showEditAwayMessageDialog());
-
         card.addView(editBtn);
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -298,7 +339,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
         bg.setCornerRadius(AndroidUtilities.dp(18));
-        bg.setStroke(AndroidUtilities.dp(1.5f), 0x337C3AED); // Royal Purple Border
+        bg.setStroke(AndroidUtilities.dp(1.5f), 0x337C3AED);
         card.setBackground(bg);
 
         LinearLayout row = new LinearLayout(context);
@@ -360,14 +401,13 @@ public class NGAutoReplyActivity extends BaseFragment {
         return card;
     }
 
-    private View createSearchAndFilterSection(Context context) {
+    private View createSearchSection(Context context) {
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(0, 0, 0, AndroidUtilities.dp(16));
+        layout.setPadding(0, 0, 0, AndroidUtilities.dp(12));
 
-        // Search Input with clean rounded border
         EditText etSearch = new EditText(context);
-        etSearch.setHint("🔍 Search rule by keyword or name...");
+        etSearch.setHint("🔍 Search rules by keyword or name...");
         etSearch.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         etSearch.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
         GradientDrawable searchBg = new GradientDrawable();
@@ -387,48 +427,7 @@ public class NGAutoReplyActivity extends BaseFragment {
             public void afterTextChanged(Editable s) {}
         });
         layout.addView(etSearch);
-
-        // Filter Chips with vibrant colors and generous touch targets
-        HorizontalScrollView hsv = new HorizontalScrollView(context);
-        hsv.setHorizontalScrollBarEnabled(false);
-        LinearLayout chips = new LinearLayout(context);
-        chips.setOrientation(LinearLayout.HORIZONTAL);
-        chips.setPadding(0, AndroidUtilities.dp(10), 0, 0);
-
-        addCategoryChip(chips, "All (16)", "ALL", COLOR_CYAN_PRIMARY, context);
-        addCategoryChip(chips, "👋 Greetings (4)", "GREET", COLOR_GREEN_PRIMARY, context);
-        addCategoryChip(chips, "💼 Business & Inquiries (5)", "BIZ", COLOR_PURPLE_PRIMARY, context);
-        addCategoryChip(chips, "🤝 Support & FAQ (7)", "SUPPORT", COLOR_AMBER_PRIMARY, context);
-
-        hsv.addView(chips);
-        layout.addView(hsv);
-
         return layout;
-    }
-
-    private void addCategoryChip(LinearLayout parent, String label, final String cat, int activeColor, final Context context) {
-        TextView chip = new TextView(parent.getContext());
-        chip.setText(label);
-        chip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        boolean isSelected = currentCategoryFilter.equals(cat);
-        chip.setTextColor(isSelected ? 0xFFFFFFFF : activeColor);
-        chip.setTypeface(isSelected ? AndroidUtilities.bold() : null);
-        chip.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(8));
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(isSelected ? activeColor : 0x1A000000 | (activeColor & 0x00FFFFFF));
-        bg.setCornerRadius(AndroidUtilities.dp(14));
-        chip.setBackground(bg);
-        chip.setOnClickListener(v -> {
-            currentCategoryFilter = cat;
-            refreshRulesList(context);
-        });
-
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        params.rightMargin = AndroidUtilities.dp(10);
-        parent.addView(chip, params);
     }
 
     private View createSectionHeader(Context context, String title, String subtitle) {
@@ -490,7 +489,7 @@ public class NGAutoReplyActivity extends BaseFragment {
             topRow.setOrientation(LinearLayout.HORIZONTAL);
             topRow.setGravity(Gravity.CENTER_VERTICAL);
 
-            int chipColor = getRuleChipColor(rule.keyword);
+            int chipColor = COLOR_CYAN_PRIMARY;
 
             TextView chip = new TextView(context);
             chip.setText("[" + rule.keyword + "]");
@@ -515,7 +514,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
             textCol.addView(topRow);
 
-            // Response Preview with airy line spacing
+            // Response Preview
             TextView resp = new TextView(context);
             resp.setText(rule.response);
             resp.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
@@ -528,7 +527,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
             card.addView(textCol);
 
-            // Vibrant Emerald Green Toggle switch
+            // Emerald Green Toggle switch
             Switch sw = new Switch(context);
             sw.setChecked(rule.enabled);
             applySwitchTint(sw, COLOR_GREEN_LIGHT, 0x9900E676, 0xFFE2E8F0, 0x66CBD5E1);
@@ -553,7 +552,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
         if (count == 0) {
             TextView empty = new TextView(context);
-            empty.setText("No rules found matching criteria.");
+            empty.setText("No custom keyword rules yet. Tap \"+ Add Custom Keyword Rule\" below to create your first rule!");
             empty.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
             empty.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
             empty.setGravity(Gravity.CENTER);
@@ -562,39 +561,13 @@ public class NGAutoReplyActivity extends BaseFragment {
         }
     }
 
-    private int getRuleChipColor(String keyword) {
-        if (keyword == null) return COLOR_CYAN_PRIMARY;
-        String kw = keyword.toLowerCase();
-        if (kw.equals("hello") || kw.equals("hi") || kw.equals("salam") || kw.equals("bye")) {
-            return COLOR_GREEN_PRIMARY;
-        } else if (kw.equals("hours") || kw.equals("price") || kw.equals("catalog") || kw.equals("order") || kw.equals("service")) {
-            return COLOR_PURPLE_PRIMARY;
-        } else if (kw.equals("help") || kw.equals("location") || kw.equals("contact") || kw.equals("meeting") || kw.equals("thanks") || kw.equals("ok") || kw.equals("feedback")) {
-            return COLOR_AMBER_PRIMARY;
-        }
-        return COLOR_CYAN_PRIMARY;
-    }
-
     private boolean matchesFilters(AutoReplyManager.AutoReplyRule rule) {
         if (rule == null) return false;
         if (!currentSearchQuery.isEmpty()) {
             boolean nameMatch = rule.name != null && rule.name.toLowerCase().contains(currentSearchQuery);
             boolean kwMatch = rule.keyword != null && rule.keyword.toLowerCase().contains(currentSearchQuery);
             boolean respMatch = rule.response != null && rule.response.toLowerCase().contains(currentSearchQuery);
-            if (!nameMatch && !kwMatch && !respMatch) {
-                return false;
-            }
-        }
-        if ("ALL".equals(currentCategoryFilter)) {
-            return true;
-        }
-        String kw = rule.keyword != null ? rule.keyword.toLowerCase() : "";
-        if ("GREET".equals(currentCategoryFilter)) {
-            return kw.equals("hello") || kw.equals("hi") || kw.equals("salam") || kw.equals("bye");
-        } else if ("BIZ".equals(currentCategoryFilter)) {
-            return kw.equals("hours") || kw.equals("price") || kw.equals("catalog") || kw.equals("order") || kw.equals("service");
-        } else if ("SUPPORT".equals(currentCategoryFilter)) {
-            return kw.equals("help") || kw.equals("location") || kw.equals("contact") || kw.equals("meeting") || kw.equals("thanks") || kw.equals("ok") || kw.equals("feedback");
+            return nameMatch || kwMatch || respMatch;
         }
         return true;
     }
@@ -624,35 +597,6 @@ public class NGAutoReplyActivity extends BaseFragment {
         addBtn.setOnClickListener(v -> showAddEditRuleDialog(-1, null));
         layout.addView(addBtn);
 
-        // Reset to 16 Clean Rules Pill Button
-        LinearLayout resetBtn = new LinearLayout(context);
-        resetBtn.setOrientation(LinearLayout.HORIZONTAL);
-        resetBtn.setGravity(Gravity.CENTER);
-        resetBtn.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
-        GradientDrawable rBg = new GradientDrawable();
-        rBg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        rBg.setCornerRadius(AndroidUtilities.dp(14));
-        rBg.setStroke(AndroidUtilities.dp(1.5f), COLOR_PURPLE_PRIMARY);
-        resetBtn.setBackground(rBg);
-
-        LinearLayout.LayoutParams rLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rLp.topMargin = AndroidUtilities.dp(12);
-        resetBtn.setLayoutParams(rLp);
-
-        TextView resetText = new TextView(context);
-        resetText.setText("🔄 Reset & Purge Legacy Rules (Clean 16 Universal Rules)");
-        resetText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        resetText.setTextColor(COLOR_PURPLE_PRIMARY);
-        resetText.setTypeface(AndroidUtilities.bold());
-        resetBtn.addView(resetText);
-
-        resetBtn.setOnClickListener(v -> {
-            AutoReplyManager.getInstance().seedDefaultRules();
-            refreshRulesList(context);
-            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Reset to 16 Clean Rules!").show();
-        });
-        layout.addView(resetBtn);
-
         return layout;
     }
 
@@ -679,17 +623,11 @@ public class NGAutoReplyActivity extends BaseFragment {
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
         bg.setCornerRadius(AndroidUtilities.dp(12));
         etMessage.setBackground(bg);
-        root.addView(etMessage);
 
-        // Formatting toolbar button
-        TextView formatBtn = new TextView(getParentActivity());
-        formatBtn.setText("✨ Insert Text Style (Bold, Italic, Spoiler, Quote...)");
-        formatBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        formatBtn.setTextColor(COLOR_CYAN_PRIMARY);
-        formatBtn.setTypeface(AndroidUtilities.bold());
-        formatBtn.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(8));
-        formatBtn.setOnClickListener(v -> showTextStyleDialog(etMessage));
-        root.addView(formatBtn);
+        // 1-Tap Quick Formatting Bar
+        root.addView(createQuickFormattingBar(etMessage));
+
+        root.addView(etMessage);
 
         b.setView(root);
         b.setPositiveButton("Save", (d, w) -> {
@@ -776,16 +714,11 @@ public class NGAutoReplyActivity extends BaseFragment {
         bgResp.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
         bgResp.setCornerRadius(AndroidUtilities.dp(10));
         etResp.setBackground(bgResp);
-        root.addView(etResp);
 
-        TextView formatBtn = new TextView(getParentActivity());
-        formatBtn.setText("✨ Insert Text Style (Bold, Italic, Spoiler, Quote...)");
-        formatBtn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        formatBtn.setTextColor(COLOR_CYAN_PRIMARY);
-        formatBtn.setTypeface(AndroidUtilities.bold());
-        formatBtn.setPadding(0, AndroidUtilities.dp(10), 0, 0);
-        formatBtn.setOnClickListener(v -> showTextStyleDialog(etResp));
-        root.addView(formatBtn);
+        // 1-Tap Quick Formatting Bar
+        root.addView(createQuickFormattingBar(etResp));
+
+        root.addView(etResp);
 
         b.setView(root);
         b.setPositiveButton("Save", (d, w) -> {
@@ -818,11 +751,45 @@ public class NGAutoReplyActivity extends BaseFragment {
     }
 
     /**
-     * Native Telegram Text Style chooser dialog:
-     * Regular, Spoiler, Bold, Italic, Mono, Strikethrough, Underline, Quote, Link
-     * Complete with PC keyboard shortcut guide.
+     * Quick Horizontal 1-Tap Formatting Toolbar placed directly above EditText.
      */
-    
+    private View createQuickFormattingBar(final EditText target) {
+        HorizontalScrollView hsv = new HorizontalScrollView(getParentActivity());
+        hsv.setHorizontalScrollBarEnabled(false);
+        LinearLayout bar = new LinearLayout(getParentActivity());
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+
+        addQuickFormatButton(bar, "𝗕 Bold", () -> applyStyleToEditText(target, "Bold"), COLOR_CYAN_PRIMARY);
+        addQuickFormatButton(bar, "𝘐 Italic", () -> applyStyleToEditText(target, "Italic"), COLOR_PURPLE_PRIMARY);
+        addQuickFormatButton(bar, "🔒 Spoiler", () -> applyStyleToEditText(target, "Spoiler"), COLOR_AMBER_PRIMARY);
+        addQuickFormatButton(bar, "𝚌𝚘𝚍𝚎", () -> applyStyleToEditText(target, "Mono"), COLOR_GREEN_PRIMARY);
+        addQuickFormatButton(bar, "❝ Quote", () -> applyStyleToEditText(target, "Quote"), 0xFF0284C7);
+        addQuickFormatButton(bar, "🔗 Link", () -> showCreateLinkDialog(target), 0xFF4F46E5);
+        addQuickFormatButton(bar, "🎨 All Styles (শাটার)", () -> showTextStyleDialog(target), 0xFFE11D48);
+
+        hsv.addView(bar);
+        return hsv;
+    }
+
+    private void addQuickFormatButton(LinearLayout parent, String label, final Runnable action, int tintColor) {
+        TextView btn = new TextView(parent.getContext());
+        btn.setText(label);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        btn.setTextColor(tintColor);
+        btn.setTypeface(AndroidUtilities.bold());
+        btn.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0x1F000000 | (tintColor & 0x00FFFFFF));
+        bg.setCornerRadius(AndroidUtilities.dp(10));
+        btn.setBackground(bg);
+        btn.setOnClickListener(v -> action.run());
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.rightMargin = AndroidUtilities.dp(6);
+        parent.addView(btn, lp);
+    }
+
     private void showCreateLinkDialog(final EditText target) {
         if (getParentActivity() == null || target == null) return;
         AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
@@ -875,143 +842,167 @@ public class NGAutoReplyActivity extends BaseFragment {
         etUrl.setBackground(urlBg);
         LinearLayout.LayoutParams urlLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         urlLp.topMargin = AndroidUtilities.dp(10);
-        root.addView(etUrl, urlLp);
+        etUrl.setLayoutParams(urlLp);
+        root.addView(etUrl);
+
+        final int fStart = start;
+        final int fEnd = end;
 
         b.setView(root);
-        final int finalStart = start;
-        final int finalEnd = end;
-        b.setPositiveButton("Insert Link", (dialog, which) -> {
-            String labelText = etLabel.getText().toString().trim();
-            String urlText = etUrl.getText().toString().trim();
-            if (urlText.isEmpty()) return;
-            if (!urlText.startsWith("http://") && !urlText.startsWith("https://") && !urlText.startsWith("tg://")) {
-                urlText = "https://" + urlText;
+        b.setPositiveButton("Insert Link", (d, w) -> {
+            String label = etLabel.getText().toString().trim();
+            String url = etUrl.getText().toString().trim();
+            if (label.isEmpty()) label = "Link";
+            if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("tg://")) {
+                url = "https://" + url;
             }
-            if (labelText.isEmpty()) labelText = urlText;
-            String formattedLink = "[" + labelText + "](" + urlText + ")";
-            Editable editable = target.getText();
-            if (editable != null) {
-                editable.replace(finalStart, finalEnd, formattedLink);
-            }
+            String formatted = "[" + label + "](" + url + ")";
+            target.getText().replace(fStart, fEnd, formatted);
+            target.setSelection(fStart + formatted.length());
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Link inserted!").show();
         });
         b.setNegativeButton("Cancel", null);
         showDialog(b.create());
     }
 
+    /**
+     * Native Telegram Sliding BottomSheet Shutter for rich text formatting.
+     * Slides gracefully up from the bottom with all style options and shortcuts.
+     */
     private void showTextStyleDialog(final EditText target) {
         if (getParentActivity() == null || target == null) return;
 
-        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        BottomSheet.Builder builder = new BottomSheet.Builder(getParentActivity());
 
         LinearLayout root = new LinearLayout(getParentActivity());
         root.setOrientation(LinearLayout.VERTICAL);
-        int pad = AndroidUtilities.dp(22);
-        root.setPadding(pad, pad, pad, AndroidUtilities.dp(16));
+        int pad = AndroidUtilities.dp(18);
+        root.setPadding(pad, AndroidUtilities.dp(12), pad, AndroidUtilities.dp(24));
+
+        // Shutter Drag Handle
+        View handle = new View(getParentActivity());
+        GradientDrawable handleBg = new GradientDrawable();
+        handleBg.setColor(0x33888888);
+        handleBg.setCornerRadius(AndroidUtilities.dp(3));
+        handle.setBackground(handleBg);
+        LinearLayout.LayoutParams hLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(40), AndroidUtilities.dp(5));
+        hLp.gravity = Gravity.CENTER_HORIZONTAL;
+        hLp.bottomMargin = AndroidUtilities.dp(14);
+        root.addView(handle, hLp);
 
         TextView title = new TextView(getParentActivity());
-        title.setText("Text style");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-        title.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        title.setText("🎨 Text Style & Formatting (লেখা স্টাইল)");
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 17);
+        title.setTextColor(Theme.getColor(Theme.key_dialogTextBlack));
         title.setTypeface(AndroidUtilities.bold());
         root.addView(title);
 
         TextView sub = new TextView(getParentActivity());
-        sub.setText("Select any style to format message text");
-        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        sub.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
-        sub.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(14));
+        sub.setText("Tap any style to apply to selected text or insert formatting tags");
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        sub.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
+        sub.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(14));
         root.addView(sub);
 
-        final String[] styles = new String[]{
-                "Regular",
-                "Spoiler",
-                "Bold",
-                "Italic",
-                "Mono",
-                "Strikethrough",
-                "Underline",
-                "Quote",
-                "Link"
-        };
+        BottomSheet sheet = builder.create();
 
-        final int[] selectedIndex = new int[]{2}; // Default Bold
-
-        final RadioGroup radioGroup = new RadioGroup(getParentActivity());
-        radioGroup.setOrientation(RadioGroup.VERTICAL);
-
-        for (int i = 0; i < styles.length; i++) {
-            RadioButton rb = new RadioButton(getParentActivity());
-            rb.setText(styles[i]);
-            rb.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-            rb.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(6), AndroidUtilities.dp(8), AndroidUtilities.dp(6));
-            rb.setId(i + 100);
-            if (i == 2) {
-                rb.setChecked(true);
-            }
-            if ("Bold".equals(styles[i])) {
-                rb.setTextColor(COLOR_CYAN_PRIMARY);
-                rb.setTypeface(AndroidUtilities.bold());
-            } else if ("Italic".equals(styles[i])) {
-                rb.setTextColor(COLOR_PURPLE_PRIMARY);
-            } else if ("Spoiler".equals(styles[i])) {
-                rb.setTextColor(COLOR_AMBER_PRIMARY);
-            } else if ("Mono".equals(styles[i])) {
-                rb.setTextColor(COLOR_GREEN_PRIMARY);
-            } else if ("Strikethrough".equals(styles[i])) {
-                rb.setTextColor(0xFFE11D48); // Coral red
-            } else if ("Underline".equals(styles[i])) {
-                rb.setTextColor(0xFF4F46E5); // Indigo
-            } else if ("Quote".equals(styles[i])) {
-                rb.setTextColor(COLOR_CYAN_PRIMARY);
-            } else {
-                rb.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-            }
-            radioGroup.addView(rb);
-        }
-
-        radioGroup.setOnCheckedChangeListener((group, checkedId) -> selectedIndex[0] = checkedId - 100);
-        root.addView(radioGroup);
+        // Style list cards
+        addStyleItem(root, "Bold (বোল্ড)", "**bold text**", COLOR_CYAN_PRIMARY, () -> {
+            applyStyleToEditText(target, "Bold");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Italic (ইটালিক)", "__italic text__", COLOR_PURPLE_PRIMARY, () -> {
+            applyStyleToEditText(target, "Italic");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Spoiler (স্পয়লার)", "||hidden text||", COLOR_AMBER_PRIMARY, () -> {
+            applyStyleToEditText(target, "Spoiler");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Monospace (কোড)", "`code snippet`", COLOR_GREEN_PRIMARY, () -> {
+            applyStyleToEditText(target, "Mono");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Quote (উদ্ধৃতি)", "> quoted line", COLOR_CYAN_PRIMARY, () -> {
+            applyStyleToEditText(target, "Quote");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Strikethrough (কাটা দাগ)", "~~strikethrough~~", 0xFFE11D48, () -> {
+            applyStyleToEditText(target, "Strikethrough");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Underline (আন্ডারলাইন)", "--underlined text--", 0xFF4F46E5, () -> {
+            applyStyleToEditText(target, "Underline");
+            sheet.dismiss();
+        });
+        addStyleItem(root, "Create Link (লিংক তৈরি)", "[Title](https://...)", COLOR_CYAN_PRIMARY, () -> {
+            sheet.dismiss();
+            showCreateLinkDialog(target);
+        });
+        addStyleItem(root, "Clear Style (সাধারণ লেখা)", "Remove formatting", 0xFF64748B, () -> {
+            applyStyleToEditText(target, "Regular");
+            sheet.dismiss();
+        });
 
         // Desktop / PC Keyboard Shortcuts Info Box
         LinearLayout guideBox = new LinearLayout(getParentActivity());
         guideBox.setOrientation(LinearLayout.VERTICAL);
-        guideBox.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
+        guideBox.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(10), AndroidUtilities.dp(14), AndroidUtilities.dp(10));
         GradientDrawable guideBg = new GradientDrawable();
         guideBg.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
-        guideBg.setCornerRadius(AndroidUtilities.dp(14));
-        guideBg.setStroke(AndroidUtilities.dp(1), 0x260284C7);
+        guideBg.setCornerRadius(AndroidUtilities.dp(12));
         guideBox.setBackground(guideBg);
 
         LinearLayout.LayoutParams gParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        gParams.topMargin = AndroidUtilities.dp(14);
+        gParams.topMargin = AndroidUtilities.dp(12);
         guideBox.setLayoutParams(gParams);
 
         TextView gTitle = new TextView(getParentActivity());
-        gTitle.setText("💻 Desktop / PC Keyboard Shortcuts:");
-        gTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        gTitle.setTextColor(COLOR_CYAN_PRIMARY);
-        gTitle.setTypeface(AndroidUtilities.bold());
+        gTitle.setText("💻 Desktop / PC Shortcuts: Ctrl+B (Bold) • Ctrl+I (Italic) • Ctrl+Shift+P (Spoiler)");
+        gTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        gTitle.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
         guideBox.addView(gTitle);
-
-        TextView gList = new TextView(getParentActivity());
-        gList.setText("• [Ctrl + B] › Bold\n• [Ctrl + I] › Italic\n• [Ctrl + U] › Underline\n• [Ctrl + Shift + M] › Monospace\n• [Ctrl + Shift + X] › Strikethrough\n• [Ctrl + Shift + P] › Spoiler\n• [Ctrl + Shift + >] › Quote");
-        gList.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        gList.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        gList.setPadding(0, AndroidUtilities.dp(6), 0, 0);
-        gList.setLineSpacing(AndroidUtilities.dp(4), 1.0f);
-        guideBox.addView(gList);
 
         root.addView(guideBox);
 
-        b.setView(root);
-        b.setPositiveButton("Select", (d, w) -> {
-            int sel = selectedIndex[0];
-            if (sel >= 0 && sel < styles.length) {
-                applyStyleToEditText(target, styles[sel]);
-            }
-        });
-        b.setNegativeButton("Close", null);
-        showDialog(b.create());
+        ScrollView sv = new ScrollView(getParentActivity());
+        sv.addView(root);
+        builder.setCustomView(sv);
+
+        showDialog(sheet);
+    }
+
+    private void addStyleItem(LinearLayout parent, String name, String sample, int color, Runnable onClick) {
+        LinearLayout row = new LinearLayout(parent.getContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        bg.setCornerRadius(AndroidUtilities.dp(10));
+        bg.setStroke(AndroidUtilities.dp(1), 0x1A000000);
+        row.setBackground(bg);
+
+        TextView tvName = new TextView(parent.getContext());
+        tvName.setText(name);
+        tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        tvName.setTextColor(color);
+        tvName.setTypeface(AndroidUtilities.bold());
+        LinearLayout.LayoutParams nLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        row.addView(tvName, nLp);
+
+        TextView tvSample = new TextView(parent.getContext());
+        tvSample.setText(sample);
+        tvSample.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        tvSample.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        row.addView(tvSample);
+
+        row.setOnClickListener(v -> onClick.run());
+
+        LinearLayout.LayoutParams rLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rLp.bottomMargin = AndroidUtilities.dp(6);
+        parent.addView(row, rLp);
     }
 
     private void applyStyleToEditText(EditText et, String style) {
@@ -1046,13 +1037,33 @@ public class NGAutoReplyActivity extends BaseFragment {
             replacement = "--" + (selected.isEmpty() ? "underlined text" : selected) + "--";
         } else if ("Quote".equals(style)) {
             replacement = "> " + (selected.isEmpty() ? "quote text" : selected);
-        } else if ("Link".equals(style)) {
-            replacement = "[" + (selected.isEmpty() ? "Title" : selected) + "](https://example.com)";
         } else {
             replacement = selected;
         }
 
         et.getText().replace(start, end, replacement);
         et.setSelection(start + replacement.length());
+    }
+
+    private void showCooldownPickerDialog(final TextView targetView) {
+        if (getParentActivity() == null) return;
+        AlertDialog.Builder b = new AlertDialog.Builder(getParentActivity());
+        b.setTitle("Cooldown Hours");
+
+        final String[] options = new String[]{"1 Hour", "2 Hours", "4 Hours", "8 Hours", "12 Hours", "24 Hours (1 Day)", "48 Hours (2 Days)"};
+        final int[] values = new int[]{1, 2, 4, 8, 12, 24, 48};
+
+        b.setItems(options, (dialog, which) -> {
+            if (which >= 0 && which < values.length) {
+                int chosen = values[which];
+                NayaConfig.getInstance().setAutoReplyCooldownHours(chosen);
+                if (targetView != null) {
+                    targetView.setText(chosen + " Hour" + (chosen > 1 ? "s" : ""));
+                }
+                BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Cooldown set to " + chosen + " hours").show();
+            }
+        });
+        b.setNegativeButton("Cancel", null);
+        showDialog(b.create());
     }
 }

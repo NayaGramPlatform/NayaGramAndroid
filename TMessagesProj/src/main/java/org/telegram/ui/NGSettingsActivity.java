@@ -188,7 +188,6 @@ public class NGSettingsActivity extends BaseFragment {
         ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem overflowItem = menu.addItem(0, R.drawable.ic_ab_other);
         overflowItem.setIconColor(0xFF00D4FF);
-        overflowItem.addSubItem(1, R.drawable.nayagram_intro_logo, "Exclusive Features Showcase").setIconColor(0xFF7C3AED);
         overflowItem.addSubItem(3, R.drawable.outline_shield_check, "Privacy & Security Audit").setIconColor(0xFF059669);
         overflowItem.addSubItem(4, R.drawable.msg_send, "Contact Support").setIconColor(0xFF2563EB);
         overflowItem.addSubItem(7, R.drawable.msg_admins, "Leadership & Admin").setIconColor(0xFF7C3AED);
@@ -200,8 +199,6 @@ public class NGSettingsActivity extends BaseFragment {
             public void onItemClick(int id) {
                 if (id == -1) {
                     finishFragment();
-                } else if (id == 1 || id == 2) {
-                    presentFragment(new NayaFeaturesActivity());
                 } else if (id == 3) {
                     showPrivacyAuditDialog(context);
                 } else if (id == 4) {
@@ -275,19 +272,13 @@ public class NGSettingsActivity extends BaseFragment {
                         checked ? R.raw.done : R.raw.chats_infotip,
                         "Bot Verified Badge: " + (checked ? "Enabled" : "Disabled")
                     ).show();
-                } else if (position == rowAnonymousStories) {
-                    cfg.setAnonymousStories(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Anonymous Stories: " + (checked ? "Enabled" : "Disabled")).show();
-                } else if (position == rowGhostMode) {
-                    cell.setChecked(false);
-                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Ghost Mode is hidden").show();
                 } else if (position == rowRadiantOnlineAura) {
                     boolean newval = !cfg.isRadiantOnlineAuraEnabled();
                     cfg.setRadiantOnlineAuraEnabled(newval);
-                    if (view instanceof org.telegram.ui.Cells.TextCheckCell2) {
-                        ((org.telegram.ui.Cells.TextCheckCell2) view).setChecked(newval);
-                    }
+                    cell.setChecked(newval);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Radiant Online Aura: " + (newval ? "Enabled" : "Disabled")
@@ -295,9 +286,10 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowStealthOfflinePresence) {
                     boolean newval = !cfg.isStealthOfflinePresenceEnabled();
                     cfg.setStealthOfflinePresenceEnabled(newval);
-                    if (view instanceof org.telegram.ui.Cells.TextCheckCell2) {
-                        ((org.telegram.ui.Cells.TextCheckCell2) view).setChecked(newval);
-                    }
+                    cell.setChecked(newval);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateInterfaces, MessagesController.UPDATE_MASK_NAME);
+                    NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.dialogsNeedReload);
+                    NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.reloadInterface);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(
                         newval ? R.raw.done : R.raw.chats_infotip,
                         "Stealth Offline Presence: " + (newval ? "Enabled" : "Disabled")
@@ -306,10 +298,6 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setApkBlockEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
-                } else if (position == rowMessageScheduler) {
-                    cfg.setMessageScheduler(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Message Scheduler: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
                     presentFragment(new NGAutoReplyActivity());
                 } else if (position == rowOneTimeVoiceVideo) {
@@ -325,11 +313,6 @@ public class NGSettingsActivity extends BaseFragment {
                     if (checked) showAutoAddTextConfigDialog();
                 } else if (position == rowEditText) {
                     showAutoAddTextConfigDialog();
-                } else if (position == rowStorySaver) {
-                    cfg.setStorySaverEnabled(checked);
-                    cell.setChecked(checked);
-                    BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "Story Saver: " + (checked ? "On" : "Off")).show();
-
                 } else if (position == rowSmartChatFolders) {
                     // Use Telegram's existing folder editor instead of a preference-only fake toggle.
                     cfg.setSmartFoldersEnabled(true);
@@ -884,10 +867,6 @@ public class NGSettingsActivity extends BaseFragment {
                         cfg.isBotVerifiedBadgeEnabled(),
                         true
                     );
-                } else if (position == rowAnonymousStories) {
-                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF0EA5E9, "Anonymous Stories", "View stories without sending view receipts", cfg.isAnonymousStories(), false);
-                } else if (position == rowGhostMode) {
-                    c.setFeature(R.drawable.ic_naya_eye_off, 0xFF64748B, "Ghost Mode", "Experimental. Hidden while SHOW_EXPERIMENTAL is false.", false, false);
                 } else if (position == rowRadiantOnlineAura) {
                     c.setFeature(R.drawable.verified_profile, 0xFF10B981, "Radiant Online Aura", "Bold 'Online' status with rainbow cycling indicator light (Green, Blue, Cyan, Purple).", cfg.isRadiantOnlineAuraEnabled(), true);
                 } else if (position == rowStealthOfflinePresence) {
@@ -900,8 +879,6 @@ public class NGSettingsActivity extends BaseFragment {
                     int mode = cfg.getAppThemeMode();
                     String modeName = mode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (mode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
                     c.setActionFeature(R.drawable.msg_theme, 0xFF8B5CF6, "Naya Theme Mode", modeName, true);
-                } else if (position == rowMessageScheduler) {
-                    c.setFeature(R.drawable.outline_message_time_24, 0xFF3B82F6, "Message Scheduler", "Automate scheduled messages", cfg.isMessageScheduler(), true);
                 } else if (position == rowSmartAutoReply) {
                     c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply Studio", cfg.isSmartAutoReply() ? "Enabled" : "Disabled", true);
                 } else if (position == rowOneTimeVoiceVideo) {
@@ -912,8 +889,6 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setFeature(R.drawable.msg_edit, 0xFF8B5CF6, "Auto-add text", "Append your text to every message you send", cfg.isAutoAddTextEnabled(), true);
                 } else if (position == rowEditText) {
                     c.setActionFeature(R.drawable.msg_settings_old, 0xFF10B981, "Edit text", cfg.getAutoAddText(), false);
-                } else if (position == rowStorySaver) {
-                    c.setFeature(R.drawable.ic_naya_download, 0xFF8B5CF6, "Story Saver", "Download stories in original HD quality", cfg.isStorySaverEnabled(), true);
                 } else if (position == rowSmartChatFolders) {
                     c.setActionFeature(R.drawable.outline_groups_24, 0xFF10B981, "Smart Chat Folders", "Create and manage Telegram chat folders", false);
                 } else if (position == rowAntiDelete) {

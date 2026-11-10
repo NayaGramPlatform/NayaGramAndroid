@@ -19,7 +19,7 @@ public class AutoReplyManager {
     private static final String KEY_ENABLED = "auto_reply_enabled";
     private static final String KEY_RULES = "auto_reply_rules";
     private static final String KEY_RULES_VERSION = "auto_reply_rules_version";
-    private static final int CURRENT_RULES_VERSION = 6;
+    private static final int CURRENT_RULES_VERSION = 20;
 
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
@@ -162,12 +162,16 @@ public class AutoReplyManager {
             List<AutoReplyRule> storedRules = gson.fromJson(json, type);
             boolean hasLegacy = false;
             if (storedRules != null) {
-                for (AutoReplyRule r : storedRules) {
-                    if (r != null && r.keyword != null) {
-                        String kw = r.keyword.toLowerCase(Locale.ROOT);
-                        if (kw.contains("bkash") || kw.contains("nagad") || kw.equals("dam")) {
-                            hasLegacy = true;
-                            break;
+                if (storedRules.size() >= 15) {
+                    hasLegacy = true;
+                } else {
+                    for (AutoReplyRule r : storedRules) {
+                        if (r != null && r.keyword != null) {
+                            String kw = r.keyword.toLowerCase(Locale.ROOT);
+                            if (kw.contains("bkash") || kw.contains("nagad") || kw.equals("dam") || kw.contains("salam") || kw.contains("greeting")) {
+                                hasLegacy = true;
+                                break;
+                            }
                         }
                     }
                 }
