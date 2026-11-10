@@ -5974,7 +5974,7 @@ public class MessageObject {
                 messageText = restrictionReason;
                 isRestrictedMessage = true;
             } else if (org.nayagram.platform.NayaGram.shouldHide(messageOwner)) {
-                messageText = "APK file blocked";
+                messageText = "❄️ 🧊 Security Shield: Blocked File 🧊 ❄️\nAPK / ZIP file restricted for safety";
                 isRestrictedMessage = true;
             } else if (messageOwner.rich_message != null) {
                 messageText = formatRichMessage(messageOwner.rich_message, isOutOwner());
@@ -11623,6 +11623,9 @@ public class MessageObject {
     }
 
     public static boolean isMediaEmpty(TLRPC.Message message, boolean allowWebpageIsEmpty) {
+        if (org.nayagram.platform.NayaGram.shouldHide(message)) {
+            return true;
+        }
         return message == null || getMedia(message) == null || getMedia(message) instanceof TLRPC.TL_messageMediaEmpty || allowWebpageIsEmpty && getMedia(message) instanceof TLRPC.TL_messageMediaWebPage;
     }
 

@@ -11385,6 +11385,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             String newString2;
             boolean hiddenStatusButton = false;
             if (user.id == getUserConfig().getClientUserId()) {
+                isOnline[0] = true;
+                if (onlineTextView[1] != null && !mediaHeaderVisible) {
+                    int key = Theme.key_profile_status;
+                    onlineTextView[1].setTag(key);
+                    if (!isPulledDown) {
+                        onlineTextView[1].setTextColor(applyPeerColor(getThemedColor(key), true, true));
+                    }
+                }
                 if (UserObject.hasFallbackPhoto(getUserInfo())) {
                     newString2 = "";
                     hasFallbackPhoto = true;
@@ -11396,7 +11404,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     if (userInfo != null && userInfo.stars_rating != null && userInfo.stars_rating.stars < 0) {
                         newString2 = getString(R.string.StarRatingLevelNegative).toLowerCase(Locale.ROOT);
                     } else {
-                        newString2 = LocaleController.getString(R.string.Online);
+                        newString2 = "Online";
                     }
                 }
             } else if (user.id == UserObject.VERIFY) {

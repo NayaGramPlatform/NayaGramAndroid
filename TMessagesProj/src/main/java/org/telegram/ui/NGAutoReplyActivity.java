@@ -16,8 +16,6 @@ import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -48,8 +46,9 @@ import java.util.List;
  * - Stealth Ghost Presence card (keeps last seen intact)
  * - Clean search bar for rules
  * - Dynamic Keyword Rules list with single-tap switch toggle & edit dialog
- * - Quick 1-tap horizontal formatting toolbar (Bold, Italic, Spoiler, Mono, Quote, Link, Shutter)
- * - Native sliding BottomSheet shutter for all rich text styles and PC shortcuts
+ * - Top-level Shutter Icon Button (🎨 Text Styles) above the input box
+ * - 1-Tap Quick Formatting Bar directly above message editor
+ * - Native sliding BottomSheet shutter for all rich text styles with colored checkmark (টিক চিহ্ন)
  * - Zero clutter: 16 legacy preset rules and category chips completely removed!
  */
 public class NGAutoReplyActivity extends BaseFragment {
@@ -105,13 +104,13 @@ public class NGAutoReplyActivity extends BaseFragment {
                 ViewGroup.LayoutParams.WRAP_CONTENT
         ));
 
-        // 1. Master Toggle Card (Radiant Cyan to Emerald Gradient)
+        // 1. Master Toggle Card
         root.addView(createMasterCard(context));
 
-        // 2. Default Away Message Card (Spacious white card with Emerald pill button)
+        // 2. Default Away Message Card
         root.addView(createDefaultMessageCard(context));
 
-        // 2.5 Stealth Ghost Presence Card (Spacious Royal Purple accent)
+        // 2.5 Stealth Ghost Presence Card
         root.addView(createStealthPresenceCard(context));
 
         // 3. Search Bar for Rules
@@ -624,6 +623,9 @@ public class NGAutoReplyActivity extends BaseFragment {
         bg.setCornerRadius(AndroidUtilities.dp(12));
         etMessage.setBackground(bg);
 
+        // Top Header Row with prominent Shutter Icon Button
+        root.addView(createEditorHeaderRow("Message Content", () -> showTextStyleDialog(etMessage)));
+
         // 1-Tap Quick Formatting Bar
         root.addView(createQuickFormattingBar(etMessage));
 
@@ -694,14 +696,6 @@ public class NGAutoReplyActivity extends BaseFragment {
         etKw.setBackground(bgKw);
         root.addView(etKw);
 
-        TextView tvResp = new TextView(getParentActivity());
-        tvResp.setText("Auto-Reply Message");
-        tvResp.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        tvResp.setTextColor(COLOR_GREEN_PRIMARY);
-        tvResp.setTypeface(AndroidUtilities.bold());
-        tvResp.setPadding(0, AndroidUtilities.dp(14), 0, 0);
-        root.addView(tvResp);
-
         final EditText etResp = new EditText(getParentActivity());
         etResp.setHint("Write the response text...");
         etResp.setText(existing != null ? existing.response : "");
@@ -714,6 +708,9 @@ public class NGAutoReplyActivity extends BaseFragment {
         bgResp.setColor(Theme.getColor(Theme.key_windowBackgroundGray));
         bgResp.setCornerRadius(AndroidUtilities.dp(10));
         etResp.setBackground(bgResp);
+
+        // Top Header Row with Shutter Icon Button (🎨 Text Styles)
+        root.addView(createEditorHeaderRow("Auto-Reply Message", () -> showTextStyleDialog(etResp)));
 
         // 1-Tap Quick Formatting Bar
         root.addView(createQuickFormattingBar(etResp));
@@ -751,6 +748,47 @@ public class NGAutoReplyActivity extends BaseFragment {
     }
 
     /**
+     * Editor Header Row: shows section title and a prominent 🎨 Text Style icon button.
+     */
+    private View createEditorHeaderRow(String titleText, Runnable onShutterClick) {
+        LinearLayout row = new LinearLayout(getParentActivity());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, AndroidUtilities.dp(14), 0, AndroidUtilities.dp(4));
+
+        TextView tv = new TextView(getParentActivity());
+        tv.setText(titleText);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        tv.setTextColor(COLOR_GREEN_PRIMARY);
+        tv.setTypeface(AndroidUtilities.bold());
+        LinearLayout.LayoutParams tLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
+        row.addView(tv, tLp);
+
+        // Top Icon Button for opening shutter
+        LinearLayout shutterBtn = new LinearLayout(getParentActivity());
+        shutterBtn.setOrientation(LinearLayout.HORIZONTAL);
+        shutterBtn.setGravity(Gravity.CENTER_VERTICAL);
+        shutterBtn.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(4), AndroidUtilities.dp(10), AndroidUtilities.dp(4));
+        GradientDrawable sBg = new GradientDrawable();
+        sBg.setColor(0x1F0284C7);
+        sBg.setCornerRadius(AndroidUtilities.dp(10));
+        sBg.setStroke(AndroidUtilities.dp(1), 0x330284C7);
+        shutterBtn.setBackground(sBg);
+
+        TextView sText = new TextView(getParentActivity());
+        sText.setText("🎨 Text Styles (শাটার)");
+        sText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        sText.setTextColor(COLOR_CYAN_PRIMARY);
+        sText.setTypeface(AndroidUtilities.bold());
+        shutterBtn.addView(sText);
+
+        shutterBtn.setOnClickListener(v -> onShutterClick.run());
+        row.addView(shutterBtn);
+
+        return row;
+    }
+
+    /**
      * Quick Horizontal 1-Tap Formatting Toolbar placed directly above EditText.
      */
     private View createQuickFormattingBar(final EditText target) {
@@ -758,7 +796,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         hsv.setHorizontalScrollBarEnabled(false);
         LinearLayout bar = new LinearLayout(getParentActivity());
         bar.setOrientation(LinearLayout.HORIZONTAL);
-        bar.setPadding(0, AndroidUtilities.dp(8), 0, AndroidUtilities.dp(8));
+        bar.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(8));
 
         addQuickFormatButton(bar, "𝗕 Bold", () -> applyStyleToEditText(target, "Bold"), COLOR_CYAN_PRIMARY);
         addQuickFormatButton(bar, "𝘐 Italic", () -> applyStyleToEditText(target, "Italic"), COLOR_PURPLE_PRIMARY);
@@ -766,7 +804,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         addQuickFormatButton(bar, "𝚌𝚘𝚍𝚎", () -> applyStyleToEditText(target, "Mono"), COLOR_GREEN_PRIMARY);
         addQuickFormatButton(bar, "❝ Quote", () -> applyStyleToEditText(target, "Quote"), 0xFF0284C7);
         addQuickFormatButton(bar, "🔗 Link", () -> showCreateLinkDialog(target), 0xFF4F46E5);
-        addQuickFormatButton(bar, "🎨 All Styles (শাটার)", () -> showTextStyleDialog(target), 0xFFE11D48);
+        addQuickFormatButton(bar, "🎨 All (শাটার)", () -> showTextStyleDialog(target), 0xFFE11D48);
 
         hsv.addView(bar);
         return hsv;
@@ -867,7 +905,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
     /**
      * Native Telegram Sliding BottomSheet Shutter for rich text formatting.
-     * Slides gracefully up from the bottom with all style options and shortcuts.
+     * Features animated tick marks (টিক চিহ্ন ✓) in radiant colors indicating active selection.
      */
     private void showTextStyleDialog(final EditText target) {
         if (getParentActivity() == null || target == null) return;
@@ -898,7 +936,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         root.addView(title);
 
         TextView sub = new TextView(getParentActivity());
-        sub.setText("Tap any style to apply to selected text or insert formatting tags");
+        sub.setText("Tap any style to format selected text or insert formatting tags");
         sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         sub.setTextColor(Theme.getColor(Theme.key_dialogTextGray));
         sub.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(14));
@@ -906,42 +944,65 @@ public class NGAutoReplyActivity extends BaseFragment {
 
         BottomSheet sheet = builder.create();
 
-        // Style list cards
-        addStyleItem(root, "Bold (বোল্ড)", "**bold text**", COLOR_CYAN_PRIMARY, () -> {
+        // Detect current style from selection or text
+        int start = Math.max(target.getSelectionStart(), 0);
+        int end = Math.max(target.getSelectionEnd(), 0);
+        if (start > end) { int tmp = start; start = end; end = tmp; }
+        String sel = target.getText().toString().substring(start, end);
+        String active = "Bold";
+        if (sel.startsWith("**") && sel.endsWith("**")) active = "Bold";
+        else if (sel.startsWith("__") && sel.endsWith("__")) active = "Italic";
+        else if (sel.startsWith("||") && sel.endsWith("||")) active = "Spoiler";
+        else if (sel.startsWith("`") && sel.endsWith("`")) active = "Mono";
+        else if (sel.startsWith("> ")) active = "Quote";
+        else if (sel.startsWith("~~") && sel.endsWith("~~")) active = "Strikethrough";
+        else if (sel.startsWith("--") && sel.endsWith("--")) active = "Underline";
+        else if (sel.startsWith("[") && sel.contains("](")) active = "Link";
+
+        // Style list cards with colorful checkmark badge (টিক চিহ্ন)
+        addStyleItem(root, "Bold (বোল্ড)", "**bold text**", COLOR_CYAN_PRIMARY, "Bold".equals(active), () -> {
             applyStyleToEditText(target, "Bold");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Bold style applied!").show();
         });
-        addStyleItem(root, "Italic (ইটালিক)", "__italic text__", COLOR_PURPLE_PRIMARY, () -> {
+        addStyleItem(root, "Italic (ইটালিক)", "__italic text__", COLOR_PURPLE_PRIMARY, "Italic".equals(active), () -> {
             applyStyleToEditText(target, "Italic");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Italic style applied!").show();
         });
-        addStyleItem(root, "Spoiler (স্পয়লার)", "||hidden text||", COLOR_AMBER_PRIMARY, () -> {
+        addStyleItem(root, "Spoiler (স্পয়লার)", "||hidden text||", COLOR_AMBER_PRIMARY, "Spoiler".equals(active), () -> {
             applyStyleToEditText(target, "Spoiler");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Spoiler style applied!").show();
         });
-        addStyleItem(root, "Monospace (কোড)", "`code snippet`", COLOR_GREEN_PRIMARY, () -> {
+        addStyleItem(root, "Monospace (কোড)", "`code snippet`", COLOR_GREEN_PRIMARY, "Mono".equals(active), () -> {
             applyStyleToEditText(target, "Mono");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Monospace style applied!").show();
         });
-        addStyleItem(root, "Quote (উদ্ধৃতি)", "> quoted line", COLOR_CYAN_PRIMARY, () -> {
+        addStyleItem(root, "Quote (উদ্ধৃতি)", "> quoted line", COLOR_CYAN_PRIMARY, "Quote".equals(active), () -> {
             applyStyleToEditText(target, "Quote");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Quote style applied!").show();
         });
-        addStyleItem(root, "Strikethrough (কাটা দাগ)", "~~strikethrough~~", 0xFFE11D48, () -> {
+        addStyleItem(root, "Strikethrough (কাটা দাগ)", "~~strikethrough~~", 0xFFE11D48, "Strikethrough".equals(active), () -> {
             applyStyleToEditText(target, "Strikethrough");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Strikethrough style applied!").show();
         });
-        addStyleItem(root, "Underline (আন্ডারলাইন)", "--underlined text--", 0xFF4F46E5, () -> {
+        addStyleItem(root, "Underline (আন্ডারলাইন)", "--underlined text--", 0xFF4F46E5, "Underline".equals(active), () -> {
             applyStyleToEditText(target, "Underline");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "✓ Underline style applied!").show();
         });
-        addStyleItem(root, "Create Link (লিংক তৈরি)", "[Title](https://...)", COLOR_CYAN_PRIMARY, () -> {
+        addStyleItem(root, "Create Link (লিংক তৈরি)", "[Title](https://...)", COLOR_CYAN_PRIMARY, "Link".equals(active), () -> {
             sheet.dismiss();
             showCreateLinkDialog(target);
         });
-        addStyleItem(root, "Clear Style (সাধারণ লেখা)", "Remove formatting", 0xFF64748B, () -> {
+        addStyleItem(root, "Clear Style (সাধারণ লেখা)", "Remove formatting", 0xFF64748B, false, () -> {
             applyStyleToEditText(target, "Regular");
             sheet.dismiss();
+            BulletinFactory.of(this).createSimpleBulletin(R.raw.done, "Formatting cleared").show();
         });
 
         // Desktop / PC Keyboard Shortcuts Info Box
@@ -972,21 +1033,21 @@ public class NGAutoReplyActivity extends BaseFragment {
         showDialog(sheet);
     }
 
-    private void addStyleItem(LinearLayout parent, String name, String sample, int color, Runnable onClick) {
+    private void addStyleItem(LinearLayout parent, String name, String sample, int color, boolean isSelected, Runnable onClick) {
         LinearLayout row = new LinearLayout(parent.getContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+        row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         GradientDrawable bg = new GradientDrawable();
         bg.setColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-        bg.setCornerRadius(AndroidUtilities.dp(10));
-        bg.setStroke(AndroidUtilities.dp(1), 0x1A000000);
+        bg.setCornerRadius(AndroidUtilities.dp(12));
+        bg.setStroke(AndroidUtilities.dp(isSelected ? 2 : 1), isSelected ? color : 0x1A000000);
         row.setBackground(bg);
 
         TextView tvName = new TextView(parent.getContext());
         tvName.setText(name);
-        tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        tvName.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         tvName.setTextColor(color);
         tvName.setTypeface(AndroidUtilities.bold());
         LinearLayout.LayoutParams nLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f);
@@ -996,12 +1057,27 @@ public class NGAutoReplyActivity extends BaseFragment {
         tvSample.setText(sample);
         tvSample.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         tvSample.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText));
+        tvSample.setPadding(0, 0, AndroidUtilities.dp(10), 0);
         row.addView(tvSample);
+
+        // Checkmark badge (টিক চিহ্ন)
+        TextView checkBadge = new TextView(parent.getContext());
+        checkBadge.setText(isSelected ? "✓" : "○");
+        checkBadge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        checkBadge.setTextColor(isSelected ? 0xFFFFFFFF : 0xFF94A3B8);
+        checkBadge.setTypeface(AndroidUtilities.bold());
+        checkBadge.setGravity(Gravity.CENTER);
+        int badgeSize = AndroidUtilities.dp(24);
+        GradientDrawable badgeBg = new GradientDrawable();
+        badgeBg.setShape(GradientDrawable.OVAL);
+        badgeBg.setColor(isSelected ? color : 0x1A94A3B8);
+        checkBadge.setBackground(badgeBg);
+        row.addView(checkBadge, new LinearLayout.LayoutParams(badgeSize, badgeSize));
 
         row.setOnClickListener(v -> onClick.run());
 
         LinearLayout.LayoutParams rLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rLp.bottomMargin = AndroidUtilities.dp(6);
+        rLp.bottomMargin = AndroidUtilities.dp(8);
         parent.addView(row, rLp);
     }
 
