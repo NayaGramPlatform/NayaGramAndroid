@@ -53,6 +53,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         org.telegram.ui.ActionBar.ActionBarMenu menu = actionBar.createMenu();
         ActionBarMenuItem addItem = menu.addItem(1, R.drawable.outline_add_account);
         addItem.setIconColor(0xFF00D4FF);
+        addItem.setOnLongClickListener(v -> org.nayagram.platform.security.NGHiddenAccounts.askUnlock(this));
 
         fragmentView = new FrameLayout(context);
         fragmentView.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundGray));
@@ -64,7 +65,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(16), AndroidUtilities.dp(24));
 
-        int activatedCount = UserConfig.getActivatedAccountsCount();
+        int activatedCount = org.nayagram.platform.security.NGHiddenAccounts.listedCount();
 
         TextView titleView = new TextView(context);
         titleView.setText("Active Accounts (" + activatedCount + "/" + UserConfig.MAX_ACCOUNT_COUNT + ")");
@@ -114,6 +115,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         addBtn.setPadding(0, AndroidUtilities.dp(12), 0, AndroidUtilities.dp(12));
         addBtn.setBackground(createRoundBg(0xFF0284C7, 12));
         addBtn.setOnClickListener(v -> showAddAccountOptions(context));
+        addBtn.setOnLongClickListener(v -> org.nayagram.platform.security.NGHiddenAccounts.askUnlock(this));
         addCard.addView(addBtn, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         content.addView(addCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
@@ -129,7 +131,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
         accountsContainer.removeAllViews();
 
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (!UserConfig.getInstance(a).isClientActivated()) continue;
+            if (!org.nayagram.platform.security.NGHiddenAccounts.isListed(a)) continue;
             final int accountIndex = a;
             TLRPC.User user = UserConfig.getInstance(a).getCurrentUser();
 
@@ -157,7 +159,7 @@ public class NGAccountSwitcherActivity extends BaseFragment {
             textCol.setOrientation(LinearLayout.VERTICAL);
 
             TextView uName = new TextView(context);
-            uName.setText(UserObject.getUserName(user));
+            uName.setText(org.nayagram.platform.security.NGHiddenAccounts.withHiddenMark(accountIndex, UserObject.getUserName(user)));
             uName.setTextSize(15);
             uName.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             uName.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));

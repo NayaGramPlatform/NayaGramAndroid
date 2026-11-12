@@ -28,7 +28,7 @@ import android.widget.Toast;
 import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
-import org.telegram.messenger.ConnectionsManager;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
@@ -475,7 +475,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         accountAvatar.setForUserOrChat(currentUser, avatarDrawable);
 
         accountNameView.setText(currentUser != null ? UserObject.getUserName(currentUser) : "Active Account");
-        int totalAccounts = UserConfig.getActivatedAccountsCount();
+        int totalAccounts = org.nayagram.platform.security.NGHiddenAccounts.listedCount();
         String subText = (currentUser != null && currentUser.username != null && !currentUser.username.isEmpty())
                 ? "@" + currentUser.username + " • " + totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active")
                 : totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active");
@@ -534,7 +534,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         infoCol.addView(nameRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         accountSubView = new TextView(context);
-        int totalAccounts = UserConfig.getActivatedAccountsCount();
+        int totalAccounts = org.nayagram.platform.security.NGHiddenAccounts.listedCount();
         String subText = (currentUser != null && currentUser.username != null && !currentUser.username.isEmpty())
                 ? "@" + currentUser.username + " • " + totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active")
                 : totalAccounts + (totalAccounts > 1 ? " accounts active" : " account active");
@@ -590,7 +590,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         final AlertDialog[] dialogHolder = new AlertDialog[1];
 
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (!UserConfig.getInstance(a).isClientActivated()) continue;
+            if (!org.nayagram.platform.security.NGHiddenAccounts.isListed(a)) continue;
             final int accountIndex = a;
             TLRPC.User user = UserConfig.getInstance(a).getCurrentUser();
 

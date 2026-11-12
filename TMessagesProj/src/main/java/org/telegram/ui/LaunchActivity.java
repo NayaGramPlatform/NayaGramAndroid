@@ -23,6 +23,7 @@ import android.app.ActivityManager;
 import android.app.Dialog;
 import android.app.PictureInPictureParams;
 import android.app.PictureInPictureUiState;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -390,6 +391,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
 
     private FlagSecureReason flagSecureReason;
     private final LiteMode.BatteryReceiver batteryReceiver = new LiteMode.BatteryReceiver();
+    private final BroadcastReceiver hiddenAccountsScreenReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null && Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                org.nayagram.platform.security.NGHiddenAccounts.onScreenOff();
+            }
+        }
+    };
     private WindowAnimatedInsetsProvider rootAnimatedInsetsListener;
 
     public static LaunchActivity instance;
@@ -420,8 +429,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         instance = this;
         ApplicationLoader.postInitApplication();
         AndroidUtilities.checkDisplaySize(this, getResources().getConfiguration());
+        org.nayagram.platform.security.NGHiddenAccounts.init();
+        org.nayagram.platform.security.NGHiddenAccounts.ensureSelectedVisible();
         currentAccount = UserConfig.selectedAccount;
         registerReceiver(batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        registerReceiver(hiddenAccountsScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
         if (!UserConfig.getInstance(currentAccount).isClientActivated()) {
             Intent intent = getIntent();
             boolean isProxy = false;
@@ -1218,6 +1230,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         ConnectionsManager.getInstance(currentAccount).setAppPaused(true, false);
         UserConfig.selectedAccount = account;
         UserConfig.getInstance(0).saveConfig(false);
+        org.nayagram.platform.security.NGHiddenAccounts.onAccountSelected(account);
 
         checkCurrentAccount();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.activeAccountChanged, account);
@@ -1258,7 +1271,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     private void switchToAvailableAccountOrLogout() {
         int account = -1;
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated()) {
+            if (UserConfig.getInstance(a).isClientActivated() && !org.nayagram.platform.security.NGHiddenAccounts.isConcealed(a)) {
                 account = a;
                 break;
             }
@@ -6762,6 +6775,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         super.onPause();
         org.nayagram.platform.security.BiometricChatLocker.getInstance(this).lockAllSessions();
         NGSafety.onAppBackground(this);
+        org.nayagram.platform.security.NGHiddenAccounts.onAppPaused();
         isResumed = false;
         pipActivityHandler.onPause();
         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.stopAllHeavyOperations, 4096);
@@ -6892,6 +6906,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         isActive = false;
         activeInstanceCount--;
         unregisterReceiver(batteryReceiver);
+        try {
+            unregisterReceiver(hiddenAccountsScreenReceiver);
+        } catch (Throwable ignore) {}
 
         if (activeInstanceCount == 0) {
             onDestroyStaticResources();
@@ -7133,6 +7150,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         // NG Guard before resuming custom fragments so their gates see the persisted state.
         if (passcodeDialog == null || passcodeDialog.passcodeView.getVisibility() != View.VISIBLE) {
             NGSafety.onAppForeground(this);
+            org.nayagram.platform.security.NGHiddenAccounts.onAppResumed();
             actionBarLayout.onResume();
             enforceBiometricChatLock();
             // Also gate restored chats/deep links when the app returns from the background.

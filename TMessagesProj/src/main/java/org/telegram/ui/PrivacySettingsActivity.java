@@ -130,6 +130,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private int sessionsRow;
     @Keep
     private int passcodeRow;
+    private int hiddenAccountsRow;
     @Keep
     private int autoDeleteMesages;
     @Keep
@@ -498,6 +499,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 presentFragment(new NGSafetyActivity());
             } else if (position == passcodeRow) {
                 presentFragment(PasscodeActivity.determineOpenFragment());
+            } else if (position == hiddenAccountsRow) {
+                org.nayagram.platform.security.NGHiddenAccountsActivity.open(this);
             } else if (position == secretWebpageRow) {
                 if (getMessagesController().secretWebpagePreview == 1) {
                     getMessagesController().secretWebpagePreview = 0;
@@ -716,6 +719,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         guardRow = rowCount++;
         autoDeleteMesages = rowCount++;
         passcodeRow = rowCount++;
+        hiddenAccountsRow = rowCount++;
         if (currentPassword != null ? currentPassword.login_email_pattern != null : SharedConfig.hasEmailLogin) {
             emailLoginRow = rowCount++;
         } else {
@@ -1021,7 +1025,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public boolean isEnabled(RecyclerView.ViewHolder holder) {
             int position = holder.getAdapterPosition();
-            return position == passcodeRow || position == passwordRow || position == guardRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
+            return position == passcodeRow || position == hiddenAccountsRow || position == passwordRow || position == guardRow || position == blockedRow || position == sessionsRow || position == secretWebpageRow || position == webSessionsRow ||
                     position == groupsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_INVITE) ||
                     position == lastSeenRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_LASTSEEN) ||
                     position == callsRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_CALLS) ||
@@ -1370,6 +1374,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             icon = R.drawable.msg2_secret;
                         }
                         textCell2.setTextAndValueAndIcon(getString(R.string.Passcode), value, true, icon, true);
+                    } else if (position == hiddenAccountsRow) {
+                        value = org.nayagram.platform.security.NGHiddenAccounts.hasCode() ? getString(R.string.PasswordOn) : getString(R.string.PasswordOff);
+                        textCell2.setTextAndValueAndIcon("Hidden accounts", value, true, R.drawable.msg_archive_hide, true);
                     } else if (position == blockedRow) {
                         int totalCount = getMessagesController().totalBlockedCount;
                         if (totalCount == 0) {
@@ -1401,7 +1408,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 return 3;
             } else if (position == botsAndWebsitesShadowRow) {
                 return 4;
-            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == guardRow || position == passcodeRow || position == blockedRow) {
+            } else if (position == autoDeleteMesages || position == sessionsRow || position == emailLoginRow || position == passwordRow || position == guardRow || position == passcodeRow || position == hiddenAccountsRow || position == blockedRow) {
                 return 5;
             }
             return 0;

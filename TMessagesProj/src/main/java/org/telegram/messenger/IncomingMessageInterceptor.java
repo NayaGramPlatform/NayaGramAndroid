@@ -1,31 +1,20 @@
 package org.telegram.messenger;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import org.nayagram.platform.NayaConfig;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Sends the NayaGram Smart Auto-Reply to new incoming private messages.
- * Rules:
- * 1. Switch must be on (either in NayaConfig or AutoReplyManager).
- * 2. Private 1:1 chats only (dialogId > 0).
- * 3. Never bots or self.
- * 4. Never service messages or outgoing messages.
- * 5. Rejects ancient backlog (> 15 minutes old).
- * 6. Keyword rules trigger instantly with 2s loop-protection debounce.
- * 7. Default away message uses the configured cooldown hours.
+ * IncomingMessageInterceptor - Clean Novagram-style Auto Answer dispatcher.
+ * - Replies once per dialog ("Automatically reply once to the first message") with native Telegram formatting.
+ * - Respects Private Chats Only setting, skips bots/self/service/outgoing/stale messages.
+ * - Zero keyword rule clutter or markdown symbol leaks.
  */
 public class IncomingMessageInterceptor {
     private static final String TAG = "IncomingMessageInterceptor";
-    private static final String PREFS_NAME = "nayagram_auto_reply_state";
-
-    private static final Pattern URL_PATTERN = Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)");
     private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\s_][^_]*?[^\\s_]|[^\\s_])_(?!_)");
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
@@ -42,26 +31,37 @@ public class IncomingMessageInterceptor {
                 if (messageObject.isOutOwner() || messageObject.messageOwner.action != null) {
                     return;
                 }
+
                 long dialogId = messageObject.getDialogId();
-                if (dialogId <= 0) {
-                    return; // private 1:1 user chats only: groups, channels and secret chats are skipped
+                if (autoReplyManager.isPrivateOnly() && dialogId <= 0) {
+                    return;
                 }
+                if (dialogId == 0) {
+                    return;
+                }
+
+                // Skip broadcast channels where we cannot post
+                if (dialogId < 0) {
+                    TLRPC.Chat chat = MessagesController.getInstance(accountId).getChat(-dialogId);
+                    if (chat != null && ChatObject.isChannel(chat) && !chat.megagroup && !ChatObject.canPost(chat)) {
+                        return;
+                    }
+                }
+
                 String incomingText = messageObject.messageOwner.message;
                 if (incomingText == null || incomingText.trim().isEmpty()) {
                     return;
                 }
 
-                AutoReplyManager.AutoReplyRule matchedRule = autoReplyManager.findMatchingRule(incomingText);
-                String replyText = matchedRule != null ? matchedRule.response : autoReplyManager.getAutoAnswerText();
+                String replyText = autoReplyManager.getAutoAnswerText();
                 if (replyText == null || replyText.trim().isEmpty()) {
                     replyText = config.getAutoReplyText();
                 }
-
                 if (replyText == null || replyText.trim().isEmpty() || incomingText.trim().equalsIgnoreCase(replyText.trim())) {
-                    return; // never answer another auto-reply or echo identical text
+                    return;
                 }
 
-                // Check message freshness: ensure background tolerance (up to 1 hour)
+                // Check message freshness (1 hour tolerance for background delivery)
                 int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
                 if (now <= 0) {
                     now = (int) (System.currentTimeMillis() / 1000L);
@@ -70,58 +70,39 @@ public class IncomingMessageInterceptor {
                     return;
                 }
 
-                // Skip known bots or self
-                TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
-                if (user == null) {
-                    try {
-                        user = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
-                        if (user != null) {
-                            MessagesController.getInstance(accountId).putUser(user, true);
-                        }
-                    } catch (Throwable ignored) {
+                // Skip bots or self in private chats
+                if (dialogId > 0) {
+                    TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
+                    if (user == null) {
+                        try {
+                            user = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
+                            if (user != null) {
+                                MessagesController.getInstance(accountId).putUser(user, true);
+                            }
+                        } catch (Throwable ignored) {}
                     }
-                }
-                if (user != null && (user.bot || user.self)) {
-                    return;
+                    if (user != null && (user.bot || user.self)) {
+                        return;
+                    }
                 }
 
                 if (!PerChatAutoReplySettings.canAutoReplyForChat(dialogId)) {
                     return;
                 }
 
-                Context context = ApplicationLoader.applicationContext;
-                SharedPreferences prefs = context != null ? context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) : null;
-                if (prefs != null) {
-                    String key = "last_" + accountId + "_" + dialogId;
-                    long nowMs = System.currentTimeMillis();
-
-                    if (matchedRule != null) {
-                        // KEYWORD RULE: Instant reply! 2-second debounce prevents echo/feedback loops
-                        long lastKw = prefs.getLong(key + "_kw", 0L);
-                        if (nowMs - lastKw < 2000L) {
-                            return;
-                        }
-                        prefs.edit().putLong(key + "_kw", nowMs).apply();
-                    } else {
-                        // GENERIC AWAY MESSAGE: Use configured cooldown (e.g. 1 hour)
-                        long lastAway = prefs.getLong(key, 0L);
-                        long cooldownMs = Math.max(1, config.getAutoReplyCooldownHours()) * 3600_000L;
-                        if (nowMs - lastAway < cooldownMs) {
-                            return;
-                        }
-                        prefs.edit().putLong(key, nowMs).apply();
-                    }
+                // Novagram rule: automatically reply once per dialog until toggled off or reset
+                if (autoReplyManager.hasAnsweredDialog(dialogId)) {
+                    return;
                 }
+                autoReplyManager.markAnsweredDialog(dialogId);
 
-                // Step 1: Check if native entitiesJson exists from AutoReplyManager or matchedRule
                 ArrayList<TLRPC.MessageEntity> entities = null;
                 String cleanText = replyText;
-                String entJson = matchedRule != null ? matchedRule.entitiesJson : autoReplyManager.getAutoAnswerEntitiesJson();
+                String entJson = autoReplyManager.getAutoAnswerEntitiesJson();
                 if (entJson != null && !entJson.isEmpty()) {
                     entities = AutoReplyManager.parseEntitiesFromJson(entJson);
                 }
                 if (entities == null || entities.isEmpty()) {
-                    // Fallback to markdown parsing for legacy text
                     String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
                     CharSequence[] messageArr = new CharSequence[]{preprocessed};
                     entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
@@ -131,12 +112,11 @@ public class IncomingMessageInterceptor {
                     cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
                 }
 
-                // Step 3: Inherit user active text style if set in Text Style menu
                 try {
                     int activeStyle = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
-                    if (activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE &&
-                        activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR &&
-                        cleanText.length() > 0) {
+                    if (activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE
+                            && activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR
+                            && cleanText.length() > 0) {
                         TLRPC.MessageEntity entity = null;
                         switch (activeStyle) {
                             case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_BOLD:
@@ -178,8 +158,8 @@ public class IncomingMessageInterceptor {
                         cm.setAppPaused(false, false);
                         cm.resumeNetworkMaybe();
                         cm.checkConnection();
-                    } catch (Throwable ignored) {
-                    }
+                    } catch (Throwable ignored) {}
+
                     SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
                             finalCleanText, dialogId, null, null, null, true, finalEntities, null, null, true, 0, 0, null, false
                     );
@@ -194,25 +174,20 @@ public class IncomingMessageInterceptor {
                             if (ApplicationLoader.mainInterfacePaused) {
                                 cm.setAppPaused(true, false);
                             }
-                        } catch (Throwable ignored) {
-                        }
+                        } catch (Throwable ignored) {}
                     }, 5000);
                 });
-                FileLog.d(TAG + ": auto-reply successfully dispatched to dialog " + dialogId + " (rule: " + (matchedRule != null ? matchedRule.name : "default") + ")");
+                FileLog.d(TAG + ": auto-answer dispatched to dialog " + dialogId);
             } catch (Exception e) {
-                FileLog.e(TAG + ": auto-reply failed", e);
+                FileLog.e(TAG + ": auto-answer failed", e);
             }
         });
     }
 
     private static void enforceStealthOfflinePresence(final int accountId) {
         sendOfflineStatus(accountId);
-        AndroidUtilities.runOnUIThread(() -> {
-            sendOfflineStatus(accountId);
-        }, 1200);
-        AndroidUtilities.runOnUIThread(() -> {
-            sendOfflineStatus(accountId);
-        }, 3500);
+        AndroidUtilities.runOnUIThread(() -> sendOfflineStatus(accountId), 1200);
+        AndroidUtilities.runOnUIThread(() -> sendOfflineStatus(accountId), 3500);
     }
 
     private static void sendOfflineStatus(int accountId) {
@@ -221,7 +196,7 @@ public class IncomingMessageInterceptor {
             req.offline = true;
             ConnectionsManager.getInstance(accountId).sendRequest(req, (response, error) -> {
                 if (BuildVars.LOGS_ENABLED) {
-                    FileLog.d(TAG + ": stealth presence offline confirmed: " + (error == null ? "OK" : error.text));
+                    FileLog.d(TAG + ": stealth presence offline: " + (error == null ? "OK" : error.text));
                 }
             });
         } catch (Throwable t) {

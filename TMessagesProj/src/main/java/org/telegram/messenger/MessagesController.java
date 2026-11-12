@@ -16165,7 +16165,9 @@ public class MessagesController extends BaseController implements NotificationCe
         } else {
             getConnectionsManager().cleanup(type == 2);
         }
+        long loggedOutUid = getUserConfig().getClientUserId();
         getUserConfig().clearConfig();
+        org.nayagram.platform.security.NGHiddenAccounts.onLoggedOut(loggedOutUid);
         SharedPrefsHelper.cleanupAccount(currentAccount);
 
         boolean shouldHandle = true;
@@ -16182,7 +16184,7 @@ public class MessagesController extends BaseController implements NotificationCe
             if (UserConfig.selectedAccount == currentAccount) {
                 int account = -1;
                 for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-                    if (UserConfig.getInstance(a).isClientActivated()) {
+                    if (UserConfig.getInstance(a).isClientActivated() && !org.nayagram.platform.security.NGHiddenAccounts.isConcealed(a)) {
                         account = a;
                         break;
                     }

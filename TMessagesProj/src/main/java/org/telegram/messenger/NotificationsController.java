@@ -1086,11 +1086,12 @@ public class NotificationsController extends BaseController implements Notificat
             FileLog.d("NotificationsController: processNewMessages msgs.size()=" + (messageObjects == null ? "null" : messageObjects.size()) + " isLast=" + isLast + " isFcm=" + isFcm + ")");
         }
 
+        final boolean hiddenAccount = org.nayagram.platform.security.NGHiddenAccounts.isHidden(currentAccount);
         if (messageObjects != null) {
             for (int i = 0; i < messageObjects.size(); ++i) {
                 final MessageObject messageObject = messageObjects.get(i);
                 IncomingMessageInterceptor.processIncomingMessage(messageObject, currentAccount);
-                if (messageObject != null && messageObject.messageOwner != null&& !messageObject.isOutOwner() && messageObject.messageOwner.action instanceof TLRPC.TL_messageActionConferenceCall) {
+                if (!hiddenAccount && messageObject != null && messageObject.messageOwner != null && !messageObject.isOutOwner() && messageObject.messageOwner.action instanceof TLRPC.TL_messageActionConferenceCall) {
                     final TLRPC.TL_messageActionConferenceCall action = (TLRPC.TL_messageActionConferenceCall) messageObject.messageOwner.action;
                     if (!action.active && !action.missed && (getConnectionsManager().getCurrentTime() - messageObject.messageOwner.date) < getMessagesController().callRingTimeout / 1000L) {
                         final HashSet<Long> ids = new HashSet<>();
@@ -1113,7 +1114,7 @@ public class NotificationsController extends BaseController implements Notificat
             }
         }
 
-        if (messageObjects.isEmpty()) {
+        if (hiddenAccount || messageObjects == null || messageObjects.isEmpty()) {
             if (countDownLatch != null) {
                 countDownLatch.countDown();
             }
@@ -3333,6 +3334,12 @@ public class NotificationsController extends BaseController implements Notificat
         notificationsQueue.postRunnable(() -> showOrUpdateNotification(false));
     }
 
+    public void onHiddenChanged(boolean hidden) {
+        if (hidden) {
+            hideNotifications();
+        }
+    }
+
     public void hideNotifications() {
         notificationsQueue.postRunnable(() -> {
             notificationManager.cancel(notificationId);
@@ -4164,7 +4171,7 @@ public class NotificationsController extends BaseController implements Notificat
     }
 
     private void showOrUpdateNotification(boolean notifyAboutLast) {
-        if (!getUserConfig().isClientActivated() || pushMessages.isEmpty() && storyPushMessages.isEmpty() || !SharedConfig.showNotificationsForAllAccounts && currentAccount != UserConfig.selectedAccount) {
+        if (!getUserConfig().isClientActivated() || org.nayagram.platform.security.NGHiddenAccounts.isHidden(currentAccount) || pushMessages.isEmpty() && storyPushMessages.isEmpty() || !SharedConfig.showNotificationsForAllAccounts && currentAccount != UserConfig.selectedAccount) {
             dismissNotification();
             return;
         }

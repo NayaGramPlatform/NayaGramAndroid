@@ -3091,6 +3091,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         String userPhone = userConfig.getCurrentUser().phone;
                         if (PhoneNumberUtils.compare(phone, userPhone) && ConnectionsManager.getInstance(a).isTestBackend() == testBackend) {
                             final int num = a;
+                            if (org.nayagram.platform.security.NGHiddenAccounts.openFromLogin(this, num)) {
+                                needHideProgress(false);
+                                return;
+                            }
                             AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                             builder.setTitle(getString(R.string.AppName));
                             builder.setMessage(getString("AccountAlreadyLoggedIn", R.string.AccountAlreadyLoggedIn));

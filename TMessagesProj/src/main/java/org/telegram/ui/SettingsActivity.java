@@ -225,6 +225,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().addObserver(this, NotificationCenter.starBalanceUpdated);
         getNotificationCenter().addObserver(this, NotificationCenter.newSuggestionsAvailable);
+        NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.nayagramHiddenAccountsChanged);
 
         if (arguments != null) {
             hasMainTabs = arguments.getBoolean("hasMainTabs", false);
@@ -518,6 +519,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         getNotificationCenter().removeObserver(this, NotificationCenter.updateInterfaces);
         getNotificationCenter().removeObserver(this, NotificationCenter.starBalanceUpdated);
         getNotificationCenter().removeObserver(this, NotificationCenter.newSuggestionsAvailable);
+        NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.nayagramHiddenAccountsChanged);
     }
 
     @Override
@@ -529,7 +531,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             }
         } else if (id == NotificationCenter.updateInterfaces) {
             setInfo();
-        } else if (id == NotificationCenter.newSuggestionsAvailable) {
+        } else if (id == NotificationCenter.newSuggestionsAvailable || id == NotificationCenter.nayagramHiddenAccountsChanged) {
             if (listView != null) {
                 listView.adapter.update(true);
             }
@@ -645,7 +647,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         accountNumbers.clear();
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
-            if (UserConfig.getInstance(a).isClientActivated() && currentAccount != a) {
+            if (UserConfig.getInstance(a).isClientActivated() && currentAccount != a && !org.nayagram.platform.security.NGHiddenAccounts.isHidden(a)) {
                 accountNumbers.add(a);
             }
         }
@@ -701,12 +703,13 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         }
 
         final boolean canAddAccount = UserConfig.getActivatedAccountsCount() < UserConfig.MAX_ACCOUNT_COUNT;
-        if (accountNumbers.size() > 0 || canAddAccount) {
+        final boolean showAddAccount = canAddAccount || org.nayagram.platform.security.NGHiddenAccounts.hasCode();
+        if (accountNumbers.size() > 0 || showAddAccount) {
             items.add(UItem.asHeader(getString(R.string.SettingsAccounts)));
             for (int i = 0; i < accountNumbers.size(); ++i) {
                 items.add(AccountCell.Factory.of(i, accountNumbers.get(i)));
             }
-            if (canAddAccount) {
+            if (showAddAccount) {
                 items.add(SettingCell.Factory.of(200, IconBackgroundColors.BLUE.top, IconBackgroundColors.BLUE.bottom, R.drawable.outline_add_account, getString(R.string.AddAccount)));
             }
             items.add(UItem.asShadow(null));
@@ -721,13 +724,13 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         // 3. NayaGram section placed right BELOW Privacy & Security
         items.add(UItem.asHeader("NayaGram"));
-        items.add(SettingCell.Factory.of(100, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.ic_naya_settings, "NayaGram Settings", "Stories, clean forward, translator, features", ""));
+        items.add(SettingCell.Factory.of(100, 0xFF7E57C2, 0xFF5E35B1, R.drawable.ic_naya_settings, "NayaGram Settings", "Features, auto answer, security & tools", ""));
         items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Infonity AI 💎", "Official AI Assistant @InfonityAI_Bot", ""));
         items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "NG Admin 🛡️", "Official Leadership & Admins", ""));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
         items.add(SettingCell.Factory.of(104, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_data, "App Cache", "Free storage & clean cache (1-Tap)", ""));
         items.add(SettingCell.Factory.of(105, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_folders, "Chat finder", "Find groups, channels & bots", ""));
-        items.add(SettingCell.Factory.of(110, IconBackgroundColors.BLUE.top, IconBackgroundColors.CYAN.bottom, R.drawable.ic_naya_info, "About NayaGram 💎", "v" + getInstalledAppVersionName() + " • Platform Features & Info", ""));
+        items.add(SettingCell.Factory.of(110, 0xFF1FB0A5, 0xFF12968C, R.drawable.ic_naya_info, "About NayaGram", "v" + getInstalledAppVersionName() + " • Platform & Info", ""));
         items.add(UItem.asShadow(createNayaCopyrightSpan()));
 
         items.add(SettingCell.Factory.of(2, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, getString(R.string.SettingsChat), getString(R.string.SettingsChatInfo)));
@@ -991,6 +994,15 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
     }
 
     private boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        if (item.id == 200) {
+            return org.nayagram.platform.security.NGHiddenAccounts.askUnlock(this);
+        }
+        if (item.instanceOf(AccountCell.Factory.class)) {
+            final ItemOptions o = ItemOptions.makeOptions(this, view);
+            org.nayagram.platform.security.NGHiddenAccounts.addHideOption(o, this, item.intValue);
+            o.setScrimViewBackground(listView.getClipBackground(view)).show();
+            return true;
+        }
         if (item.object instanceof TLRPC.TL_attachMenuBot) {
             TLRPC.TL_attachMenuBot attachMenuBot = (TLRPC.TL_attachMenuBot) item.object;
             BotWebViewSheet.deleteBot(currentAccount, attachMenuBot.bot_id, () -> listView.adapter.update(true));
@@ -1221,7 +1233,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             avatarDrawable.setInfo(account, user);
             avatarView.getImageReceiver().setCurrentAccount(account);
             avatarView.setForUserOrChat(user, avatarDrawable);
-            textView.setText(UserObject.getUserName(user));
+            textView.setText(org.nayagram.platform.security.NGHiddenAccounts.withHiddenMark(account, UserObject.getUserName(user)));
 
             botDrawable.setCurrentAccount(account);
             emojiStatusDrawable.setCurrentAccount(account);
@@ -1248,6 +1260,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
             counterView.setVisibility(counter > 0 ? View.VISIBLE : View.GONE);
             counterView.setText(LocaleController.formatNumber(counter, ','));
             switchView.setChecked(NotificationsController.isAccountNotificationsEnabled(account), false);
+            switchView.setVisibility(org.nayagram.platform.security.NGHiddenAccounts.isHidden(account) ? View.GONE : View.VISIBLE);
         }
 
         @Override
@@ -1275,6 +1288,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 final UItem item = UItem.ofFactory(AccountCell.Factory.class);
                 item.id = id;
                 item.intValue = account;
+                item.checked = org.nayagram.platform.security.NGHiddenAccounts.isHidden(account);
                 return item;
             }
 
@@ -1285,7 +1299,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
             @Override
             public boolean contentsEquals(UItem a, UItem b) {
-                return a.intValue == b.intValue;
+                return a.intValue == b.intValue && a.checked == b.checked;
             }
         }
     }

@@ -555,8 +555,8 @@ public class NGSettingsActivity extends BaseFragment {
             title = "Message Scheduler";
             body = "Use Telegram's built-in schedule (long-press Send) to send later.\n\nThis switch stores your preference. It does not replace Telegram's official scheduler.";
         } else if (position == rowSmartAutoReply) {
-            title = "Smart Auto-Reply";
-            body = "Saves an auto-reply message you can copy and send.\n\nTurning it on opens the message editor. It does not silently message people in the background.";
+            title = "Auto answer";
+            body = "Automatically replies once to the first incoming message using your formatted reply text.";
         } else if (position == rowStorySaver) {
             title = "Story Saver";
             body = "Preference for saving stories you are allowed to view.\n\nDownload only content you have permission to save.";
@@ -880,7 +880,8 @@ public class NGSettingsActivity extends BaseFragment {
                     String modeName = mode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (mode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
                     c.setActionFeature(R.drawable.msg_theme, 0xFF8B5CF6, "Naya Theme Mode", modeName, true);
                 } else if (position == rowSmartAutoReply) {
-                    c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Smart Auto-Reply Studio", cfg.isSmartAutoReply() ? "Enabled" : "Disabled", true);
+                    boolean active = org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled();
+                    c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Auto answer", active ? "Active • Replies once automatically" : "Automatically reply once to the first message", true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
                 } else if (position == rowVideoShape && rowVideoShape != -1) {
