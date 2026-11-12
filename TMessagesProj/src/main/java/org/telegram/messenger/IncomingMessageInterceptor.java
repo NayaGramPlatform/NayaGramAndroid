@@ -52,7 +52,10 @@ public class IncomingMessageInterceptor {
                 }
 
                 AutoReplyManager.AutoReplyRule matchedRule = autoReplyManager.findMatchingRule(incomingText);
-                String replyText = matchedRule != null ? matchedRule.response : config.getAutoReplyText();
+                String replyText = matchedRule != null ? matchedRule.response : autoReplyManager.getAutoAnswerText();
+                if (replyText == null || replyText.trim().isEmpty()) {
+                    replyText = config.getAutoReplyText();
+                }
 
                 if (replyText == null || replyText.trim().isEmpty() || incomingText.trim().equalsIgnoreCase(replyText.trim())) {
                     return; // never answer another auto-reply or echo identical text
@@ -114,12 +117,51 @@ public class IncomingMessageInterceptor {
                 String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
 
                 // Step 2: Use MediaDataController to parse standard Markdown (**bold**, __italic__, `mono`, ||spoiler||)
-                CharSequence[] messageArr = new CharSequence[]{rawResponse};
+                CharSequence[] messageArr = new CharSequence[]{preprocessed};
                 ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
                 if (entities == null) {
                     entities = new ArrayList<>();
                 }
-                final String cleanText = messageArr[0] != null ? messageArr[0].toString() : rawResponse;
+                final String cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
+
+                // Step 3: Inherit user active text style if set in Text Style menu
+                try {
+                    int activeStyle = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
+                    if (activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE &&
+                        activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR &&
+                        cleanText.length() > 0) {
+                        TLRPC.MessageEntity entity = null;
+                        switch (activeStyle) {
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_BOLD:
+                                entity = new TLRPC.TL_messageEntityBold();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_ITALIC:
+                                entity = new TLRPC.TL_messageEntityItalic();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_SPOILER:
+                                entity = new TLRPC.TL_messageEntitySpoiler();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_MONO:
+                                entity = new TLRPC.TL_messageEntityCode();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_STRIKE:
+                                entity = new TLRPC.TL_messageEntityStrike();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_UNDERLINE:
+                                entity = new TLRPC.TL_messageEntityUnderline();
+                                break;
+                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_QUOTE:
+                                entity = new TLRPC.TL_messageEntityBlockquote();
+                                break;
+                        }
+                        if (entity != null) {
+                            entity.offset = 0;
+                            entity.length = cleanText.length();
+                            entities.add(entity);
+                        }
+                    }
+                } catch (Throwable ignored) {}
+
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
                 AndroidUtilities.runOnUIThread(() -> {

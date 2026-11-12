@@ -124,6 +124,19 @@ public class AutoReplyManager {
      * 1. Checks custom keyword rules first (Graph Messenger style).
      * 2. If no keyword matches, falls back to the main auto-answer text (Novagram style).
      */
+    public synchronized AutoReplyRule findMatchingRule(String messageText) {
+        if (messageText == null || rules.isEmpty()) return null;
+        String lower = messageText.toLowerCase(Locale.ROOT).trim();
+        for (AutoReplyRule rule : rules) {
+            if (rule != null && rule.enabled && rule.keyword != null && !rule.keyword.trim().isEmpty()) {
+                if (matchesKeyword(lower, rule)) {
+                    return rule;
+                }
+            }
+        }
+        return null;
+    }
+
     public synchronized String getAutoReplyResponse(String messageText) {
         if (messageText != null && !rules.isEmpty()) {
             String lower = messageText.toLowerCase(Locale.ROOT).trim();
