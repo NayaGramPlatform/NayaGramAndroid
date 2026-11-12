@@ -22371,7 +22371,8 @@ public class ChatActivity extends BaseFragment implements
                 return;
             }
             int max_id = (Integer) args[1];
-            if (!pinnedMessageIds.isEmpty()) {
+            boolean antiDelete = org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled();
+            if (!antiDelete && !pinnedMessageIds.isEmpty()) {
                 pinnedMessageIds.clear();
                 pinnedMessageObjects.clear();
                 currentPinnedMessageId = 0;
@@ -22379,13 +22380,27 @@ public class ChatActivity extends BaseFragment implements
                 totalPinnedMessagesCount = 0;
                 updatePinnedMessageView(true);
             }
-
             boolean updated = false;
             for (int b = 0; b < messages.size(); b++) {
                 MessageObject obj = messages.get(b);
                 int mid = obj.getId();
                 if (mid <= 0 || mid > max_id) {
                     continue;
+                }
+                if (antiDelete && !obj.isOutOwner()) {
+                    if (getMessagesController().isLocallyDeleted(dialog_id, mid)) {
+                        getMessagesController().removeLocallyDeleted(dialog_id, mid);
+                    } else {
+                        obj.deleted = false;
+                        obj.isAntiDeleted = true;
+                        obj.forceUpdate = true;
+                        if (obj.messageOwner != null) {
+                            obj.messageOwner.isAntiDeleted = true;
+                        }
+                        getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
+                        updated = true;
+                        continue;
+                    }
                 }
                 messages.remove(b);
                 b--;
@@ -26531,6 +26546,23 @@ public class ChatActivity extends BaseFragment implements
         for (int a = 0; a < size; a++) {
             Integer mid = markAsDeletedMessages.get(a);
             MessageObject obj = chatAdapter != null && chatAdapter.isFiltered ? filteredMessagesDict.get(mid) :  messagesDict[loadIndex].get(mid);
+            if (obj != null) {
+                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                    if (getMessagesController().isLocallyDeleted(dialog_id, mid)) {
+                        getMessagesController().removeLocallyDeleted(dialog_id, mid);
+                    } else {
+                        obj.deleted = false;
+                        obj.isAntiDeleted = true;
+                        obj.forceUpdate = true;
+                        if (obj.messageOwner != null) {
+                            obj.messageOwner.isAntiDeleted = true;
+                        }
+                        getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
+                        updated = true;
+                        continue;
+                    }
+                }
+            }
             if (selectedObject != null && obj == selectedObject || obj != null && selectedObjectGroup != null && selectedObjectGroup == groupedMessagesMap.get(obj.getGroupId())) {
                 closeMenu();
             }
@@ -26556,20 +26588,6 @@ public class ChatActivity extends BaseFragment implements
                 updateReplyMessageOwners(mid, null);
             }
             if (obj != null) {
-                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
-                    if (getMessagesController().isLocallyDeleted(dialog_id, mid)) {
-                        getMessagesController().removeLocallyDeleted(dialog_id, mid);
-                    } else {
-                        obj.deleted = false;
-                        obj.isAntiDeleted = true;
-                        if (obj.messageOwner != null) {
-                            obj.messageOwner.isAntiDeleted = true;
-                        }
-                        getMessagesStorage().updateMessageAntiDeleted(dialog_id, obj.getId(), obj.messageOwner);
-                        updated = true;
-                        continue;
-                    }
-                }
                 if (obj.messageOwner.reply_to != null && !(obj.messageOwner.action instanceof TLRPC.TL_messageActionPinMessage)) {
                     int replyId = obj.getReplyAnyMsgId();
                     if (threadMessageObject != null && threadMessageObject.getId() == replyId) {

@@ -21184,9 +21184,11 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(obj.getDialogId(), id)) {
                                     obj.deleted = false;
                                     obj.isAntiDeleted = true;
+                                    obj.forceUpdate = true;
                                     if (obj.messageOwner != null) {
                                         obj.messageOwner.isAntiDeleted = true;
                                     }
+                                    updateMask |= UPDATE_MASK_ALL;
                                     continue;
                                 }
                                 obj.deleted = true;
@@ -21203,9 +21205,11 @@ public class MessagesController extends BaseController implements NotificationCe
                                             if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(dialogId, obj.getId())) {
                                                 obj.deleted = false;
                                                 obj.isAntiDeleted = true;
+                                                obj.forceUpdate = true;
                                                 if (obj.messageOwner != null) {
                                                     obj.messageOwner.isAntiDeleted = true;
                                                 }
+                                                updateMask |= UPDATE_MASK_ALL;
                                                 break;
                                             }
                                             obj.deleted = true;
@@ -21251,6 +21255,16 @@ public class MessagesController extends BaseController implements NotificationCe
                         for (int i = 0; i < objs.size(); ++i) {
                             MessageObject obj = objs.get(i);
                             if (obj != null && obj.getId() <= id) {
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(did, obj.getId())) {
+                                    obj.deleted = false;
+                                    obj.isAntiDeleted = true;
+                                    obj.forceUpdate = true;
+                                    if (obj.messageOwner != null) {
+                                        obj.messageOwner.isAntiDeleted = true;
+                                    }
+                                    updateMask |= UPDATE_MASK_ALL;
+                                    continue;
+                                }
                                 obj.deleted = true;
                                 break;
                             }

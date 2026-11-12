@@ -28,14 +28,18 @@ import android.widget.Toast;
 import org.nayagram.platform.NayaConfig;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ChatObject;
+import org.telegram.messenger.ConnectionsManager;
 import org.telegram.messenger.DialogObject;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.MessagesController;
+import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.messenger.UserObject;
 import org.telegram.messenger.LocaleController;
 import android.graphics.Color;
+import android.util.SparseBooleanArray;
+import android.util.SparseIntArray;
 import org.telegram.messenger.browser.Browser;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -47,13 +51,15 @@ import org.telegram.ui.Components.BackupImageView;
 import org.telegram.ui.Components.LayoutHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 
 /**
  * NG Hub lists channels and groups this account created, and keeps everyone
  * else's communities in a separate section. Nothing is invented.
  */
-public class NGHubActivity extends BaseFragment {
+public class NGHubActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate {
     private static final int SECTION_CHANNELS = 0;
     private static final int SECTION_GROUPS = 1;
     private static final int SECTION_BOTS = 2;
@@ -91,14 +97,150 @@ public class NGHubActivity extends BaseFragment {
     private int detailLang;
     private boolean swipeNavigationEnabled = true;
     private boolean horizontalCards;
-    private boolean mineOnly = true;
+    private boolean mineOnly = false;
     private boolean plusOpen;
     private boolean closing;
     private float touchStartX;
     private float touchStartY;
+    private int observedAccount = -1;
+    private final SparseIntArray dialogLoadRounds = new SparseIntArray();
+    private final SparseBooleanArray allChatsLoadedForAccount = new SparseBooleanArray();
+    private final SparseBooleanArray allChatsInFlightForAccount = new SparseBooleanArray();
+    private final SparseBooleanArray adminedChatsLoadedForAccount = new SparseBooleanArray();
+    private final SparseBooleanArray adminedChatsInFlightForAccount = new SparseBooleanArray();
+    private final HashMap<Integer, HashMap<Long, TLRPC.Chat>> extraChatsByAccount = new HashMap<>();
 
     public NGHubActivity() {
         super();
+    }
+
+    @Override
+    public boolean onFragmentCreate() {
+        super.onFragmentCreate();
+        registerObservers(currentAccount);
+        ensureAllSpacesLoaded(true);
+        return true;
+    }
+
+    @Override
+    public void onFragmentDestroy() {
+        unregisterObservers();
+        super.onFragmentDestroy();
+    }
+
+    private void registerObservers(int account) {
+        if (observedAccount == account) return;
+        unregisterObservers();
+        observedAccount = account;
+        NotificationCenter nc = NotificationCenter.getInstance(observedAccount);
+        nc.addObserver(this, NotificationCenter.dialogsNeedReload);
+        nc.addObserver(this, NotificationCenter.updateInterfaces);
+        nc.addObserver(this, NotificationCenter.chatInfoDidLoad);
+        nc.addObserver(this, NotificationCenter.didUpdateConnectionState);
+    }
+
+    private void unregisterObservers() {
+        if (observedAccount < 0) return;
+        NotificationCenter nc = NotificationCenter.getInstance(observedAccount);
+        nc.removeObserver(this, NotificationCenter.dialogsNeedReload);
+        nc.removeObserver(this, NotificationCenter.updateInterfaces);
+        nc.removeObserver(this, NotificationCenter.chatInfoDidLoad);
+        nc.removeObserver(this, NotificationCenter.didUpdateConnectionState);
+        observedAccount = -1;
+    }
+
+    @Override
+    public void didReceivedNotification(int id, int account, Object... args) {
+        if (account != currentAccount) return;
+        if (id == NotificationCenter.dialogsNeedReload) {
+            ensureAllSpacesLoaded(false);
+            showSection(selectedSection);
+        } else if (id == NotificationCenter.updateInterfaces || id == NotificationCenter.chatInfoDidLoad || id == NotificationCenter.didUpdateConnectionState) {
+            updateAccountCard();
+            showSection(selectedSection);
+        }
+    }
+
+    private void ensureAllSpacesLoaded(boolean resetRounds) {
+        final int targetAccount = currentAccount;
+        MessagesController controller = MessagesController.getInstance(targetAccount);
+        if (resetRounds) {
+            dialogLoadRounds.put(targetAccount, 0);
+        }
+        int rounds = dialogLoadRounds.get(targetAccount, 0);
+        if (controller.getDialogs(0).isEmpty() && !controller.isLoadingDialogs(0)) {
+            controller.loadDialogs(0, 0, 100, true);
+        }
+        if (rounds < 15) {
+            boolean requestedPage = false;
+            if (!controller.isDialogsEndReached(0) && !controller.isLoadingDialogs(0)) {
+                controller.loadDialogs(0, -1, 100, false);
+                requestedPage = true;
+            }
+            if (!controller.isDialogsEndReached(1) && !controller.isLoadingDialogs(1)) {
+                controller.loadDialogs(1, -1, 100, false);
+                requestedPage = true;
+            }
+            if (requestedPage) {
+                dialogLoadRounds.put(targetAccount, rounds + 1);
+            }
+        }
+        if (!allChatsLoadedForAccount.get(targetAccount) && !allChatsInFlightForAccount.get(targetAccount)) {
+            allChatsInFlightForAccount.put(targetAccount, true);
+            TLRPC.TL_messages_getAllChats req = new TLRPC.TL_messages_getAllChats();
+            req.except_ids = new ArrayList<>();
+            ConnectionsManager.getInstance(targetAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                allChatsInFlightForAccount.put(targetAccount, false);
+                if (response instanceof TLRPC.messages_Chats) {
+                    TLRPC.messages_Chats res = (TLRPC.messages_Chats) response;
+                    allChatsLoadedForAccount.put(targetAccount, true);
+                    if (res.chats != null && !res.chats.isEmpty()) {
+                        MessagesController.getInstance(targetAccount).putChats(res.chats, false);
+                        HashMap<Long, TLRPC.Chat> map = extraChatsByAccount.get(targetAccount);
+                        if (map == null) {
+                            map = new HashMap<>();
+                            extraChatsByAccount.put(targetAccount, map);
+                        }
+                        for (TLRPC.Chat c : res.chats) {
+                            if (c != null) {
+                                map.put(c.id, c);
+                            }
+                        }
+                    }
+                    if (targetAccount == currentAccount && contentColumn != null) {
+                        showSection(selectedSection);
+                    }
+                }
+            }));
+        }
+        if (!adminedChatsLoadedForAccount.get(targetAccount) && !adminedChatsInFlightForAccount.get(targetAccount)) {
+            adminedChatsInFlightForAccount.put(targetAccount, true);
+            TLRPC.TL_channels_getAdminedPublicChannels req = new TLRPC.TL_channels_getAdminedPublicChannels();
+            req.for_community_peer = false;
+            ConnectionsManager.getInstance(targetAccount).sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+                adminedChatsInFlightForAccount.put(targetAccount, false);
+                if (response instanceof TLRPC.messages_Chats) {
+                    TLRPC.messages_Chats res = (TLRPC.messages_Chats) response;
+                    adminedChatsLoadedForAccount.put(targetAccount, true);
+                    if (res.chats != null && !res.chats.isEmpty()) {
+                        MessagesController.getInstance(targetAccount).putChats(res.chats, false);
+                        HashMap<Long, TLRPC.Chat> map = extraChatsByAccount.get(targetAccount);
+                        if (map == null) {
+                            map = new HashMap<>();
+                            extraChatsByAccount.put(targetAccount, map);
+                        }
+                        for (TLRPC.Chat c : res.chats) {
+                            if (c != null) {
+                                map.put(c.id, c);
+                            }
+                        }
+                    }
+                    if (targetAccount == currentAccount && contentColumn != null) {
+                        showSection(selectedSection);
+                    }
+                }
+            }));
+        }
     }
 
     @Override
@@ -151,7 +293,7 @@ public class NGHubActivity extends BaseFragment {
         page.addView(buildShortcuts(context));
         page.addView(buildCreateRow(context));
 
-        audienceToggle = createAction(context, "My Spaces");
+        audienceToggle = createAction(context, mineOnly ? "My Spaces" : "All Joined");
         audienceToggle.setOnClickListener(v -> {
             mineOnly = !mineOnly;
             audienceToggle.setText(mineOnly ? "My Spaces" : "All Joined");
@@ -283,6 +425,10 @@ public class NGHubActivity extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
+        if (observedAccount != currentAccount) {
+            registerObservers(currentAccount);
+        }
+        ensureAllSpacesLoaded(false);
         updateAccountCard();
         showSection(selectedSection);
     }
@@ -1138,7 +1284,26 @@ public class NGHubActivity extends BaseFragment {
                 if (!alreadyPresent) dialogs.add(mainDialog);
             }
         }
+        ArrayList<TLRPC.Dialog> archiveDialogs = controller.getDialogs(1);
+        if (archiveDialogs != null) {
+            for (TLRPC.Dialog archDialog : archiveDialogs) {
+                if (archDialog == null) continue;
+                boolean alreadyPresent = false;
+                for (TLRPC.Dialog existing : dialogs) {
+                    if (existing != null && existing.id == archDialog.id
+                            && existing.getClass() == archDialog.getClass()) {
+                        alreadyPresent = true;
+                        break;
+                    }
+                }
+                if (!alreadyPresent) dialogs.add(archDialog);
+            }
+        }
         int visibleCount = 0;
+        int[] sectionCounts = new int[4];
+        HashSet<Long> seenChatIds = new HashSet<>();
+        HashSet<Long> seenUserIds = new HashSet<>();
+        HashSet<Long> seenCommunityIds = new HashSet<>();
         String query = searchField == null || searchField.getText() == null
                 ? "" : searchField.getText().toString().trim().toLowerCase(Locale.ROOT);
 
@@ -1154,14 +1319,17 @@ public class NGHubActivity extends BaseFragment {
                     // Do not classify it as a broadcast channel or an ordinary group.
                     chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
                     if (chat == null || ChatObject.isNotInChat(chat)) continue;
+                    seenCommunityIds.add(chat.id);
                     type = SECTION_COMMUNITIES;
                 } else if (DialogObject.isChatDialog(dialog.id)) {
                     chat = controller.getChat(-dialog.id);
-                    if (chat == null || ChatObject.isNotInChat(chat)) continue;
+                    if (chat == null || ChatObject.isNotInChat(chat) || chat.migrated_to != null) continue;
+                    if (!seenChatIds.add(chat.id)) continue;
                     type = ChatObject.isChannel(chat) && !chat.megagroup ? SECTION_CHANNELS : SECTION_GROUPS;
                 } else if (DialogObject.isUserDialog(dialog.id)) {
                     user = controller.getUser(dialog.id);
                     if (user == null || !user.bot) continue;
+                    if (!seenUserIds.add(user.id)) continue;
                     type = SECTION_BOTS;
                 } else {
                     continue;
@@ -1170,25 +1338,66 @@ public class NGHubActivity extends BaseFragment {
                 if (mineOnly && type != SECTION_BOTS && !owned) continue;
                 if (mineOnly && type == SECTION_BOTS && (user == null || !isMarkedMyBot(user.id))) continue;
                 // Bot ownership is not exposed by the dialog object; My Bot uses an explicit local user selection.
-                if (type != selectedSection) continue;
                 String title = chat != null ? (chat.title == null ? "" : chat.title)
                         : (user.first_name == null ? "" : user.first_name) + (user.last_name == null ? "" : " " + user.last_name);
                 MessageObject lastMessage = null;
                 ArrayList<MessageObject> messages = controller.dialogMessage.get(dialog.id);
                 if (messages != null && !messages.isEmpty()) lastMessage = messages.get(0);
                 String preview = lastMessage == null || lastMessage.messageText == null
-                        ? (type == SECTION_BOTS ? "Bot account" : "No recent message")
+                        ? (type == SECTION_BOTS ? "Bot account" : buildChatFallbackPreview(chat, type == SECTION_CHANNELS))
                         : lastMessage.messageText.toString().trim();
                 if (!query.isEmpty() && !title.toLowerCase(Locale.ROOT).contains(query)
                         && !preview.toLowerCase(Locale.ROOT).contains(query)) continue;
+                sectionCounts[type]++;
+                if (type != selectedSection) continue;
                 addDialogRow(dialog, chat, user, title, preview, lastMessage);
                 visibleCount++;
             }
         }
 
+        // Merge additional joined/admined channels and groups fetched via getAllChats / getAdminedPublicChannels / cached chats
+        ArrayList<TLRPC.Chat> extraChats = new ArrayList<>();
+        HashMap<Long, TLRPC.Chat> fetchedMap = extraChatsByAccount.get(currentAccount);
+        if (fetchedMap != null && !fetchedMap.isEmpty()) {
+            extraChats.addAll(fetchedMap.values());
+        }
+        if (controller.getChats() != null && !controller.getChats().isEmpty()) {
+            extraChats.addAll(controller.getChats().values());
+        }
+        for (int i = 0; i < extraChats.size(); i++) {
+            TLRPC.Chat chat = extraChats.get(i);
+            if (chat == null || ChatObject.isNotInChat(chat) || chat.migrated_to != null) continue;
+            if (seenChatIds.contains(chat.id) || seenCommunityIds.contains(chat.id)) continue;
+            seenChatIds.add(chat.id);
+            boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
+            int type = isChannel ? SECTION_CHANNELS : SECTION_GROUPS;
+            boolean owned = chat.creator;
+            if (mineOnly && type != SECTION_BOTS && !owned) continue;
+            String title = chat.title == null ? "" : chat.title;
+            MessageObject lastMessage = null;
+            ArrayList<MessageObject> messages = controller.dialogMessage.get(-chat.id);
+            if (messages != null && !messages.isEmpty()) lastMessage = messages.get(0);
+            String preview = lastMessage == null || lastMessage.messageText == null
+                    ? buildChatFallbackPreview(chat, isChannel)
+                    : lastMessage.messageText.toString().trim();
+            if (!query.isEmpty() && !title.toLowerCase(Locale.ROOT).contains(query)
+                    && !preview.toLowerCase(Locale.ROOT).contains(query)) continue;
+            sectionCounts[type]++;
+            if (type != selectedSection) continue;
+            addDialogRow(null, chat, null, title, preview, lastMessage);
+            visibleCount++;
+        }
+
+        updateTabCounts(sectionCounts);
+
+        boolean stillLoadingMore = !controller.isDialogsEndReached(0)
+                || allChatsInFlightForAccount.get(currentAccount)
+                || adminedChatsInFlightForAccount.get(currentAccount);
+
         if (visibleCount == 0) {
             TextView empty = new TextView(getContext());
             empty.setText(!query.isEmpty() ? "No matches for \"" + query + "\"."
+                    : stillLoadingMore ? "Syncing your channels, groups, bots & communities..."
                     : selectedSection == SECTION_BOTS && mineOnly
                     ? "No bots marked as yours yet. Tap All Joined, long-press your bot chat, and choose My Bot. You can also open BotFather to view bots created by your account."
                     : selectedSection == SECTION_COMMUNITIES
@@ -1208,10 +1417,34 @@ public class NGHubActivity extends BaseFragment {
         }
     }
 
+    private String buildChatFallbackPreview(TLRPC.Chat chat, boolean isChannel) {
+        if (chat == null) return "No recent message";
+        String role = chat.creator ? "Creator" : ChatObject.hasAdminRights(chat) ? "Admin" : "Member";
+        if (chat.participants_count > 0) {
+            return role + " • " + chat.participants_count + (isChannel ? " subscribers" : " members");
+        }
+        if (chat.username != null && !chat.username.isEmpty()) {
+            return role + " • @" + chat.username;
+        }
+        return role + (isChannel ? " channel" : " group");
+    }
+
+    private void updateTabCounts(int[] sectionCounts) {
+        if (tabs == null || sectionCounts == null || sectionCounts.length < 4) return;
+        String[] baseLabels = {"Channels", "Groups", "Bots", "Communities"};
+        for (int i = 0; i < tabs.length && i < baseLabels.length; i++) {
+            tabs[i].setText(baseLabels[i] + " (" + sectionCounts[i] + ")");
+        }
+    }
+
     private void updateTabStyles() {
         if (tabs == null) return;
         boolean isDark = Theme.isCurrentThemeDark();
         for (int i = 0; i < tabs.length; i++) {
+            tabs[i].setTextSize(12);
+            tabs[i].setSingleLine(true);
+            tabs[i].setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tabs[i].setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), 0);
             tabs[i].setTextColor(i == selectedSection ? COLOR_CYAN : (isDark ? 0xFFCBD5E1 : 0xFF64748B));
             tabs[i].setAlpha(i == selectedSection ? 1f : 0.78f);
         }
