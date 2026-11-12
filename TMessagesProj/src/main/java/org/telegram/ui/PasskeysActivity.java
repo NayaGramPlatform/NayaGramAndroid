@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.PasskeysController;
@@ -50,6 +51,7 @@ import org.telegram.ui.Stars.ExplainStarsSheet;
 import org.telegram.ui.Stories.recorder.ButtonWithCounterView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 @RequiresApi(api = 28)
 public class PasskeysActivity extends BaseFragment {
@@ -177,15 +179,34 @@ public class PasskeysActivity extends BaseFragment {
     }
 
     private void showPasskeyError(String error) {
-        if (error != null && error.contains("FRESH_RESET_AUTHORIZATION")) {
+        // Telegram RPC errors are returned through PasskeysController as error.text.
+        // Keep diagnostics to a code-like token only; never log request/credential payloads.
+        String diagnosticCode = error == null ? "EMPTY_ERROR" : error.trim().toUpperCase(Locale.US);
+        if (!diagnosticCode.matches("[A-Z0-9_]{1,96}")) {
+            diagnosticCode = "NON_CODE_ERROR";
+        }
+        FileLog.d("Passkey registration failed: " + diagnosticCode);
+
+        if ("FRESH_RESET_AUTHORIZATION_FORBIDDEN".equals(diagnosticCode)
+                || diagnosticCode.startsWith("FRESH_RESET_AUTHORIZATION_")) {
             new AlertDialog.Builder(getContext())
-                .setTitle("Passkey temporarily unavailable")
-                .setMessage("Telegram's server rejected passkey registration with FRESH_RESET_AUTHORIZATION_FORBIDDEN. This is an account-security restriction, not a local biometric error, and NayaGram cannot bypass it. Keep your current session signed in; do not clear app data or reinstall just to retry. Try again from a device you previously used with this Telegram account, or wait and retry later. If it persists, use Telegram's official support.")
+                .setTitle("Passkey setup temporarily unavailable")
+                .setMessage("Telegram's server refused this passkey registration because the current authorization does not meet its fresh-reset security requirement. The app cannot override this server-side restriction. Keep your current session signed in; do not clear app data, reinstall, or revoke sessions to retry. Try again later or use Telegram's official support if the restriction persists.")
                 .setPositiveButton(getString(R.string.OK), null)
                 .show();
             return;
         }
-        BulletinFactory.of(this).showForError(error == null ? "Unable to create passkey. Please try again later." : error, true);
+
+        if (diagnosticCode.contains("NETWORK")
+                || diagnosticCode.contains("TIMEOUT")
+                || diagnosticCode.contains("CONNECTION")) {
+            BulletinFactory.of(this).showForError("Passkey setup could not reach Telegram. Check your connection and try again.", true);
+            return;
+        }
+        if ("CANCELLED".equals(diagnosticCode)) {
+            return;
+        }
+        BulletinFactory.of(this).showForError("Passkey setup could not be completed. Check your account authorization and try again. If the problem persists, contact Telegram support.", true);
     }
 
     public void added(TL_account.Passkey passkey) {
