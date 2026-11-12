@@ -211,6 +211,9 @@ public class NGAutoReplyActivity extends BaseFragment {
         subtitle.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(10));
         card.addView(subtitle);
 
+        // Rich Text Formatting & Link Toolbar
+        card.addView(buildFormattingToolbar(context, () -> autoAnswerEditText));
+
         // Edit box (Novagram AutoAnswerMenu style - types and auto-saves)
         autoAnswerEditText = new EditText(context);
         autoAnswerEditText.setGravity(Gravity.TOP | Gravity.START);
@@ -437,7 +440,9 @@ public class NGAutoReplyActivity extends BaseFragment {
         replyInput.setMinLines(2);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.topMargin = AndroidUtilities.dp(12);
+        lp.bottomMargin = AndroidUtilities.dp(4);
         layout.addView(replyInput, lp);
+        layout.addView(buildFormattingToolbar(context, () -> replyInput));
 
         b.setView(layout);
 
@@ -453,6 +458,154 @@ public class NGAutoReplyActivity extends BaseFragment {
             Toast.makeText(context, "Rule added successfully", Toast.LENGTH_SHORT).show();
         });
 
+        b.setNegativeButton("Cancel", null);
+        b.show();
+    }
+
+    private View buildFormattingToolbar(Context context, java.util.concurrent.Callable<EditText> targetGetter) {
+        android.widget.HorizontalScrollView hsv = new android.widget.HorizontalScrollView(context);
+        hsv.setHorizontalScrollBarEnabled(false);
+        LinearLayout.LayoutParams hsvLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hsvLp.bottomMargin = AndroidUtilities.dp(8);
+        hsv.setLayoutParams(hsvLp);
+
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        hsv.addView(row);
+
+        boolean isDark = Theme.isCurrentThemeDark();
+
+        String[][] tools = new String[][]{
+            {"B", "**", "**", "Bold"},
+            {"I", "_", "_", "Italic"},
+            {"</>", "`", "`", "Mono"},
+            {"✦", "||", "||", "Spoiler"},
+            {"❝", "> ", "", "Quote"}
+        };
+
+        for (String[] t : tools) {
+            TextView btn = createToolbarButton(context, t[0], isDark);
+            btn.setOnClickListener(v -> {
+                try {
+                    EditText et = targetGetter.call();
+                    wrapOrInsert(et, t[1], t[2]);
+                } catch (Exception ignored) {}
+            });
+            row.addView(btn);
+        }
+
+        // Link Button
+        TextView linkBtn = createToolbarButton(context, "🔗 Link", isDark);
+        linkBtn.setOnClickListener(v -> {
+            try {
+                EditText et = targetGetter.call();
+                showInsertLinkDialog(context, et);
+            } catch (Exception ignored) {}
+        });
+        row.addView(linkBtn);
+
+        // Style Preset Button
+        TextView styleBtn = createToolbarButton(context, "🎨 Styles", isDark);
+        styleBtn.setOnClickListener(v -> {
+            org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(context);
+        });
+        row.addView(styleBtn);
+
+        return hsv;
+    }
+
+    private TextView createToolbarButton(Context context, String label, boolean isDark) {
+        TextView btn = new TextView(context);
+        btn.setText(label);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+        btn.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        btn.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+        btn.setGravity(Gravity.CENTER);
+        btn.setPadding(AndroidUtilities.dp(10), AndroidUtilities.dp(6), AndroidUtilities.dp(10), AndroidUtilities.dp(6));
+
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(isDark ? 0xFF1E293B : 0xFFF1F5F9);
+        gd.setCornerRadius(AndroidUtilities.dp(8));
+        gd.setStroke(AndroidUtilities.dp(1), isDark ? 0xFF334155 : 0xFFCBD5E1);
+        btn.setBackground(gd);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.rightMargin = AndroidUtilities.dp(6);
+        btn.setLayoutParams(lp);
+
+        return btn;
+    }
+
+    private void wrapOrInsert(EditText et, String startTag, String endTag) {
+        if (et == null) return;
+        int start = et.getSelectionStart();
+        int end = et.getSelectionEnd();
+        Editable text = et.getText();
+        if (text == null) return;
+
+        if (start >= 0 && end > start) {
+            String sel = text.subSequence(start, end).toString();
+            text.replace(start, end, startTag + sel + endTag);
+            et.setSelection(start + startTag.length() + sel.length() + endTag.length());
+        } else {
+            int pos = Math.max(0, start);
+            String snippet = startTag + "text" + endTag;
+            text.insert(pos, snippet);
+            et.setSelection(pos + startTag.length(), pos + startTag.length() + 4);
+        }
+    }
+
+    private void showInsertLinkDialog(Context context, EditText targetEditText) {
+        if (context == null || targetEditText == null) return;
+
+        AlertDialog.Builder b = new AlertDialog.Builder(context);
+        b.setTitle("Create Hyperlink");
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(10), AndroidUtilities.dp(20), AndroidUtilities.dp(10));
+
+        TextView titleLabel = new TextView(context);
+        titleLabel.setText("Link Title / Text:");
+        titleLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        layout.addView(titleLabel);
+
+        EditText titleInput = new EditText(context);
+        titleInput.setHint("e.g. My Website / Support Channel");
+        titleInput.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        layout.addView(titleInput);
+
+        TextView urlLabel = new TextView(context);
+        urlLabel.setText("URL (Web Link):");
+        urlLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
+        urlLabel.setPadding(0, AndroidUtilities.dp(10), 0, 0);
+        layout.addView(urlLabel);
+
+        EditText urlInput = new EditText(context);
+        urlInput.setHint("https://...");
+        urlInput.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+        layout.addView(urlInput);
+
+        b.setView(layout);
+        b.setPositiveButton("Insert", (d, w) -> {
+            String title = titleInput.getText() != null ? titleInput.getText().toString().trim() : "";
+            String url = urlInput.getText() != null ? urlInput.getText().toString().trim() : "";
+            if (title.isEmpty()) title = "Link";
+            if (url.isEmpty()) url = "https://";
+            String markdown = "[" + title + "](" + url + ")";
+
+            int pos = targetEditText.getSelectionStart();
+            Editable text = targetEditText.getText();
+            if (text != null) {
+                if (pos >= 0) {
+                    text.insert(pos, markdown);
+                    targetEditText.setSelection(pos + markdown.length());
+                } else {
+                    targetEditText.append(markdown);
+                }
+            }
+        });
         b.setNegativeButton("Cancel", null);
         b.show();
     }

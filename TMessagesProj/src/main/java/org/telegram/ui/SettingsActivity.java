@@ -721,7 +721,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
 
         // 3. NayaGram section placed right BELOW Privacy & Security
         items.add(UItem.asHeader("NayaGram"));
-        items.add(SettingCell.Factory.of(100, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_features, "NayaGram Settings", "Stories, clean forward, translator, features", ""));
+        items.add(SettingCell.Factory.of(100, IconBackgroundColors.BLUE_DEEP.top, IconBackgroundColors.BLUE_DEEP.bottom, R.drawable.ic_naya_settings, "NayaGram Settings", "Stories, clean forward, translator, features", ""));
         items.add(SettingCell.Factory.of(108, IconBackgroundColors.GREEN.top, IconBackgroundColors.GREEN.bottom, R.drawable.settings_devices, "Infonity AI 💎", "Official AI Assistant @InfonityAI_Bot", ""));
         items.add(SettingCell.Factory.of(112, IconBackgroundColors.PURPLE.top, IconBackgroundColors.CYAN.bottom, R.drawable.msg_admins, "NG Admin 🛡️", "Official Leadership & Admins", ""));
         items.add(SettingCell.Factory.of(106, IconBackgroundColors.ORANGE.top, IconBackgroundColors.ORANGE.bottom, R.drawable.settings_chat, "App Theme", "Customize wallpaper, colors & bubbles", ""));
