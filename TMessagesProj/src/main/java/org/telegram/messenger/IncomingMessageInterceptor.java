@@ -170,6 +170,7 @@ public class IncomingMessageInterceptor {
                 } catch (Throwable ignored) {}
 
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
+                final String finalCleanText = cleanText;
 
                 AndroidUtilities.runOnUIThread(() -> {
                     ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
@@ -180,7 +181,7 @@ public class IncomingMessageInterceptor {
                     } catch (Throwable ignored) {
                     }
                     SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-                            cleanText, dialogId, null, null, null, true, finalEntities, null, null, true, 0, 0, null, false
+                            finalCleanText, dialogId, null, null, null, true, finalEntities, null, null, true, 0, 0, null, false
                     );
                     SendMessagesHelper.getInstance(accountId).sendMessage(params);
 
