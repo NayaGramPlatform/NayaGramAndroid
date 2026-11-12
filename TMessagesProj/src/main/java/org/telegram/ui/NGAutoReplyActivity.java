@@ -30,6 +30,11 @@ import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.messenger.MediaDataController;
+import org.telegram.messenger.UserConfig;
+import org.telegram.tgnet.TLRPC;
+import org.telegram.ui.Components.EditTextCaption;
+import org.telegram.ui.Components.URLSpanReplacement;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.LayoutHelper;
 
@@ -47,7 +52,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
     private Switch masterSwitch;
     private TextView masterStatusText;
-    private EditText autoAnswerEditText;
+    private EditTextCaption autoAnswerEditText;
     private LinearLayout rulesContainer;
     private TextView emptyRulesText;
 
@@ -214,8 +219,8 @@ public class NGAutoReplyActivity extends BaseFragment {
         // Rich Text Formatting & Link Toolbar
         card.addView(buildFormattingToolbar(context, () -> autoAnswerEditText));
 
-        // Edit box (Novagram AutoAnswerMenu style - types and auto-saves)
-        autoAnswerEditText = new EditText(context);
+        // Edit box (Novagram AutoAnswerMenu style with Telegram native EditTextCaption - 100% live formatting)
+        autoAnswerEditText = new EditTextCaption(context, null);
         autoAnswerEditText.setGravity(Gravity.TOP | Gravity.START);
         autoAnswerEditText.setMinLines(4);
         autoAnswerEditText.setMaxLines(8);
@@ -233,14 +238,22 @@ public class NGAutoReplyActivity extends BaseFragment {
         autoAnswerEditText.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
 
         String savedText = AutoReplyManager.getInstance().getAutoAnswerText();
+        String savedEntities = AutoReplyManager.getInstance().getAutoAnswerEntitiesJson();
         autoAnswerEditText.setText(savedText);
+        if (savedEntities != null && !savedEntities.isEmpty()) {
+            AutoReplyManager.restoreSpansFromJson(autoAnswerEditText.getText(), savedEntities);
+        } else if (savedText != null && (savedText.contains("**") || savedText.contains("__") || savedText.contains("||") || savedText.contains("`") || savedText.contains("["))) {
+            convertLegacyMarkdownToSpans(autoAnswerEditText.getText());
+        }
         autoAnswerEditText.setSelection(autoAnswerEditText.getText().length());
 
         autoAnswerEditText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void afterTextChanged(Editable s) {
-                AutoReplyManager.getInstance().setAutoAnswerText(s != null ? s.toString() : "");
+                String plain = s != null ? s.toString() : "";
+                String json = AutoReplyManager.serializeSpansToJson(s);
+                AutoReplyManager.getInstance().setAutoAnswerText(plain, json);
             }
         });
 
@@ -435,7 +448,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         keywordInput.setHint("Keyword to match (e.g. price, address)");
         layout.addView(keywordInput);
 
-        final EditText replyInput = new EditText(context);
+        final EditTextCaption replyInput = new EditTextCaption(context, null);
         replyInput.setHint("Automated reply text");
         replyInput.setMinLines(2);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -449,11 +462,12 @@ public class NGAutoReplyActivity extends BaseFragment {
         b.setPositiveButton("Save", (dialog, which) -> {
             String kw = keywordInput.getText().toString().trim();
             String rep = replyInput.getText().toString().trim();
+            String repJson = AutoReplyManager.serializeSpansToJson(replyInput.getText());
             if (TextUtils.isEmpty(kw) || TextUtils.isEmpty(rep)) {
                 Toast.makeText(context, "Keyword and reply cannot be empty", Toast.LENGTH_SHORT).show();
                 return;
             }
-            AutoReplyManager.getInstance().addRule(new AutoReplyManager.AutoReplyRule(kw, kw, rep));
+            AutoReplyManager.getInstance().addRule(new AutoReplyManager.AutoReplyRule(kw, kw, rep, repJson));
             refreshRulesList(context);
             Toast.makeText(context, "Rule added successfully", Toast.LENGTH_SHORT).show();
         });
@@ -462,7 +476,7 @@ public class NGAutoReplyActivity extends BaseFragment {
         b.show();
     }
 
-    private View buildFormattingToolbar(Context context, java.util.concurrent.Callable<EditText> targetGetter) {
+    private View buildFormattingToolbar(Context context, java.util.concurrent.Callable<EditTextCaption> targetGetter) {
         android.widget.HorizontalScrollView hsv = new android.widget.HorizontalScrollView(context);
         hsv.setHorizontalScrollBarEnabled(false);
         LinearLayout.LayoutParams hsvLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -476,36 +490,88 @@ public class NGAutoReplyActivity extends BaseFragment {
 
         boolean isDark = Theme.isCurrentThemeDark();
 
-        String[][] tools = new String[][]{
-            {"B", "**", "**", "Bold"},
-            {"I", "_", "_", "Italic"},
-            {"</>", "`", "`", "Mono"},
-            {"✦", "||", "||", "Spoiler"},
-            {"❝", "> ", "", "Quote"}
-        };
+        // 1. Bold Button (1-Click Telegram Native Bold - Zero Asterisks)
+        TextView boldBtn = createToolbarButton(context, "B Bold", isDark);
+        boldBtn.setOnClickListener(v -> {
+            try {
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    selectWordOrAll(et);
+                    et.makeSelectedBold();
+                }
+            } catch (Exception ignored) {}
+        });
+        row.addView(boldBtn);
 
-        for (String[] t : tools) {
-            TextView btn = createToolbarButton(context, t[0], isDark);
-            btn.setOnClickListener(v -> {
-                try {
-                    EditText et = targetGetter.call();
-                    wrapOrInsert(et, t[1], t[2]);
-                } catch (Exception ignored) {}
-            });
-            row.addView(btn);
-        }
+        // 2. Italic Button (1-Click Telegram Native Italic - Zero Underscores)
+        TextView italicBtn = createToolbarButton(context, "I Italic", isDark);
+        italicBtn.setOnClickListener(v -> {
+            try {
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    selectWordOrAll(et);
+                    et.makeSelectedItalic();
+                }
+            } catch (Exception ignored) {}
+        });
+        row.addView(italicBtn);
 
-        // Link Button
+        // 3. Monospace Button (1-Click Telegram Native Code - Zero Backticks)
+        TextView monoBtn = createToolbarButton(context, "</> Mono", isDark);
+        monoBtn.setOnClickListener(v -> {
+            try {
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    selectWordOrAll(et);
+                    et.makeSelectedMono();
+                }
+            } catch (Exception ignored) {}
+        });
+        row.addView(monoBtn);
+
+        // 4. Spoiler Button (1-Click Telegram Native Animated Spoiler - Zero Vertical Bars)
+        TextView spoilerBtn = createToolbarButton(context, "✦ Spoiler", isDark);
+        spoilerBtn.setOnClickListener(v -> {
+            try {
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    selectWordOrAll(et);
+                    et.makeSelectedSpoiler();
+                }
+            } catch (Exception ignored) {}
+        });
+        row.addView(spoilerBtn);
+
+        // 5. Quote Button (1-Click Telegram Native Quote - Zero Angle Brackets)
+        TextView quoteBtn = createToolbarButton(context, "❝ Quote", isDark);
+        quoteBtn.setOnClickListener(v -> {
+            try {
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    selectWordOrAll(et);
+                    et.makeSelectedQuote();
+                }
+            } catch (Exception ignored) {}
+        });
+        row.addView(quoteBtn);
+
+        // 6. Hyperlink Button (1-Click Telegram Native Link - Zero Brackets)
         TextView linkBtn = createToolbarButton(context, "🔗 Link", isDark);
         linkBtn.setOnClickListener(v -> {
             try {
-                EditText et = targetGetter.call();
-                showInsertLinkDialog(context, et);
+                EditTextCaption et = targetGetter.call();
+                if (et != null) {
+                    if (et.hasSelection()) {
+                        et.makeSelectedUrl();
+                    } else {
+                        showInsertLinkDialogNative(context, et);
+                    }
+                }
             } catch (Exception ignored) {}
         });
         row.addView(linkBtn);
 
-        // Style Preset Button
+        // 7. Text Styles Preset Button (International Telegram Palette)
         TextView styleBtn = createToolbarButton(context, "🎨 Styles", isDark);
         styleBtn.setOnClickListener(v -> {
             org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(context);
@@ -533,41 +599,43 @@ public class NGAutoReplyActivity extends BaseFragment {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.rightMargin = AndroidUtilities.dp(6);
         btn.setLayoutParams(lp);
-
         return btn;
     }
 
-    private void wrapOrInsert(EditText et, String startTag, String endTag) {
+    private void selectWordOrAll(EditTextCaption et) {
         if (et == null) return;
+        Editable text = et.getText();
+        if (text == null || text.length() == 0) return;
         int start = et.getSelectionStart();
         int end = et.getSelectionEnd();
-        Editable text = et.getText();
-        if (text == null) return;
-
-        if (start >= 0 && end > start) {
-            String sel = text.subSequence(start, end).toString();
-            text.replace(start, end, startTag + sel + endTag);
-            et.setSelection(start + startTag.length() + sel.length() + endTag.length());
+        if (start != end) return;
+        int len = text.length();
+        int wStart = Math.min(Math.max(0, start), len);
+        int wEnd = wStart;
+        while (wStart > 0 && !Character.isWhitespace(text.charAt(wStart - 1))) {
+            wStart--;
+        }
+        while (wEnd < len && !Character.isWhitespace(text.charAt(wEnd))) {
+            wEnd++;
+        }
+        if (wStart < wEnd) {
+            et.setSelection(wStart, wEnd);
         } else {
-            int pos = Math.max(0, start);
-            String snippet = startTag + "text" + endTag;
-            text.insert(pos, snippet);
-            et.setSelection(pos + startTag.length(), pos + startTag.length() + 4);
+            et.setSelection(0, len);
         }
     }
 
-    private void showInsertLinkDialog(Context context, EditText targetEditText) {
+    private void showInsertLinkDialogNative(Context context, EditTextCaption targetEditText) {
         if (context == null || targetEditText == null) return;
-
         AlertDialog.Builder b = new AlertDialog.Builder(context);
-        b.setTitle("Create Hyperlink");
+        b.setTitle(LocaleController.getString(R.string.CreateLink));
 
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(10), AndroidUtilities.dp(20), AndroidUtilities.dp(10));
 
         TextView titleLabel = new TextView(context);
-        titleLabel.setText("Link Title / Text:");
+        titleLabel.setText("Link Text:");
         titleLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         layout.addView(titleLabel);
 
@@ -577,36 +645,50 @@ public class NGAutoReplyActivity extends BaseFragment {
         layout.addView(titleInput);
 
         TextView urlLabel = new TextView(context);
-        urlLabel.setText("URL (Web Link):");
+        urlLabel.setText(LocaleController.getString(R.string.URL) + ":");
         urlLabel.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         urlLabel.setPadding(0, AndroidUtilities.dp(10), 0, 0);
         layout.addView(urlLabel);
 
         EditText urlInput = new EditText(context);
         urlInput.setHint("https://...");
+        urlInput.setText("https://");
         urlInput.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
         layout.addView(urlInput);
 
         b.setView(layout);
-        b.setPositiveButton("Insert", (d, w) -> {
+        b.setPositiveButton(LocaleController.getString(R.string.OK), (d, w) -> {
             String title = titleInput.getText() != null ? titleInput.getText().toString().trim() : "";
             String url = urlInput.getText() != null ? urlInput.getText().toString().trim() : "";
             if (title.isEmpty()) title = "Link";
             if (url.isEmpty()) url = "https://";
-            String markdown = "[" + title + "](" + url + ")";
 
-            int pos = targetEditText.getSelectionStart();
-            Editable text = targetEditText.getText();
-            if (text != null) {
-                if (pos >= 0) {
-                    text.insert(pos, markdown);
-                    targetEditText.setSelection(pos + markdown.length());
-                } else {
-                    targetEditText.append(markdown);
-                }
+            int start = Math.max(0, targetEditText.getSelectionStart());
+            Editable editable = targetEditText.getText();
+            if (editable != null) {
+                editable.insert(start, title);
+                editable.setSpan(new URLSpanReplacement(url), start, start + title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                targetEditText.setSelection(start + title.length());
             }
         });
-        b.setNegativeButton("Cancel", null);
+        b.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
         b.show();
+    }
+
+    public static void convertLegacyMarkdownToSpans(Editable editable) {
+        if (editable == null || editable.length() == 0) return;
+        try {
+            CharSequence[] arr = new CharSequence[]{editable.toString()};
+            ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(UserConfig.selectedAccount).getEntities(arr, true);
+            if (entities != null && !entities.isEmpty() && arr[0] != null) {
+                editable.replace(0, editable.length(), arr[0]);
+                MediaDataController.addTextStyleRuns(entities, arr[0], editable);
+                for (TLRPC.MessageEntity entity : entities) {
+                    if (entity instanceof TLRPC.TL_messageEntityTextUrl) {
+                        editable.setSpan(new URLSpanReplacement(entity.url), entity.offset, entity.offset + entity.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 }

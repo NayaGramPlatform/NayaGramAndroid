@@ -113,16 +113,23 @@ public class IncomingMessageInterceptor {
                     }
                 }
 
-                // Step 1: Pre-process single underscore _italic_ into __italic__ for MediaDataController
-                String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
-
-                // Step 2: Use MediaDataController to parse standard Markdown (**bold**, __italic__, `mono`, ||spoiler||)
-                CharSequence[] messageArr = new CharSequence[]{preprocessed};
-                ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
-                if (entities == null) {
-                    entities = new ArrayList<>();
+                // Step 1: Check if native entitiesJson exists from AutoReplyManager or matchedRule
+                ArrayList<TLRPC.MessageEntity> entities = null;
+                String cleanText = replyText;
+                String entJson = matchedRule != null ? matchedRule.entitiesJson : autoReplyManager.getAutoAnswerEntitiesJson();
+                if (entJson != null && !entJson.isEmpty()) {
+                    entities = AutoReplyManager.parseEntitiesFromJson(entJson);
                 }
-                final String cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
+                if (entities == null || entities.isEmpty()) {
+                    // Fallback to markdown parsing for legacy text
+                    String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
+                    CharSequence[] messageArr = new CharSequence[]{preprocessed};
+                    entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
+                    if (entities == null) {
+                        entities = new ArrayList<>();
+                    }
+                    cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
+                }
 
                 // Step 3: Inherit user active text style if set in Text Style menu
                 try {
