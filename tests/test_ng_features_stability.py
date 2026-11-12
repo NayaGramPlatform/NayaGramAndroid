@@ -52,6 +52,12 @@ class NayaGramFeaturesStabilityTest(unittest.TestCase):
         self.assertIn('recipient.status instanceof TLRPC.TL_userStatusRecently', enter_view_code)
         self.assertIn('sendMessageInternal(true, 0x7FFFFFFE, 0, 0, true);', enter_view_code)
 
+    def test_light_theme_is_default_without_system_dark_mode_following(self):
+        theme_code = (ROOT / 'java/org/telegram/ui/ActionBar/Theme.java').read_text()
+        # New installs should keep the light theme unless the user explicitly opts into auto-night.
+        self.assertIn('selectedAutoNightType = preferences.getInt("selectedAutoNightType", AUTO_NIGHT_TYPE_NONE);', theme_code)
+        self.assertNotIn('preferences.getInt("selectedAutoNightType", Build.VERSION.SDK_INT >= 29 ? AUTO_NIGHT_TYPE_SYSTEM : AUTO_NIGHT_TYPE_NONE)', theme_code)
+
     def test_support_bulletin_styling(self):
         chat_activity_code = (ROOT / 'java/org/telegram/ui/ChatActivity.java').read_text()
         # Custom vibrant green and white styling with animated star
