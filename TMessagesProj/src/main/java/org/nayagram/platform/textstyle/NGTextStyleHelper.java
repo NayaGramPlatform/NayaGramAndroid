@@ -137,33 +137,40 @@ public final class NGTextStyleHelper {
         } catch (Exception ignored) {}
 
         try {
-            int length = editField.length();
-            editField.setSelectionOverride(0, length);
-            editField.makeSelectedRegular();
-            editField.setSelectionOverride(0, length);
+            android.text.Editable editable = editField.getText();
+            if (editable == null || editable.length() == 0) return;
+            int length = editable.length();
 
+            org.telegram.ui.Components.TextStyleSpan.TextStyleRun run = new org.telegram.ui.Components.TextStyleSpan.TextStyleRun();
             switch (style) {
                 case STYLE_BOLD:
-                    editField.makeSelectedBold();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_BOLD;
                     break;
                 case STYLE_ITALIC:
-                    editField.makeSelectedItalic();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_ITALIC;
                     break;
                 case STYLE_SPOILER:
-                    editField.makeSelectedSpoiler();
-                    break;
-                case STYLE_QUOTE:
-                    editField.makeSelectedQuote();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_SPOILER;
                     break;
                 case STYLE_MONO:
-                    editField.makeSelectedMono();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_MONO;
                     break;
                 case STYLE_STRIKE:
-                    editField.makeSelectedStrike();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_STRIKE;
                     break;
                 case STYLE_UNDERLINE:
-                    editField.makeSelectedUnderline();
+                    run.flags |= org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_UNDERLINE;
                     break;
+                case STYLE_QUOTE:
+                    editField.setSelectionOverride(0, length);
+                    editField.makeSelectedQuote();
+                    return;
+            }
+            if (run.flags != 0) {
+                org.telegram.messenger.MediaDataController.addStyleToText(new org.telegram.ui.Components.TextStyleSpan(run), 0, length, editable, true);
+                if ((run.flags & org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_SPOILER) != 0) {
+                    editField.invalidateSpoilers();
+                }
             }
         } catch (Exception ignored) {}
     }

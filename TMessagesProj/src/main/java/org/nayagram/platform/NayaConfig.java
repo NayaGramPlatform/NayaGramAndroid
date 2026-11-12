@@ -335,7 +335,7 @@ public class NayaConfig {
     private static final String KEY_RADIANT_ONLINE_AURA = "feature_radiant_online_aura";
     private static final String KEY_STEALTH_OFFLINE_PRESENCE = "feature_stealth_offline_presence";
 
-    public boolean isRadiantOnlineAuraEnabled() { return preferences.getBoolean(KEY_RADIANT_ONLINE_AURA, false); }
+    public boolean isRadiantOnlineAuraEnabled() { return preferences.getBoolean(KEY_RADIANT_ONLINE_AURA, true); }
     public void setRadiantOnlineAuraEnabled(boolean e) { preferences.edit().putBoolean(KEY_RADIANT_ONLINE_AURA, e).apply(); }
 
     public boolean isStealthOfflinePresenceEnabled() { return preferences.getBoolean(KEY_STEALTH_OFFLINE_PRESENCE, false); }

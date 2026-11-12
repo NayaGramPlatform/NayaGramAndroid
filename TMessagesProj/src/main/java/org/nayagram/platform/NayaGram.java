@@ -143,7 +143,7 @@ public class NayaGram {
 
     public static int getStatusTextColor(boolean isOnline, boolean isDarkTheme) {
         if (isOnline) {
-            return isDarkTheme ? 0xFF34D399 : 0xFF059669;
+            return isDarkTheme ? 0xFF10B981 : 0xFF059669;
         } else {
             return isDarkTheme ? 0xFF38BDF8 : 0xFF0284C7;
         }

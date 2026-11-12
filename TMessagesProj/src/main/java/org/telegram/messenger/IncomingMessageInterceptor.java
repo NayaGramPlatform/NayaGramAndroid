@@ -114,73 +114,12 @@ public class IncomingMessageInterceptor {
                 String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
 
                 // Step 2: Use MediaDataController to parse standard Markdown (**bold**, __italic__, `mono`, ||spoiler||)
-                CharSequence[] messageArr = new CharSequence[]{preprocessed};
+                CharSequence[] messageArr = new CharSequence[]{rawResponse};
                 ArrayList<TLRPC.MessageEntity> entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
                 if (entities == null) {
                     entities = new ArrayList<>();
                 }
-                String currentText = messageArr[0] != null ? messageArr[0].toString() : preprocessed;
-
-                // Step 3: Parse quote lines starting with "> " -> TL_messageEntityBlockquote
-                String[] lines = currentText.split("\n", -1);
-                StringBuilder newTextBuilder = new StringBuilder();
-                int lineStart = 0;
-                for (int i = 0; i < lines.length; i++) {
-                    String line = lines[i];
-                    if (line.startsWith("> ")) {
-                        String quoteContent = line.substring(2);
-                        newTextBuilder.append(quoteContent);
-                        TLRPC.TL_messageEntityBlockquote quoteEntity = new TLRPC.TL_messageEntityBlockquote();
-                        quoteEntity.offset = lineStart;
-                        quoteEntity.length = quoteContent.length();
-                        entities.add(quoteEntity);
-                        for (int e = 0; e < entities.size() - 1; e++) {
-                            TLRPC.MessageEntity existing = entities.get(e);
-                            if (existing.offset >= lineStart + 2) {
-                                existing.offset -= 2;
-                            }
-                        }
-                        lineStart += quoteContent.length();
-                    } else {
-                        newTextBuilder.append(line);
-                        lineStart += line.length();
-                    }
-                    if (i < lines.length - 1) {
-                        newTextBuilder.append("\n");
-                        lineStart += 1;
-                    }
-                }
-                currentText = newTextBuilder.toString();
-
-                // Step 4: Parse [label](url) -> TL_messageEntityTextUrl
-                Matcher urlMatcher = URL_PATTERN.matcher(currentText);
-                while (urlMatcher.find()) {
-                    String label = urlMatcher.group(1);
-                    String url = urlMatcher.group(2);
-                    int start = urlMatcher.start();
-                    int end = urlMatcher.end();
-                    int fullLen = end - start;
-                    int removed = fullLen - label.length();
-
-                    currentText = currentText.substring(0, start) + label + currentText.substring(end);
-
-                    for (int e = 0; e < entities.size(); e++) {
-                        TLRPC.MessageEntity existing = entities.get(e);
-                        if (existing.offset >= end) {
-                            existing.offset -= removed;
-                        }
-                    }
-
-                    TLRPC.TL_messageEntityTextUrl urlEntity = new TLRPC.TL_messageEntityTextUrl();
-                    urlEntity.offset = start;
-                    urlEntity.length = label.length();
-                    urlEntity.url = url;
-                    entities.add(urlEntity);
-
-                    urlMatcher = URL_PATTERN.matcher(currentText);
-                }
-
-                final String cleanText = currentText;
+                final String cleanText = messageArr[0] != null ? messageArr[0].toString() : rawResponse;
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
 
                 AndroidUtilities.runOnUIThread(() -> {

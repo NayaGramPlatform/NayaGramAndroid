@@ -1,5 +1,6 @@
 package org.telegram.messenger;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -11,25 +12,32 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/** Handles automatic replies for incoming messages and keyword rules. */
+/**
+ * AutoReplyManager - Clean Novagram & Graph Messenger style auto-reply engine.
+ * - Simple main auto-answer text (like Novagram AutoAnswer.kt).
+ * - Optional custom keyword rules (like Graph Messenger).
+ * - Zero forced preset rules, zero cooldown traps, zero broken markdown tags.
+ */
 public class AutoReplyManager {
     private static AutoReplyManager instance;
     private static final String TAG = "AutoReplyManager";
     private static final String PREFS_NAME = "auto_reply_prefs";
     private static final String KEY_ENABLED = "auto_reply_enabled";
+    private static final String KEY_TEXT = "auto_answer_text";
+    private static final String KEY_PRIVATE_ONLY = "auto_reply_private_only";
     private static final String KEY_RULES = "auto_reply_rules";
-    private static final String KEY_RULES_VERSION = "auto_reply_rules_version";
-    private static final int CURRENT_RULES_VERSION = 20;
 
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
     private final List<AutoReplyRule> rules = new ArrayList<>();
     private boolean autoReplyEnabled;
+    private String autoAnswerText = "";
+    private boolean privateOnly = true;
 
     private AutoReplyManager() {
         preferences = ApplicationLoader.applicationContext.getSharedPreferences(
-                PREFS_NAME, android.content.Context.MODE_PRIVATE);
-        loadRules();
+                PREFS_NAME, Context.MODE_PRIVATE);
+        load();
     }
 
     public static synchronized AutoReplyManager getInstance() {
@@ -45,7 +53,6 @@ public class AutoReplyManager {
         try {
             NayaConfig.getInstance().setSmartAutoReply(enabled);
         } catch (Throwable ignored) {}
-        FileLog.d(TAG + ": Auto-reply " + (enabled ? "enabled" : "disabled"));
     }
 
     public synchronized boolean isAutoReplyEnabled() {
@@ -56,9 +63,26 @@ public class AutoReplyManager {
         }
     }
 
+    public synchronized String getAutoAnswerText() {
+        return autoAnswerText != null ? autoAnswerText : "";
+    }
+
+    public synchronized void setAutoAnswerText(String text) {
+        autoAnswerText = text != null ? text : "";
+        preferences.edit().putString(KEY_TEXT, autoAnswerText).apply();
+    }
+
+    public synchronized boolean isPrivateOnly() {
+        return privateOnly;
+    }
+
+    public synchronized void setPrivateOnly(boolean val) {
+        privateOnly = val;
+        preferences.edit().putBoolean(KEY_PRIVATE_ONLY, val).apply();
+    }
+
     public synchronized void addRule(AutoReplyRule rule) {
-        if (rule == null || rule.name == null || rule.name.trim().isEmpty()
-                || rule.keyword == null || rule.keyword.trim().isEmpty() || rule.response == null) {
+        if (rule == null || rule.keyword == null || rule.keyword.trim().isEmpty() || rule.response == null) {
             return;
         }
         rules.add(rule);
@@ -86,11 +110,8 @@ public class AutoReplyManager {
         }
     }
 
-    public synchronized void removeRule(String ruleName) {
-        if (ruleName == null) {
-            return;
-        }
-        rules.removeIf(rule -> ruleName.equals(rule.name));
+    public synchronized void clearAllRules() {
+        rules.clear();
         saveRules();
     }
 
@@ -98,106 +119,79 @@ public class AutoReplyManager {
         return new ArrayList<>(rules);
     }
 
-    public synchronized AutoReplyRule findMatchingRule(String messageText) {
-        if (messageText == null) {
-            return null;
+    /**
+     * Resolves response for an incoming message:
+     * 1. Checks custom keyword rules first (Graph Messenger style).
+     * 2. If no keyword matches, falls back to the main auto-answer text (Novagram style).
+     */
+    public synchronized String getAutoReplyResponse(String messageText) {
+        if (messageText != null && !rules.isEmpty()) {
+            String lower = messageText.toLowerCase(Locale.ROOT).trim();
+            for (AutoReplyRule rule : rules) {
+                if (rule != null && rule.enabled && rule.keyword != null && !rule.keyword.trim().isEmpty()) {
+                    if (matchesKeyword(lower, rule)) {
+                        return rule.response;
+                    }
+                }
+            }
         }
-        String lowerMessage = messageText.toLowerCase(Locale.ROOT).trim();
-        for (AutoReplyRule rule : rules) {
-            if (rule == null || !rule.enabled || rule.keyword == null) {
-                continue;
-            }
-            if (matchesKeyword(lowerMessage, rule)) {
-                return rule;
-            }
+        // Fallback to main Novagram auto-reply message
+        if (autoAnswerText != null && !autoAnswerText.trim().isEmpty()) {
+            return autoAnswerText;
         }
         return null;
     }
 
     private boolean matchesKeyword(String message, AutoReplyRule rule) {
-        if (rule.keyword == null || rule.keyword.trim().isEmpty()) {
-            return false;
-        }
         if (!rule.regex) {
             return message.contains(rule.keyword.toLowerCase(Locale.ROOT).trim());
         }
         try {
             return Pattern.compile(rule.keyword, Pattern.CASE_INSENSITIVE).matcher(message).find();
         } catch (Exception e) {
-            FileLog.e(TAG + ": invalid regex for rule " + rule.name, e);
             return false;
         }
     }
 
-    public synchronized String getAutoReplyResponse(String messageText) {
-        AutoReplyRule rule = findMatchingRule(messageText);
-        return rule == null ? null : rule.response;
-    }
-
     public synchronized boolean shouldSendAutoReply(long dialogId, int accountId) {
-        return isAutoReplyEnabled();
+        if (!isAutoReplyEnabled()) return false;
+        if (privateOnly && dialogId < 0) {
+            // Group or channel
+            return false;
+        }
+        return true;
     }
 
     private synchronized void saveRules() {
         try {
-            preferences.edit()
-                    .putString(KEY_RULES, gson.toJson(rules))
-                    .putInt(KEY_RULES_VERSION, CURRENT_RULES_VERSION)
-                    .apply();
-        } catch (Exception e) {
-            FileLog.e(TAG + ": failed to save rules", e);
-        }
+            preferences.edit().putString(KEY_RULES, gson.toJson(rules)).apply();
+        } catch (Exception ignored) {}
     }
 
-    private synchronized void loadRules() {
+    private synchronized void load() {
         autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
-        int version = preferences.getInt(KEY_RULES_VERSION, 0);
+        autoAnswerText = preferences.getString(KEY_TEXT, "");
+        privateOnly = preferences.getBoolean(KEY_PRIVATE_ONLY, true);
+
+        rules.clear();
         String json = preferences.getString(KEY_RULES, null);
-        if (json == null || json.isEmpty() || version < CURRENT_RULES_VERSION) {
-            seedDefaultRules();
-            return;
-        }
-        try {
-            Type type = new TypeToken<List<AutoReplyRule>>() {}.getType();
-            List<AutoReplyRule> storedRules = gson.fromJson(json, type);
-            boolean hasLegacy = false;
-            if (storedRules != null) {
-                if (storedRules.size() >= 15) {
-                    hasLegacy = true;
-                } else {
-                    for (AutoReplyRule r : storedRules) {
-                        if (r != null && r.keyword != null) {
+        if (json != null && !json.isEmpty()) {
+            try {
+                Type type = new TypeToken<List<AutoReplyRule>>() {}.getType();
+                List<AutoReplyRule> stored = gson.fromJson(json, type);
+                if (stored != null) {
+                    // Filter out any legacy preset rules (e.g. bkash, nagad, 16 rules)
+                    for (AutoReplyRule r : stored) {
+                        if (r != null && r.keyword != null && !r.keyword.trim().isEmpty()) {
                             String kw = r.keyword.toLowerCase(Locale.ROOT);
-                            if (kw.contains("bkash") || kw.contains("nagad") || kw.equals("dam") || kw.contains("salam") || kw.contains("greeting")) {
-                                hasLegacy = true;
-                                break;
+                            if (!kw.contains("bkash") && !kw.contains("nagad") && !kw.contains("salam")) {
+                                rules.add(r);
                             }
                         }
                     }
                 }
-            }
-            if (hasLegacy || storedRules == null || storedRules.isEmpty()) {
-                seedDefaultRules();
-            } else {
-                rules.clear();
-                rules.addAll(storedRules);
-            }
-        } catch (Exception e) {
-            rules.clear();
-            seedDefaultRules();
-            FileLog.e(TAG + ": failed to load rules", e);
+            } catch (Exception ignored) {}
         }
-    }
-
-    public synchronized void seedDefaultRules() {
-        rules.clear();
-        // Default rules list kept clean and empty of forced templates. User creates custom rules as desired.
-        saveRules();
-    }
-
-    public synchronized void clearAllRules() {
-        rules.clear();
-        saveRules();
     }
 
     public static class AutoReplyRule {
