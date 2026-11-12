@@ -36,9 +36,10 @@ import java.util.List;
  * NGTextStyleHelper - Persistent Text Formatting & Auto-Styler.
  * Features:
  * - Direct style picker across 1-on-1 chats, groups, channels, and bots.
- * - Radiant checkmark badge (উজ্জ্বল রঙের টিক চিহ্ন ✓) for the active selection.
- * - Prominent, beautifully styled Desktop/PC keyboard shortcuts guide card.
- * - Automatically applies chosen text style to outgoing messages.
+ * - Radiant emerald checkmark badge (উজ্জ্বল সবুজ টিক চিহ্ন ✓) for the active selection.
+ * - Spacious, elegant international Desktop & Web keyboard shortcuts panel.
+ * - Luxurious Telegram royal blue, cyan, sapphire & electric indigo color scheme (zero yellow, red, or dull gray).
+ * - Automatically applies chosen text style to outgoing messages and auto-replies.
  */
 public final class NGTextStyleHelper {
 
@@ -62,29 +63,30 @@ public final class NGTextStyleHelper {
 
     public static final String[] STYLE_NAMES = new String[] {
         "Regular", "Spoiler", "Bold", "Italic",
-        "Mono", "Strikethrough", "Underline", "Quote"
+        "Monospace", "Strikethrough", "Underline", "Quote"
     };
 
     public static final String[] STYLE_DESCS = new String[] {
-        "Standard readable plain text",
-        "Hidden covered text revealed on tap",
-        "Bold emphasized text",
-        "Slanted italic font style",
-        "Fixed-width monospace coding font",
-        "Strikethrough crossed line format",
-        "Underlined bottom accent format",
-        "Prominent blockquote format"
+        "Standard readable text format",
+        "Tap-to-reveal hidden spoiler text",
+        "Emphasized bold headline weight",
+        "Smooth slanted cursive italic font",
+        "Clean fixed-width code font",
+        "Horizontal strike line format",
+        "Crisp bottom underline accent",
+        "Prominent blockquote citation"
     };
 
+    // Cohesive, premium Telegram royal blue, cyan, sapphire & indigo palette (NO yellow, NO red, NO dull gray)
     public static final int[] STYLE_COLORS = new int[] {
-        0xFF0EA5E9, // Regular: Sky blue
-        0xFFF59E0B, // Spoiler: Amber
-        0xFF2563EB, // Bold: Royal blue
-        0xFF9333EA, // Italic: Purple
-        0xFF0D9488, // Mono: Teal
-        0xFF64748B, // Strikethrough: Slate
-        0xFF0284C7, // Underline: Ocean
-        0xFF4F46E5  // Quote: Indigo
+        0xFF0EA5E9, // Regular: Sky Blue
+        0xFF2563EB, // Spoiler: Royal Sapphire
+        0xFF1D4ED8, // Bold: Telegram Deep Blue
+        0xFF6366F1, // Italic: Electric Indigo
+        0xFF0284C7, // Monospace: Ocean Cobalt
+        0xFF38BDF8, // Strikethrough: Ice Blue
+        0xFF00D4FF, // Underline: Vivid Cyan
+        0xFF4F46E5  // Quote: Imperial Blue
     };
 
     public static final String[] STYLE_ICONS = new String[] {
@@ -169,7 +171,7 @@ public final class NGTextStyleHelper {
             if (run.flags != 0) {
                 org.telegram.messenger.MediaDataController.addStyleToText(new org.telegram.ui.Components.TextStyleSpan(run), 0, length, editable, true);
                 if ((run.flags & org.telegram.ui.Components.TextStyleSpan.FLAG_STYLE_SPOILER) != 0) {
-                    editField.invalidateSpoilers();
+                    editField.invalidate();
                 }
             }
         } catch (Exception ignored) {}
@@ -177,7 +179,7 @@ public final class NGTextStyleHelper {
 
     /**
      * Displays the modernized "Text style" selection dialog across all chats, groups, channels, and bots.
-     * Features vibrant radiant checkmark badges (উজ্জ্বল রঙের টিক চিহ্ন ✓) and an enlarged Desktop/PC shortcuts cheatsheet.
+     * Features spacious international design, vibrant checkmarks, and clean keyboard shortcuts.
      */
     public static void showDialog(Context context) {
         if (context == null) return;
@@ -192,20 +194,27 @@ public final class NGTextStyleHelper {
             }
         }
 
+        ScrollView mainScrollView = new ScrollView(context);
+        mainScrollView.setVerticalScrollBarEnabled(false);
+
         LinearLayout root = new LinearLayout(context);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(8), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
+        root.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(10), AndroidUtilities.dp(16), AndroidUtilities.dp(16));
+        mainScrollView.addView(root, new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ));
 
-        // Subtitle guide
+        // Subtitle guide - clean international English
         TextView subTitle = new TextView(context);
-        subTitle.setText("Choose default text style for messages & replies");
+        subTitle.setText("Choose default text style for outgoing messages and replies");
         subTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
         subTitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
-        subTitle.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(10));
+        subTitle.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(12));
         root.addView(subTitle);
 
         final LinearLayout itemsList = new LinearLayout(context);
         itemsList.setOrientation(LinearLayout.VERTICAL);
+        root.addView(itemsList);
 
         final List<CharSequence> labels = buildStyledLabels();
         final View[] rowViews = new View[RADIO_STYLES.length];
@@ -218,7 +227,7 @@ public final class NGTextStyleHelper {
             LinearLayout row = new LinearLayout(context);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(10), AndroidUtilities.dp(12), AndroidUtilities.dp(10));
+            row.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(11), AndroidUtilities.dp(14), AndroidUtilities.dp(11));
 
             LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
@@ -239,8 +248,8 @@ public final class NGTextStyleHelper {
             iconBg.setColor(styleColor);
             iconBadge.setBackground(iconBg);
 
-            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(34), AndroidUtilities.dp(34));
-            iconParams.rightMargin = AndroidUtilities.dp(12);
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(36), AndroidUtilities.dp(36));
+            iconParams.rightMargin = AndroidUtilities.dp(14);
             row.addView(iconBadge, iconParams);
 
             // Middle text container
@@ -250,24 +259,25 @@ public final class NGTextStyleHelper {
             TextView titleView = new TextView(context);
             titleView.setText(labels.get(i));
             titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            titleView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             textCol.addView(titleView);
 
             TextView descView = new TextView(context);
             descView.setText(STYLE_DESCS[i]);
-            descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
+            descView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
             descView.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
             descView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
             textCol.addView(descView);
 
             row.addView(textCol, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.0f));
 
-            // Right selection badge (উজ্জ্বল রঙের টিক চিহ্ন ✓)
+            // Right selection badge (উজ্জ্বল সবুজ টিক চিহ্ন ✓)
             TextView tickBadge = new TextView(context);
             tickBadge.setGravity(Gravity.CENTER);
             tickViews[i] = tickBadge;
 
-            LinearLayout.LayoutParams tickParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(28), AndroidUtilities.dp(28));
-            tickParams.leftMargin = AndroidUtilities.dp(8);
+            LinearLayout.LayoutParams tickParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(26), AndroidUtilities.dp(26));
+            tickParams.leftMargin = AndroidUtilities.dp(10);
             row.addView(tickBadge, tickParams);
 
             rowViews[i] = row;
@@ -284,20 +294,16 @@ public final class NGTextStyleHelper {
 
         updateRowStates(rowViews, tickViews, checkedIndex[0], isDark);
 
-        ScrollView scroll = new ScrollView(context);
-        scroll.setVerticalScrollBarEnabled(true);
-        scroll.addView(itemsList);
-        root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, AndroidUtilities.dp(230)));
-
-        // Prominent Desktop / PC Keyboard Shortcuts Section
+        // Prominent Desktop / PC Keyboard Shortcuts Section (Spacious, airy & international)
         View keyboardGuideCard = buildKeyboardShortcutCard(context);
         LinearLayout.LayoutParams guideParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        guideParams.topMargin = AndroidUtilities.dp(12);
+        guideParams.topMargin = AndroidUtilities.dp(14);
+        guideParams.bottomMargin = AndroidUtilities.dp(6);
         root.addView(keyboardGuideCard, guideParams);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Text style");
-        builder.setView(root);
+        builder.setView(mainScrollView);
         builder.setPositiveButton("Select", (d, w) -> {
             int chosenIdx = checkedIndex[0];
             if (chosenIdx >= 0 && chosenIdx < RADIO_STYLES.length) {
@@ -313,7 +319,7 @@ public final class NGTextStyleHelper {
     }
 
     /**
-     * Updates visual state: selected row receives glowing border and vibrant checkmark (✓).
+     * Updates visual state: selected row receives glowing border and vibrant emerald checkmark (✓).
      */
     private static void updateRowStates(View[] rowViews, TextView[] tickViews, int selectedIndex, boolean isDark) {
         for (int i = 0; i < rowViews.length; i++) {
@@ -326,7 +332,7 @@ public final class NGTextStyleHelper {
 
             if (isSelected) {
                 // Vibrant glowing accent background + cyan border
-                rowBg.setColor(isDark ? 0x3300D4FF : 0x180284C7);
+                rowBg.setColor(isDark ? 0x2E0284C7 : 0x140284C7);
                 rowBg.setStroke(AndroidUtilities.dp(1.8f), isDark ? 0xFF00D4FF : 0xFF0284C7);
 
                 // Radiant emerald checkmark badge (উজ্জ্বল সবুজ টিক চিহ্ন ✓)
@@ -336,13 +342,13 @@ public final class NGTextStyleHelper {
                 tick.setBackground(tickBg);
                 tick.setText("✓");
                 tick.setTextColor(Color.WHITE);
-                tick.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+                tick.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
                 tick.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             } else {
                 rowBg.setColor(isDark ? 0xFF1E293B : 0xFFF8FAFC);
                 rowBg.setStroke(AndroidUtilities.dp(1f), isDark ? 0xFF334155 : 0xFFE2E8F0);
 
-                // Empty ring
+                // Subtle empty circle
                 GradientDrawable ringBg = new GradientDrawable();
                 ringBg.setShape(GradientDrawable.OVAL);
                 ringBg.setColor(Color.TRANSPARENT);
@@ -355,18 +361,19 @@ public final class NGTextStyleHelper {
     }
 
     /**
-     * Builds an enlarged, beautifully styled Desktop / PC Keyboard Shortcuts cheatsheet card.
+     * Builds an airy, beautifully styled Desktop & Web Keyboard Shortcuts card.
+     * Clean international English without dense parenthetical text.
      */
     private static View buildKeyboardShortcutCard(Context context) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+        card.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(14), AndroidUtilities.dp(16), AndroidUtilities.dp(14));
 
         boolean isDark = Theme.isCurrentThemeDark();
         GradientDrawable gd = new GradientDrawable();
         gd.setColor(isDark ? 0xFF0F172A : 0xFFF1F5F9);
-        gd.setCornerRadius(AndroidUtilities.dp(14));
-        gd.setStroke(AndroidUtilities.dp(1.5f), isDark ? 0xFF38BDF8 : 0xFF0284C7);
+        gd.setCornerRadius(AndroidUtilities.dp(16));
+        gd.setStroke(AndroidUtilities.dp(1.5f), isDark ? 0xFF0284C7 : 0xFF38BDF8);
         card.setBackground(gd);
 
         // Header Title
@@ -375,44 +382,43 @@ public final class NGTextStyleHelper {
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
 
         TextView title = new TextView(context);
-        title.setText("💻 Desktop / PC Keyboard Shortcuts");
+        title.setText("💻 Desktop & Web Shortcuts");
         title.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
         titleRow.addView(title);
-
         card.addView(titleRow);
 
         TextView subtitle = new TextView(context);
-        subtitle.setText("Quick formatting keys for Telegram Desktop, Web & Mac:");
+        subtitle.setText("Quick formatting keys for Windows, macOS & Telegram Web:");
         subtitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
         subtitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
-        subtitle.setPadding(0, AndroidUtilities.dp(2), 0, AndroidUtilities.dp(8));
+        subtitle.setPadding(0, AndroidUtilities.dp(3), 0, AndroidUtilities.dp(10));
         card.addView(subtitle);
 
         String[][] shortcuts = new String[][]{
-            {"Ctrl + B", "Bold (বোল্ড)"},
-            {"Ctrl + I", "Italic (ইটালিক)"},
-            {"Ctrl + U", "Underline (নিচে দাগ)"},
-            {"Ctrl + Shift + M", "Monospace (মনোস্পেস)"},
-            {"Ctrl + Shift + X", "Strikethrough (মাঝখান কাটা)"},
-            {"Ctrl + Shift + P", "Spoiler (স্পয়লার)"},
-            {"Ctrl + Shift + >", "Quote (কোট / উদ্ধৃতি)"}
+            {"Ctrl + B", "Bold"},
+            {"Ctrl + I", "Italic"},
+            {"Ctrl + U", "Underline"},
+            {"Ctrl + Shift + M", "Monospace"},
+            {"Ctrl + Shift + X", "Strikethrough"},
+            {"Ctrl + Shift + P", "Spoiler"},
+            {"Ctrl + Shift + >", "Quote"}
         };
 
         for (String[] pair : shortcuts) {
             LinearLayout item = new LinearLayout(context);
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            item.setPadding(0, AndroidUtilities.dp(3), 0, AndroidUtilities.dp(3));
+            item.setPadding(0, AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4));
 
-            // Key cap badge
+            // Tactile keycap badge
             TextView keyBadge = new TextView(context);
             keyBadge.setText(pair[0]);
             keyBadge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11);
             keyBadge.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
-            keyBadge.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0369A1);
-            keyBadge.setPadding(AndroidUtilities.dp(6), AndroidUtilities.dp(2), AndroidUtilities.dp(6), AndroidUtilities.dp(2));
+            keyBadge.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+            keyBadge.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(3), AndroidUtilities.dp(8), AndroidUtilities.dp(3));
 
             GradientDrawable keyBg = new GradientDrawable();
             keyBg.setColor(isDark ? 0xFF1E293B : 0xFFE2E8F0);
@@ -421,17 +427,17 @@ public final class NGTextStyleHelper {
             keyBadge.setBackground(keyBg);
             item.addView(keyBadge);
 
-            // Arrow
+            // Clean bullet separator
             TextView arrow = new TextView(context);
-            arrow.setText(" › ");
+            arrow.setText("  ›  ");
             arrow.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
             arrow.setTextColor(isDark ? 0xFF00D4FF : 0xFF0284C7);
             item.addView(arrow);
 
-            // Action name
+            // Action name - clean international English
             TextView action = new TextView(context);
             action.setText(pair[1]);
-            action.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            action.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13);
             action.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             action.setTextColor(isDark ? 0xFFE2E8F0 : 0xFF1E293B);
             item.addView(action);
@@ -444,56 +450,50 @@ public final class NGTextStyleHelper {
 
     private static List<CharSequence> buildStyledLabels() {
         List<CharSequence> list = new ArrayList<>();
-        boolean isBn = false;
-        try {
-            if (LocaleController.getInstance() != null && LocaleController.getInstance().getCurrentLocale() != null) {
-                isBn = "bn".equalsIgnoreCase(LocaleController.getInstance().getCurrentLocale().getLanguage());
-            }
-        } catch (Throwable ignored) {}
 
-        // Regular
-        SpannableStringBuilder regular = new SpannableStringBuilder("Regular" + (isBn ? " (সাধারণ)" : ""));
+        // 1. Regular
+        SpannableStringBuilder regular = new SpannableStringBuilder("Regular");
         regular.setSpan(new ForegroundColorSpan(0xFF0EA5E9), 0, regular.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(regular);
 
-        // Spoiler
-        SpannableStringBuilder spoiler = new SpannableStringBuilder("Spoiler" + (isBn ? " (স্পয়লার)" : ""));
-        spoiler.setSpan(new ForegroundColorSpan(0xFFD97706), 0, spoiler.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // 2. Spoiler
+        SpannableStringBuilder spoiler = new SpannableStringBuilder("Spoiler");
+        spoiler.setSpan(new ForegroundColorSpan(0xFF2563EB), 0, spoiler.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(spoiler);
 
-        // Bold
-        SpannableStringBuilder bold = new SpannableStringBuilder("Bold" + (isBn ? " (বোল্ড)" : ""));
+        // 3. Bold
+        SpannableStringBuilder bold = new SpannableStringBuilder("Bold");
         bold.setSpan(new StyleSpan(Typeface.BOLD), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         bold.setSpan(new ForegroundColorSpan(0xFF1D4ED8), 0, bold.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(bold);
 
-        // Italic
-        SpannableStringBuilder italic = new SpannableStringBuilder("Italic" + (isBn ? " (ইটালিক)" : ""));
+        // 4. Italic
+        SpannableStringBuilder italic = new SpannableStringBuilder("Italic");
         italic.setSpan(new StyleSpan(Typeface.ITALIC), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        italic.setSpan(new ForegroundColorSpan(0xFF7E22CE), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        italic.setSpan(new ForegroundColorSpan(0xFF6366F1), 0, italic.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(italic);
 
-        // Mono
-        SpannableStringBuilder mono = new SpannableStringBuilder("Mono" + (isBn ? " (মনোস্পেস)" : ""));
+        // 5. Monospace
+        SpannableStringBuilder mono = new SpannableStringBuilder("Monospace");
         mono.setSpan(new TypefaceSpan("monospace"), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        mono.setSpan(new ForegroundColorSpan(0xFF0D9488), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        mono.setSpan(new ForegroundColorSpan(0xFF0284C7), 0, mono.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(mono);
 
-        // Strikethrough
-        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough" + (isBn ? " (মাঝখান কাটা)" : ""));
+        // 6. Strikethrough
+        SpannableStringBuilder strike = new SpannableStringBuilder("Strikethrough");
         strike.setSpan(new StrikethroughSpan(), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        strike.setSpan(new ForegroundColorSpan(0xFF475569), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        strike.setSpan(new ForegroundColorSpan(0xFF38BDF8), 0, strike.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(strike);
 
-        // Underline
-        SpannableStringBuilder underline = new SpannableStringBuilder("Underline" + (isBn ? " (নিচে দাগ)" : ""));
+        // 7. Underline
+        SpannableStringBuilder underline = new SpannableStringBuilder("Underline");
         underline.setSpan(new UnderlineSpan(), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        underline.setSpan(new ForegroundColorSpan(0xFF0284C7), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        underline.setSpan(new ForegroundColorSpan(0xFF00D4FF), 0, underline.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(underline);
 
-        // Quote
-        SpannableStringBuilder quote = new SpannableStringBuilder("Quote" + (isBn ? " (কোট)" : ""));
-        quote.setSpan(new ForegroundColorSpan(0xFF4338CA), 0, quote.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // 8. Quote
+        SpannableStringBuilder quote = new SpannableStringBuilder("Quote");
+        quote.setSpan(new ForegroundColorSpan(0xFF4F46E5), 0, quote.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         list.add(quote);
 
         return list;
