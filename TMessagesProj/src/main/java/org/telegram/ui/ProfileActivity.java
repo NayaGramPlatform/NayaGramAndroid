@@ -5632,6 +5632,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a].setEllipsizeByGradient(true);
             onlineTextView[a].setTextColor(applyPeerColor(getThemedColor(Theme.key_actionBarDefaultSubtitle), true, null));
             onlineTextView[a].setTextSizePx(dp(13.5f));
+            onlineTextView[a].setTypeface(AndroidUtilities.bold());
             onlineTextView[a].setGravity(Gravity.LEFT);
             onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
             onlineTextView[a].setPivotX(dp(8));
@@ -11427,7 +11428,14 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     int key = isOnline[0] && peerColor == null ? Theme.key_profile_status : Theme.key_actionBarDefaultSubtitle;
                     onlineTextView[1].setTag(key);
                     if (!isPulledDown) {
-                        onlineTextView[1].setTextColor(applyPeerColor(getThemedColor(key), true, isOnline[0]));
+                        boolean isDark = Theme.isCurrentThemeDark();
+                        int customColor;
+                        if (isOnline[0]) {
+                            customColor = isDark ? 0xFF38BDF8 : 0xFF0284C7; // High-contrast vivid Sky Blue / Sapphire Blue
+                        } else {
+                            customColor = isDark ? 0xFFCBD5E1 : 0xFF334155; // High-contrast Silver / Deep Slate
+                        }
+                        onlineTextView[1].setTextColor(customColor);
                     }
                 }
             }
@@ -11437,7 +11445,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             try {
                 if (org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && user.id > 0) {
                     int dc = user.photo != null ? user.photo.dc_id : 0;
-                    String idLine = "ID " + user.id + (dc > 0 ? " · DC" + dc : "");
+                    if (dc <= 0 && userId == UserConfig.getInstance(currentAccount).clientUserId) {
+                        dc = org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId();
+                    }
+                    String idLine = "ID " + user.id + (dc > 0 && dc < Integer.MAX_VALUE ? " · DC" + dc : "");
                     nayaIdCopy[0] = Long.toString(user.id);
                     nayaDcCopy[0] = dc > 0 ? ("DC" + dc) : "";
                     String nayaUser = user.username != null && user.username.length() > 0 ? ("@" + user.username) : "";
@@ -11663,23 +11674,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             if (userId == UserConfig.getInstance(currentAccount).clientUserId) {
                 onlineTextView[2].setText(LocaleController.getString(R.string.FallbackTooltip));
                 onlineTextView[2].setOnLongClickListener(null);
-                String onlineStatus = (userInfo != null && userInfo.stars_rating != null && userInfo.stars_rating.stars < 0)
-                        ? getString(R.string.StarRatingLevelNegative).toLowerCase(Locale.ROOT)
-                        : LocaleController.getString(R.string.Online);
-                if (org.nayagram.platform.NayaConfig.getInstance().isShowIdAndDc() && user.id > 0) {
-                    int nayaCurrentDc = org.telegram.tgnet.ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId();
-                    String nayaIdDcText = "ID " + user.id
-                            + (nayaCurrentDc > 0 && nayaCurrentDc < Integer.MAX_VALUE ? " · DC" + nayaCurrentDc : "");
-                    onlineTextView[3].setText(onlineStatus + " · " + nayaIdDcText);
-                    onlineTextView[3].setOnLongClickListener(v -> {
-                        AndroidUtilities.addToClipboard(nayaIdDcText);
-                        Toast.makeText(getContext(), "Copied ID/DC", Toast.LENGTH_SHORT).show();
-                        return true;
-                    });
-                } else {
-                    onlineTextView[3].setText(onlineStatus);
-                    onlineTextView[3].setOnLongClickListener(null);
-                }
+                onlineTextView[3].setText("");
+                onlineTextView[3].setOnLongClickListener(null);
+                onlineTextView[3].setVisibility(View.GONE);
             } else {
                 if (user.photo != null && user.photo.personal && user.photo.has_video) {
                     SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(newString2);
@@ -11698,10 +11695,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             }
 
-            onlineTextView[2].setVisibility(View.VISIBLE);
-            if (!searchMode) {
-                onlineTextView[3].setVisibility(View.VISIBLE);
-            }
+            onlineTextView[2].setVisibility(hasFallbackPhoto ? View.VISIBLE : View.GONE);
+            onlineTextView[3].setVisibility(View.GONE);
 
             if (previousTransitionFragment != null) {
                 previousTransitionFragment.checkAndUpdateAvatar();
@@ -12723,7 +12718,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         avatarContainer.setVisibility(View.VISIBLE);
         nameTextView[1].setVisibility(View.VISIBLE);
         onlineTextView[1].setVisibility(View.VISIBLE);
-        onlineTextView[3].setVisibility(View.VISIBLE);
+        onlineTextView[3].setVisibility(hasFallbackPhoto ? View.VISIBLE : View.GONE);
 
         actionBar.onSearchFieldVisibilityChanged(searchTransitionProgress > 0.5f);
         int itemVisibility = searchTransitionProgress > 0.5f ? View.VISIBLE : View.GONE;
