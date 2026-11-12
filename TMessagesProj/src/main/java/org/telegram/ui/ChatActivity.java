@@ -46672,6 +46672,22 @@ public class ChatActivity extends BaseFragment implements
             options.add(OPTION_WELCOME_REVERT);
             icons.add(R.drawable.outline_revert_24);
         }
+
+        // If this file/message is blocked by NayaGram Security Shield, purge all download and share actions!
+        if (selectedObject != null && selectedObject.messageOwner != null) {
+            boolean isBlockedShield = org.nayagram.platform.NayaGram.shouldHide(selectedObject.messageOwner)
+                    || (!selectedObject.isOutOwner() && org.nayagram.platform.NayaGram.shouldBlockFile(selectedObject.getDocumentName(), selectedObject.messageOwner.date));
+            if (isBlockedShield) {
+                for (int i = options.size() - 1; i >= 0; i--) {
+                    int opt = options.get(i);
+                    if (opt == OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC || opt == OPTION_SAVE_TO_GALLERY || opt == OPTION_SAVE_TO_GALLERY2 || opt == OPTION_SHARE) {
+                        options.remove(i);
+                        if (i < items.size()) items.remove(i);
+                        if (i < icons.size()) icons.remove(i);
+                    }
+                }
+            }
+        }
     }
 
     private boolean showWelcomeMessageRevertOption(MessageObject messageObject) {

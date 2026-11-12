@@ -21997,6 +21997,10 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             currentBackgroundDrawable.setAlpha(255);
         }
 
+        if (currentMessageObject != null && currentMessageObject.messageOwner != null && org.nayagram.platform.NayaGram.shouldHide(currentMessageObject.messageOwner)) {
+            org.nayagram.platform.security.IceShieldRenderer.drawIceBlock(canvas, left, top, right, bottom, getAlpha());
+        }
+
         animateCheckboxTranslation();
     }
 

@@ -5974,7 +5974,15 @@ public class MessageObject {
                 messageText = restrictionReason;
                 isRestrictedMessage = true;
             } else if (org.nayagram.platform.NayaGram.shouldHide(messageOwner)) {
-                messageText = "❄️ 🧊 Security Shield: Blocked File 🧊 ❄️\nAPK / ZIP file restricted for safety";
+                android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder();
+                String line1 = "❄️ 🧊 Security Shield: Blocked File 🧊 ❄️";
+                String line2 = "\nAPK / ZIP file restricted for safety";
+                sb.append(line1);
+                sb.append(line2);
+                sb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, line1.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                sb.setSpan(new android.text.style.ForegroundColorSpan(0xFF0284C7), 0, line1.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                sb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.ITALIC), line1.length(), sb.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                messageText = sb;
                 isRestrictedMessage = true;
             } else if (messageOwner.rich_message != null) {
                 messageText = formatRichMessage(messageOwner.rich_message, isOutOwner());
