@@ -1262,6 +1262,7 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_VIEW_STATISTICS = 115;
     public final static int OPTION_WELCOME_REVERT = 116;
     public final static int OPTION_SEND_MONEY = 117;
+    public final static int OPTION_EDIT_HISTORY = 29901;
 
     private final static int[] allowedNotificationsDuringChatListAnimations = new int[]{
             NotificationCenter.messagesRead,
@@ -26895,6 +26896,9 @@ public class ChatActivity extends BaseFragment implements
                 pinnedMessageObjects.put(messageObject.getId(), messageObject);
             }
             MessageObject old = messagesDict[loadIndex].get(messageObject.getId());
+            if (old != null && old.messageOwner != null && messageObject != null && messageObject.messageOwner != null) {
+                org.nayagram.platform.history.NGMessageEditHistory.recordEdit(currentAccount, messageObject.getDialogId(), old.messageOwner, messageObject.messageOwner);
+            }
             if (messageObject.getId() > 0 && old == null && UserObject.isBot(currentUser)) {
                 old = BotForumHelper.getInstance(currentAccount).onBotForumDraftCheckNewMessages(currentUser.id, (int) getTopicId(), messageObject.getId(), messageObject.messageText.toString());
                 if (old != null) {
@@ -33582,6 +33586,11 @@ public class ChatActivity extends BaseFragment implements
         }
         boolean preserveDim = false;
         switch (option) {
+            case OPTION_EDIT_HISTORY: {
+                MessageObject targetHistoryObj = org.nayagram.platform.history.NGMessageEditHistory.resolveHistoryTarget(currentAccount, selectedObject, selectedObjectGroup);
+                org.nayagram.platform.history.NGMessageEditHistory.showHistoryDialog(getParentActivity(), currentAccount, targetHistoryObj != null ? targetHistoryObj : selectedObject);
+                break;
+            }
             case OPTION_RETRY: {
                 final MessageObject object = selectedObject;
                 final MessageObject.GroupedMessages group = selectedObjectGroup;
@@ -46697,6 +46706,28 @@ public class ChatActivity extends BaseFragment implements
             items.add(getString(R.string.WelcomeMessageRevert));
             options.add(OPTION_WELCOME_REVERT);
             icons.add(R.drawable.outline_revert_24);
+        }
+
+        if (selectedObject != null && selectedObject.messageOwner != null && org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+            MessageObject historyTarget = org.nayagram.platform.history.NGMessageEditHistory.resolveHistoryTarget(currentAccount, selectedObject, selectedObjectGroup);
+            if (historyTarget == null || historyTarget.messageOwner == null) {
+                historyTarget = selectedObject;
+            }
+            boolean isEditedMsg = (historyTarget.messageOwner.flags & TLRPC.MESSAGE_FLAG_EDITED) != 0 || historyTarget.messageOwner.edit_date > 0;
+            int revCount = org.nayagram.platform.history.NGMessageEditHistory.getEditCount(currentAccount, historyTarget.getDialogId(), historyTarget.getId());
+            if (isEditedMsg || revCount > 0) {
+                String historyLabel = revCount > 0 ? ("Edit History (" + revCount + ")") : "Edit History";
+                int insertIdx = options.indexOf(OPTION_COPY);
+                if (insertIdx >= 0 && insertIdx + 1 <= options.size()) {
+                    items.add(insertIdx + 1, historyLabel);
+                    options.add(insertIdx + 1, OPTION_EDIT_HISTORY);
+                    icons.add(insertIdx + 1, R.drawable.msg_edit);
+                } else {
+                    items.add(historyLabel);
+                    options.add(OPTION_EDIT_HISTORY);
+                    icons.add(R.drawable.msg_edit);
+                }
+            }
         }
 
         // If this file/message is blocked by NayaGram Security Shield, purge all download and share actions!

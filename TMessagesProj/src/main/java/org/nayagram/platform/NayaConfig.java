@@ -321,10 +321,14 @@ public class NayaConfig {
     }
 
     // APK & ZIP File Security Shield
-        private static final String KEY_PREVENT_MESSAGE_DELETION = "feature_prevent_message_deletion";
+    private static final String KEY_PREVENT_MESSAGE_DELETION = "feature_prevent_message_deletion";
     // Anti-Delete is OFF by default; the user can enable it from NayaGram Settings.
     public boolean isPreventMessageDeletionEnabled() { return preferences.getBoolean(KEY_PREVENT_MESSAGE_DELETION, false); }
     public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
+
+    private static final String KEY_SAVE_EDIT_HISTORY = "feature_save_edit_history";
+    public boolean isSaveEditHistoryEnabled() { return preferences.getBoolean(KEY_SAVE_EDIT_HISTORY, true); }
+    public void setSaveEditHistoryEnabled(boolean e) { preferences.edit().putBoolean(KEY_SAVE_EDIT_HISTORY, e).apply(); }
 
     
     private static final String KEY_RADIANT_PRESENCE = "feature_radiant_presence";
