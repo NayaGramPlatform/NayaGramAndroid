@@ -345,10 +345,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
             final int position = indexToPosition(index);
             tabs[index].setOnClickListener(v -> {
-                if (viewPager.isManualScrolling() || viewPager.isTouch()) {
-                    return;
-                }
-
                 if (viewPager.getCurrentPosition() == position) {
                     final BaseFragment fragment = getCurrentVisibleFragment();
                     if (fragment instanceof MainTabsActivity.TabFragmentDelegate) {
@@ -750,9 +746,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
                 dropFragmentAtPosition(POSITION_CALLS_OR_SETTINGS);
                 dropCallsFragmentAfterPageScroll = false;
             }
-            if (currentPosition != POSITION_PROFILE) {
-                dropFragmentAtPosition(POSITION_PROFILE);
-            }
             if (pendingFolderId != null && currentPosition == POSITION_CHATS && dialogsActivity != null) {
                 dialogsActivity.scrollToFolder(pendingFolderId);
                 pendingFolderId = null;
@@ -1093,8 +1086,8 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         final float scale = lerp(0.85f, 1f, factor);
 
         tabsViewWrapper.setTranslationY(lerp(hiddenY, normalY, factor));
-        tabsView.setClickable(factor > 1);
-        tabsView.setEnabled(factor > 1);
+        tabsView.setClickable(factor > 0.5f);
+        tabsView.setEnabled(factor > 0.5f);
         tabsView.setAlpha(factor);
         tabsView.setVisibility(factor > 0 ? View.VISIBLE : View.GONE);
     }

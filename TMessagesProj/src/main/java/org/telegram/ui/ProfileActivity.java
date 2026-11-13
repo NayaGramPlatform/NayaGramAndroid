@@ -2920,7 +2920,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             if (avatarUploadingRequest != 0) {
                                 getConnectionsManager().cancelRequest(avatarUploadingRequest, true);
                             }
-                            allowPullingDown = !AndroidUtilities.isTablet() && !isInLandscapeMode && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled();
+                            allowPullingDown = (hasMainTabs || !AndroidUtilities.isTablet() && !isInLandscapeMode) && (avatarImage.getImageReceiver().hasNotThumb() || avatarImage.getImageReceiver().hasBitmapImage()) && !AndroidUtilities.isAccessibilityScreenReaderEnabled();
                             avatar = null;
                             avatarBig = null;
                             avatarsViewPager.scrolledByUser = true;
@@ -3186,7 +3186,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     measureChildWithMargins(listView, widthMeasureSpec, 0, heightMeasureSpec, 0);
                     listView.layout(0, actionBarHeight, listView.getMeasuredWidth(), actionBarHeight + listView.getMeasuredHeight());
                     ignoreLayout = false;
-                } else if (fragmentOpened && !openAnimationInProgress && !firstLayout) {
+                } else if ((fragmentOpened || hasMainTabs) && !openAnimationInProgress && !firstLayout) {
                     ignoreLayout = true;
 
                     int paddingTop;
@@ -3277,10 +3277,22 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             @Override
             protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
                 super.onLayout(changed, left, top, right, bottom);
+                boolean wasFirstLayout = firstLayout;
                 savedScrollPosition = -1;
                 firstLayout = false;
                 invalidateScroll = false;
                 checkListViewScroll();
+                if (wasFirstLayout && hasMainTabs) {
+                    fragmentOpened = true;
+                    invalidateScroll = true;
+                    post(() -> {
+                        if (fragmentView != null) {
+                            fragmentOpened = true;
+                            invalidateScroll = true;
+                            fragmentView.requestLayout();
+                        }
+                    });
+                }
             }
 
             @Override
@@ -5224,6 +5236,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             listView.setBottomGlowOffset(AndroidUtilities.dp(48));
         } else {
             listView.setPadding(0, getHeaderExtraHeight(), 0, 0);
+        }
+        if (hasMainTabs) {
+            fragmentOpened = true;
+            isFragmentOpened = true;
+            invalidateScroll = true;
         }
 
         topView = new TopView(context);
@@ -13049,7 +13066,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         }
                     }
 
-                    allowPullingDown = !AndroidUtilities.isTablet() && !isInLandscapeMode && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled();
+                    allowPullingDown = (hasMainTabs || !AndroidUtilities.isTablet() && !isInLandscapeMode) && (avatarImage.getImageReceiver().hasNotThumb() || avatarImage.getImageReceiver().hasBitmapImage()) && !AndroidUtilities.isAccessibilityScreenReaderEnabled();
                     avatar = null;
                     avatarBig = null;
                     avatarsViewPager.scrolledByUser = true;

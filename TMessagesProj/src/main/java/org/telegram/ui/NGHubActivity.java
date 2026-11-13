@@ -77,7 +77,8 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     private TextView[] tabs;
     private TextView swipeToggle;
     private TextView layoutToggle;
-    private TextView audienceToggle;
+    private TextView joinedModeButton;
+    private TextView mineModeButton;
     private EditText searchField;
     private FrameLayout plusSheet;
     private TextView plusButton;
@@ -98,6 +99,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     private boolean swipeNavigationEnabled = true;
     private boolean horizontalCards;
     private boolean mineOnly = false;
+    private boolean initialRenderDone = false;
     private boolean plusOpen;
     private boolean closing;
     private float touchStartX;
@@ -118,7 +120,6 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
         registerObservers(currentAccount);
-        ensureAllSpacesLoaded(true);
         return true;
     }
 
@@ -135,8 +136,6 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         NotificationCenter nc = NotificationCenter.getInstance(observedAccount);
         nc.addObserver(this, NotificationCenter.dialogsNeedReload);
         nc.addObserver(this, NotificationCenter.updateInterfaces);
-        nc.addObserver(this, NotificationCenter.chatInfoDidLoad);
-        nc.addObserver(this, NotificationCenter.didUpdateConnectionState);
     }
 
     private void unregisterObservers() {
@@ -144,8 +143,6 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         NotificationCenter nc = NotificationCenter.getInstance(observedAccount);
         nc.removeObserver(this, NotificationCenter.dialogsNeedReload);
         nc.removeObserver(this, NotificationCenter.updateInterfaces);
-        nc.removeObserver(this, NotificationCenter.chatInfoDidLoad);
-        nc.removeObserver(this, NotificationCenter.didUpdateConnectionState);
         observedAccount = -1;
     }
 
@@ -153,11 +150,9 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     public void didReceivedNotification(int id, int account, Object... args) {
         if (account != currentAccount) return;
         if (id == NotificationCenter.dialogsNeedReload) {
-            ensureAllSpacesLoaded(false);
             showSection(selectedSection);
-        } else if (id == NotificationCenter.updateInterfaces || id == NotificationCenter.chatInfoDidLoad || id == NotificationCenter.didUpdateConnectionState) {
+        } else if (id == NotificationCenter.updateInterfaces) {
             updateAccountCard();
-            showSection(selectedSection);
         }
     }
 
@@ -171,7 +166,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         if (controller.getDialogs(0).isEmpty() && !controller.isLoadingDialogs(0)) {
             controller.loadDialogs(0, 0, 100, true);
         }
-        if (rounds < 15) {
+        if (rounds < 2) {
             boolean requestedPage = false;
             if (!controller.isDialogsEndReached(0) && !controller.isLoadingDialogs(0)) {
                 controller.loadDialogs(0, -1, 100, false);
@@ -202,7 +197,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
                             extraChatsByAccount.put(targetAccount, map);
                         }
                         for (TLRPC.Chat c : res.chats) {
-                            if (c != null) {
+                            if (c != null && !ChatObject.isNotInChat(c) && !c.min) {
                                 map.put(c.id, c);
                             }
                         }
@@ -230,7 +225,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
                             extraChatsByAccount.put(targetAccount, map);
                         }
                         for (TLRPC.Chat c : res.chats) {
-                            if (c != null) {
+                            if (c != null && c.creator && !ChatObject.isNotInChat(c)) {
                                 map.put(c.id, c);
                             }
                         }
@@ -293,13 +288,30 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         page.addView(buildShortcuts(context));
         page.addView(buildCreateRow(context));
 
-        audienceToggle = createAction(context, mineOnly ? "My Spaces" : "All Joined");
-        audienceToggle.setOnClickListener(v -> {
-            mineOnly = !mineOnly;
-            audienceToggle.setText(mineOnly ? "My Spaces" : "All Joined");
-            showSection(selectedSection);
+        LinearLayout modeRow = new LinearLayout(context);
+        modeRow.setOrientation(LinearLayout.HORIZONTAL);
+        joinedModeButton = createAction(context, "🌐 Joined (Other's)");
+        mineModeButton = createAction(context, "👑 My Created (Owned)");
+        joinedModeButton.setOnClickListener(v -> {
+            if (mineOnly) {
+                mineOnly = false;
+                updateModeButtons();
+                showSection(selectedSection);
+            }
         });
-        page.addView(audienceToggle, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 42, 0, 4, 0, 8));
+        mineModeButton.setOnClickListener(v -> {
+            if (!mineOnly) {
+                mineOnly = true;
+                updateModeButtons();
+                showSection(selectedSection);
+            }
+        });
+        modeRow.addView(joinedModeButton, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f));
+        LinearLayout.LayoutParams mineLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+        mineLp.leftMargin = AndroidUtilities.dp(8);
+        modeRow.addView(mineModeButton, mineLp);
+        page.addView(modeRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 42, 0, 4, 0, 8));
+        updateModeButtons();
 
         searchField = new EditText(context);
         searchField.setSingleLine(true);
@@ -321,7 +333,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         LinearLayout tabRow = new LinearLayout(context);
         tabRow.setOrientation(LinearLayout.HORIZONTAL);
         page.addView(tabRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 0, 0, 10));
-        String[] labels = {"Channels", "Groups", "Bots", "Communities"};
+        String[] labels = {"Joined Channels", "Joined Groups", "Bots", "Communities"};
         tabs = new TextView[labels.length];
         for (int i = 0; i < labels.length; i++) {
             final int section = i;
@@ -413,12 +425,13 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         root.addView(detailsOverlay, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         fragmentView = root;
+        initialRenderDone = true;
         showSection(selectedSection);
-        if (!NayaConfig.getInstance().isReduceMotion()) {
-            root.setAlpha(0f);
-            root.setTranslationY(AndroidUtilities.dp(16));
-            root.post(() -> root.animate().alpha(1f).translationY(0f).setDuration(280).start());
-        }
+        root.postDelayed(() -> {
+            if (getParentActivity() != null) {
+                ensureAllSpacesLoaded(true);
+            }
+        }, 250);
         return fragmentView;
     }
 
@@ -428,9 +441,11 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         if (observedAccount != currentAccount) {
             registerObservers(currentAccount);
         }
-        ensureAllSpacesLoaded(false);
         updateAccountCard();
-        showSection(selectedSection);
+        if (!initialRenderDone) {
+            showSection(selectedSection);
+        }
+        initialRenderDone = false;
     }
 
     private View buildHero(Context context) {
@@ -770,37 +785,51 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     private View buildShortcuts(Context context) {
         LinearLayout grid = new LinearLayout(context);
         grid.setOrientation(LinearLayout.VERTICAL);
+
         LinearLayout row1 = new LinearLayout(context);
         row1.setOrientation(LinearLayout.HORIZONTAL);
-        TextView channel = coloredButton(context, "📣  My Channel", COLOR_CYAN);
-        TextView group = coloredButton(context, "👥  My Group", COLOR_TEAL);
-        row1.addView(channel, weight());
-        LinearLayout.LayoutParams gap = weight();
-        gap.leftMargin = AndroidUtilities.dp(8);
-        row1.addView(group, gap);
-        grid.addView(row1, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
+        TextView myChannel = coloredButton(context, "📣  My Channels", COLOR_CYAN);
+        TextView myGroup = coloredButton(context, "👥  My Groups", COLOR_TEAL);
+        row1.addView(myChannel, weight());
+        LinearLayout.LayoutParams gap1 = weight();
+        gap1.leftMargin = AndroidUtilities.dp(8);
+        row1.addView(myGroup, gap1);
+        grid.addView(row1, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46));
+
+        LinearLayout rowJoined = new LinearLayout(context);
+        rowJoined.setOrientation(LinearLayout.HORIZONTAL);
+        TextView joinedChannels = coloredButton(context, "📺  Joined Channels", 0xFF0369A1);
+        TextView joinedGroups = coloredButton(context, "💬  Joined Groups", 0xFF0D9488);
+        rowJoined.addView(joinedChannels, weight());
+        LinearLayout.LayoutParams gapJoined = weight();
+        gapJoined.leftMargin = AndroidUtilities.dp(8);
+        rowJoined.addView(joinedGroups, gapJoined);
+        grid.addView(rowJoined, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 8, 0, 0));
+
         LinearLayout row2 = new LinearLayout(context);
         row2.setOrientation(LinearLayout.HORIZONTAL);
-        TextView bot = coloredButton(context, "🤖  My Bot", COLOR_GREEN);
+        TextView bot = coloredButton(context, "🤖  My Bots", COLOR_GREEN);
         TextView profile = coloredButton(context, "👤  My Profile", COLOR_BLUE);
         row2.addView(bot, weight());
         LinearLayout.LayoutParams gap2 = weight();
         gap2.leftMargin = AndroidUtilities.dp(8);
         row2.addView(profile, gap2);
-        LinearLayout.LayoutParams row2Params = LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0);
-        grid.addView(row2, row2Params);
+        grid.addView(row2, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 8, 0, 0));
+
         LinearLayout row3 = new LinearLayout(context);
         row3.setOrientation(LinearLayout.HORIZONTAL);
-        TextView contacts = coloredButton(context, "📇  My Contact List", COLOR_TEAL);
+        TextView contacts = coloredButton(context, "📇  My Contacts", COLOR_TEAL);
         TextView liveStream = coloredButton(context, "📡  Live Stream", 0xFF0D9488);
         row3.addView(contacts, weight());
         LinearLayout.LayoutParams gap3 = weight();
         gap3.leftMargin = AndroidUtilities.dp(8);
         row3.addView(liveStream, gap3);
-        grid.addView(row3, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 8, 0, 0));
+        grid.addView(row3, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 8, 0, 0));
 
-        channel.setOnClickListener(v -> selectMine(SECTION_CHANNELS));
-        group.setOnClickListener(v -> selectMine(SECTION_GROUPS));
+        myChannel.setOnClickListener(v -> selectMine(SECTION_CHANNELS));
+        myGroup.setOnClickListener(v -> selectMine(SECTION_GROUPS));
+        joinedChannels.setOnClickListener(v -> selectJoined(SECTION_CHANNELS));
+        joinedGroups.setOnClickListener(v -> selectJoined(SECTION_GROUPS));
         bot.setOnClickListener(v -> selectMine(SECTION_BOTS));
         profile.setOnClickListener(v -> openProfile());
         contacts.setOnClickListener(v -> presentFragment(new ContactsActivity(null)));
@@ -875,9 +904,27 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         return item;
     }
 
+    private void updateModeButtons() {
+        boolean isDark = Theme.isCurrentThemeDark();
+        if (joinedModeButton != null) {
+            joinedModeButton.setBackground(round(!mineOnly ? COLOR_CYAN : Theme.getColor(Theme.key_windowBackgroundWhite), 12));
+            joinedModeButton.setTextColor(!mineOnly ? Color.WHITE : (isDark ? 0xFFCBD5E1 : 0xFF475569));
+        }
+        if (mineModeButton != null) {
+            mineModeButton.setBackground(round(mineOnly ? COLOR_TEAL : Theme.getColor(Theme.key_windowBackgroundWhite), 12));
+            mineModeButton.setTextColor(mineOnly ? Color.WHITE : (isDark ? 0xFFCBD5E1 : 0xFF475569));
+        }
+    }
+
     private void selectMine(int section) {
         mineOnly = true;
-        if (audienceToggle != null) audienceToggle.setText("My Spaces");
+        updateModeButtons();
+        showSection(section);
+    }
+
+    private void selectJoined(int section) {
+        mineOnly = false;
+        updateModeButtons();
         showSection(section);
     }
 
@@ -1209,6 +1256,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     private void showSection(int section) {
         selectedSection = Math.max(SECTION_CHANNELS, Math.min(SECTION_COMMUNITIES, section));
         if (contentColumn == null || getContext() == null) return;
+        updateModeButtons();
         updateTabStyles();
         contentColumn.removeAllViews();
 
@@ -1217,13 +1265,25 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         note.setTextColor(Theme.isCurrentThemeDark() ? 0xFFCBD5E1 : 0xFF475569);
         note.setPadding(0, 0, 0, AndroidUtilities.dp(8));
         if (mineOnly) {
-            note.setText(selectedSection == SECTION_BOTS
-                    ? "My Bot shows bots you marked as yours. Tap All Joined to see bot chats from every folder, then long-press your bot to add or remove it from My Bot. Telegram's chat list does not expose bot ownership automatically."
-                    : selectedSection == SECTION_COMMUNITIES
-                    ? "Telegram Communities are listed separately from channels and groups. This section uses Telegram's actual community dialog entries; linked chats remain in their own sections."
-                    : "Only channels and groups this account created. They appear here automatically from your chat list.");
+            if (selectedSection == SECTION_CHANNELS) {
+                note.setText("👑 My Created Channels: Showing ONLY channels created by your account. Joined channels from others are kept separate in Joined Channels.");
+            } else if (selectedSection == SECTION_GROUPS) {
+                note.setText("👑 My Created Groups: Showing ONLY groups created by your account. Joined groups from others are kept separate in Joined Groups.");
+            } else if (selectedSection == SECTION_BOTS) {
+                note.setText("🤖 My Bots: Bots you marked as yours (long-press any bot in Joined -> Bots to add or remove).");
+            } else {
+                note.setText("👑 My Created Communities: Showing ONLY Telegram Communities created by your account.");
+            }
         } else {
-            note.setText("All Joined: channels, groups, bots and Telegram Communities available in this account. Community entries are kept separate from their linked chats; ownership is shown only when Telegram confirms you are the creator.");
+            if (selectedSection == SECTION_CHANNELS) {
+                note.setText("📺 Joined Channels: Showing ONLY channels you have joined. Channels you created yourself are kept separate in My Created.");
+            } else if (selectedSection == SECTION_GROUPS) {
+                note.setText("💬 Joined Groups: Showing ONLY groups you have joined. Groups you created yourself are kept separate in My Created.");
+            } else if (selectedSection == SECTION_BOTS) {
+                note.setText("🤖 Joined Bots: Bot chats from your chat list. Long-press your own bot to add it to My Bots.");
+            } else {
+                note.setText("🌐 Joined Communities: Telegram Communities you have joined.");
+            }
         }
         contentColumn.addView(note, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
@@ -1247,58 +1307,41 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
             cardsWrapper.addView(bottomBorder, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 1, 0, 6, 0, 6));
 
             contentColumn.addView(cardsWrapper, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
-
-            if (!NayaConfig.getInstance().isReduceMotion()) {
-                cardsWrapper.setTranslationX(AndroidUtilities.dp(48));
-                cardsWrapper.setAlpha(0.2f);
-                cardsWrapper.animate()
-                        .translationX(0f)
-                        .alpha(1f)
-                        .setDuration(300)
-                        .setInterpolator(new android.view.animation.DecelerateInterpolator(1.4f))
-                        .start();
-            }
         } else {
             activeRows = contentColumn;
         }
 
         MessagesController controller = MessagesController.getInstance(currentAccount);
-        // Read dialogs from every folder first (including archived chats), then merge
-        // the main folder without duplicating entries. The old fallback only loaded
-        // all folders when the main folder was empty, hiding archived bot chats.
         ArrayList<TLRPC.Dialog> dialogs = new ArrayList<>();
+        HashSet<Long> mergedDialogIds = new HashSet<>();
         ArrayList<TLRPC.Dialog> allDialogs = controller.getAllDialogs();
-        if (allDialogs != null) dialogs.addAll(allDialogs);
+        if (allDialogs != null) {
+            for (int i = 0, n = allDialogs.size(); i < n; i++) {
+                TLRPC.Dialog d = allDialogs.get(i);
+                if (d != null && mergedDialogIds.add(d.id)) {
+                    dialogs.add(d);
+                }
+            }
+        }
         ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
         if (mainDialogs != null) {
-            for (TLRPC.Dialog mainDialog : mainDialogs) {
-                if (mainDialog == null) continue;
-                boolean alreadyPresent = false;
-                for (TLRPC.Dialog existing : dialogs) {
-                    if (existing != null && existing.id == mainDialog.id
-                            && existing.getClass() == mainDialog.getClass()) {
-                        alreadyPresent = true;
-                        break;
-                    }
+            for (int i = 0, n = mainDialogs.size(); i < n; i++) {
+                TLRPC.Dialog d = mainDialogs.get(i);
+                if (d != null && mergedDialogIds.add(d.id)) {
+                    dialogs.add(d);
                 }
-                if (!alreadyPresent) dialogs.add(mainDialog);
             }
         }
         ArrayList<TLRPC.Dialog> archiveDialogs = controller.getDialogs(1);
         if (archiveDialogs != null) {
-            for (TLRPC.Dialog archDialog : archiveDialogs) {
-                if (archDialog == null) continue;
-                boolean alreadyPresent = false;
-                for (TLRPC.Dialog existing : dialogs) {
-                    if (existing != null && existing.id == archDialog.id
-                            && existing.getClass() == archDialog.getClass()) {
-                        alreadyPresent = true;
-                        break;
-                    }
+            for (int i = 0, n = archiveDialogs.size(); i < n; i++) {
+                TLRPC.Dialog d = archiveDialogs.get(i);
+                if (d != null && mergedDialogIds.add(d.id)) {
+                    dialogs.add(d);
                 }
-                if (!alreadyPresent) dialogs.add(archDialog);
             }
         }
+
         int visibleCount = 0;
         int[] sectionCounts = new int[4];
         HashSet<Long> seenChatIds = new HashSet<>();
@@ -1307,90 +1350,91 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         String query = searchField == null || searchField.getText() == null
                 ? "" : searchField.getText().toString().trim().toLowerCase(Locale.ROOT);
 
-        if (dialogs != null) {
-            for (int i = 0; i < dialogs.size(); i++) {
-                TLRPC.Dialog dialog = dialogs.get(i);
-                if (dialog == null || DialogObject.isEncryptedDialog(dialog.id)) continue;
-                TLRPC.Chat chat = null;
-                TLRPC.User user = null;
-                int type;
-                if (dialog instanceof TLRPC.TL_dialogCommunity) {
-                    // Telegram represents a Community as its own dialog wrapper.
-                    // Do not classify it as a broadcast channel or an ordinary group.
-                    chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
-                    if (chat == null || ChatObject.isNotInChat(chat)) continue;
-                    seenCommunityIds.add(chat.id);
-                    type = SECTION_COMMUNITIES;
-                } else if (DialogObject.isChatDialog(dialog.id)) {
-                    chat = controller.getChat(-dialog.id);
-                    if (chat == null || ChatObject.isNotInChat(chat) || chat.migrated_to != null) continue;
-                    if (!seenChatIds.add(chat.id)) continue;
-                    type = ChatObject.isChannel(chat) && !chat.megagroup ? SECTION_CHANNELS : SECTION_GROUPS;
-                } else if (DialogObject.isUserDialog(dialog.id)) {
-                    user = controller.getUser(dialog.id);
-                    if (user == null || !user.bot) continue;
-                    if (!seenUserIds.add(user.id)) continue;
-                    type = SECTION_BOTS;
-                } else {
-                    continue;
-                }
-                boolean owned = chat != null && chat.creator;
-                if (mineOnly && type != SECTION_BOTS && !owned) continue;
-                if (mineOnly && type == SECTION_BOTS && (user == null || !isMarkedMyBot(user.id))) continue;
-                // Bot ownership is not exposed by the dialog object; My Bot uses an explicit local user selection.
-                String title = chat != null ? (chat.title == null ? "" : chat.title)
-                        : (user.first_name == null ? "" : user.first_name) + (user.last_name == null ? "" : " " + user.last_name);
-                MessageObject lastMessage = null;
-                ArrayList<MessageObject> messages = controller.dialogMessage.get(dialog.id);
-                if (messages != null && !messages.isEmpty()) lastMessage = messages.get(0);
-                String preview = lastMessage == null || lastMessage.messageText == null
-                        ? (type == SECTION_BOTS ? "Bot account" : buildChatFallbackPreview(chat, type == SECTION_CHANNELS))
-                        : lastMessage.messageText.toString().trim();
-                if (!query.isEmpty() && !title.toLowerCase(Locale.ROOT).contains(query)
-                        && !preview.toLowerCase(Locale.ROOT).contains(query)) continue;
-                sectionCounts[type]++;
-                if (type != selectedSection) continue;
-                addDialogRow(dialog, chat, user, title, preview, lastMessage);
-                visibleCount++;
+        for (int i = 0, n = dialogs.size(); i < n; i++) {
+            TLRPC.Dialog dialog = dialogs.get(i);
+            if (dialog == null || DialogObject.isEncryptedDialog(dialog.id)) continue;
+            TLRPC.Chat chat = null;
+            TLRPC.User user = null;
+            int type;
+            if (dialog instanceof TLRPC.TL_dialogCommunity) {
+                chat = controller.getChat(((TLRPC.TL_dialogCommunity) dialog).community_id);
+                if (chat == null || ChatObject.isNotInChat(chat) || chat.min) continue;
+                seenCommunityIds.add(chat.id);
+                type = SECTION_COMMUNITIES;
+            } else if (DialogObject.isChatDialog(dialog.id)) {
+                chat = controller.getChat(-dialog.id);
+                if (chat == null || ChatObject.isNotInChat(chat) || chat.migrated_to != null || chat.min) continue;
+                if (!seenChatIds.add(chat.id)) continue;
+                type = ChatObject.isChannel(chat) && !chat.megagroup ? SECTION_CHANNELS : SECTION_GROUPS;
+            } else if (DialogObject.isUserDialog(dialog.id)) {
+                user = controller.getUser(dialog.id);
+                if (user == null || !user.bot) continue;
+                if (!seenUserIds.add(user.id)) continue;
+                type = SECTION_BOTS;
+            } else {
+                continue;
             }
-        }
-
-        // Merge additional joined/admined channels and groups fetched via getAllChats / getAdminedPublicChannels / cached chats
-        ArrayList<TLRPC.Chat> extraChats = new ArrayList<>();
-        HashMap<Long, TLRPC.Chat> fetchedMap = extraChatsByAccount.get(currentAccount);
-        if (fetchedMap != null && !fetchedMap.isEmpty()) {
-            extraChats.addAll(fetchedMap.values());
-        }
-        if (controller.getChats() != null && !controller.getChats().isEmpty()) {
-            extraChats.addAll(controller.getChats().values());
-        }
-        for (int i = 0; i < extraChats.size(); i++) {
-            TLRPC.Chat chat = extraChats.get(i);
-            if (chat == null || ChatObject.isNotInChat(chat) || chat.migrated_to != null) continue;
-            if (seenChatIds.contains(chat.id) || seenCommunityIds.contains(chat.id)) continue;
-            seenChatIds.add(chat.id);
-            boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
-            int type = isChannel ? SECTION_CHANNELS : SECTION_GROUPS;
-            boolean owned = chat.creator;
-            if (mineOnly && type != SECTION_BOTS && !owned) continue;
-            String title = chat.title == null ? "" : chat.title;
+            boolean owned = chat != null && chat.creator;
+            if (type != SECTION_BOTS) {
+                // Strict separation:
+                // - In My Created (mineOnly == true), ONLY include chats this user created (owned == true).
+                // - In Joined (mineOnly == false), ONLY include chats this user joined from others (!owned).
+                if (mineOnly && !owned) continue;
+                if (!mineOnly && owned) continue;
+            } else {
+                if (mineOnly && (user == null || !isMarkedMyBot(user.id))) continue;
+            }
+            String title = chat != null ? (chat.title == null ? "" : chat.title)
+                    : (user.first_name == null ? "" : user.first_name) + (user.last_name == null ? "" : " " + user.last_name);
             MessageObject lastMessage = null;
-            ArrayList<MessageObject> messages = controller.dialogMessage.get(-chat.id);
+            ArrayList<MessageObject> messages = controller.dialogMessage.get(dialog.id);
             if (messages != null && !messages.isEmpty()) lastMessage = messages.get(0);
             String preview = lastMessage == null || lastMessage.messageText == null
-                    ? buildChatFallbackPreview(chat, isChannel)
+                    ? (type == SECTION_BOTS ? "Bot account" : buildChatFallbackPreview(chat, type == SECTION_CHANNELS))
                     : lastMessage.messageText.toString().trim();
             if (!query.isEmpty() && !title.toLowerCase(Locale.ROOT).contains(query)
                     && !preview.toLowerCase(Locale.ROOT).contains(query)) continue;
             sectionCounts[type]++;
             if (type != selectedSection) continue;
-            addDialogRow(null, chat, null, title, preview, lastMessage);
+            if (visibleCount < 150 || !query.isEmpty()) {
+                addDialogRow(dialog, chat, user, title, preview, lastMessage);
+            }
             visibleCount++;
+        }
+
+        // Only merge extraChats from getAdminedPublicChannels / getAllChats when looking at My Created (owned == true),
+        // so Joined Channels & Joined Groups strictly reflect the user's actual joined dialog list!
+        if (mineOnly) {
+            HashMap<Long, TLRPC.Chat> fetchedMap = extraChatsByAccount.get(currentAccount);
+            if (fetchedMap != null && !fetchedMap.isEmpty()) {
+                for (TLRPC.Chat chat : fetchedMap.values()) {
+                    if (chat == null || !chat.creator || ChatObject.isNotInChat(chat) || chat.migrated_to != null) continue;
+                    if (seenChatIds.contains(chat.id) || seenCommunityIds.contains(chat.id)) continue;
+                    seenChatIds.add(chat.id);
+                    boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
+                    int type = isChannel ? SECTION_CHANNELS : SECTION_GROUPS;
+                    String title = chat.title == null ? "" : chat.title;
+                    MessageObject lastMessage = null;
+                    ArrayList<MessageObject> messages = controller.dialogMessage.get(-chat.id);
+                    if (messages != null && !messages.isEmpty()) lastMessage = messages.get(0);
+                    String preview = lastMessage == null || lastMessage.messageText == null
+                            ? buildChatFallbackPreview(chat, isChannel)
+                            : lastMessage.messageText.toString().trim();
+                    if (!query.isEmpty() && !title.toLowerCase(Locale.ROOT).contains(query)
+                            && !preview.toLowerCase(Locale.ROOT).contains(query)) continue;
+                    sectionCounts[type]++;
+                    if (type != selectedSection) continue;
+                    if (visibleCount < 150 || !query.isEmpty()) {
+                        addDialogRow(null, chat, null, title, preview, lastMessage);
+                    }
+                    visibleCount++;
+                }
+            }
         }
 
         updateTabCounts(sectionCounts);
 
-        boolean stillLoadingMore = !controller.isDialogsEndReached(0)
+        boolean stillLoadingMore = controller.isLoadingDialogs(0)
                 || allChatsInFlightForAccount.get(currentAccount)
                 || adminedChatsInFlightForAccount.get(currentAccount);
 
@@ -1399,11 +1443,12 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
             empty.setText(!query.isEmpty() ? "No matches for \"" + query + "\"."
                     : stillLoadingMore ? "Syncing your channels, groups, bots & communities..."
                     : selectedSection == SECTION_BOTS && mineOnly
-                    ? "No bots marked as yours yet. Tap All Joined, long-press your bot chat, and choose My Bot. You can also open BotFather to view bots created by your account."
+                    ? "No bots marked as yours yet. Switch to Joined (Other's) -> Bots, long-press your bot chat, and mark it as My Bot."
                     : selectedSection == SECTION_COMMUNITIES
-                    ? "No Telegram Community entries are available in the loaded chat list."
-                    : mineOnly ? "Nothing you created is in this list yet."
-                    : "No joined channels, groups, bots or communities are available in the loaded chat list.");
+                    ? (mineOnly ? "You have not created any Telegram Communities yet." : "No joined Telegram Communities in your chat list.")
+                    : mineOnly
+                    ? (selectedSection == SECTION_CHANNELS ? "You have not created any channels on this account yet." : "You have not created any groups on this account yet.")
+                    : (selectedSection == SECTION_CHANNELS ? "No joined channels found in your chat list." : "No joined groups found in your chat list."));
             empty.setTextSize(15);
             empty.setGravity(Gravity.CENTER);
             empty.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24));
@@ -1419,19 +1464,21 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
 
     private String buildChatFallbackPreview(TLRPC.Chat chat, boolean isChannel) {
         if (chat == null) return "No recent message";
-        String role = chat.creator ? "Creator" : ChatObject.hasAdminRights(chat) ? "Admin" : "Member";
+        String role = chat.creator ? "👑 Creator" : ChatObject.hasAdminRights(chat) ? "🛡️ Admin" : (isChannel ? "📺 Joined Channel" : "💬 Joined Group");
         if (chat.participants_count > 0) {
             return role + " • " + chat.participants_count + (isChannel ? " subscribers" : " members");
         }
         if (chat.username != null && !chat.username.isEmpty()) {
             return role + " • @" + chat.username;
         }
-        return role + (isChannel ? " channel" : " group");
+        return role;
     }
 
     private void updateTabCounts(int[] sectionCounts) {
         if (tabs == null || sectionCounts == null || sectionCounts.length < 4) return;
-        String[] baseLabels = {"Channels", "Groups", "Bots", "Communities"};
+        String[] baseLabels = mineOnly
+                ? new String[]{"My Channels", "My Groups", "My Bots", "My Communities"}
+                : new String[]{"Joined Channels", "Joined Groups", "Bots", "Communities"};
         for (int i = 0; i < tabs.length && i < baseLabels.length; i++) {
             tabs[i].setText(baseLabels[i] + " (" + sectionCounts[i] + ")");
         }
