@@ -351,7 +351,7 @@ public final class NGTextStyleHelper {
                 if (onStyleChanged != null) {
                     onStyleChanged.run();
                 }
-                showStyleSavedPopup(context, chosenIdx, styledLabels.get(chosenIdx));
+                showStyleSavedPopup(context, chosenIdx, labels.get(chosenIdx));
             }
             d.dismiss();
         });

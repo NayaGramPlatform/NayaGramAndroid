@@ -139,7 +139,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                 R.drawable.ic_naya_robot,
                 0xFF10B981,
                 "Enable Auto Answer",
-                "Automatically reply once to the first incoming message",
+                "Automatically reply to incoming messages (instant background & foreground)",
                 autoAnswerStatusBadge,
                 autoAnswerSwitch,
                 isDark,

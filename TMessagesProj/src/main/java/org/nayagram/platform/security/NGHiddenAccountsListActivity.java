@@ -435,6 +435,15 @@ public class NGHiddenAccountsListActivity extends UniversalFragment implements N
         return emptyView;
     }
 
+    @Override
+    protected void onClick(UItem item, View view, int position, float x, float y) {
+    }
+
+    @Override
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
+    }
+
     private int dp(float v) {
         return AndroidUtilities.dp(v);
     }

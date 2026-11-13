@@ -89,6 +89,15 @@ public class AutoReplyManager {
     }
 
     public synchronized String getAutoAnswerText() {
+        if (autoAnswerText != null && !autoAnswerText.trim().isEmpty()) {
+            return autoAnswerText;
+        }
+        try {
+            String fallback = NayaConfig.getInstance().getAutoReplyText();
+            if (fallback != null && !fallback.trim().isEmpty()) {
+                return fallback;
+            }
+        } catch (Throwable ignored) {}
         return autoAnswerText != null ? autoAnswerText : "";
     }
 
