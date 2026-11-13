@@ -21,14 +21,16 @@ import org.telegram.ui.Components.URLSpanReplacement;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * AutoReplyManager - Clean Novagram-style Auto Answer engine.
  * - Single clean auto-answer message with native Telegram formatting & links.
- * - Replies once per dialog while enabled; resets answered list when turned off.
+ * - Replies to every incoming message with a 4.5s anti-duplicate / anti-loop guard so Push + Socket never double-send.
  * - Full hyperlink (TL_messageEntityTextUrl) persistence and visual span restoration.
  */
 public class AutoReplyManager {
@@ -39,6 +41,7 @@ public class AutoReplyManager {
     private static final String KEY_ENTITIES = "auto_answer_entities";
     private static final String KEY_PRIVATE_ONLY = "auto_reply_private_only";
     private static final String KEY_ANSWERED_DIALOGS = "answered_dialogs";
+    private static final long DEDUP_COOLDOWN_MS = 4500L;
 
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
@@ -47,6 +50,8 @@ public class AutoReplyManager {
     private String autoAnswerEntitiesJson = null;
     private boolean privateOnly = true;
     private final Set<Long> answeredDialogs = new HashSet<>();
+    private final Map<Long, Long> lastReplyTimestampByDialog = new HashMap<>();
+    private final Map<Long, Integer> lastAnsweredMsgIdByDialog = new HashMap<>();
 
     private AutoReplyManager() {
         preferences = ApplicationLoader.applicationContext.getSharedPreferences(
@@ -63,15 +68,13 @@ public class AutoReplyManager {
 
     public synchronized void setAutoReplyEnabled(boolean enabled) {
         autoReplyEnabled = enabled;
-        if (!enabled) {
-            answeredDialogs.clear();
-            preferences.edit()
-                    .putBoolean(KEY_ENABLED, false)
-                    .remove(KEY_ANSWERED_DIALOGS)
-                    .apply();
-        } else {
-            preferences.edit().putBoolean(KEY_ENABLED, true).apply();
-        }
+        answeredDialogs.clear();
+        lastReplyTimestampByDialog.clear();
+        lastAnsweredMsgIdByDialog.clear();
+        preferences.edit()
+                .putBoolean(KEY_ENABLED, enabled)
+                .remove(KEY_ANSWERED_DIALOGS)
+                .apply();
         try {
             NayaConfig.getInstance().setSmartAutoReply(enabled);
         } catch (Throwable ignored) {}
@@ -126,24 +129,45 @@ public class AutoReplyManager {
         preferences.edit().putBoolean(KEY_PRIVATE_ONLY, val).apply();
     }
 
+    public synchronized boolean shouldSkipDuplicate(long dialogId, int messageId) {
+        if (messageId != 0) {
+            Integer lastMsgId = lastAnsweredMsgIdByDialog.get(dialogId);
+            if (lastMsgId != null && lastMsgId == messageId) {
+                return true;
+            }
+        }
+        Long lastTs = lastReplyTimestampByDialog.get(dialogId);
+        if (lastTs != null && (System.currentTimeMillis() - lastTs) < DEDUP_COOLDOWN_MS) {
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized void markMessageAnswered(long dialogId, int messageId) {
+        lastReplyTimestampByDialog.put(dialogId, System.currentTimeMillis());
+        if (messageId != 0) {
+            lastAnsweredMsgIdByDialog.put(dialogId, messageId);
+        }
+    }
+
     public synchronized boolean hasAnsweredDialog(long dialogId) {
-        return answeredDialogs.contains(dialogId);
+        return shouldSkipDuplicate(dialogId, 0);
     }
 
     public synchronized void markAnsweredDialog(long dialogId) {
-        if (answeredDialogs.add(dialogId)) {
-            saveAnsweredDialogs();
-        }
+        markMessageAnswered(dialogId, 0);
     }
 
     public synchronized void removeAnsweredDialog(long dialogId) {
-        if (answeredDialogs.remove(dialogId)) {
-            saveAnsweredDialogs();
-        }
+        answeredDialogs.remove(dialogId);
+        lastReplyTimestampByDialog.remove(dialogId);
+        lastAnsweredMsgIdByDialog.remove(dialogId);
     }
 
     public synchronized void clearAnsweredDialogs() {
         answeredDialogs.clear();
+        lastReplyTimestampByDialog.clear();
+        lastAnsweredMsgIdByDialog.clear();
         preferences.edit().remove(KEY_ANSWERED_DIALOGS).apply();
     }
 
@@ -152,7 +176,7 @@ public class AutoReplyManager {
         if (privateOnly && dialogId <= 0) {
             return false;
         }
-        return !answeredDialogs.contains(dialogId);
+        return !shouldSkipDuplicate(dialogId, 0);
     }
 
     public synchronized String getAutoReplyResponse(String unused) {
@@ -162,28 +186,16 @@ public class AutoReplyManager {
         return null;
     }
 
-    private void saveAnsweredDialogs() {
-        try {
-            preferences.edit().putString(KEY_ANSWERED_DIALOGS, gson.toJson(new ArrayList<>(answeredDialogs))).apply();
-        } catch (Exception ignored) {}
-    }
-
     private synchronized void load() {
         autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
         autoAnswerText = preferences.getString(KEY_TEXT, "");
         autoAnswerEntitiesJson = preferences.getString(KEY_ENTITIES, null);
         privateOnly = preferences.getBoolean(KEY_PRIVATE_ONLY, true);
-
         answeredDialogs.clear();
-        String answeredJson = preferences.getString(KEY_ANSWERED_DIALOGS, null);
-        if (answeredJson != null && !answeredJson.isEmpty()) {
-            try {
-                Type type = new TypeToken<List<Long>>() {}.getType();
-                List<Long> stored = gson.fromJson(answeredJson, type);
-                if (stored != null) {
-                    answeredDialogs.addAll(stored);
-                }
-            } catch (Exception ignored) {}
+        lastReplyTimestampByDialog.clear();
+        lastAnsweredMsgIdByDialog.clear();
+        if (preferences.contains(KEY_ANSWERED_DIALOGS)) {
+            preferences.edit().remove(KEY_ANSWERED_DIALOGS).apply();
         }
     }
 

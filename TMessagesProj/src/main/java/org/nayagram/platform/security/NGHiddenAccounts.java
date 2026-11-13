@@ -230,8 +230,9 @@ public final class NGHiddenAccounts {
     public static CharSequence withHiddenMark(int account, CharSequence name) {
         if (name == null || !isHidden(account)) return name;
         SpannableStringBuilder sb = new SpannableStringBuilder(name).append("  h");
-        ColoredImageSpan span = new ColoredImageSpan(R.drawable.msg_archive_hide);
-        span.setSize(AndroidUtilities.dp(15f));
+        ColoredImageSpan span = new ColoredImageSpan(R.drawable.ic_naya_eye_off);
+        span.setSize(AndroidUtilities.dp(16f));
+        span.setOverrideColor(0xFF0EA5E9);
         sb.setSpan(span, sb.length() - 1, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         return sb;
     }

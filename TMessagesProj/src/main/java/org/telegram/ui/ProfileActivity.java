@@ -1733,6 +1733,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         consumed[1] = dyUnconsumed;
                         innerListView.scrollBy(0, dyUnconsumed);
                     }
+                } else if (target != listView && dyUnconsumed < 0 && listView != null) {
+                    consumed[1] = dyUnconsumed;
+                    listView.scrollBy(0, dyUnconsumed);
                 }
             } catch (Throwable e) {
                 FileLog.e(e);
@@ -4301,9 +4304,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 if (view != null && !openingAvatar) {
                     final int canScroll = view.getTop() - getHeaderExtraHeight();
                     if (!allowPullingDown && canScroll > dy) {
-                        dy = canScroll;
-                        if (avatarsViewPager.hasImages() && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled() && (!isInLandscapeMode && !AndroidUtilities.isTablet() || hasMainTabs)) {
-                            allowPullingDown = avatarBig == null;
+                        final boolean hasAvatarToExpand = (avatarsViewPager != null && avatarsViewPager.hasImages())
+                                || (avatarImage != null && (avatarImage.getImageReceiver().hasNotThumb() || avatarImage.getImageReceiver().hasBitmapImage()));
+                        if (hasAvatarToExpand && !AndroidUtilities.isAccessibilityScreenReaderEnabled() && (!isInLandscapeMode && !AndroidUtilities.isTablet() || hasMainTabs) && avatarBig == null) {
+                            allowPullingDown = true;
+                            if (!isPulledDown && listView.getScrollState() == RecyclerListView.SCROLL_STATE_DRAGGING) {
+                                dy = (int) (dy * 0.8f);
+                            }
+                        } else {
+                            dy = canScroll;
                         }
                     } else if (allowPullingDown) {
                         if (dy >= canScroll) {
@@ -4311,7 +4320,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             allowPullingDown = false;
                         } else if (listView.getScrollState() == RecyclerListView.SCROLL_STATE_DRAGGING) {
                             if (!isPulledDown) {
-                                dy /= 2;
+                                dy = (int) (dy * 0.8f);
                             }
                         }
                     }
@@ -6237,7 +6246,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
     }
 
     private boolean expandAvatar() {
-        if ((hasMainTabs || !AndroidUtilities.isTablet() && !isInLandscapeMode) && avatarImage.getImageReceiver().hasNotThumb() && !AndroidUtilities.isAccessibilityScreenReaderEnabled()) {
+        final boolean hasAvatarImage = (avatarsViewPager != null && avatarsViewPager.hasImages())
+                || (avatarImage != null && (avatarImage.getImageReceiver().hasNotThumb() || avatarImage.getImageReceiver().hasBitmapImage()));
+        if ((hasMainTabs || !AndroidUtilities.isTablet() && !isInLandscapeMode) && hasAvatarImage && !AndroidUtilities.isAccessibilityScreenReaderEnabled()) {
             openingAvatar = true;
             allowPullingDown = true;
             View child = null;
@@ -8451,7 +8462,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 final float durationFactor = Math.min(AndroidUtilities.dpf2(2000f), Math.max(AndroidUtilities.dpf2(1100f), Math.abs(listViewVelocityY))) / AndroidUtilities.dpf2(1100f);
                 final boolean hasActions = getActionsExtraHeight() > 0;
 
-                if (allowPullingDown && (openingAvatar || expandProgress >= 0.33f)) {
+                if (allowPullingDown && (openingAvatar || expandProgress >= 0.20f)) {
                     if (!isPulledDown) {
                         if (otherItem != null) {
                             if (!isPeerNoForwards()) {

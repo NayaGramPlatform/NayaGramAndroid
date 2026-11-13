@@ -144,10 +144,11 @@ public class IncomingMessageInterceptor {
         }
 
         final long dialogId = messageObject.getDialogId();
+        final int messageId = messageObject.getId();
         if (dialogId == 0 || (autoReplyManager.isPrivateOnly() && dialogId <= 0)) {
             return;
         }
-        if (autoReplyManager.hasAnsweredDialog(dialogId)) {
+        if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
             return;
         }
 
@@ -161,7 +162,7 @@ public class IncomingMessageInterceptor {
 
         Utilities.globalQueue.postRunnable(() -> {
             try {
-                if (autoReplyManager.hasAnsweredDialog(dialogId)) {
+                if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
                     releaseBackgroundResources();
                     return;
                 }
@@ -253,13 +254,13 @@ public class IncomingMessageInterceptor {
                     }
                 }
 
-                // Synchronously check and mark answered dialog to prevent duplicate sends from push + socket
+                // Synchronously check and mark message + cooldown window to prevent duplicate sends from push + socket
                 synchronized (autoReplyManager) {
-                    if (autoReplyManager.hasAnsweredDialog(dialogId)) {
+                    if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
                         releaseBackgroundResources();
                         return;
                     }
-                    autoReplyManager.markAnsweredDialog(dialogId);
+                    autoReplyManager.markMessageAnswered(dialogId, messageId);
                 }
                 lastDispatchedDialogByAccount.put(accountId, dialogId);
 

@@ -1,9 +1,11 @@
 package org.nayagram.platform.textstyle;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -16,10 +18,12 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
@@ -322,7 +326,6 @@ public final class NGTextStyleHelper {
                 if (onStyleChanged != null) {
                     onStyleChanged.run();
                 }
-                Toast.makeText(context, "Style active: " + STYLE_NAMES[index] + " ✓", Toast.LENGTH_SHORT).show();
             });
 
             itemsList.addView(row);
@@ -348,13 +351,128 @@ public final class NGTextStyleHelper {
                 if (onStyleChanged != null) {
                     onStyleChanged.run();
                 }
-                Toast.makeText(context, "Text style set to: " + STYLE_NAMES[chosenIdx] + " ✓", Toast.LENGTH_SHORT).show();
+                showStyleSavedPopup(context, chosenIdx, styledLabels.get(chosenIdx));
             }
             d.dismiss();
         });
         builder.setNegativeButton("Close", (d, w) -> d.dismiss());
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private static void showStyleSavedPopup(Context context, int chosenIdx, CharSequence styledLabel) {
+        if (context == null) return;
+        try {
+            final boolean isDark = Theme.isCurrentThemeDark();
+            final Dialog popup = new Dialog(context);
+            popup.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            Window window = popup.getWindow();
+            if (window != null) {
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+                WindowManager.LayoutParams wlp = window.getAttributes();
+                wlp.gravity = Gravity.CENTER;
+                wlp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+                wlp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+                window.setAttributes(wlp);
+            }
+
+            LinearLayout card = new LinearLayout(context);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setGravity(Gravity.CENTER_HORIZONTAL);
+            card.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(20), AndroidUtilities.dp(24), AndroidUtilities.dp(18));
+
+            GradientDrawable cardBg = new GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    isDark
+                            ? new int[]{0xFF0F172A, 0xFF1E293B}
+                            : new int[]{0xFFFFFFFF, 0xFFF0F9FF}
+            );
+            cardBg.setCornerRadius(AndroidUtilities.dp(22));
+            cardBg.setStroke(AndroidUtilities.dp(1.5f), isDark ? 0x8838BDF8 : 0x550284C7);
+            card.setBackground(cardBg);
+
+            // Radiant Emerald Checkmark Badge
+            FrameLayout badge = new FrameLayout(context);
+            GradientDrawable badgeBg = new GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    new int[]{0xFF10B981, 0xFF059669}
+            );
+            badgeBg.setShape(GradientDrawable.OVAL);
+            badge.setBackground(badgeBg);
+
+            TextView checkTv = new TextView(context);
+            checkTv.setText("✓");
+            checkTv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 22);
+            checkTv.setTypeface(AndroidUtilities.bold());
+            checkTv.setTextColor(Color.WHITE);
+            checkTv.setGravity(Gravity.CENTER);
+            badge.addView(checkTv, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+            LinearLayout.LayoutParams badgeLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(46), AndroidUtilities.dp(46));
+            badgeLp.bottomMargin = AndroidUtilities.dp(10);
+            card.addView(badge, badgeLp);
+
+            // Title
+            TextView titleTv = new TextView(context);
+            titleTv.setText("Text Style Saved");
+            titleTv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 16.5f);
+            titleTv.setTypeface(AndroidUtilities.bold());
+            titleTv.setTextColor(isDark ? 0xFFF8FAFC : 0xFF0F172A);
+            titleTv.setGravity(Gravity.CENTER);
+            card.addView(titleTv);
+
+            // Active Style Pill Preview
+            LinearLayout pill = new LinearLayout(context);
+            pill.setOrientation(LinearLayout.HORIZONTAL);
+            pill.setGravity(Gravity.CENTER);
+            pill.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(7), AndroidUtilities.dp(16), AndroidUtilities.dp(7));
+            GradientDrawable pillBg = new GradientDrawable();
+            pillBg.setCornerRadius(AndroidUtilities.dp(14));
+            pillBg.setColor(isDark ? 0x2638BDF8 : 0x180284C7);
+            pillBg.setStroke(AndroidUtilities.dp(1), 0x550EA5E9);
+            pill.setBackground(pillBg);
+
+            TextView styleNameTv = new TextView(context);
+            styleNameTv.setText(styledLabel != null ? styledLabel : STYLE_NAMES[chosenIdx]);
+            styleNameTv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
+            styleNameTv.setGravity(Gravity.CENTER);
+            pill.addView(styleNameTv);
+
+            LinearLayout.LayoutParams pillLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            pillLp.topMargin = AndroidUtilities.dp(10);
+            pillLp.bottomMargin = AndroidUtilities.dp(8);
+            card.addView(pill, pillLp);
+
+            // Subtitle
+            TextView subTv = new TextView(context);
+            subTv.setText(chosenIdx == 0
+                    ? "Outgoing messages will use standard formatting"
+                    : "Outgoing messages will automatically use " + STYLE_NAMES[chosenIdx]);
+            subTv.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+            subTv.setTextColor(isDark ? 0xFF94A3B8 : 0xFF475569);
+            subTv.setGravity(Gravity.CENTER);
+            card.addView(subTv);
+
+            card.setOnClickListener(v -> {
+                try { popup.dismiss(); } catch (Throwable ignored) {}
+            });
+
+            popup.setContentView(card);
+            card.setScaleX(0.88f);
+            card.setScaleY(0.88f);
+            card.setAlpha(0f);
+            popup.show();
+            card.animate().scaleX(1f).scaleY(1f).alpha(1f).setDuration(160).start();
+
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    if (popup.isShowing()) {
+                        popup.dismiss();
+                    }
+                } catch (Throwable ignored) {}
+            }, 1450);
+        } catch (Throwable ignored) {}
     }
 
     private static void updateRowStates(View[] rowViews, TextView[] tickViews, int selectedIndex, boolean isDark) {
