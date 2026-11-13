@@ -2,6 +2,8 @@ package org.telegram.messenger;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.wifi.WifiManager;
+import android.os.PowerManager;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.Spanned;
@@ -14,6 +16,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import org.nayagram.platform.NayaConfig;
+import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.Components.QuoteSpan;
 import org.telegram.ui.Components.TextStyleSpan;
@@ -32,6 +35,7 @@ import java.util.Set;
  * - Single clean auto-answer message with native Telegram formatting & links.
  * - Replies to every incoming message with a 4.5s anti-duplicate / anti-loop guard so Push + Socket never double-send.
  * - Full hyperlink (TL_messageEntityTextUrl) persistence and visual span restoration.
+ * - Background MTProto socket keep-alive heartbeat so Auto-Reply works 100% automatically even when the app is minimized or screen is off.
  */
 public class AutoReplyManager {
     private static AutoReplyManager instance;
@@ -42,6 +46,8 @@ public class AutoReplyManager {
     private static final String KEY_PRIVATE_ONLY = "auto_reply_private_only";
     private static final String KEY_ANSWERED_DIALOGS = "answered_dialogs";
     private static final long DEDUP_COOLDOWN_MS = 4500L;
+    private static final long HEARTBEAT_INTERVAL_MS = 15_000L;
+    private static final String DEFAULT_AUTO_ANSWER_TEXT = "আসসালামু আলাইকুম! 🥰\nআমি এখন ব্যস্ত আছি, একটু পরে রিপ্লাই দিচ্ছি ইনশাআল্লাহ।";
 
     private final SharedPreferences preferences;
     private final Gson gson = new Gson();
@@ -53,10 +59,48 @@ public class AutoReplyManager {
     private final Map<Long, Long> lastReplyTimestampByDialog = new HashMap<>();
     private final Map<Long, Integer> lastAnsweredMsgIdByDialog = new HashMap<>();
 
+    private PowerManager.WakeLock backgroundWakeLock;
+    private WifiManager.WifiLock backgroundWifiLock;
+    private boolean heartbeatScheduled = false;
+
+    private final Runnable heartbeatRunnable = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (AutoReplyManager.this) {
+                heartbeatScheduled = false;
+            }
+            if (!isAutoReplyEnabled()) {
+                releaseBackgroundLocks();
+                return;
+            }
+            try {
+                boolean isBackgrounded = ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn;
+                if (isBackgrounded) {
+                    acquireBackgroundLocks();
+                } else {
+                    releaseBackgroundLocks();
+                }
+                for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                    try {
+                        if (UserConfig.getInstance(a).isClientActivated()) {
+                            ConnectionsManager cm = ConnectionsManager.getInstance(a);
+                            cm.keepNetworkAliveInBackground();
+                            cm.checkConnection();
+                        }
+                    } catch (Throwable ignored) {}
+                }
+            } catch (Throwable ignored) {}
+            scheduleNextHeartbeat();
+        }
+    };
+
     private AutoReplyManager() {
         preferences = ApplicationLoader.applicationContext.getSharedPreferences(
                 PREFS_NAME, Context.MODE_PRIVATE);
         load();
+        if (isAutoReplyEnabled()) {
+            AndroidUtilities.runOnUIThread(this::ensureBackgroundKeepAlive, 1500);
+        }
     }
 
     public static synchronized AutoReplyManager getInstance() {
@@ -64,6 +108,76 @@ public class AutoReplyManager {
             instance = new AutoReplyManager();
         }
         return instance;
+    }
+
+    public synchronized void ensureBackgroundKeepAlive() {
+        if (!isAutoReplyEnabled()) {
+            releaseBackgroundLocks();
+            return;
+        }
+        try {
+            if (ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn) {
+                acquireBackgroundLocks();
+            }
+            for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
+                try {
+                    if (UserConfig.getInstance(a).isClientActivated()) {
+                        ConnectionsManager cm = ConnectionsManager.getInstance(a);
+                        cm.keepNetworkAliveInBackground();
+                        cm.checkConnection();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        } catch (Throwable ignored) {}
+        scheduleNextHeartbeat();
+    }
+
+    private synchronized void scheduleNextHeartbeat() {
+        if (heartbeatScheduled || !isAutoReplyEnabled()) {
+            return;
+        }
+        heartbeatScheduled = true;
+        AndroidUtilities.runOnUIThread(heartbeatRunnable, HEARTBEAT_INTERVAL_MS);
+    }
+
+    private synchronized void acquireBackgroundLocks() {
+        try {
+            Context ctx = ApplicationLoader.applicationContext;
+            if (ctx == null) return;
+            if (backgroundWakeLock == null) {
+                PowerManager pm = (PowerManager) ctx.getSystemService(Context.POWER_SERVICE);
+                if (pm != null) {
+                    backgroundWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "NayaGram:AutoReplyKeepAlive");
+                    backgroundWakeLock.setReferenceCounted(false);
+                }
+            }
+            if (backgroundWakeLock != null && !backgroundWakeLock.isHeld()) {
+                backgroundWakeLock.acquire(10 * 60 * 1000L);
+            }
+            if (backgroundWifiLock == null) {
+                WifiManager wm = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wm != null) {
+                    backgroundWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "NayaGram:AutoReplyWifiLock");
+                    backgroundWifiLock.setReferenceCounted(false);
+                }
+            }
+            if (backgroundWifiLock != null && !backgroundWifiLock.isHeld()) {
+                backgroundWifiLock.acquire();
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    private synchronized void releaseBackgroundLocks() {
+        try {
+            if (backgroundWakeLock != null && backgroundWakeLock.isHeld()) {
+                backgroundWakeLock.release();
+            }
+        } catch (Throwable ignored) {}
+        try {
+            if (backgroundWifiLock != null && backgroundWifiLock.isHeld()) {
+                backgroundWifiLock.release();
+            }
+        } catch (Throwable ignored) {}
     }
 
     public synchronized void setAutoReplyEnabled(boolean enabled) {
@@ -78,6 +192,14 @@ public class AutoReplyManager {
         try {
             NayaConfig.getInstance().setSmartAutoReply(enabled);
         } catch (Throwable ignored) {}
+        if (enabled) {
+            ensureBackgroundKeepAlive();
+            try {
+                ApplicationLoader.startPushService();
+            } catch (Throwable ignored) {}
+        } else {
+            releaseBackgroundLocks();
+        }
     }
 
     public synchronized boolean isAutoReplyEnabled() {
@@ -98,7 +220,7 @@ public class AutoReplyManager {
                 return fallback;
             }
         } catch (Throwable ignored) {}
-        return autoAnswerText != null ? autoAnswerText : "";
+        return DEFAULT_AUTO_ANSWER_TEXT;
     }
 
     public synchronized String getCustomReplyMessage() {
@@ -189,10 +311,7 @@ public class AutoReplyManager {
     }
 
     public synchronized String getAutoReplyResponse(String unused) {
-        if (autoAnswerText != null && !autoAnswerText.trim().isEmpty()) {
-            return autoAnswerText;
-        }
-        return null;
+        return getAutoAnswerText();
     }
 
     private synchronized void load() {

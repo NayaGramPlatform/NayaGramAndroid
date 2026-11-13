@@ -379,8 +379,14 @@ public class ApplicationLoader extends Application {
         if (preferences.contains("pushService")) {
             enabled = preferences.getBoolean("pushService", true);
         } else {
-            enabled = MessagesController.getMainSettings(UserConfig.selectedAccount).getBoolean("keepAliveService", false);
+            enabled = MessagesController.getMainSettings(UserConfig.selectedAccount).getBoolean("keepAliveService", true);
         }
+        try {
+            if (AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+                enabled = true;
+                AutoReplyManager.getInstance().ensureBackgroundKeepAlive();
+            }
+        } catch (Throwable ignored) {}
         if (enabled) {
             try {
                 applicationContext.startService(new Intent(applicationContext, NotificationsService.class));

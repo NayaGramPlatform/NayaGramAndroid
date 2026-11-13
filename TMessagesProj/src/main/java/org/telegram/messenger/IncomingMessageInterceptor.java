@@ -216,7 +216,9 @@ public class IncomingMessageInterceptor {
                         // Peer not in local DB yet (e.g. brand-new contact via FCM push). Wake network & fetch difference;
                         // do NOT mark dialog answered yet so getDifference() will trigger auto-reply with valid access_hash!
                         ConnectionsManager.onInternalPushReceived(accountId);
+                        ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
                         ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
+                        ConnectionsManager.getInstance(accountId).checkConnection();
                         AndroidUtilities.runOnUIThread(() -> {
                             try {
                                 MessagesController.getInstance(accountId).getDifference();
@@ -240,7 +242,9 @@ public class IncomingMessageInterceptor {
                     }
                     if (chat == null) {
                         ConnectionsManager.onInternalPushReceived(accountId);
+                        ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
                         ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
+                        ConnectionsManager.getInstance(accountId).checkConnection();
                         AndroidUtilities.runOnUIThread(() -> {
                             try {
                                 MessagesController.getInstance(accountId).getDifference();
@@ -332,10 +336,14 @@ public class IncomingMessageInterceptor {
                 AndroidUtilities.runOnUIThread(() -> {
                     try {
                         ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
-                        // Wake MTProto in background push mode WITHOUT calling setAppPaused(false, false)!
-                        // This transmits immediately in the background while keeping pauseTime > 0 and offline status intact.
+                        // Wake MTProto in background mode WITHOUT calling setAppPaused(false, false)!
+                        // keepNetworkAliveInBackground() sets C++ lastPauseTime = 0 & networkPaused = false so
+                        // ConnectionTypeGeneric transmits immediately while Java lastPauseTime > 0 keeps user Offline.
                         ConnectionsManager.onInternalPushReceived(accountId);
+                        cm.keepNetworkAliveInBackground();
                         cm.resumeNetworkMaybe();
+                        cm.checkConnection();
+                        autoReplyManager.ensureBackgroundKeepAlive();
 
                         autoReplyDispatchOnUiThread.set(true);
                         try {
@@ -365,9 +373,14 @@ public class IncomingMessageInterceptor {
 
     private static void sendOfflineStatusNow(final int accountId, final Runnable onComplete) {
         try {
+            ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
+            cm.keepNetworkAliveInBackground();
             org.telegram.tgnet.tl.TL_account.updateStatus req = new org.telegram.tgnet.tl.TL_account.updateStatus();
             req.offline = true;
-            ConnectionsManager.getInstance(accountId).sendRequest(req, (response, error) -> {
+            cm.sendRequest(req, (response, error) -> {
+                try {
+                    ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
+                } catch (Throwable ignored) {}
                 if (BuildVars.LOGS_ENABLED) {
                     FileLog.d(TAG + ": stealth presence offline: " + (error == null ? "OK" : error.text));
                 }

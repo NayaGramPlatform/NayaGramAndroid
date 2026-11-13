@@ -750,6 +750,10 @@ public class ConnectionsManager extends BaseController {
         native_resumeNetwork(currentAccount, true);
     }
 
+    public void keepNetworkAliveInBackground() {
+        native_resumeNetwork(currentAccount, false);
+    }
+
     public void updateDcSettings() {
         native_updateDcSettings(currentAccount);
     }
@@ -800,7 +804,11 @@ public class ConnectionsManager extends BaseController {
             if (lastPauseTime == 0) {
                 lastPauseTime = System.currentTimeMillis();
             }
-            native_pauseNetwork(currentAccount);
+            if (org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+                native_resumeNetwork(currentAccount, false);
+            } else {
+                native_pauseNetwork(currentAccount);
+            }
         } else {
             if (appPaused) {
                 return;
