@@ -18492,17 +18492,14 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
         } else if (currentMessageObject.isRepostPreview) {
             timeString = LocaleController.formatSmallDateChat(messageObject.messageOwner.date) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000);
         } else if (edited) {
-            MessageObject ngTargetMsg = org.nayagram.platform.history.NGMessageEditHistory.resolveHistoryTarget(currentAccount, currentMessageObject, currentMessagesGroup);
-            int ngEditCount = ngTargetMsg != null ? org.nayagram.platform.history.NGMessageEditHistory.getEditCount(currentAccount, ngTargetMsg.getDialogId(), ngTargetMsg.getId()) : 0;
-            String ngEditBadge = ngEditCount > 0 ? ("✎" + ngEditCount + " ") : "";
             if (AppGlobalConfig.getInstance(currentAccount).messagePrimaryEditedDate.get()) {
                 int editDate = currentMessagesGroup != null ? currentMessagesGroup.getMaxEditDate() : messageObject.messageOwner.edit_date;
                 if (editDate == 0 && currentMessageObject.isEditing()) {
                     editDate = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
                 }
-                timeString = ngEditBadge + LocaleController.formatPmEditedDate(editDate);
+                timeString = LocaleController.formatPmEditedDate(editDate);
             } else {
-                timeString = ngEditBadge + (getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000));
+                timeString = getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (messageObject.messageOwner.date) * 1000);
             }
         } else if (currentMessageObject.isSaved && currentMessageObject.messageOwner.fwd_from != null && (currentMessageObject.messageOwner.fwd_from.date != 0 || currentMessageObject.messageOwner.fwd_from.saved_date != 0)) {
             int date = currentMessageObject.messageOwner.fwd_from.saved_date;
@@ -18533,6 +18530,17 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             deletedTag.setSpan(new StyleSpan(Typeface.BOLD), 0, deletedTag.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             deletedTag.append(currentTimeString);
             currentTimeString = deletedTag;
+        }
+        if (edited && currentMessageObject != null && org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+            MessageObject ngTargetMsg = org.nayagram.platform.history.NGMessageEditHistory.resolveHistoryTarget(currentAccount, currentMessageObject, currentMessagesGroup);
+            int ngEditCount = ngTargetMsg != null ? org.nayagram.platform.history.NGMessageEditHistory.getEditCount(currentAccount, ngTargetMsg.getDialogId(), ngTargetMsg.getId()) : 0;
+            if (ngEditCount > 0) {
+                SpannableStringBuilder editedTag = new SpannableStringBuilder("✎" + ngEditCount + " ");
+                editedTag.setSpan(new ForegroundColorSpan(0xFF10B981), 0, editedTag.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                editedTag.setSpan(new StyleSpan(Typeface.BOLD), 0, editedTag.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                editedTag.append(currentTimeString);
+                currentTimeString = editedTag;
+            }
         }
         if (currentMessageObject.isStakedDice()) {
             currentTimeString = TextUtils.concat("💎", StarsIntroActivity.formatTON(currentMessageObject.getStakedDiceAmount()), "  ", currentTimeString);

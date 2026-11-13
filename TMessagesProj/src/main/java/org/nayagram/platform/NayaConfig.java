@@ -327,7 +327,8 @@ public class NayaConfig {
     public void setPreventMessageDeletionEnabled(boolean e) { preferences.edit().putBoolean(KEY_PREVENT_MESSAGE_DELETION, e).apply(); }
 
     private static final String KEY_SAVE_EDIT_HISTORY = "feature_save_edit_history";
-    public boolean isSaveEditHistoryEnabled() { return preferences.getBoolean(KEY_SAVE_EDIT_HISTORY, true); }
+    // Message Edit History Log is OFF by default; the user can enable it from NayaGram Settings.
+    public boolean isSaveEditHistoryEnabled() { return preferences.getBoolean(KEY_SAVE_EDIT_HISTORY, false); }
     public void setSaveEditHistoryEnabled(boolean e) { preferences.edit().putBoolean(KEY_SAVE_EDIT_HISTORY, e).apply(); }
 
     
@@ -511,6 +512,8 @@ public class NayaConfig {
             .putBoolean(KEY_AUTO_ADD_TEXT_ENABLED, false)
             .putString(KEY_AUTO_ADD_TEXT_VALUE, "@NGSupreme")
             .putBoolean(KEY_ONE_TIME_VOICE_VIDEO, false)
+            .putBoolean(KEY_PREVENT_MESSAGE_DELETION, false)
+            .putBoolean(KEY_SAVE_EDIT_HISTORY, false)
             .apply();
     }
 }

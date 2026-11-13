@@ -65,6 +65,39 @@ public final class NGMessageEditHistory {
         return accountId + "_" + dialogId + "_" + messageId;
     }
 
+    public static String extractSnapshotText(TLRPC.Message msg) {
+        if (msg == null) {
+            return "";
+        }
+        String base = msg.message != null ? msg.message : "";
+        if (msg.entities != null && !msg.entities.isEmpty()) {
+            StringBuilder links = new StringBuilder();
+            for (int i = 0; i < msg.entities.size(); i++) {
+                TLRPC.MessageEntity entity = msg.entities.get(i);
+                if (entity instanceof TLRPC.TL_messageEntityTextUrl && !TextUtils.isEmpty(entity.url)) {
+                    if (!base.contains(entity.url)) {
+                        if (links.length() > 0) {
+                            links.append("\n");
+                        }
+                        links.append("🔗 ").append(entity.url);
+                    }
+                }
+            }
+            if (links.length() > 0) {
+                return base.isEmpty() ? links.toString() : (base + "\n" + links.toString());
+            }
+        }
+        return base;
+    }
+
+    public static void clearHistory(int accountId, long dialogId, int messageId) {
+        try {
+            String key = makeKey(accountId, dialogId, messageId);
+            MEMORY_CACHE.remove(key);
+            getPrefs().edit().remove(key).apply();
+        } catch (Throwable ignored) {}
+    }
+
     /**
      * Records a message edit when oldMsg text differs from newMsg text.
      * Safe to call from both MessagesStorage (SQLite thread) and MessagesController (StageQueue).
@@ -77,8 +110,8 @@ public final class NGMessageEditHistory {
             if (oldMsg == null || newMsg == null || newMsg.id <= 0) {
                 return;
             }
-            String oldText = oldMsg.message != null ? oldMsg.message : "";
-            String newText = newMsg.message != null ? newMsg.message : "";
+            String oldText = extractSnapshotText(oldMsg);
+            String newText = extractSnapshotText(newMsg);
 
             // Ignore non-text edits (such as reaction counts, views, or pin state updates)
             if (TextUtils.equals(oldText, newText)) {
@@ -194,7 +227,7 @@ public final class NGMessageEditHistory {
         final int messageId = messageObject.getId();
         List<RevisionEntry> revisions = new ArrayList<>(getRevisions(accountId, dialogId, messageId));
 
-        String currentText = messageObject.messageOwner.message != null ? messageObject.messageOwner.message : "";
+        String currentText = extractSnapshotText(messageObject.messageOwner);
         int currentEditDate = messageObject.messageOwner.edit_date > 0
                 ? messageObject.messageOwner.edit_date
                 : messageObject.messageOwner.date;
@@ -352,6 +385,13 @@ public final class NGMessageEditHistory {
             Toast.makeText(context, "Full edit history copied ✓", Toast.LENGTH_SHORT).show();
             d.dismiss();
         });
+        if (editCount > 0) {
+            builder.setNeutralButton("Clear Log", (d, w) -> {
+                clearHistory(accountId, dialogId, messageId);
+                Toast.makeText(context, "Edit history cleared", Toast.LENGTH_SHORT).show();
+                d.dismiss();
+            });
+        }
         builder.setNegativeButton("Close", (d, w) -> d.dismiss());
         builder.show();
     }

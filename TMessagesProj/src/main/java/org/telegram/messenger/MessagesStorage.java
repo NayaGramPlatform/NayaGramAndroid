@@ -5522,7 +5522,68 @@ public class MessagesStorage extends BaseController {
         });
     }
 
+    private void captureEditHistoryBeforeOverwriteInternal(ArrayList<TLRPC.Message> messages) {
+        if (messages == null || messages.isEmpty() || database == null || !org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+            return;
+        }
+        LongSparseArray<ArrayList<TLRPC.Message>> byDialog = new LongSparseArray<>();
+        for (int a = 0, N = messages.size(); a < N; a++) {
+            TLRPC.Message msg = messages.get(a);
+            if (msg == null || msg.id <= 0 || msg instanceof TLRPC.TL_messageEmpty) {
+                continue;
+            }
+            if ((msg.flags & TLRPC.MESSAGE_FLAG_EDITED) == 0 && msg.edit_date <= 0) {
+                continue;
+            }
+            long did = MessageObject.getDialogId(msg);
+            if (did == 0) {
+                continue;
+            }
+            ArrayList<TLRPC.Message> list = byDialog.get(did);
+            if (list == null) {
+                list = new ArrayList<>();
+                byDialog.put(did, list);
+            }
+            list.add(msg);
+        }
+        for (int a = 0, N = byDialog.size(); a < N; a++) {
+            long did = byDialog.keyAt(a);
+            ArrayList<TLRPC.Message> list = byDialog.valueAt(a);
+            ArrayList<Integer> mids = new ArrayList<>(list.size());
+            SparseArray<TLRPC.Message> incomingByMid = new SparseArray<>(list.size());
+            for (int b = 0; b < list.size(); b++) {
+                TLRPC.Message m = list.get(b);
+                mids.add(m.id);
+                incomingByMid.put(m.id, m);
+            }
+            String idsStr = TextUtils.join(",", mids);
+            SQLiteCursor cursor = null;
+            try {
+                cursor = database.queryFinalized(String.format(Locale.US, "SELECT mid, data FROM messages_v2 WHERE uid = %d AND mid IN(%s)", did, idsStr));
+                while (cursor.next()) {
+                    int mid = cursor.intValue(0);
+                    NativeByteBuffer data = cursor.byteBufferValue(1);
+                    if (data != null) {
+                        TLRPC.Message oldMsg = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
+                        data.reuse();
+                        TLRPC.Message newMsg = incomingByMid.get(mid);
+                        if (oldMsg != null && newMsg != null) {
+                            org.nayagram.platform.history.NGMessageEditHistory.recordEdit(currentAccount, did, oldMsg, newMsg);
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                FileLog.e(e);
+            } finally {
+                if (cursor != null) {
+                    cursor.dispose();
+                }
+            }
+        }
+    }
+
     private void preserveExistingAntiDeletedInternal(ArrayList<TLRPC.Message> messages) {
+        captureEditHistoryBeforeOverwriteInternal(messages);
         if (messages == null || messages.isEmpty() || database == null || !org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled()) {
             return;
         }

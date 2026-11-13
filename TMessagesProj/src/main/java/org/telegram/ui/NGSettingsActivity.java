@@ -912,7 +912,7 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowAntiDelete) {
                     c.setFeature(R.drawable.msg_delete, 0xFF0284C7, "Anti-Delete Messages", "Keep deleted messages in chat with cyan indicator", cfg.isPreventMessageDeletionEnabled(), true);
                 } else if (position == rowEditHistory) {
-                    c.setFeature(R.drawable.msg_edit, 0xFF6366F1, "Message Edit History Log", "Capture & view original and previous edited versions of messages", cfg.isSaveEditHistoryEnabled(), true);
+                    c.setFeature(R.drawable.msg_edit, 0xFF6366F1, "Message Edit History Log", "Capture & view original and previous edited versions of messages. Off by default.", cfg.isSaveEditHistoryEnabled(), true);
                 } else if (position == rowShowIdDc) {
                     c.setFeature(R.drawable.ic_naya_info, 0xFF1565C0, "User ID & DC Display", "Show Telegram ID & DataCenter in profile", cfg.isShowIdAndDc(), true);
                 } else if (position == rowBiometricLocker) {
