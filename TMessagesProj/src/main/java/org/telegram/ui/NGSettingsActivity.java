@@ -90,6 +90,7 @@ public class NGSettingsActivity extends BaseFragment {
     private int rowEditText;
     private int rowMessageScheduler;
     private int rowSmartAutoReply;
+    private int rowTextStyle;
     private int rowStorySaver;
     private int rowSmartChatFolders;
 
@@ -147,6 +148,7 @@ public class NGSettingsActivity extends BaseFragment {
         rowEditText = rowCount++;
         rowMessageScheduler = -1;
         rowSmartAutoReply = rowCount++;
+        rowTextStyle = rowCount++;
         rowStorySaver = -1;
         rowSmartChatFolders = rowCount++;
 
@@ -300,6 +302,12 @@ public class NGSettingsActivity extends BaseFragment {
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "APK & ZIP Security Shield: " + (checked ? "On" : "Off")).show();
                 } else if (position == rowSmartAutoReply) {
                     presentFragment(new NGAutoReplyActivity());
+                } else if (position == rowTextStyle) {
+                    org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(getParentActivity(), () -> {
+                        if (listAdapter != null && rowTextStyle != -1) {
+                            listAdapter.notifyItemChanged(rowTextStyle);
+                        }
+                    });
                 } else if (position == rowOneTimeVoiceVideo) {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
@@ -882,6 +890,9 @@ public class NGSettingsActivity extends BaseFragment {
                 } else if (position == rowSmartAutoReply) {
                     boolean active = org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled();
                     c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Auto answer", active ? "Active • Replies once automatically" : "Automatically reply once to the first message", true);
+                } else if (position == rowTextStyle) {
+                    String styleName = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyleName();
+                    c.setActionFeature(R.drawable.msg_text_outlined, 0xFF0EA5E9, "Text style", "Active: " + styleName + " • Tap to choose Bold, Italic, Mono, Spoiler, Quote", true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
                 } else if (position == rowVideoShape && rowVideoShape != -1) {

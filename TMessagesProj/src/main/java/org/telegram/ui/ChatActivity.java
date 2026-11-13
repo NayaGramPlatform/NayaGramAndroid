@@ -4074,7 +4074,7 @@ public class ChatActivity extends BaseFragment implements
                         chatActivityEnterView.getEditField().makeSelectedRegular();
                     }
                 } else if (id == text_ng_style) {
-                    org.nayagram.platform.ui.NGTextStyleHelper.showDialog(getParentActivity(), () -> {
+                    org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(getParentActivity(), () -> {
                         if (chatActivityEnterView != null) {
                             chatActivityEnterView.updateColors();
                         }

@@ -5,6 +5,10 @@ import android.content.SharedPreferences;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.Spanned;
+import android.text.TextUtils;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.URLSpan;
+import android.text.style.UnderlineSpan;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -25,7 +29,7 @@ import java.util.Set;
  * AutoReplyManager - Clean Novagram-style Auto Answer engine.
  * - Single clean auto-answer message with native Telegram formatting & links.
  * - Replies once per dialog while enabled; resets answered list when turned off.
- * - Zero keyword rule clutter, zero markdown symbol artifacts.
+ * - Full hyperlink (TL_messageEntityTextUrl) persistence and visual span restoration.
  */
 public class AutoReplyManager {
     private static AutoReplyManager instance;
@@ -85,6 +89,14 @@ public class AutoReplyManager {
         return autoAnswerText != null ? autoAnswerText : "";
     }
 
+    public synchronized String getCustomReplyMessage() {
+        return getAutoAnswerText();
+    }
+
+    public synchronized void setCustomReplyMessage(String text) {
+        setAutoAnswerText(text, autoAnswerEntitiesJson);
+    }
+
     public synchronized void setAutoAnswerText(String text) {
         setAutoAnswerText(text, null);
     }
@@ -96,6 +108,9 @@ public class AutoReplyManager {
                 .putString(KEY_TEXT, autoAnswerText)
                 .putString(KEY_ENTITIES, autoAnswerEntitiesJson)
                 .apply();
+        try {
+            NayaConfig.getInstance().setAutoReplyText(autoAnswerText);
+        } catch (Throwable ignored) {}
     }
 
     public synchronized String getAutoAnswerEntitiesJson() {
@@ -188,6 +203,17 @@ public class AutoReplyManager {
         }
     }
 
+    private static void addUrlEntityIfAbsent(List<EntityData> list, int start, int length, String url) {
+        if (start < 0 || length <= 0 || TextUtils.isEmpty(url)) return;
+        for (EntityData existing : list) {
+            if (existing.type == 8 && existing.offset == start && existing.length == length) {
+                existing.url = url;
+                return;
+            }
+        }
+        list.add(new EntityData(8, start, length, url));
+    }
+
     public static String serializeSpansToJson(CharSequence text) {
         if (!(text instanceof Spannable)) return null;
         Spannable s = (Spannable) text;
@@ -207,6 +233,9 @@ public class AutoReplyManager {
                 if ((f & TextStyleSpan.FLAG_STYLE_SPOILER) != 0) list.add(new EntityData(4, start, end - start, null));
                 if ((f & TextStyleSpan.FLAG_STYLE_STRIKE) != 0) list.add(new EntityData(5, start, end - start, null));
                 if ((f & TextStyleSpan.FLAG_STYLE_UNDERLINE) != 0) list.add(new EntityData(6, start, end - start, null));
+                if ((f & TextStyleSpan.FLAG_STYLE_URL) != 0 && run.urlEntity != null && !TextUtils.isEmpty(run.urlEntity.url)) {
+                    addUrlEntityIfAbsent(list, start, end - start, run.urlEntity.url);
+                }
             }
         }
         QuoteSpan.QuoteStyleSpan[] quotes = s.getSpans(0, s.length(), QuoteSpan.QuoteStyleSpan.class);
@@ -222,7 +251,20 @@ public class AutoReplyManager {
             for (URLSpanReplacement u : urls) {
                 int start = s.getSpanStart(u);
                 int end = s.getSpanEnd(u);
-                if (start >= 0 && end > start) list.add(new EntityData(8, start, end - start, u.getURL()));
+                if (start >= 0 && end > start && !TextUtils.isEmpty(u.getURL())) {
+                    addUrlEntityIfAbsent(list, start, end - start, u.getURL());
+                }
+            }
+        }
+        URLSpan[] stdUrls = s.getSpans(0, s.length(), URLSpan.class);
+        if (stdUrls != null) {
+            for (URLSpan u : stdUrls) {
+                if (u instanceof URLSpanReplacement) continue;
+                int start = s.getSpanStart(u);
+                int end = s.getSpanEnd(u);
+                if (start >= 0 && end > start && !TextUtils.isEmpty(u.getURL())) {
+                    addUrlEntityIfAbsent(list, start, end - start, u.getURL());
+                }
             }
         }
         if (list.isEmpty()) return null;
@@ -250,7 +292,7 @@ public class AutoReplyManager {
                 else if (e.type == 5) entity = new TLRPC.TL_messageEntityStrike();
                 else if (e.type == 6) entity = new TLRPC.TL_messageEntityUnderline();
                 else if (e.type == 7) entity = new TLRPC.TL_messageEntityBlockquote();
-                else if (e.type == 8 && e.url != null) {
+                else if (e.type == 8 && e.url != null && !e.url.isEmpty()) {
                     TLRPC.TL_messageEntityTextUrl urlEntity = new TLRPC.TL_messageEntityTextUrl();
                     urlEntity.url = e.url;
                     entity = urlEntity;
@@ -263,6 +305,19 @@ public class AutoReplyManager {
             }
         } catch (Exception ignored) {}
         return entities;
+    }
+
+    public static void applyVisualLinkSpan(Spannable s, int start, int end, String url) {
+        if (s == null || start < 0 || end <= start || end > s.length() || TextUtils.isEmpty(url)) return;
+        URLSpanReplacement[] oldUrls = s.getSpans(start, end, URLSpanReplacement.class);
+        if (oldUrls != null) {
+            for (URLSpanReplacement old : oldUrls) {
+                s.removeSpan(old);
+            }
+        }
+        s.setSpan(new URLSpanReplacement(url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        s.setSpan(new ForegroundColorSpan(0xFF0EA5E9), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        s.setSpan(new UnderlineSpan(), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     public static void restoreSpansFromJson(Spannable s, String json) {
@@ -282,7 +337,7 @@ public class AutoReplyManager {
                         QuoteSpan.putQuote(s, start, end, false);
                     }
                 } else if (e instanceof TLRPC.TL_messageEntityTextUrl) {
-                    s.setSpan(new URLSpanReplacement(e.url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    applyVisualLinkSpan(s, start, end, e.url);
                 }
             }
         }

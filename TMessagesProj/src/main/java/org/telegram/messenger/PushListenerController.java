@@ -1539,6 +1539,7 @@ public class PushListenerController {
         });
         try {
             countDownLatch.await();
+            IncomingMessageInterceptor.awaitBackgroundAutoReply(8500);
         } catch (Throwable ignore) {
 
         }

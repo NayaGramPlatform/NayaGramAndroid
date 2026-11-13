@@ -2834,7 +2834,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 updateNgTextStyleButtonColor();
                 attachLayout.addView(ngTextStyleButton, LayoutHelper.createLinear(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
                 ngTextStyleButton.setOnClickListener(v -> {
-                    org.nayagram.platform.ui.NGTextStyleHelper.showDialog(getContext(), this::updateNgTextStyleButtonColor);
+                    org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(getContext(), this::updateNgTextStyleButtonColor);
                 });
             }
 
@@ -10482,9 +10482,10 @@ public class ChatActivityEnterView extends FrameLayout implements
     private void updateNgTextStyleButtonColor() {
         if (ngTextStyleButton == null) return;
         try {
-            int style = org.nayagram.platform.ui.NGTextStyleHelper.getSelectedStyle();
-            if (style != org.nayagram.platform.ui.NGTextStyleHelper.STYLE_REGULAR) {
-                int badgeColor = org.nayagram.platform.ui.NGTextStyleHelper.getStyleBadgeColor(style);
+            int style = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
+            if (style != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR
+                    && style != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE) {
+                int badgeColor = org.nayagram.platform.textstyle.NGTextStyleHelper.getStyleBadgeColor(style);
                 ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(badgeColor, PorterDuff.Mode.SRC_IN));
             } else {
                 ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));

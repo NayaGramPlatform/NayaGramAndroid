@@ -5371,6 +5371,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+                            reqSend.background = true;
+                        }
                         if (payStars > 0) {
                             reqSend.flags |= 2097152;
                             reqSend.allow_paid_stars = payStars;
@@ -5436,6 +5439,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+                            reqSend.background = true;
+                        }
                         if (payStars > 0) {
                             reqSend.flags |= 2097152;
                             reqSend.allow_paid_stars = payStars;
@@ -8091,6 +8097,10 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         }
 
         newMsgObj.reqId = getConnectionsManager().sendRequest(req, (response, error) -> {
+            if ((req instanceof TLRPC.TL_messages_sendMessage && ((TLRPC.TL_messages_sendMessage) req).background)
+                    || (req instanceof TLRPC.TL_messages_sendMedia && ((TLRPC.TL_messages_sendMedia) req).background)) {
+                IncomingMessageInterceptor.onAutoReplyServerResponse(currentAccount, error != null);
+            }
             if (error != null && (req instanceof TLRPC.TL_messages_sendMedia || req instanceof TL_ephemeral.TL_sendMessage || req instanceof TLRPC.TL_messages_editMessage || req instanceof TLRPC.TL_messages_addPollAnswer) && FileRefController.isFileRefError(error.text)) {
                 if (FileRefController.isFileRefErrorCover(error.text)) {
                     if (removeCoverFromRequest(req)) {
