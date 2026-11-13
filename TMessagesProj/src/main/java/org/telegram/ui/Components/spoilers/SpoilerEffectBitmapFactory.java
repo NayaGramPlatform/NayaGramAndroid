@@ -16,7 +16,6 @@ import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.DispatchQueue;
 import org.telegram.messenger.LiteMode;
 import org.telegram.messenger.SharedConfig;
-import org.telegram.messenger.Utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +59,7 @@ public class SpoilerEffectBitmapFactory {
     Paint getPaint() {
         if (bitmapBuffers[0] == null) {
             bitmapBuffers[0] = new Buffer(size);
-            shaderPaint = new Paint();
+            shaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
             shaderSpoilerEffects = new ArrayList<>(10 * 10);
             int step = (int) (size / 10f);
             int particleCount = (int) (60 * (size / (float) AndroidUtilities.dp(200)));
@@ -68,25 +67,25 @@ public class SpoilerEffectBitmapFactory {
                 for (int j = 0; j < 10; j++) {
                     SpoilerEffect shaderSpoilerEffect = new SpoilerEffect();
                     shaderSpoilerEffect.setSize(size);
-                    shaderSpoilerEffect.setBounds(step * i, step * j - AndroidUtilities.dp(5), step * i + step +  AndroidUtilities.dp(3), step * j + step + AndroidUtilities.dp(5));
+                    shaderSpoilerEffect.setBounds(step * i, step * j - AndroidUtilities.dp(5), step * i + step + AndroidUtilities.dp(3), step * j + step + AndroidUtilities.dp(5));
                     shaderSpoilerEffect.setMaxParticlesCount(Math.min(SpoilerEffect.MAX_PARTICLES_PER_ENTITY * 5, particleCount));
                     shaderSpoilerEffect.setColor(Color.WHITE);
                     shaderSpoilerEffects.add(shaderSpoilerEffect);
                 }
             }
-            doDraw(new Canvas(bitmapBuffers[0].bitmap), new Rect(0, 0, size, size));
+            bitmapBuffers[0].bitmap.eraseColor(Color.TRANSPARENT);
+            doDraw(bitmapBuffers[0].canvas, new Rect(0, 0, size, size));
             shaderPaint.setShader(bitmapBuffers[0].shader);
             lastUpdateTime = System.currentTimeMillis();
         } else if (isDrawnWithClipRegion && !LiteMode.isEnabled(LiteMode.FLAG_CHAT_SPOILER)) {
             // restore full-drawn texture
-
             currentBitmapBuffer = 0;
-            doDraw(new Canvas(bitmapBuffers[0].bitmap), new Rect(0, 0, size, size));
+            bitmapBuffers[0].bitmap.eraseColor(Color.TRANSPARENT);
+            doDraw(bitmapBuffers[0].canvas, new Rect(0, 0, size, size));
             shaderPaint.setShader(bitmapBuffers[0].shader);
             lastUpdateTime = System.currentTimeMillis();
             isDrawnWithClipRegion = false;
         }
-
 
         return shaderPaint;
     }
@@ -153,13 +152,14 @@ public class SpoilerEffectBitmapFactory {
                     bitmapBuffers[nextBitmapBuffer] = new Buffer(size);
                 }
                 if (backgroundBitmap == null) {
-                    backgroundBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ALPHA_8);
+                    backgroundBitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
                     backgroundCanvas = new Canvas(backgroundBitmap);
                 } else {
                     backgroundBitmap.eraseColor(Color.TRANSPARENT);
                 }
                 doDraw(backgroundCanvas, clipRegionDump);
-                Utilities.copyBitmaps(backgroundBitmap, bitmapBuffers[nextBitmapBuffer].bitmap);
+                bitmapBuffers[nextBitmapBuffer].bitmap.eraseColor(Color.TRANSPARENT);
+                bitmapBuffers[nextBitmapBuffer].canvas.drawBitmap(backgroundBitmap, 0, 0, null);
                 AndroidUtilities.runOnUIThread(() -> {
                     currentBitmapBuffer = nextBitmapBuffer;
                     shaderPaint.setShader(bitmapBuffers[currentBitmapBuffer].shader);
@@ -172,9 +172,11 @@ public class SpoilerEffectBitmapFactory {
 
     private static class Buffer {
         private final Bitmap bitmap;
+        private final Canvas canvas;
         private final BitmapShader shader;
         public Buffer(int size) {
-            bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ALPHA_8);
+            bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+            canvas = new Canvas(bitmap);
             shader = new BitmapShader(bitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT);
         }
     }
@@ -205,6 +207,38 @@ public class SpoilerEffectBitmapFactory {
         public void draw(Canvas canvas, Paint paint) {
             if (length > 0) {
                 canvas.drawPoints(buffer, 0, length, paint);
+            }
+        }
+
+        public void drawColorful(Canvas canvas, Paint basePaint, int[] palette, float alphaMultiplier) {
+            if (length <= 0 || palette == null || palette.length == 0) {
+                return;
+            }
+            final int totalCoords = length - (length % 2);
+            if (totalCoords <= 0) {
+                return;
+            }
+            final int numColors = palette.length;
+            final int totalPoints = totalCoords / 2;
+            if (totalPoints < numColors) {
+                int c = palette[0];
+                basePaint.setColor(c);
+                basePaint.setAlpha(Math.min(255, Math.max(0, (int) (255 * alphaMultiplier))));
+                canvas.drawPoints(buffer, 0, totalCoords, basePaint);
+                return;
+            }
+            int pointsPerBucket = Math.max(1, totalPoints / numColors);
+            int offset = 0;
+            for (int i = 0; i < numColors && offset < totalCoords; i++) {
+                int coordsCount = (i == numColors - 1)
+                        ? (totalCoords - offset)
+                        : Math.min(totalCoords - offset, pointsPerBucket * 2);
+                if (coordsCount > 0) {
+                    basePaint.setColor(palette[i]);
+                    basePaint.setAlpha(Math.min(255, Math.max(0, (int) (255 * alphaMultiplier))));
+                    canvas.drawPoints(buffer, offset, coordsCount, basePaint);
+                    offset += coordsCount;
+                }
             }
         }
 

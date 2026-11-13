@@ -1679,6 +1679,7 @@ public class ChatActivity extends BaseFragment implements
     private final static int text_spoiler = 57;
     private final static int text_quote = 58;
     private final static int text_date = 74;
+    private final static int text_ng_style = 75;
 
     private final static int view_as_topics = 59;
 
@@ -4072,6 +4073,12 @@ public class ChatActivity extends BaseFragment implements
                         chatActivityEnterView.getEditField().setSelectionOverride(editTextStart, editTextEnd);
                         chatActivityEnterView.getEditField().makeSelectedRegular();
                     }
+                } else if (id == text_ng_style) {
+                    org.nayagram.platform.ui.NGTextStyleHelper.showDialog(getParentActivity(), () -> {
+                        if (chatActivityEnterView != null) {
+                            chatActivityEnterView.updateColors();
+                        }
+                    });
                 } else if (id == change_colors) {
                     showChatThemeBottomSheet();
                 } else if (id == topic_close) {
@@ -10995,6 +11002,7 @@ public class ChatActivity extends BaseFragment implements
             item.addSubItem(text_date, LocaleController.getString(R.string.FormattedDate));
         }
         item.addSubItem(text_regular, LocaleController.getString(R.string.Regular));
+        item.addSubItem(text_ng_style, "Text style...");
 
         filledEditTextItemMenu = true;
     }

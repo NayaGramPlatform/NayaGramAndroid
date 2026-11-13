@@ -659,6 +659,7 @@ public class ChatActivityEnterView extends FrameLayout implements
     protected View topView;
     private BotKeyboardView botKeyboardView;
     private ImageView notifyButton;
+    private ImageView ngTextStyleButton;
     @Nullable
     private ImageView scheduledButton;
     @Nullable
@@ -2823,6 +2824,17 @@ public class ChatActivityEnterView extends FrameLayout implements
                         notifyButton.setContentDescription(silent ? getString("AccDescrChanSilentOn", R.string.AccDescrChanSilentOn) : getString("AccDescrChanSilentOff", R.string.AccDescrChanSilentOff));
                         updateFieldHint(true);
                     }
+                });
+
+                ngTextStyleButton = new ImageView(context);
+                ngTextStyleButton.setImageResource(R.drawable.msg_text_outlined);
+                ngTextStyleButton.setScaleType(ImageView.ScaleType.CENTER);
+                ngTextStyleButton.setContentDescription("Text style");
+                ngTextStyleButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
+                updateNgTextStyleButtonColor();
+                attachLayout.addView(ngTextStyleButton, LayoutHelper.createLinear(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
+                ngTextStyleButton.setOnClickListener(v -> {
+                    org.nayagram.platform.ui.NGTextStyleHelper.showDialog(getContext(), this::updateNgTextStyleButtonColor);
                 });
             }
 
@@ -8824,13 +8836,12 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (isStories && isLiveComment) {
             layoutParams.rightMargin = dp(suggestButtonVisible ? 50 : 2) + Math.max(0, sendButton.width() - dp(DEFAULT_HEIGHT));
         } else if (attachVisible == 1 || attachVisible == 2/* && layoutParams.rightMargin != dp(2)*/) {
-            if (botButton != null && botButton.getVisibility() == VISIBLE && scheduledButton != null && scheduledButton.getVisibility() == VISIBLE && attachButton != null && attachButton.getVisibility() == VISIBLE) {
-                layoutParams.rightMargin = dp(146);
-            } else if (botButton != null && botButton.getVisibility() == VISIBLE || notifyButton != null && notifyButton.getVisibility() == VISIBLE || scheduledButton != null && scheduledButton.getTag() != null) {
-                layoutParams.rightMargin = dp(98);
-            } else {
-                layoutParams.rightMargin = dp(50);
-            }
+            int extraAttachIcons = 0;
+            if (botButton != null && botButton.getVisibility() == VISIBLE) extraAttachIcons++;
+            if (notifyButton != null && notifyButton.getVisibility() == VISIBLE) extraAttachIcons++;
+            if (scheduledButton != null && (scheduledButton.getVisibility() == VISIBLE || scheduledButton.getTag() != null)) extraAttachIcons++;
+            if (ngTextStyleButton != null && ngTextStyleButton.getVisibility() == VISIBLE) extraAttachIcons++;
+            layoutParams.rightMargin = dp(50 + 48 * Math.min(3, extraAttachIcons));
         } else {
             if (scheduledButton != null && scheduledButton.getTag() != null) {
                 layoutParams.rightMargin = dp(50);
@@ -10465,6 +10476,20 @@ public class ChatActivityEnterView extends FrameLayout implements
         deleteRichDraftButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.SRC_IN));
         deleteRichDraftButton.setBackground(Theme.createInsetRoundRectDrawable(getThemedColor(Theme.key_listSelector), dp(19), dp(1), dp(3)));
         sendOutlineView.setColorFilter(getThemedColor(Theme.key_telegram_color), PorterDuff.Mode.SRC_IN);
+        updateNgTextStyleButtonColor();
+    }
+
+    private void updateNgTextStyleButtonColor() {
+        if (ngTextStyleButton == null) return;
+        try {
+            int style = org.nayagram.platform.ui.NGTextStyleHelper.getSelectedStyle();
+            if (style != org.nayagram.platform.ui.NGTextStyleHelper.STYLE_REGULAR) {
+                int badgeColor = org.nayagram.platform.ui.NGTextStyleHelper.getStyleBadgeColor(style);
+                ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(badgeColor, PorterDuff.Mode.SRC_IN));
+            } else {
+                ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));
+            }
+        } catch (Throwable ignored) {}
     }
 
     private void updateRecordedDeleteIconColors() {

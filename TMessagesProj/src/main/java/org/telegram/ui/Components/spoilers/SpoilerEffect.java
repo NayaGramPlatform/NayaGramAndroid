@@ -67,8 +67,16 @@ public class SpoilerEffect extends Drawable {
     private final static int FPS = 30;
     private final static int renderDelayMs = 1000 / FPS + 1;
     public final static float[] ALPHAS = {
-            0.3f, 0.6f, 1.0f
+            0.45f, 0.75f, 1.0f
     };
+    private static final int[] SPOILER_AURORA_PALETTE = new int[]{
+            0xFF00E5FF, // Vivid Cyan
+            0xFF3B82F6, // Royal Blue
+            0xFFA855F7, // Electric Violet
+            0xFF10B981, // Emerald Green
+            0xFFEC4899  // Neon Rose-Magenta
+    };
+    private final Paint auroraMistPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint[] particlePaints = new Paint[ALPHAS.length];
     private final float[] halfStrokeWidths = new float[ALPHAS.length];
 
@@ -134,13 +142,13 @@ public class SpoilerEffect extends Drawable {
 
     public SpoilerEffect() {
         for (int i = 0; i < ALPHAS.length; i++) {
-            particlePaints[i] = new Paint();
+            particlePaints[i] = new Paint(Paint.ANTI_ALIAS_FLAG);
             if (i == 0) {
-                particlePaints[i].setStrokeWidth(AndroidUtilities.dp(1.4f));
+                particlePaints[i].setStrokeWidth(AndroidUtilities.dp(1.8f));
                 particlePaints[i].setStyle(Paint.Style.STROKE);
                 particlePaints[i].setStrokeCap(Paint.Cap.ROUND);
             } else {
-                particlePaints[i].setStrokeWidth(AndroidUtilities.dp(1.2f));
+                particlePaints[i].setStrokeWidth(AndroidUtilities.dp(1.5f));
                 particlePaints[i].setStyle(Paint.Style.STROKE);
                 particlePaints[i].setStrokeCap(Paint.Cap.ROUND);
             }
@@ -312,8 +320,18 @@ public class SpoilerEffect extends Drawable {
             return;
         }
 
+        int baseColorAlpha = lastColor == Color.TRANSPARENT ? 255 : Color.alpha(lastColor);
+        int effectiveAlpha = Math.min(255, Math.max(0, (int) ((baseColorAlpha / 255f) * mAlpha)));
+
+        // Soft colorful Aurora mist pill behind particles so text is concealed with a rich colorful tint
+        boolean isDark = Theme.isCurrentThemeDark();
+        auroraMistPaint.setColor(isDark ? 0xFF6366F1 : 0xFF0EA5E9);
+        auroraMistPaint.setAlpha((int) (effectiveAlpha * (isDark ? 0.24f : 0.16f)));
+        canvas.drawRoundRect(boundsFWithInset, AndroidUtilities.dp(4), AndroidUtilities.dp(4), auroraMistPaint);
+
         final Paint shaderPaint = SpoilerEffectBitmapFactory.getInstance().getPaint();
-        shaderPaint.setColorFilter(colorFilter);
+        shaderPaint.setColorFilter(null);
+        shaderPaint.setAlpha(effectiveAlpha);
 
         canvas.drawRect(bounds, shaderPaint);
         if (LiteMode.isEnabled(LiteMode.FLAG_CHAT_SPOILER)) {
@@ -502,7 +520,7 @@ public class SpoilerEffect extends Drawable {
         }
 
         for (int a = 0; a < ALPHAS.length; a++) {
-            buffers[a].draw(canvas, particlePaints[a]);
+            buffers[a].drawColorful(canvas, particlePaints[a], SPOILER_AURORA_PALETTE, ALPHAS[a]);
         }
     }
 

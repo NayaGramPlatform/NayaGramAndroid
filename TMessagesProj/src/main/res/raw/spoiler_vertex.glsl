@@ -13,6 +13,7 @@ out float outTime;
 out float outDuration;
 
 out float alpha;
+out vec3 vColor;
 
 uniform float reset;
 uniform float time;
@@ -132,5 +133,20 @@ void main() {
 
   gl_PointSize = r;
   gl_Position = vec4((position / size * 2.0 - vec2(1.0)), 0.0, 1.0);
-  alpha = sin(particleTime * 3.14) * (.6 + .4 * rand(vec2(gl_VertexID)));
+  alpha = sin(particleTime * 3.14) * (.65 + .35 * rand(vec2(gl_VertexID)));
+
+  int cid = gl_VertexID % 5;
+  vec3 baseCol;
+  if (cid == 0) {
+    baseCol = vec3(0.0, 0.898, 1.0);       // Cyan #00E5FF
+  } else if (cid == 1) {
+    baseCol = vec3(0.231, 0.510, 0.965);   // Royal Blue #3B82F6
+  } else if (cid == 2) {
+    baseCol = vec3(0.659, 0.333, 0.969);   // Electric Violet #A855F7
+  } else if (cid == 3) {
+    baseCol = vec3(0.063, 0.725, 0.506);   // Emerald #10B981
+  } else {
+    baseCol = vec3(0.925, 0.282, 0.600);   // Rose-Magenta #EC4899
+  }
+  vColor = mix(baseCol, vec3(1.0), 0.16 * sin(particleTime * 3.14159));
 }

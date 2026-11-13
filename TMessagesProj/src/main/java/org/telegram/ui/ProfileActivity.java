@@ -5634,17 +5634,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             onlineTextView[a].setTextSizePx(dp(14f));
             onlineTextView[a].setTypeface(AndroidUtilities.bold());
             onlineTextView[a].setGravity(Gravity.LEFT);
-            onlineTextView[a].setAlpha(a == 0 ? 0.0f : 1.0f);
+            onlineTextView[a].setAlpha(a == 1 ? 1.0f : 0.0f);
+            onlineTextView[a].setVisibility(a == 1 ? View.VISIBLE : View.GONE);
             onlineTextView[a].setPivotX(dp(8));
             onlineTextView[a].setPivotY(dp(8));
-            if (a == 1 || a == 2 || a == 3) {
-                onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
-            }
+            onlineTextView[a].setPadding(AndroidUtilities.dp(4), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(2));
             if (a > 0) {
                 onlineTextView[a].setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             }
             onlineTextView[a].setFocusable(a == 0);
-            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 109 - (a == 1 || a == 2 || a == 3 ? 4 : 0), (a == 1 || a == 2 || a == 3 ? -2 : 0), (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 8) - (a == 1 || a == 2 || a == 3 ? 4 : 0), 0));
+            avatarContainer2.addView(onlineTextView[a], LayoutHelper.createFrame(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 105, -2, (a == 0 ? rightMargin - (hasTitleExpanded ? 10 : 0) : 8) - 4, 0));
         }
         checkPhotoDescriptionAlpha();
         avatarContainer2.addView(animatedStatusView);
@@ -10273,6 +10272,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                     avatarsViewPager.setVisibility(View.VISIBLE);
                 }
                 transitionOnlineText = null;
+                if (onlineTextView[0] != null) {
+                    onlineTextView[0].setAlpha(0f);
+                    onlineTextView[0].setVisibility(View.GONE);
+                }
+                enforceSingleOnlineSubtitle();
                 avatarContainer2.invalidate();
                 profileTransitionInProgress = false;
                 previousTransitionFragment = null;
@@ -11328,6 +11332,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             avatarDrawable.setInfo(currentAccount, user);
 
+            if (user.id == getUserConfig().getClientUserId()) {
+                isOnline[0] = true;
+            }
             final MessagesController.PeerColor wasPeerColor = peerColor;
             peerColor = MessagesController.PeerColor.fromCollectible(user.emoji_status);
             if (peerColor == null) {
@@ -11465,6 +11472,11 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 ChatActivity chatActivity = (ChatActivity) prevFragment;
                 BackupImageView fromAvatarImage = chatActivity.avatarContainer.getAvatarImageView();
                 avatarImage.setAnimateFromImageReceiver(fromAvatarImage.getImageReceiver());
+            }
+            if (playProfileAnimation == 0 && onlineTextView[0] != null) {
+                onlineTextView[0].setText("");
+                onlineTextView[0].setAlpha(0f);
+                onlineTextView[0].setVisibility(View.GONE);
             }
             for (int a = 0; a < 2; a++) {
                 if (nameTextView[a] == null) {
@@ -11716,6 +11728,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
             onlineTextView[2].setVisibility((hasFallbackPhoto || hasCustomPhoto) ? View.VISIBLE : View.GONE);
+            checkPhotoDescriptionAlpha();
+            enforceSingleOnlineSubtitle();
 
             if (previousTransitionFragment != null) {
                 previousTransitionFragment.checkAndUpdateAvatar();
@@ -11730,6 +11744,23 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
             if (flagSecure != null) {
                 flagSecure.invalidate();
+            }
+            hasFallbackPhoto = false;
+            hasCustomPhoto = false;
+            if (onlineTextView[0] != null && playProfileAnimation == 0) {
+                onlineTextView[0].setText("");
+                onlineTextView[0].setAlpha(0f);
+                onlineTextView[0].setVisibility(View.GONE);
+            }
+            if (onlineTextView[2] != null) {
+                onlineTextView[2].setText("");
+                onlineTextView[2].setAlpha(0f);
+                onlineTextView[2].setVisibility(View.GONE);
+            }
+            if (onlineTextView[3] != null) {
+                onlineTextView[3].setText("");
+                onlineTextView[3].setAlpha(0f);
+                onlineTextView[3].setVisibility(View.GONE);
             }
 
             final MessagesController.PeerColor wasPeerColor = peerColor;
@@ -12034,6 +12065,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             avatarImage.getImageReceiver().setVisible(!PhotoViewer.isShowingImage(photoBig) && (getLastStoryViewer() == null || getLastStoryViewer().transitionViewHolder.view != avatarImage), storyView != null);
         }
 
+        enforceSingleOnlineSubtitle();
         needLayout(true);
     }
 
@@ -12797,8 +12829,13 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 storyView.setAlpha(progressHalf);
             }
             nameTextView[1].setAlpha(progressHalf);
-            onlineTextView[1].setAlpha(progressHalf);
-            onlineTextView[3].setAlpha(progressHalf);
+            if (hasFallbackPhoto && userId == UserConfig.getInstance(currentAccount).clientUserId) {
+                onlineTextView[1].setAlpha(0f);
+                onlineTextView[3].setAlpha(progressHalf * (1f - currentExpandAnimatorValue));
+            } else {
+                onlineTextView[1].setAlpha(progressHalf);
+                onlineTextView[3].setAlpha(0f);
+            }
 
             searchItem.getSearchField().setAlpha(progressHalfEnd);
             if (enter && searchTransitionProgress < 0.7f) {
@@ -12874,7 +12911,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         }
         nameTextView[1].setVisibility(hide);
         onlineTextView[1].setVisibility(hide);
-        onlineTextView[3].setVisibility(hide);
+        onlineTextView[3].setVisibility(!enter && hasFallbackPhoto && userId == UserConfig.getInstance(currentAccount).clientUserId ? View.VISIBLE : View.GONE);
 
         if (otherItem != null) {
             otherItem.setAlpha(1f);
@@ -12891,7 +12928,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             giftsView.setAlpha(1f);
         }
         nameTextView[1].setAlpha(1f);
-        onlineTextView[1].setAlpha(1f);
+        onlineTextView[1].setAlpha(!enter && !(hasFallbackPhoto && userId == UserConfig.getInstance(currentAccount).clientUserId) ? 1f : 0f);
+        enforceSingleOnlineSubtitle();
         searchItem.setAlpha(1f);
         listView.setAlpha(1f);
         searchListView.setAlpha(1f);
@@ -15973,8 +16011,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             } else {
                 if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(0);
-                    onlineTextView[3].setAlpha(0);
+                    onlineTextView[2].setAlpha(0f);
+                    onlineTextView[3].setAlpha(0f);
                 }
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha2(1f);
@@ -15982,6 +16020,9 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             }
 
         } else {
+            if (onlineTextView[3] != null) {
+                onlineTextView[3].setAlpha(0f);
+            }
             if (hasCustomPhoto) {
                 if (onlineTextView[2] != null) {
                     onlineTextView[2].setAlpha(photoDescriptionProgress);
@@ -15991,13 +16032,71 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 }
             } else {
                 if (onlineTextView[2] != null) {
-                    onlineTextView[2].setAlpha(0);
+                    onlineTextView[2].setAlpha(0f);
                 }
                 if (showStatusButton != null) {
                     showStatusButton.setAlpha2(1f);
                 }
             }
         }
+        enforceSingleOnlineSubtitle();
+    }
+
+    /**
+     * Guarantees that at most ONE subtitle layer under the profile name is visible/opaque
+     * at any moment, preventing any double-layer ghosting or overlapping text.
+     */
+    private void enforceSingleOnlineSubtitle() {
+        try {
+            if (onlineTextView == null) return;
+            // 1. Transition view [0] must never remain visible unless an open/close transition is actively running
+            if (onlineTextView[0] != null) {
+                if (playProfileAnimation == 0 || (!openAnimationInProgress && !profileTransitionInProgress)) {
+                    onlineTextView[0].setAlpha(0f);
+                    onlineTextView[0].setVisibility(View.GONE);
+                } else {
+                    onlineTextView[0].setVisibility(onlineTextView[0].getAlpha() > 0.01f ? View.VISIBLE : View.GONE);
+                }
+            }
+            final boolean isSelfFallback = (userId != 0 && userId == UserConfig.getInstance(currentAccount).clientUserId && hasFallbackPhoto);
+            // 2. Fallback online view [3] is strictly for own profile when hasFallbackPhoto is true
+            if (onlineTextView[3] != null) {
+                if (!isSelfFallback || searchMode || mediaHeaderAnimationProgress > 0.5f) {
+                    onlineTextView[3].setAlpha(0f);
+                    onlineTextView[3].setVisibility(View.GONE);
+                } else {
+                    float a3 = Math.max(0f, (1f - currentExpandAnimatorValue) * (1f - mediaHeaderAnimationProgress));
+                    onlineTextView[3].setAlpha(a3);
+                    onlineTextView[3].setVisibility(a3 > 0.01f ? View.VISIBLE : View.GONE);
+                }
+            }
+            // 3. Tooltip view [2] is strictly for expanded fallback/custom photo
+            if (onlineTextView[2] != null) {
+                if ((!hasFallbackPhoto && !hasCustomPhoto) || searchMode || mediaHeaderAnimationProgress > 0.5f) {
+                    onlineTextView[2].setAlpha(0f);
+                    onlineTextView[2].setVisibility(View.GONE);
+                } else {
+                    onlineTextView[2].setVisibility(onlineTextView[2].getAlpha() > 0.01f ? View.VISIBLE : View.GONE);
+                }
+            }
+            // 4. Primary subtitle [1]: if [0] is actively visible during transition OR isSelfFallback is active OR [2] is opaque, mute [1] so it never double-draws
+            if (onlineTextView[1] != null) {
+                if (isSelfFallback) {
+                    onlineTextView[1].setText("");
+                    onlineTextView[1].setAlpha(0f);
+                } else if (onlineTextView[0] != null && onlineTextView[0].getVisibility() == View.VISIBLE && onlineTextView[0].getAlpha() > 0.05f) {
+                    onlineTextView[1].setAlpha(0f);
+                } else if (onlineTextView[2] != null && onlineTextView[2].getVisibility() == View.VISIBLE && onlineTextView[2].getAlpha() > 0.5f) {
+                    onlineTextView[1].setAlpha(Math.max(0f, 1f - onlineTextView[2].getAlpha()));
+                } else if (!searchMode && !openAnimationInProgress && !profileTransitionInProgress) {
+                    onlineTextView[1].setAlpha(Math.max(0f, 1f - mediaHeaderAnimationProgress));
+                }
+            }
+            // 5. Media counter subtitle: strictly zero alpha unless shared media header is active
+            if (mediaCounterTextView != null && !mediaHeaderVisible && mediaHeaderAnimationProgress <= 0.01f) {
+                mediaCounterTextView.setAlpha(0f);
+            }
+        } catch (Throwable ignored) {}
     }
 
     private float lastOnlineTextViewX;
