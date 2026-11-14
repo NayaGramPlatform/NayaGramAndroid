@@ -103,10 +103,16 @@ jobs:
           fi
           test -s TMessagesProj/config/nayagrampro.jks
           ls -la TMessagesProj/config/nayagrampro.jks
-      - name: Print Build Version Info
+      - name: Load & Print Build Version Info
         run: |
+          APP_VERSION_CODE=$(grep -E '^APP_VERSION_CODE=' gradle.properties | cut -d= -f2- | tr -d '\r')
+          APP_VERSION_NAME=$(grep -E '^APP_VERSION_NAME=' gradle.properties | cut -d= -f2- | tr -d '\r')
+          APP_VERSION_TAG="v${APP_VERSION_NAME// /-}"
+          echo "APP_VERSION_CODE=$APP_VERSION_CODE" >> "$GITHUB_ENV"
+          echo "APP_VERSION_NAME=$APP_VERSION_NAME" >> "$GITHUB_ENV"
+          echo "APP_VERSION_TAG=$APP_VERSION_TAG" >> "$GITHUB_ENV"
           echo "=================================================="
-          echo " NayaGram v4.16.45 NG - Build 4058 "
+          echo " NayaGram v${APP_VERSION_NAME} - Build ${APP_VERSION_CODE} "
           echo " Target SDK: 36 | Min SDK: 24 (Google Play Compliant)"
           echo "=================================================="
 
@@ -254,22 +260,22 @@ jobs:
           path: build_output/NayaGram-Release.apk
           if-no-files-found: warn
 
-      - name: Publish Direct GitHub Release (NayaGram v4.16.45 NG)
+      - name: Publish Direct GitHub Release
         uses: softprops/action-gh-release@v2
         continue-on-error: true
         if: github.ref == 'refs/heads/master'
         with:
-          tag_name: "v4.16.45-b${{ github.run_number }}"
-          name: "NayaGram Release v4.16.45 NG (Build ${{ github.run_number }})"
+          tag_name: "${{ env.APP_VERSION_TAG }}-b${{ github.run_number }}"
+          name: "NayaGram Release v${{ env.APP_VERSION_NAME }} (Build ${{ env.APP_VERSION_CODE }})"
           body: |
-            ### 🚀 NayaGram Release v4.16.45 NG (Build 4058)
+            ### 🚀 NayaGram Release v${{ env.APP_VERSION_NAME }} (Build ${{ env.APP_VERSION_CODE }})
             
             **Release Highlights:**
-            - **Version Code**: `4048`
-            - **Version Name**: `4.16.45 NG`
-            - **Public Universal Verified Badges**: Active for all users, groups, channels, chat lists, dialogs, and user profiles!
-            - **NG Hub & Switch Account Header**: Styled with green (light mode) and glowing radiant purple (dark mode).
-            - **High Contrast Popups**: Crisp white icons on Naya Blue background.
+            - **Version Code**: `${{ env.APP_VERSION_CODE }}`
+            - **Version Name**: `${{ env.APP_VERSION_NAME }}`
+            - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
+            - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
+            - **App Size Optimization**: Compressed native libraries (`useLegacyPackaging = true`) and targeted R8 code shrinking.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab

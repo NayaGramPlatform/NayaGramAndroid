@@ -17620,13 +17620,25 @@ public class MessagesController extends BaseController implements NotificationCe
 
     protected void deleteMessagesByPush(long dialogId, ArrayList<Integer> ids, long channelId) {
         getMessagesStorage().getStorageQueue().postRunnable(() -> {
+            final boolean antiDeleteEnabled = org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled();
             AndroidUtilities.runOnUIThread(() -> {
                 getNotificationCenter().postNotificationName(NotificationCenter.messagesDeleted, ids, channelId, false);
+                boolean updatedAntiDelete = false;
                 if (channelId == 0) {
                     for (int b = 0, size2 = ids.size(); b < size2; b++) {
                         Integer id = ids.get(b);
                         MessageObject obj = dialogMessagesByIds.get(id);
                         if (obj != null) {
+                            if (antiDeleteEnabled && !obj.isOutOwner() && !isLocallyDeleted(obj.getDialogId(), id)) {
+                                obj.deleted = false;
+                                obj.isAntiDeleted = true;
+                                obj.forceUpdate = true;
+                                if (obj.messageOwner != null) {
+                                    obj.messageOwner.isAntiDeleted = true;
+                                }
+                                updatedAntiDelete = true;
+                                continue;
+                            }
                             obj.deleted = true;
                         }
                     }
@@ -17635,14 +17647,30 @@ public class MessagesController extends BaseController implements NotificationCe
                     if (objs != null) {
                         for (int i = 0; i < objs.size(); ++i) {
                             MessageObject obj = objs.get(i);
+                            if (obj == null) {
+                                continue;
+                            }
                             for (int b = 0, size2 = ids.size(); b < size2; b++) {
                                 if (obj.getId() == ids.get(b)) {
+                                    if (antiDeleteEnabled && !obj.isOutOwner() && !isLocallyDeleted(dialogId != 0 ? dialogId : -channelId, obj.getId())) {
+                                        obj.deleted = false;
+                                        obj.isAntiDeleted = true;
+                                        obj.forceUpdate = true;
+                                        if (obj.messageOwner != null) {
+                                            obj.messageOwner.isAntiDeleted = true;
+                                        }
+                                        updatedAntiDelete = true;
+                                        break;
+                                    }
                                     obj.deleted = true;
                                     break;
                                 }
                             }
                         }
                     }
+                }
+                if (updatedAntiDelete) {
+                    getNotificationCenter().postNotificationName(NotificationCenter.updateInterfaces, UPDATE_MASK_ALL);
                 }
             });
             getMessagesStorage().deletePushMessages(dialogId, ids);

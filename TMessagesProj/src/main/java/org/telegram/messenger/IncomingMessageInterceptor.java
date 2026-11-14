@@ -9,6 +9,7 @@ import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -16,10 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 /**
- * IncomingMessageInterceptor - Clean Novagram-style Auto Answer dispatcher.
- * - Replies once per dialog ("Automatically reply once to the first message") with native Telegram formatting & links.
- * - Works immediately while offline/backgrounded (via FCM Push or background MTProto updates) by holding a WakeLock
- *   and coordinating with PushListenerController until the server acknowledges the reply.
+ * IncomingMessageInterceptor - Clean Auto Answer dispatcher.
+ * - Replies to incoming messages with native Telegram formatting & links.
+ * - Works immediately while offline/backgrounded (via FCM Push or background MTProto updates) by using a
+ *   reference-counted background job latch and WakeLock until Telegram's server acknowledges the reply.
  * - Strictly preserves the user's offline / last-seen timestamp: never calls setAppPaused(false, false) while
  *   offline or on a secondary account, marks the sendMessage request as background=true, and immediately sends
  *   TL_account.updateStatus(offline=true) as soon as the server processes the auto-reply.
@@ -31,8 +32,12 @@ public class IncomingMessageInterceptor {
     private static final AtomicBoolean autoReplyDispatchOnUiThread = new AtomicBoolean(false);
     private static final ConcurrentHashMap<Integer, Long> keepOfflineUntilByAccount = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Integer, Long> lastDispatchedDialogByAccount = new ConcurrentHashMap<>();
-    private static volatile CountDownLatch activeBackgroundLatch = null;
-    private static volatile PowerManager.WakeLock activeWakeLock = null;
+    private static final ConcurrentHashMap<Long, JobHandle> jobHandlesByDialog = new ConcurrentHashMap<>();
+
+    private static final Object backgroundLock = new Object();
+    private static int pendingBackgroundJobs = 0;
+    private static CountDownLatch activeBackgroundLatch = null;
+    private static PowerManager.WakeLock activeWakeLock = null;
 
     public static boolean isAutoReplyDispatchActive() {
         return autoReplyDispatchOnUiThread.get();
@@ -49,27 +54,47 @@ public class IncomingMessageInterceptor {
 
     /**
      * Called by PushListenerController so FirebaseMessagingService stays alive until
-     * a triggered background auto-reply finishes transmitting over MTProto.
+     * all triggered background auto-reply jobs finish transmitting over MTProto.
      */
     public static void awaitBackgroundAutoReply(long timeoutMs) {
-        CountDownLatch latch = activeBackgroundLatch;
-        if (latch == null) return;
+        CountDownLatch latch;
+        synchronized (backgroundLock) {
+            latch = activeBackgroundLatch;
+        }
+        if (latch == null) {
+            return;
+        }
         try {
             latch.await(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (Throwable ignored) {}
     }
 
-    /**
-     * Called by SendMessagesHelper.performSendMessageRequest immediately when a background/auto-reply
-     * TL_messages_sendMessage receives its response from Telegram's servers.
-     */
     public static void onAutoReplyServerResponse(final int accountId, final boolean hasError) {
+        onAutoReplyServerResponse(accountId, 0L, hasError);
+    }
+
+    /**
+     * Called by SendMessagesHelper when a background/auto-reply TL_messages_sendMessage
+     * finishes (or exits early/errors). Releases its tracked background job token cleanly.
+     */
+    public static void onAutoReplyServerResponse(final int accountId, final long dialogId, final boolean hasError) {
+        JobHandle trackedHandle = dialogId != 0L ? jobHandlesByDialog.remove(dialogId) : null;
         try {
             if (hasError) {
-                Long lastDialogId = lastDispatchedDialogByAccount.remove(accountId);
-                if (lastDialogId != null) {
-                    AutoReplyManager.getInstance().removeAnsweredDialog(lastDialogId);
+                long targetDialog = dialogId != 0 ? dialogId : 0L;
+                if (targetDialog == 0L) {
+                    Long removed = lastDispatchedDialogByAccount.remove(accountId);
+                    if (removed != null) {
+                        targetDialog = removed;
+                    }
+                } else {
+                    lastDispatchedDialogByAccount.remove(accountId, targetDialog);
                 }
+                if (targetDialog != 0L) {
+                    AutoReplyManager.getInstance().removeAnsweredDialog(targetDialog);
+                }
+            } else if (dialogId != 0L) {
+                lastDispatchedDialogByAccount.remove(accountId, dialogId);
             }
             boolean shouldStayOffline = ApplicationLoader.mainInterfacePaused
                     || !ApplicationLoader.isScreenOn
@@ -81,54 +106,94 @@ public class IncomingMessageInterceptor {
             if (shouldStayOffline) {
                 markKeepOfflineWindow(accountId, 20_000L);
                 sendOfflineStatusNow(accountId, () -> {
-                    releaseBackgroundResources();
+                    if (trackedHandle != null) {
+                        trackedHandle.release();
+                    }
                 });
                 AndroidUtilities.runOnUIThread(() -> sendOfflineStatusNow(accountId, null), 1500);
-            } else {
-                releaseBackgroundResources();
+            } else if (trackedHandle != null) {
+                trackedHandle.release();
             }
         } catch (Throwable t) {
-            releaseBackgroundResources();
+            if (trackedHandle != null) {
+                trackedHandle.release();
+            }
         }
     }
 
-    private static synchronized void acquireBackgroundResources() {
-        try {
-            activeBackgroundLatch = new CountDownLatch(1);
-            if (ApplicationLoader.applicationContext != null) {
-                PowerManager pm = (PowerManager) ApplicationLoader.applicationContext.getSystemService(Context.POWER_SERVICE);
-                if (pm != null) {
-                    if (activeWakeLock != null && activeWakeLock.isHeld()) {
-                        try { activeWakeLock.release(); } catch (Throwable ignored) {}
-                    }
-                    activeWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "NayaGram:AutoReplyWakeLock");
-                    activeWakeLock.setReferenceCounted(false);
-                    activeWakeLock.acquire(15_000L);
-                }
+    private static final class JobHandle {
+        private final AtomicBoolean released = new AtomicBoolean(false);
+        private final boolean trackBackground;
+        private final long dialogId;
+
+        JobHandle(boolean trackBackground, long dialogId) {
+            this.trackBackground = trackBackground;
+            this.dialogId = dialogId;
+            if (trackBackground) {
+                acquireBackgroundJob();
+                // Safety guard so a dead socket or aborted send can never hold WakeLock indefinitely
+                Utilities.globalQueue.postRunnable(this::release, 12_000L);
             }
-        } catch (Throwable ignored) {}
+        }
+
+        void release() {
+            if (dialogId != 0L) {
+                jobHandlesByDialog.remove(dialogId, this);
+            }
+            if (trackBackground && released.compareAndSet(false, true)) {
+                releaseBackgroundJob();
+            }
+        }
     }
 
-    private static synchronized void releaseBackgroundResources() {
-        try {
-            if (activeBackgroundLatch != null) {
-                activeBackgroundLatch.countDown();
-                activeBackgroundLatch = null;
+    private static void acquireBackgroundJob() {
+        synchronized (backgroundLock) {
+            if (pendingBackgroundJobs == 0 || activeBackgroundLatch == null || activeBackgroundLatch.getCount() == 0) {
+                activeBackgroundLatch = new CountDownLatch(1);
             }
-        } catch (Throwable ignored) {}
-        try {
-            if (activeWakeLock != null && activeWakeLock.isHeld()) {
-                activeWakeLock.release();
+            pendingBackgroundJobs++;
+            try {
+                if (ApplicationLoader.applicationContext != null) {
+                    PowerManager pm = (PowerManager) ApplicationLoader.applicationContext.getSystemService(Context.POWER_SERVICE);
+                    if (pm != null) {
+                        if (activeWakeLock == null) {
+                            activeWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "NayaGram:AutoReplyWakeLock");
+                            activeWakeLock.setReferenceCounted(false);
+                        }
+                        if (!activeWakeLock.isHeld()) {
+                            activeWakeLock.acquire(15_000L);
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    private static void releaseBackgroundJob() {
+        synchronized (backgroundLock) {
+            if (pendingBackgroundJobs > 0) {
+                pendingBackgroundJobs--;
             }
-            activeWakeLock = null;
-        } catch (Throwable ignored) {}
+            if (pendingBackgroundJobs == 0) {
+                try {
+                    if (activeBackgroundLatch != null) {
+                        activeBackgroundLatch.countDown();
+                        activeBackgroundLatch = null;
+                    }
+                } catch (Throwable ignored) {}
+                try {
+                    if (activeWakeLock != null && activeWakeLock.isHeld()) {
+                        activeWakeLock.release();
+                    }
+                } catch (Throwable ignored) {}
+            }
+        }
     }
 
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
         if (messageObject == null || messageObject.messageOwner == null) {
             return;
         }
-        // Quick pre-check before posting to globalQueue so PushListenerController knows if a latch is needed
         final AutoReplyManager autoReplyManager = AutoReplyManager.getInstance();
         final NayaConfig config = NayaConfig.getInstance();
         if (!config.isSmartAutoReply() && !autoReplyManager.isAutoReplyEnabled()) {
@@ -156,14 +221,12 @@ public class IncomingMessageInterceptor {
                 || !ApplicationLoader.isScreenOn
                 || accountId != UserConfig.selectedAccount;
 
-        if (isOfflineOrBackground) {
-            acquireBackgroundResources();
-        }
+        final JobHandle jobHandle = new JobHandle(isOfflineOrBackground, dialogId);
 
         Utilities.globalQueue.postRunnable(() -> {
+            boolean handedOffToSend = false;
             try {
                 if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
-                    releaseBackgroundResources();
                     return;
                 }
 
@@ -172,13 +235,11 @@ public class IncomingMessageInterceptor {
                     replyText = config.getAutoReplyText();
                 }
                 if (replyText == null || replyText.trim().isEmpty()) {
-                    releaseBackgroundResources();
                     return;
                 }
 
                 String incomingText = messageObject.messageOwner.message;
                 if (incomingText != null && incomingText.trim().equalsIgnoreCase(replyText.trim())) {
-                    releaseBackgroundResources();
                     return;
                 }
 
@@ -188,31 +249,33 @@ public class IncomingMessageInterceptor {
                     now = (int) (System.currentTimeMillis() / 1000L);
                 }
                 if (messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 7200) {
-                    releaseBackgroundResources();
                     return;
                 }
 
                 if (!PerChatAutoReplySettings.canAutoReplyForChat(dialogId)) {
-                    releaseBackgroundResources();
                     return;
                 }
 
-                // Ensure peer (User or Chat) is loaded into MessagesController so SendMessagesHelper has valid access_hash
+                if (MessagesController.getInstance(accountId).getSendPaidMessagesStars(dialogId) > 0) {
+                    return;
+                }
+
+                // Ensure peer (User or Chat) is fully loaded so SendMessagesHelper has valid access_hash
                 if (dialogId > 0) {
                     if (dialogId == UserConfig.getInstance(accountId).getClientUserId()) {
-                        releaseBackgroundResources();
                         return;
                     }
                     TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
-                    if (user == null) {
+                    if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
                         try {
-                            user = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
-                            if (user != null) {
-                                MessagesController.getInstance(accountId).putUser(user, true);
+                            TLRPC.User dbUser = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
+                            if (dbUser != null && !dbUser.min && (dbUser.access_hash != 0 || dbUser.self)) {
+                                MessagesController.getInstance(accountId).putUser(dbUser, false);
+                                user = dbUser;
                             }
                         } catch (Throwable ignored) {}
                     }
-                    if (user == null) {
+                    if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
                         // Peer not in local DB yet (e.g. brand-new contact via FCM push). Wake network & fetch difference;
                         // do NOT mark dialog answered yet so getDifference() will trigger auto-reply with valid access_hash!
                         ConnectionsManager.onInternalPushReceived(accountId);
@@ -224,23 +287,27 @@ public class IncomingMessageInterceptor {
                                 MessagesController.getInstance(accountId).getDifference();
                             } catch (Throwable ignored) {}
                         });
+                        // Keep the background handle alive briefly while getDifference fetches the message + user,
+                        // then release this specific handle after 6.5s so PushListenerController never leaks locks.
+                        handedOffToSend = true;
+                        Utilities.globalQueue.postRunnable(jobHandle::release, 6_500L);
                         return;
                     }
                     if (user.bot || user.self) {
-                        releaseBackgroundResources();
                         return;
                     }
                 } else {
                     TLRPC.Chat chat = MessagesController.getInstance(accountId).getChat(-dialogId);
-                    if (chat == null) {
+                    if (chat == null || chat.min) {
                         try {
-                            chat = MessagesStorage.getInstance(accountId).getChatSync(-dialogId);
-                            if (chat != null) {
-                                MessagesController.getInstance(accountId).putChat(chat, true);
+                            TLRPC.Chat dbChat = MessagesStorage.getInstance(accountId).getChatSync(-dialogId);
+                            if (dbChat != null && !dbChat.min) {
+                                MessagesController.getInstance(accountId).putChat(dbChat, false);
+                                chat = dbChat;
                             }
                         } catch (Throwable ignored) {}
                     }
-                    if (chat == null) {
+                    if (chat == null || chat.min) {
                         ConnectionsManager.onInternalPushReceived(accountId);
                         ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
                         ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
@@ -250,10 +317,11 @@ public class IncomingMessageInterceptor {
                                 MessagesController.getInstance(accountId).getDifference();
                             } catch (Throwable ignored) {}
                         });
+                        handedOffToSend = true;
+                        Utilities.globalQueue.postRunnable(jobHandle::release, 6_500L);
                         return;
                     }
                     if (ChatObject.isChannel(chat) && !chat.megagroup && !ChatObject.canPost(chat)) {
-                        releaseBackgroundResources();
                         return;
                     }
                 }
@@ -261,7 +329,6 @@ public class IncomingMessageInterceptor {
                 // Synchronously check and mark message + cooldown window to prevent duplicate sends from push + socket
                 synchronized (autoReplyManager) {
                     if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
-                        releaseBackgroundResources();
                         return;
                     }
                     autoReplyManager.markMessageAnswered(dialogId, messageId);
@@ -333,24 +400,33 @@ public class IncomingMessageInterceptor {
                     markKeepOfflineWindow(accountId, 25_000L);
                 }
 
+                if (isOfflineOrBackground) {
+                    JobHandle previous = jobHandlesByDialog.put(dialogId, jobHandle);
+                    if (previous != null && previous != jobHandle) {
+                        previous.release();
+                    }
+                }
+                handedOffToSend = true;
                 AndroidUtilities.runOnUIThread(() -> {
+                    boolean sentDispatched = false;
                     try {
                         ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
-                        // Wake MTProto in background mode WITHOUT calling setAppPaused(false, false)!
-                        // keepNetworkAliveInBackground() sets C++ lastPauseTime = 0 & networkPaused = false so
-                        // ConnectionTypeGeneric transmits immediately while Java lastPauseTime > 0 keeps user Offline.
                         ConnectionsManager.onInternalPushReceived(accountId);
                         cm.keepNetworkAliveInBackground();
                         cm.resumeNetworkMaybe();
                         cm.checkConnection();
                         autoReplyManager.ensureBackgroundKeepAlive();
 
+                        HashMap<String, String> sendExtraParams = new HashMap<>(2);
+                        sendExtraParams.put("ng_auto_reply", "1");
+
                         autoReplyDispatchOnUiThread.set(true);
                         try {
                             SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-                                    finalCleanText, dialogId, null, null, null, true, finalEntities, null, null, false, 0, 0, null, false
+                                    finalCleanText, dialogId, null, null, null, true, finalEntities, null, sendExtraParams, false, 0, 0, null, false
                             );
                             SendMessagesHelper.getInstance(accountId).sendMessage(params);
+                            sentDispatched = true;
                         } finally {
                             autoReplyDispatchOnUiThread.set(false);
                         }
@@ -360,13 +436,18 @@ public class IncomingMessageInterceptor {
                         }
                     } catch (Throwable t) {
                         FileLog.e(TAG + ": UI dispatch error", t);
-                        releaseBackgroundResources();
+                        if (!sentDispatched) {
+                            jobHandle.release();
+                        }
                     }
                 });
                 FileLog.d(TAG + ": auto-answer dispatched to dialog " + dialogId + " (preserveOffline=" + preserveOffline + ")");
             } catch (Exception e) {
                 FileLog.e(TAG + ": auto-answer failed", e);
-                releaseBackgroundResources();
+            } finally {
+                if (!handedOffToSend) {
+                    jobHandle.release();
+                }
             }
         });
     }

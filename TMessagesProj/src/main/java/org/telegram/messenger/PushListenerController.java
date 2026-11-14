@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Keep
 public class PushListenerController {
@@ -44,7 +45,6 @@ public class PushListenerController {
     public @interface PushType {}
 
     public static final int NOTIFICATION_ID = 1;
-    private static CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public static void sendRegistrationToServer(@PushType int pushType, String token) {
         Utilities.stageQueue.postRunnable(() -> {
@@ -98,6 +98,7 @@ public class PushListenerController {
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d(tag + " PRE START PROCESSING");
         }
+        final CountDownLatch pushLatch = new CountDownLatch(1);
         long receiveTime = SystemClock.elapsedRealtime();
         AndroidUtilities.runOnUIThread(() -> {
             if (BuildVars.LOGS_ENABLED) {
@@ -114,6 +115,7 @@ public class PushListenerController {
                 int currentAccount = -1;
                 String loc_key = null;
                 String jsonString = null;
+                boolean canRelease = true;
                 try {
                     byte[] bytes = Base64.decode(data, Base64.URL_SAFE);
                     NativeByteBuffer buffer = new NativeByteBuffer(bytes.length);
@@ -128,7 +130,8 @@ public class PushListenerController {
                     byte[] inAuthKeyId = new byte[8];
                     buffer.readBytes(inAuthKeyId, true);
                     if (!Arrays.equals(SharedConfig.pushAuthKeyId, inAuthKeyId)) {
-                        onDecryptError();
+                        canRelease = false;
+                        onDecryptError(pushLatch);
                         if (BuildVars.LOGS_ENABLED) {
                             FileLog.d(String.format(Locale.US, tag + " DECRYPT ERROR 2 k1=%s k2=%s, key=%s", Utilities.bytesToHex(SharedConfig.pushAuthKeyId), Utilities.bytesToHex(inAuthKeyId), Utilities.bytesToHex(SharedConfig.pushAuthKey)));
                         }
@@ -143,7 +146,8 @@ public class PushListenerController {
 
                     byte[] messageKeyFull = Utilities.computeSHA256(SharedConfig.pushAuthKey, 88 + 8, 32, buffer.buffer, 24, buffer.buffer.limit());
                     if (!Utilities.arraysEquals(messageKey, 0, messageKeyFull, 8)) {
-                        onDecryptError();
+                        canRelease = false;
+                        onDecryptError(pushLatch);
                         if (BuildVars.LOGS_ENABLED) {
                             FileLog.d(String.format(tag + " DECRYPT ERROR 3, key = %s", Utilities.bytesToHex(SharedConfig.pushAuthKey)));
                         }
@@ -157,7 +161,6 @@ public class PushListenerController {
                     JSONObject json = new JSONObject(jsonString);
 
                     if (ApplicationLoader.applicationLoaderInstance != null && ApplicationLoader.applicationLoaderInstance.consumePush(currentAccount, json)) {
-                        countDownLatch.countDown();
                         return;
                     }
 
@@ -192,7 +195,7 @@ public class PushListenerController {
                         } else if (userIdObject instanceof Integer) {
                             accountUserId = (Integer) userIdObject;
                         } else if (userIdObject instanceof String) {
-                            accountUserId = Utilities.parseInt((String) userIdObject);
+                            accountUserId = Utilities.parseLong((String) userIdObject);
                         } else {
                             accountUserId = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId();
                         }
@@ -210,7 +213,6 @@ public class PushListenerController {
                         if (BuildVars.LOGS_ENABLED) {
                             FileLog.d(tag + " ACCOUNT NOT FOUND");
                         }
-                        countDownLatch.countDown();
                         return;
                     }
                     final int accountFinal = currentAccount = account;
@@ -218,7 +220,6 @@ public class PushListenerController {
                         if (BuildVars.LOGS_ENABLED) {
                             FileLog.d(tag + " ACCOUNT NOT ACTIVATED");
                         }
-                        countDownLatch.countDown();
                         return;
                     }
                     if (BuildVars.LOGS_ENABLED) {
@@ -233,7 +234,6 @@ public class PushListenerController {
                             NotificationsController.getInstance(currentAccount).showTonConnectNotification(dapp, time);
                             ConnectionsManager.onInternalPushReceived(currentAccount);
                             ConnectionsManager.getInstance(currentAccount).resumeNetworkMaybe();
-                            countDownLatch.countDown();
                             return;
                         }
                         case "DC_UPDATE": {
@@ -241,14 +241,12 @@ public class PushListenerController {
                             String addr = custom.getString("addr");
                             String[] parts = addr.split(":");
                             if (parts.length != 2) {
-                                countDownLatch.countDown();
                                 return;
                             }
                             String ip = parts[0];
                             int port = Integer.parseInt(parts[1]);
                             ConnectionsManager.getInstance(currentAccount).applyDatacenterAddress(dc, ip, port);
                             ConnectionsManager.getInstance(currentAccount).resumeNetworkMaybe();
-                            countDownLatch.countDown();
                             return;
                         }
                         case "MESSAGE_ANNOUNCEMENT": {
@@ -263,7 +261,6 @@ public class PushListenerController {
                             updates.updates.add(update);
                             Utilities.stageQueue.postRunnable(() -> MessagesController.getInstance(accountFinal).processUpdates(updates, false));
                             ConnectionsManager.getInstance(currentAccount).resumeNetworkMaybe();
-                            countDownLatch.countDown();
                             return;
                         }
                         case "SESSION_REVOKE": {
@@ -273,12 +270,10 @@ public class PushListenerController {
                                     MessagesController.getInstance(accountFinal).performLogout(0);
                                 }
                             });
-                            countDownLatch.countDown();
                             return;
                         }
                         case "GEO_LIVE_PENDING": {
                             Utilities.stageQueue.postRunnable(() -> LocationController.getInstance(accountFinal).setNewLocationEndWatchTime());
-                            countDownLatch.countDown();
                             return;
                         }
                         case "OAUTH_REQUEST": {
@@ -317,7 +312,8 @@ public class PushListenerController {
                             ArrayList<MessageObject> arrayList = new ArrayList<>();
                             arrayList.add(messageObject);
                             FileLog.d("PushListenerController push OAUTH notification to NotificationsController of " + messageOwner.dialog_id);
-                            NotificationsController.getInstance(currentAccount).processNewMessages(arrayList, true, true, countDownLatch);
+                            canRelease = false;
+                            NotificationsController.getInstance(currentAccount).processNewMessages(arrayList, true, true, pushLatch);
                             return;
                         }
                     }
@@ -362,7 +358,6 @@ public class PushListenerController {
                     if (dialogId == 0 && "ENCRYPTED_MESSAGE".equals(loc_key)) {
                         dialogId = NotificationsController.globalSecretChatId;
                     }
-                    boolean canRelease = true;
                     if (dialogId != 0) {
                         if ("CONF_CALL_REQUEST".equals(loc_key) || "CONF_VIDEOCALL_REQUEST".equals(loc_key)) {
                             final long call_id = custom.getLong("call_id");
@@ -1508,16 +1503,13 @@ public class PushListenerController {
                                         final int mid = msg_id;
                                         AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(accountFinal).reportMessageDelivery(did, mid, true));
                                     }
-                                    NotificationsController.getInstance(currentAccount).processNewMessages(arrayList, true, true, countDownLatch);
+                                    NotificationsController.getInstance(currentAccount).processNewMessages(arrayList, true, true, pushLatch);
                                 }
                             } else if ("CONF_CALL_MISSED".equalsIgnoreCase(loc_key)) {
                                 final long call_id = custom.getLong("call_id");
                                 VoIPGroupNotification.hideByCallId(ApplicationLoader.applicationContext, account, call_id);
                             }
                         }
-                    }
-                    if (canRelease) {
-                        countDownLatch.countDown();
                     }
 
                     ConnectionsManager.onInternalPushReceived(currentAccount);
@@ -1526,20 +1518,24 @@ public class PushListenerController {
                     if (currentAccount != -1) {
                         ConnectionsManager.onInternalPushReceived(currentAccount);
                         ConnectionsManager.getInstance(currentAccount).resumeNetworkMaybe();
-                        countDownLatch.countDown();
                     } else {
-                        onDecryptError();
+                        canRelease = false;
+                        onDecryptError(pushLatch);
                     }
                     if (BuildVars.LOGS_ENABLED) {
                         FileLog.e("error in loc_key = " + loc_key + " json " + jsonString);
                     }
                     FileLog.e(e);
+                } finally {
+                    if (canRelease) {
+                        pushLatch.countDown();
+                    }
                 }
             });
         });
         try {
-            countDownLatch.await();
-            IncomingMessageInterceptor.awaitBackgroundAutoReply(8500);
+            pushLatch.await(12, TimeUnit.SECONDS);
+            IncomingMessageInterceptor.awaitBackgroundAutoReply(12000);
         } catch (Throwable ignore) {
 
         }
@@ -1764,14 +1760,16 @@ public class PushListenerController {
         return null;
     }
 
-    private static void onDecryptError() {
+    private static void onDecryptError(CountDownLatch pushLatch) {
         for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
             if (UserConfig.getInstance(a).isClientActivated()) {
                 ConnectionsManager.onInternalPushReceived(a);
                 ConnectionsManager.getInstance(a).resumeNetworkMaybe();
             }
         }
-        countDownLatch.countDown();
+        if (pushLatch != null) {
+            pushLatch.countDown();
+        }
     }
 
     @Keep

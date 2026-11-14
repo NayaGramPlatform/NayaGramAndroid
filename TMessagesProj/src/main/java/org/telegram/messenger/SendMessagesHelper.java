@@ -5163,6 +5163,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                     TLRPC.User sendToUser = getMessagesController().getUser(peer);
                     if (sendToUser == null) {
                         processSentMessage(newMsg.id);
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || (params != null && "1".equals(params.get("ng_auto_reply")))) {
+                            IncomingMessageInterceptor.onAutoReplyServerResponse(currentAccount, peer, true);
+                        }
                         return;
                     }
                     if (sendToUser.bot) {
@@ -5412,7 +5415,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
-                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || (params != null && "1".equals(params.get("ng_auto_reply"))) || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
                             reqSend.background = true;
                         }
                         if (payStars > 0) {
@@ -5480,7 +5483,7 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         reqSend.silent = newMsg.silent;
                         reqSend.peer = sendToPeer;
                         reqSend.random_id = newMsg.random_id;
-                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || (params != null && "1".equals(params.get("ng_auto_reply"))) || ApplicationLoader.mainInterfacePaused || !ApplicationLoader.isScreenOn || currentAccount != UserConfig.selectedAccount || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
                             reqSend.background = true;
                         }
                         if (payStars > 0) {
@@ -5566,6 +5569,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         reqSend.media = new TLRPC.TL_decryptedMessageMediaEmpty();
                     }
                     getSecretChatHelper().performSendEncryptedRequest(reqSend, newMsgObj.messageOwner, encryptedChat, null, null, newMsgObj);
+                    if (IncomingMessageInterceptor.isAutoReplyDispatchActive() || (params != null && "1".equals(params.get("ng_auto_reply")))) {
+                        IncomingMessageInterceptor.onAutoReplyServerResponse(currentAccount, peer, false);
+                    }
                     if (retryMessageObject == null) {
                         getMediaDataController().cleanDraft(peer, replyToTopMsg != null ? replyToTopMsg.getId() : 0, false);
                     }
@@ -8139,8 +8145,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
 
         newMsgObj.reqId = getConnectionsManager().sendRequest(req, (response, error) -> {
             if ((req instanceof TLRPC.TL_messages_sendMessage && ((TLRPC.TL_messages_sendMessage) req).background)
-                    || (req instanceof TLRPC.TL_messages_sendMedia && ((TLRPC.TL_messages_sendMedia) req).background)) {
-                IncomingMessageInterceptor.onAutoReplyServerResponse(currentAccount, error != null);
+                    || (req instanceof TLRPC.TL_messages_sendMedia && ((TLRPC.TL_messages_sendMedia) req).background)
+                    || (params != null && "1".equals(params.get("ng_auto_reply")))) {
+                IncomingMessageInterceptor.onAutoReplyServerResponse(currentAccount, msgObj.getDialogId(), error != null);
             }
             if (error != null && (req instanceof TLRPC.TL_messages_sendMedia || req instanceof TL_ephemeral.TL_sendMessage || req instanceof TLRPC.TL_messages_editMessage || req instanceof TLRPC.TL_messages_addPollAnswer) && FileRefController.isFileRefError(error.text)) {
                 if (FileRefController.isFileRefErrorCover(error.text)) {

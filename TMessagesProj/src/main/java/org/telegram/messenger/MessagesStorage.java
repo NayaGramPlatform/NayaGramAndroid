@@ -14918,7 +14918,7 @@ public class MessagesStorage extends BaseController {
                             }
                             data.reuse();
                             if (DialogObject.isEncryptedDialog(did) || deleteFiles) {
-                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || message.out || getMessagesController().isLocallyDeleted(did, message.id)) {
+                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, message.id)) {
                                     addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                                 }
                             }
@@ -14969,7 +14969,7 @@ public class MessagesStorage extends BaseController {
                             TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
                             message.readAttachPath(data, getUserConfig().clientUserId);
                             data.reuse();
-                            if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || message.out || getMessagesController().isLocallyDeleted(did, message.id)) {
+                            if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, message.id)) {
                                 addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                             }
                             if (message.action instanceof TLRPC.TL_messageActionTopicCreate) {
@@ -15013,14 +15013,25 @@ public class MessagesStorage extends BaseController {
                     SQLiteCursor rCur = null;
                     try {
                         String q = dialogId != 0
-                                ? String.format(Locale.US, "SELECT mid, uid, out FROM messages_v2 WHERE mid IN(%s) AND uid = %d UNION SELECT mid, uid, out FROM messages_topics WHERE mid IN(%s) AND uid = %d", ids, dialogId, ids, dialogId)
-                                : String.format(Locale.US, "SELECT mid, uid, out FROM messages_v2 WHERE mid IN(%s) AND is_channel = 0", ids);
+                                ? String.format(Locale.US, "SELECT mid, uid, out, data FROM messages_v2 WHERE mid IN(%s) AND uid = %d UNION SELECT mid, uid, out, data FROM messages_topics WHERE mid IN(%s) AND uid = %d", ids, dialogId, ids, dialogId)
+                                : String.format(Locale.US, "SELECT mid, uid, out, data FROM messages_v2 WHERE mid IN(%s) AND is_channel = 0", ids);
                         rCur = database.queryFinalized(q);
                         while (rCur.next()) {
                             int rmid = rCur.intValue(0);
                             long ruid = rCur.longValue(1);
                             int rout = rCur.intValue(2);
-                            if ((rout == 1 || getMessagesController().isLocallyDeleted(ruid, rmid)) && !replyIdsList.contains(rmid)) {
+                            boolean isChannelPost = false;
+                            if (rout == 1 && ruid < 0) {
+                                NativeByteBuffer rData = rCur.byteBufferValue(3);
+                                if (rData != null) {
+                                    TLRPC.Message rMsg = TLRPC.Message.TLdeserialize(rData, rData.readInt32(false), false);
+                                    rData.reuse();
+                                    if (rMsg != null && rMsg.post) {
+                                        isChannelPost = true;
+                                    }
+                                }
+                            }
+                            if (((rout == 1 && !isChannelPost) || getMessagesController().isLocallyDeleted(ruid, rmid)) && !replyIdsList.contains(rmid)) {
                                 replyIdsList.add(rmid);
                             }
                         }
@@ -15530,7 +15541,7 @@ public class MessagesStorage extends BaseController {
             ArrayList<Integer> encryptedToLoad = new ArrayList<>();
             LongSparseArray<Long> groupsToLoad = new LongSparseArray<>();
 
-            cursor = database.queryFinalized(String.format(Locale.US, "SELECT d.did, d.last_mid, d.unread_count, d.date, m.data, m.read_state, m.mid, m.send_state, m.date, d.pts, d.inbox_max, d.outbox_max, d.pinned, d.unread_count_i, d.flags, d.folder_id, d.data, d.unread_reactions, d.last_mid_group, d.ttl_period, d.unread_poll_votes FROM dialogs as d LEFT JOIN messages_v2 as m ON d.last_mid = m.mid AND d.did = m.uid AND d.last_mid_group IS NULL WHERE d.did IN(%s)", ids));
+            cursor = database.queryFinalized(String.format(Locale.US, "SELECT d.did, d.last_mid, d.unread_count, d.date, m.data, m.read_state, m.mid, m.send_state, m.date, d.pts, d.inbox_max, d.outbox_max, d.pinned, d.unread_count_i, d.flags, d.folder_id, d.data, d.unread_reactions, d.last_mid_group, d.ttl_period, d.unread_poll_votes, m.custom_params FROM dialogs as d LEFT JOIN messages_v2 as m ON d.last_mid = m.mid AND d.did = m.uid AND d.last_mid_group IS NULL WHERE d.did IN(%s)", ids));
             while (cursor.next()) {
                 long dialogId = cursor.longValue(0);
                 TLRPC.Dialog dialog;
@@ -15588,6 +15599,11 @@ public class MessagesStorage extends BaseController {
                         dialog.last_message_date = date;
                     }
                     message.dialog_id = dialog.id;
+                    NativeByteBuffer customParams = cursor.byteBufferValue(21);
+                    if (customParams != null) {
+                        MessageCustomParamsHelper.readLocalParams(message, customParams);
+                        customParams.reuse();
+                    }
                     dialogs.messages.add(message);
 
                     addUsersAndChatsFromMessage(message, usersToLoad, chatsToLoad, null);
@@ -15623,7 +15639,7 @@ public class MessagesStorage extends BaseController {
                         whereClause.append(" OR ");
                     }
                 }
-                cursor = database.queryFinalized(String.format(Locale.US, "SELECT uid, data, read_state, mid, send_state, date, group_id FROM messages_v2 WHERE %s", whereClause));
+                cursor = database.queryFinalized(String.format(Locale.US, "SELECT uid, data, read_state, mid, send_state, date, group_id, custom_params FROM messages_v2 WHERE %s", whereClause));
                 while (cursor.next()) {
                     long dialogId = cursor.longValue(0);
                     TLRPC.Dialog dialog = null;
@@ -15650,6 +15666,11 @@ public class MessagesStorage extends BaseController {
                             dialog.last_message_date = date;
                         }
                         message.dialog_id = dialog.id;
+                        NativeByteBuffer customParams = cursor.byteBufferValue(7);
+                        if (customParams != null) {
+                            MessageCustomParamsHelper.readLocalParams(message, customParams);
+                            customParams.reuse();
+                        }
                         dialogs.messages.add(message);
 
                         addUsersAndChatsFromMessage(message, usersToLoad, chatsToLoad, null);
@@ -15751,7 +15772,7 @@ public class MessagesStorage extends BaseController {
                         TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
                         message.readAttachPath(data, getUserConfig().clientUserId);
                         data.reuse();
-                        if (!antiDeleteEnabled || message.out || getMessagesController().isLocallyDeleted(did, msgId)) {
+                        if (!antiDeleteEnabled || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, msgId)) {
                             addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                         }
                     }

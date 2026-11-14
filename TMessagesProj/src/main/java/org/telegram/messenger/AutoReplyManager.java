@@ -45,6 +45,8 @@ public class AutoReplyManager {
     private static final String KEY_ENTITIES = "auto_answer_entities";
     private static final String KEY_PRIVATE_ONLY = "auto_reply_private_only";
     private static final String KEY_ANSWERED_DIALOGS = "answered_dialogs";
+    private static final String KEY_LAST_ANSWERED_MSG_IDS = "last_answered_msg_ids";
+    private static final int MAX_PERSISTED_MSG_IDS = 100;
     private static final long DEDUP_COOLDOWN_MS = 4500L;
     private static final long HEARTBEAT_INTERVAL_MS = 15_000L;
     private static final String DEFAULT_AUTO_ANSWER_TEXT = "আসসালামু আলাইকুম! 🥰\nআমি এখন ব্যস্ত আছি, একটু পরে রিপ্লাই দিচ্ছি ইনশাআল্লাহ।";
@@ -188,6 +190,7 @@ public class AutoReplyManager {
         preferences.edit()
                 .putBoolean(KEY_ENABLED, enabled)
                 .remove(KEY_ANSWERED_DIALOGS)
+                .remove(KEY_LAST_ANSWERED_MSG_IDS)
                 .apply();
         try {
             NayaConfig.getInstance().setSmartAutoReply(enabled);
@@ -278,6 +281,7 @@ public class AutoReplyManager {
         lastReplyTimestampByDialog.put(dialogId, System.currentTimeMillis());
         if (messageId != 0) {
             lastAnsweredMsgIdByDialog.put(dialogId, messageId);
+            saveLastAnsweredMsgIdsLocked();
         }
     }
 
@@ -292,14 +296,16 @@ public class AutoReplyManager {
     public synchronized void removeAnsweredDialog(long dialogId) {
         answeredDialogs.remove(dialogId);
         lastReplyTimestampByDialog.remove(dialogId);
-        lastAnsweredMsgIdByDialog.remove(dialogId);
+        if (lastAnsweredMsgIdByDialog.remove(dialogId) != null) {
+            saveLastAnsweredMsgIdsLocked();
+        }
     }
 
     public synchronized void clearAnsweredDialogs() {
         answeredDialogs.clear();
         lastReplyTimestampByDialog.clear();
         lastAnsweredMsgIdByDialog.clear();
-        preferences.edit().remove(KEY_ANSWERED_DIALOGS).apply();
+        preferences.edit().remove(KEY_ANSWERED_DIALOGS).remove(KEY_LAST_ANSWERED_MSG_IDS).apply();
     }
 
     public synchronized boolean shouldSendAutoReply(long dialogId, int accountId) {
@@ -314,6 +320,26 @@ public class AutoReplyManager {
         return getAutoAnswerText();
     }
 
+    private void saveLastAnsweredMsgIdsLocked() {
+        try {
+            if (lastAnsweredMsgIdByDialog.size() > MAX_PERSISTED_MSG_IDS) {
+                int toRemove = lastAnsweredMsgIdByDialog.size() - MAX_PERSISTED_MSG_IDS;
+                java.util.Iterator<Long> it = lastAnsweredMsgIdByDialog.keySet().iterator();
+                while (it.hasNext() && toRemove > 0) {
+                    it.next();
+                    it.remove();
+                    toRemove--;
+                }
+            }
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<Long, Integer> entry : lastAnsweredMsgIdByDialog.entrySet()) {
+                if (sb.length() > 0) sb.append(',');
+                sb.append(entry.getKey()).append(':').append(entry.getValue());
+            }
+            preferences.edit().putString(KEY_LAST_ANSWERED_MSG_IDS, sb.toString()).apply();
+        } catch (Throwable ignored) {}
+    }
+
     private synchronized void load() {
         autoReplyEnabled = preferences.getBoolean(KEY_ENABLED, false);
         autoAnswerText = preferences.getString(KEY_TEXT, "");
@@ -325,6 +351,19 @@ public class AutoReplyManager {
         if (preferences.contains(KEY_ANSWERED_DIALOGS)) {
             preferences.edit().remove(KEY_ANSWERED_DIALOGS).apply();
         }
+        try {
+            String raw = preferences.getString(KEY_LAST_ANSWERED_MSG_IDS, "");
+            if (raw != null && !raw.isEmpty()) {
+                for (String pair : raw.split(",")) {
+                    int idx = pair.indexOf(':');
+                    if (idx > 0 && idx + 1 < pair.length()) {
+                        long did = Long.parseLong(pair.substring(0, idx));
+                        int mid = Integer.parseInt(pair.substring(idx + 1));
+                        lastAnsweredMsgIdByDialog.put(did, mid);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     public static class EntityData {

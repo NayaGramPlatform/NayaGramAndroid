@@ -394,7 +394,9 @@ public class ApplicationLoader extends Application {
 
             }
         } else {
-            applicationContext.stopService(new Intent(applicationContext, NotificationsService.class));
+            try {
+                applicationContext.stopService(new Intent(applicationContext, NotificationsService.class));
+            } catch (Throwable ignore) {}
         }
     }
 

@@ -11,20 +11,19 @@
 -keep class org.webrtc.* { *; }
 -keep class org.webrtc.audio.* { *; }
 -keep class org.webrtc.voiceengine.* { *; }
--keep class org.telegram.messenger.* { *; }
+-keepclasseswithmembers,includedescriptorclasses class org.telegram.messenger.* {
+    native <methods>;
+}
+-keep class org.telegram.messenger.AnimatedFileDrawableStream { *; }
+-keep class org.telegram.messenger.NotificationBadge$* { *; }
 -keep class org.telegram.messenger.camera.* { *; }
 -keep class org.telegram.messenger.secretmedia.* { *; }
--keep class org.telegram.messenger.support.* { *; }
 -keep class org.telegram.messenger.support.* { *; }
 -keep class org.telegram.messenger.time.* { *; }
 -keep class org.telegram.messenger.video.* { *; }
 -keep class org.telegram.messenger.voip.* { *; }
 -keep class org.telegram.SQLite.** { *; }
--keep class org.telegram.tgnet.ConnectionsManager { *; }
--keep class org.telegram.tgnet.ConnectionsManager$* { *; }
--keep class org.telegram.tgnet.NativeByteBuffer { *; }
--keep class org.telegram.tgnet.RequestTimeDelegate { *; }
--keep class org.telegram.tgnet.RequestDelegate { *; }
+-keep class org.telegram.tgnet.** { *; }
 -keep class org.telegram.ui.Stories.recorder.FfmpegAudioWaveformLoader { *; }
 -keep class androidx.mediarouter.app.MediaRouteButton { *; }
 -keepclassmembers class ** {
@@ -52,8 +51,6 @@
 
 -keep class io.nano.tex.** {*;}
 
--keep class org.telegram.tgnet.** { *; }
-
 # JLatexMath: macro/atom classes are loaded reflectively by Class.forName
 -keep class org.scilab.forge.jlatexmath.** { *; }
 -keep class ru.noties.jlatexmath.** { *; }
@@ -63,10 +60,17 @@
 #-dontoptimize
 #-dontobfuscate
 
--keep class org.telegram.tgnet.** { *; }
-
-# NayaGram Platform Exclusive Rules
--keep class org.nayagram.** { *; }
+# NayaGram Platform Targeted Rules (Gson models & TensorFlow JNI)
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+-keep class org.telegram.messenger.AutoReplyManager$* { *; }
+-keep class org.nayagram.platform.history.NGMessageEditHistory$* { *; }
 -dontwarn org.nayagram.**
--keep class org.tensorflow.** { *; }
+-keepclasseswithmembers,includedescriptorclasses class org.tensorflow.** {
+    native <methods>;
+}
 -dontwarn org.tensorflow.**
