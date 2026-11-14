@@ -4,6 +4,7 @@ import android.text.TextUtils;
 
 import androidx.collection.LongSparseArray;
 
+import org.nayagram.platform.NayaConfig;
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLiteDatabase;
 import org.telegram.SQLite.SQLitePreparedStatement;
