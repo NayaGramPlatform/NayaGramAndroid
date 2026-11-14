@@ -1,4 +1,8 @@
--keep public class com.google.android.gms.* { public *; }
+# Allow R8 + GMS consumer rules to strip unused Play Services / Ads classes safely
+-dontwarn com.google.android.gms.**
+-dontwarn com.google.ads.**
+-keep class com.google.android.gms.common.ConnectionResult { *; }
+-keep class com.google.android.gms.common.GoogleApiAvailability { *; }
 -keepnames @com.google.android.gms.common.annotation.KeepName class *
 -keepclassmembernames class * {
     @com.google.android.gms.common.annotation.KeepName *;

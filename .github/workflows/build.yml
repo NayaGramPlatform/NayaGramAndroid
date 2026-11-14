@@ -122,6 +122,61 @@ jobs:
           ./gradlew --stop || true
           ./gradlew clean --no-build-cache --stacktrace
 
+      - name: Optimize Drawables and Launcher Mipmaps for Small App Size
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends webp optipng
+          python3 - << 'PY'
+          import os, subprocess
+          from pathlib import Path
+
+          res_roots = [
+              Path("TMessagesProj/src/main/res"),
+              Path("TMessagesProj_App/src/main/res"),
+              Path("TMessagesProj_AppStandalone/src/main/res"),
+          ]
+          keep_png_names = {"ic_launcher.png", "ic_launcher_round.png", "ic_launcher_dr.png"}
+          saved_bytes = 0
+          converted_webp = 0
+          crushed_png = 0
+
+          for root in res_roots:
+              if not root.exists():
+                  continue
+              for dirpath, _, filenames in os.walk(root):
+                  dname = os.path.basename(dirpath)
+                  if not (dname.startswith("drawable") or dname.startswith("mipmap")):
+                      continue
+                  for fn in filenames:
+                      if not fn.endswith(".png") or fn.endswith(".9.png"):
+                          continue
+                      p = Path(dirpath) / fn
+                      orig_size = p.stat().st_size
+                      if fn in keep_png_names:
+                          subprocess.run(["optipng", "-o2", "-quiet", "-strip", "all", str(p)], check=False)
+                          new_size = p.stat().st_size if p.exists() else orig_size
+                          if new_size < orig_size:
+                              saved_bytes += (orig_size - new_size)
+                              crushed_png += 1
+                      elif orig_size >= 6144:
+                          webp_p = p.with_suffix(".webp")
+                          if webp_p.exists():
+                              continue
+                          r = subprocess.run(
+                              ["cwebp", "-q", "90", "-alpha_q", "95", "-m", "6", "-quiet", str(p), "-o", str(webp_p)],
+                              check=False,
+                          )
+                          if r.returncode == 0 and webp_p.exists():
+                              w_size = webp_p.stat().st_size
+                              if w_size + 512 < orig_size:
+                                  p.unlink()
+                                  saved_bytes += (orig_size - w_size)
+                                  converted_webp += 1
+                              else:
+                                  webp_p.unlink()
+          print(f"Optimized {converted_webp} PNG->WebP and crushed {crushed_png} PNGs; saved {saved_bytes / 1048576:.2f} MB")
+          PY
+
       - name: Assemble VoIP Native Libs (Fat Release, no cache)
         run: |
           ./gradlew :TMessagesProj:assembleAfatRelease \
@@ -223,6 +278,8 @@ jobs:
             --apks=build_output/phone.apks \
             --device-spec=/tmp/nayagram-phone.json \
             --output-dir=build_output/phone-splits
+          WIRE_SIZE=$(java -jar bundletool-all-1.17.2.jar get-size total --apks=build_output/phone.apks --device-spec=/tmp/nayagram-phone.json | tail -n 1 | tr -d '\r')
+          export WIRE_SIZE
           python3 - << 'PY'
           import os
           root = "build_output/phone-splits"
@@ -235,7 +292,10 @@ jobs:
               size = os.path.getsize(path)
               total += size
               lines.append(f"{size/1048576:.1f} MB  {name}")
-          text = "\n".join(lines + [f"Play arm64 download ≈ {total/1048576:.1f} MB"])
+          wire = os.environ.get("WIRE_SIZE", "")
+          if wire:
+              lines.append(f"Play Store wire download (arm64): {wire} bytes")
+          text = "\n".join(lines + [f"Play arm64 split APKs total ≈ {total/1048576:.1f} MB"])
           print(text)
           open("build_output/play-download-size.txt", "w").write(text + "\n")
           summary = os.environ.get("GITHUB_STEP_SUMMARY")
