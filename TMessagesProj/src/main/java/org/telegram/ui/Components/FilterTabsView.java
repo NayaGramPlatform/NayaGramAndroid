@@ -540,10 +540,10 @@ public class FilterTabsView extends FrameLayout {
                     canvas.scale(s, s, rect.centerX(), rect.centerY());
                 }
                 if (isSelected) {
-                    counterPaint.setColor(isDark ? 0x4DFFFFFF : 0xFFFFFFFF);
-                    textCounterPaint.setColor(isDark ? 0xFF00D4FF : 0xFF0284C7);
+                    counterPaint.setColor(0xFFFFFFFF);
+                    textCounterPaint.setColor(0xFF0284C7);
                 } else {
-                    counterPaint.setColor(isDark ? 0x2638BDF8 : 0xFFE0F2FE);
+                    counterPaint.setColor(isDark ? 0xFF334155 : 0xFFE2E8F0);
                     textCounterPaint.setColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
                 }
                 canvas.drawRoundRect(rect, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, counterPaint);

@@ -107,48 +107,48 @@ public final class NGMessageEditHistory {
             if (!NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
                 return;
             }
-            if (oldMsg == null || newMsg == null || oldMsg == newMsg || newMsg.id <= 0) {
+            if (newMsg == null || newMsg.id <= 0) {
                 return;
             }
-            String oldText = extractSnapshotText(oldMsg);
+            String oldText = oldMsg != null ? extractSnapshotText(oldMsg) : "";
             String newText = extractSnapshotText(newMsg);
 
-            // Ignore non-text edits (such as reaction counts, views, or pin state updates)
-            if (TextUtils.equals(oldText, newText)) {
+            if (newText.isEmpty()) {
                 return;
             }
-            if (oldText.isEmpty() && newText.isEmpty()) {
+            if (oldText.isEmpty()) {
+                oldText = "(Original message)";
+            }
+            if (TextUtils.equals(oldText, newText)) {
                 return;
             }
 
             if (dialogId == 0) {
                 dialogId = MessageObject.getDialogId(newMsg);
-                if (dialogId == 0) {
+                if (dialogId == 0 && oldMsg != null) {
                     dialogId = MessageObject.getDialogId(oldMsg);
                 }
             }
             String key = makeKey(accountId, dialogId, newMsg.id);
             List<RevisionEntry> history = new ArrayList<>(getRevisions(accountId, dialogId, newMsg.id));
 
+            int origTime = (oldMsg != null && oldMsg.date > 0) ? oldMsg.date : (newMsg.date > 0 ? newMsg.date : (int) (System.currentTimeMillis() / 1000L));
+            int editTime = newMsg.edit_date > 0 ? newMsg.edit_date : (int) (System.currentTimeMillis() / 1000L);
+
             if (history.isEmpty()) {
-                int origTime = oldMsg.date > 0 ? oldMsg.date : (int) (System.currentTimeMillis() / 1000L);
                 history.add(new RevisionEntry(oldText, origTime, true));
-            } else {
-                RevisionEntry last = history.get(history.size() - 1);
-                if (TextUtils.equals(last.text, newText)) {
-                    return; // Already recorded this exact edit
-                }
-                if (!TextUtils.equals(last.text, oldText) && !oldText.isEmpty()) {
-                    int prevTime = oldMsg.edit_date > 0 ? oldMsg.edit_date : (oldMsg.date > 0 ? oldMsg.date : (int) (System.currentTimeMillis() / 1000L));
-                    history.add(new RevisionEntry(oldText, prevTime, false));
-                }
             }
 
-            int editTime = newMsg.edit_date > 0 ? newMsg.edit_date : (int) (System.currentTimeMillis() / 1000L);
+            RevisionEntry last = history.get(history.size() - 1);
+            if (TextUtils.equals(last.text, newText)) {
+                return;
+            }
+            if (!TextUtils.equals(last.text, oldText)) {
+                history.add(new RevisionEntry(oldText, editTime > origTime ? editTime - 1 : origTime, false));
+            }
             history.add(new RevisionEntry(newText, editTime, false));
 
             while (history.size() > MAX_REVISIONS_PER_MESSAGE) {
-                // Keep the original entry at index 0, trim oldest intermediate edits
                 history.remove(1);
             }
 
