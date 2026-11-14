@@ -108,6 +108,7 @@ public class MessagesStorage extends BaseController {
     private volatile int pendingMainUnreadCount;
     private volatile int pendingArchiveUnreadCount;
     private boolean databaseCreated;
+    private long restoredAntiDeleteVaultForUserId = 0;
 
     private final CountDownLatch openSync = new CountDownLatch(1);
 
@@ -410,6 +411,7 @@ public class MessagesStorage extends BaseController {
         loadDialogFilters();
         loadUnreadMessages();
         loadPendingTasks();
+        ensureAntiDeleteVaultRestoredInternal();
         try {
             openSync.countDown();
         } catch (Throwable ignore) {
@@ -847,6 +849,7 @@ public class MessagesStorage extends BaseController {
 
         secretPBytes = null;
         secretG = 0;
+        restoredAntiDeleteVaultForUserId = 0;
     }
 
     public void cleanup(boolean isLogin) {
@@ -4521,6 +4524,9 @@ public class MessagesStorage extends BaseController {
                 database.executeFast("DELETE FROM messages_holes WHERE uid = " + did).stepThis().dispose();
                 database.executeFast("DELETE FROM media_holes_v2 WHERE uid = " + did).stepThis().dispose();
                 getMediaDataController().clearBotKeyboard(did);
+                if ((messagesOnly == 0 || messagesOnly == 1) && !DialogObject.isEncryptedDialog(did)) {
+                    org.nayagram.platform.history.NGAntiDeleteVault.deleteDialog(getUserConfig().getClientUserId(), did);
+                }
                 AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.needReloadRecentDialogsSearch));
                 resetAllUnreadCounters(false);
                 updateWidgets(did);
@@ -5714,6 +5720,7 @@ public class MessagesStorage extends BaseController {
                             nativeByteBuffer.reuse();
                         }
                     }
+                    org.nayagram.platform.history.NGAntiDeleteVault.saveFromMainDb(getUserConfig().getClientUserId(), database, dialogId, msgId);
                 }
                 database.commitTransaction();
             } catch (Exception e) {
@@ -5725,6 +5732,44 @@ public class MessagesStorage extends BaseController {
                 if (state != null) {
                     state.dispose();
                 }
+            }
+        });
+    }
+
+    private void ensureAntiDeleteVaultRestoredInternal() {
+        if (database == null) {
+            return;
+        }
+        long uid = getUserConfig().getClientUserId();
+        if (uid == 0 || restoredAntiDeleteVaultForUserId == uid) {
+            return;
+        }
+        restoredAntiDeleteVaultForUserId = uid;
+        if (org.nayagram.platform.history.NGAntiDeleteVault.hasVaultForUser(uid)) {
+            org.nayagram.platform.history.NGAntiDeleteVault.restoreIntoMainDb(uid, database);
+        }
+    }
+
+    public void backupAntiDeleteBeforeLogout(final long ownerUserId) {
+        if (ownerUserId == 0) {
+            return;
+        }
+        storageQueue.postRunnable(() -> {
+            if (database != null) {
+                org.nayagram.platform.history.NGAntiDeleteVault.backupAllBeforeLogout(ownerUserId, database);
+            }
+        });
+    }
+
+    public void deleteMessagesFromAntiDeleteVault(final long dialogId, final ArrayList<Integer> mids) {
+        if (dialogId == 0 || mids == null || mids.isEmpty() || DialogObject.isEncryptedDialog(dialogId)) {
+            return;
+        }
+        final ArrayList<Integer> copy = new ArrayList<>(mids);
+        storageQueue.postRunnable(() -> {
+            long uid = getUserConfig().getClientUserId();
+            if (uid != 0) {
+                org.nayagram.platform.history.NGAntiDeleteVault.deleteMessages(uid, dialogId, copy);
             }
         });
     }
@@ -9127,6 +9172,7 @@ public class MessagesStorage extends BaseController {
         final boolean quickReplies = mode == ChatActivity.MODE_QUICK_REPLIES;
         final boolean welcomeMessages = mode == ChatActivity.MODE_WELCOME_MESSAGES;
         try {
+            ensureAntiDeleteVaultRestoredInternal();
             ArrayList<Long> usersToLoad = new ArrayList<>();
             ArrayList<Long> chatsToLoad = new ArrayList<>();
             ArrayList<Long> animatedEmojiToLoad = new ArrayList<>();
@@ -15265,6 +15311,7 @@ public class MessagesStorage extends BaseController {
                                     if (nativeByteBuffer != null) {
                                         nativeByteBuffer.reuse();
                                     }
+                                    org.nayagram.platform.history.NGAntiDeleteVault.saveFromMainDb(currentUser, database, did, amid);
                                 }
                             }
                         } catch (Exception e) {
@@ -15865,6 +15912,7 @@ public class MessagesStorage extends BaseController {
                             if (nativeByteBuffer != null) {
                                 nativeByteBuffer.reuse();
                             }
+                            org.nayagram.platform.history.NGAntiDeleteVault.saveFromMainDb(currentUser, database, targetUid, amid);
                         }
                     }
                 } catch (Exception e) {
@@ -16806,6 +16854,7 @@ public class MessagesStorage extends BaseController {
                                         if (written != null) {
                                             written.reuse();
                                         }
+                                        org.nayagram.platform.history.NGAntiDeleteVault.saveFromMainDb(selfId, database, dialogId, amid);
                                     }
                                 }
                             } catch (Exception e) {
@@ -17510,6 +17559,7 @@ public class MessagesStorage extends BaseController {
             ArrayList<TLRPC.EncryptedChat> encryptedChats = new ArrayList<>();
             SQLiteCursor cursor = null;
             try {
+                ensureAntiDeleteVaultRestoredInternal();
                 ArrayList<Long> usersToLoad = new ArrayList<>();
                 HashSet<Long> dialogUsers = new HashSet<>();
                 usersToLoad.add(getUserConfig().getClientUserId());
@@ -17534,7 +17584,7 @@ public class MessagesStorage extends BaseController {
                     }
 
                     ArrayList<Pair<Long, Long>> dialogsToLoadGroupMessages = new ArrayList<>();
-                    cursor = database.queryFinalized(String.format(Locale.US, "SELECT d.did, d.last_mid, d.unread_count, d.date, m.data, m.read_state, m.mid, m.send_state, s.flags, m.date, d.pts, d.inbox_max, d.outbox_max, m.replydata, d.pinned, d.unread_count_i, d.flags, d.folder_id, d.data, d.unread_reactions, d.last_mid_group, d.ttl_period, d.unread_poll_votes FROM dialogs as d LEFT JOIN messages_v2 as m ON d.last_mid = m.mid AND d.did = m.uid AND d.last_mid_group IS NULL LEFT JOIN dialog_settings as s ON d.did = s.did WHERE d.folder_id = %d ORDER BY d.pinned DESC, d.date DESC LIMIT %d,%d", fid, off, cnt));
+                    cursor = database.queryFinalized(String.format(Locale.US, "SELECT d.did, d.last_mid, d.unread_count, d.date, m.data, m.read_state, m.mid, m.send_state, s.flags, m.date, d.pts, d.inbox_max, d.outbox_max, m.replydata, d.pinned, d.unread_count_i, d.flags, d.folder_id, d.data, d.unread_reactions, d.last_mid_group, d.ttl_period, d.unread_poll_votes, m.custom_params FROM dialogs as d LEFT JOIN messages_v2 as m ON d.last_mid = m.mid AND d.did = m.uid AND d.last_mid_group IS NULL LEFT JOIN dialog_settings as s ON d.did = s.did WHERE d.folder_id = %d ORDER BY d.pinned DESC, d.date DESC LIMIT %d,%d", fid, off, cnt));
                     while (cursor.next()) {
                         long dialogId = cursor.longValue(0);
                         TLRPC.Dialog dialog;
@@ -17603,6 +17653,13 @@ public class MessagesStorage extends BaseController {
                             if (message != null) {
                                 message.readAttachPath(data, getUserConfig().clientUserId);
                                 data.reuse();
+                                if (!cursor.isNull(23)) {
+                                    NativeByteBuffer customParams = cursor.byteBufferValue(23);
+                                    if (customParams != null) {
+                                        MessageCustomParamsHelper.readLocalParams(message, customParams);
+                                        customParams.reuse();
+                                    }
+                                }
                                 MessageObject.setUnreadFlags(message, cursor.intValue(5));
                                 message.id = cursor.intValue(6);
                                 int date = cursor.intValue(9);
@@ -17674,7 +17731,7 @@ public class MessagesStorage extends BaseController {
                                 whereClause.append(" OR ");
                             }
                         }
-                        cursor = database.queryFinalized(String.format(Locale.US, "SELECT uid, data, read_state, mid, send_state, date, replydata, group_id FROM messages_v2 WHERE %s ORDER BY date DESC", whereClause));
+                        cursor = database.queryFinalized(String.format(Locale.US, "SELECT uid, data, read_state, mid, send_state, date, replydata, group_id, custom_params FROM messages_v2 WHERE %s ORDER BY date DESC", whereClause));
                         int COUNT = 0;
                         while (cursor.next()) {
                             COUNT++;
@@ -17696,6 +17753,13 @@ public class MessagesStorage extends BaseController {
                                 if (message != null) {
                                     message.readAttachPath(data, getUserConfig().clientUserId);
                                     data.reuse();
+                                    if (!cursor.isNull(8)) {
+                                        NativeByteBuffer customParams = cursor.byteBufferValue(8);
+                                        if (customParams != null) {
+                                            MessageCustomParamsHelper.readLocalParams(message, customParams);
+                                            customParams.reuse();
+                                        }
+                                    }
                                     MessageObject.setUnreadFlags(message, cursor.intValue(2));
                                     message.id = cursor.intValue(3);
                                     int date = cursor.intValue(5);
@@ -17896,6 +17960,7 @@ public class MessagesStorage extends BaseController {
         SQLitePreparedStatement state_tasks = null;
         SQLiteCursor cursor = null;
         try {
+            ensureAntiDeleteVaultRestoredInternal();
             database.beginTransaction();
             LongSparseArray<TLRPC.Message> new_dialogMessage = new LongSparseArray<>(dialogs.messages.size());
             for (int a = 0; a < dialogs.messages.size(); a++) {
@@ -18135,6 +18200,7 @@ public class MessagesStorage extends BaseController {
 
             putUsersInternal(dialogs.users);
             putChatsInternal(dialogs.chats);
+            org.nayagram.platform.history.NGAntiDeleteVault.reconcileDialogsAfterServerPut(getUserConfig().getClientUserId(), database);
 
             database.commitTransaction();
             resetAllUnreadCounters(false);

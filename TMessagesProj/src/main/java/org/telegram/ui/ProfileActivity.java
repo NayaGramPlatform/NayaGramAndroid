@@ -438,6 +438,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean doNotSetForeground;
     public boolean hasMainTabs;
+    private boolean nayaTabInitializedOnce;
 
     private boolean[] isOnline = new boolean[1];
 
@@ -3282,7 +3283,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                 firstLayout = false;
                 invalidateScroll = false;
                 checkListViewScroll();
-                if (wasFirstLayout && hasMainTabs) {
+                if (wasFirstLayout && hasMainTabs && (!nayaTabInitializedOnce || listView == null || listView.getChildCount() == 0)) {
                     fragmentOpened = true;
                     invalidateScroll = true;
                     post(() -> {
@@ -9598,7 +9599,8 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             sharedMediaLayout.onResume();
         }
         invalidateIsInLandscapeMode();
-        if (listAdapter != null) {
+        final boolean fastMainTabResume = hasMainTabs && nayaTabInitializedOnce && listView != null && listView.getChildCount() > 0 && !firstLayout;
+        if (listAdapter != null && !fastMainTabResume) {
             // saveScrollPosition();
             firstLayout = true;
             listAdapter.notifyDataSetChanged();
@@ -9613,8 +9615,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             setParentActivityTitle(LocaleController.getString(R.string.Settings));
         }
 
-        updateProfileData(true);
-        fixLayout();
+        updateProfileData(!fastMainTabResume);
+        if (!fastMainTabResume) {
+            fixLayout();
+        }
         if (nameTextView[1] != null) {
             setParentActivityTitle(nameTextView[1].getText());
         }
@@ -9637,7 +9641,10 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
             flagSecure.attach();
         }
         updateItemsUsername();
-        needLayout(false);
+        if (!fastMainTabResume || listView == null || listView.getPaddingTop() != listView.getMeasuredWidth() + getActionsExtraHeight()) {
+            needLayout(false);
+        }
+        nayaTabInitializedOnce = true;
     }
 
     @Override

@@ -298,7 +298,7 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         showAccountChangeHint();
         if (contentView != null) {
             contentView.removeCallbacks(preloadProfileRunnable);
-            contentView.postDelayed(preloadProfileRunnable, 600);
+            contentView.postDelayed(preloadProfileRunnable, 250);
         }
     }
 
@@ -780,7 +780,6 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         }
 
         checkUi_fadeView();
-        blur3_invalidateBlur();
         contentView.invalidate();
     }
 

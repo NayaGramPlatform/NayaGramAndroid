@@ -9313,6 +9313,9 @@ public class MessagesController extends BaseController implements NotificationCe
         }
         if (messages != null) {
             addLocallyDeleted(dialogId, messages);
+            if (mode == ChatActivity.MODE_DEFAULT && !DialogObject.isEncryptedDialog(dialogId)) {
+                getMessagesStorage().deleteMessagesFromAntiDeleteVault(dialogId, messages);
+            }
         }
         ArrayList<Integer> toSend = null;
         long channelId;
@@ -12033,6 +12036,10 @@ public class MessagesController extends BaseController implements NotificationCe
                 return;
             }
         }
+        if (!isCache && mode == ChatActivity.MODE_DEFAULT && !DialogObject.isEncryptedDialog(dialogId)) {
+            org.nayagram.platform.history.NGAntiDeleteVault.mergeServerWindowMessages(
+                    getUserConfig().getClientUserId(), dialogId, threadMessageId, load_type, max_id, count, messagesRes, usersDict, chatsDict, this);
+        }
         int size = messagesRes.messages.size();
         if (!isCache) {
             Integer inboxValue = dialogs_read_inbox_max.get(dialogId);
@@ -13447,6 +13454,10 @@ public class MessagesController extends BaseController implements NotificationCe
                         dialogsLoadOffsetAccess);
                 getUserConfig().setTotalDialogsCount(folderId, totalDialogsLoadCount);
                 getUserConfig().saveConfig(false);
+            }
+            if (!fromCache && offset == 0) {
+                org.nayagram.platform.history.NGAntiDeleteVault.mergeSavedDialogsForFolder(
+                        getUserConfig().getClientUserId(), folderId, dialogsRes, usersDict, chatsDict, new_dialogMessage, currentAccount);
             }
 
             ArrayList<TLRPC.Dialog> dialogsToReload = new ArrayList<>();
@@ -16166,6 +16177,7 @@ public class MessagesController extends BaseController implements NotificationCe
             getConnectionsManager().cleanup(type == 2);
         }
         long loggedOutUid = getUserConfig().getClientUserId();
+        getMessagesStorage().backupAntiDeleteBeforeLogout(loggedOutUid);
         getUserConfig().clearConfig();
         org.nayagram.platform.security.NGHiddenAccounts.onLoggedOut(loggedOutUid);
         SharedPrefsHelper.cleanupAccount(currentAccount);

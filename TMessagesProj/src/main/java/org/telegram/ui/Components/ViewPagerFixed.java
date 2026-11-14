@@ -222,6 +222,29 @@ public class ViewPagerFixed extends FrameLayout {
         if (page == currentPosition || (manualScrolling != null && nextPosition == page)) {
             return false;
         }
+        if (tabsAnimation != null) {
+            tabsAnimation.removeAllListeners();
+            tabsAnimation.cancel();
+            tabsAnimation = null;
+        }
+        if (tabsAnimationInProgress || startedTracking || maybeStartTracking) {
+            tabsAnimationInProgress = false;
+            startedTracking = false;
+            maybeStartTracking = false;
+            if (viewPages[0] != null) {
+                setTranslationX(viewPages[0], 0);
+            }
+            if (viewPages[1] != null) {
+                viewsByType.put(viewTypes[1], viewPages[1]);
+                removeView(viewPages[1]);
+                viewPages[1].setVisibility(View.GONE);
+                viewPages[1] = null;
+            }
+            if (tabsView != null) {
+                tabsView.setEnabled(true);
+            }
+            notificationsLocker.unlock();
+        }
         if (manualScrolling != null) {
             manualScrolling.cancel();
             manualScrolling = null;
