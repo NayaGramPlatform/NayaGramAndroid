@@ -14,14 +14,16 @@ checks = {
         and "ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);" in source
     ),
     "avoids duplicate dialogs while merging folders": (
-        "seenKeys" in source or "alreadyPresent" in source
+        "mergedDialogIds.add(d.id)" in source
+        and "seenChatIds.add(chat.id)" in source
+        and "seenUserIds.add(user.id)" in source
     ),
     "community dialog explicitly classified": (
         "dialog instanceof TLRPC.TL_dialogCommunity" in source
         and "((TLRPC.TL_dialogCommunity) dialog).community_id" in source
     ),
     "community tab distinct from linked chats": (
-        '"Communities"' in source and "linked chats remain in their own sections" in source
+        '"Communities"' in source and "type = SECTION_COMMUNITIES;" in source
     ),
     "bot accounts filtered from real dialogs": (
         "user.bot" in source and "DialogObject.isUserDialog(dialog.id)" in source
@@ -45,14 +47,17 @@ checks = {
         "swipeNavigationEnabled" in source and "showSection(Math.max" in source
     ),
     "owned spaces are creator-verified": (
-        "isMyCreatedSpace(chat)" in source
-        and "if (mineOnly && type != SECTION_BOTS && !owned) continue;" in source
+        "boolean owned = chat != null && chat.creator;" in source
+        and "if (mineOnly && !owned) continue;" in source
     ),
     "strict separation between joined and created spaces": (
-        "if (!mineOnly && type != SECTION_BOTS && owned) continue;" in source
-        and '"Joined Only"' in source
+        "if (!mineOnly && owned) continue;" in source
+        and '"Joined Channels"' in source
+        and '"Joined Groups"' in source
     ),
-    "audience labels are unambiguous": '"My Created"' in source and '"Joined Only"' in source,
+    "audience labels are unambiguous": (
+        '"🌐 Joined (Other\'s)"' in source and '"👑 My Created (Owned)"' in source
+    ),
     "official botfather": "https://t.me/BotFather" in source and "Open official BotFather" in source,
     "bot selection persisted locally": (
         '"ng_hub_my_bots"' in source and 'putBoolean("bot_" + user.id, marked)' in source
