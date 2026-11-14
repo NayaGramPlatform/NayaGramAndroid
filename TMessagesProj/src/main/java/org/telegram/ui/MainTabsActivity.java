@@ -271,6 +271,12 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         updateLayout();
     }
 
+    private final Runnable preloadProfileRunnable = () -> {
+        if (!isFinishing() && getParentActivity() != null && viewPager != null && getParentLayout() != null) {
+            preloadPosition(POSITION_PROFILE);
+        }
+    };
+
     @Override
     public void onResume() {
         super.onResume();
@@ -290,6 +296,10 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
         checkUnreadCount(true);
 
         showAccountChangeHint();
+        if (contentView != null) {
+            contentView.removeCallbacks(preloadProfileRunnable);
+            contentView.postDelayed(preloadProfileRunnable, 600);
+        }
     }
 
     private void checkContactsTabBadge() {
@@ -309,6 +319,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
     @Override
     public void onPause() {
         super.onPause();
+        if (contentView != null) {
+            contentView.removeCallbacks(preloadProfileRunnable);
+        }
         if (accountSwitchHint != null) {
             accountSwitchHint.hide();
         }
@@ -1039,6 +1052,9 @@ public class MainTabsActivity extends ViewPagerActivity implements NotificationC
 
     @Override
     public void onFragmentDestroy() {
+        if (contentView != null) {
+            contentView.removeCallbacks(preloadProfileRunnable);
+        }
         Bulletin.removeDelegate(this);
         Bulletin.removeDelegate(contentView);
 

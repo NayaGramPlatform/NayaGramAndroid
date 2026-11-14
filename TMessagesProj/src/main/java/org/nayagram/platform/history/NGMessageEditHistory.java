@@ -107,7 +107,7 @@ public final class NGMessageEditHistory {
             if (!NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
                 return;
             }
-            if (oldMsg == null || newMsg == null || newMsg.id <= 0) {
+            if (oldMsg == null || newMsg == null || oldMsg == newMsg || newMsg.id <= 0) {
                 return;
             }
             String oldText = extractSnapshotText(oldMsg);
@@ -123,6 +123,9 @@ public final class NGMessageEditHistory {
 
             if (dialogId == 0) {
                 dialogId = MessageObject.getDialogId(newMsg);
+                if (dialogId == 0) {
+                    dialogId = MessageObject.getDialogId(oldMsg);
+                }
             }
             String key = makeKey(accountId, dialogId, newMsg.id);
             List<RevisionEntry> history = new ArrayList<>(getRevisions(accountId, dialogId, newMsg.id));

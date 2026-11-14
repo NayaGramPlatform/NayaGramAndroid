@@ -130,6 +130,47 @@ public abstract class ViewPagerActivity extends BaseFragment {
         fragmentsArr.put(position, new FragmentState(fragment));
     }
 
+    protected void preloadPosition(int position) {
+        if (viewPager == null || position < 0 || position >= getFragmentsCount()) {
+            return;
+        }
+        Context context = getContext();
+        if (context == null || getParentLayout() == null) {
+            return;
+        }
+        FragmentState state = fragmentsArr.get(position);
+        final BaseFragment fragment;
+        if (state != null) {
+            fragment = state.fragment;
+        } else {
+            fragment = createBaseFragmentAt(position);
+            if (fragment == null) {
+                return;
+            }
+            state = new FragmentState(fragment);
+            fragmentsArr.put(position, state);
+        }
+        if (!state.onCreateCalled) {
+            fragment.onFragmentCreate();
+            state.onCreateCalled = true;
+        }
+        fragment.setParentLayout(getParentLayout());
+        if (fragment.getFragmentView() == null) {
+            fragment.performCreateView(context);
+            fragment.setTitleOverlayText(titleOverlay, titleOverlayId, titleOverlayAction);
+        }
+        final View fv = fragment.getFragmentView();
+        if (fv != null && !fragment.hasOwnBackground() && fv.getBackground() == null) {
+            fv.setBackgroundColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+        }
+        if (fv != null && fv.getMeasuredWidth() == 0 && viewPager.getMeasuredWidth() > 0 && viewPager.getMeasuredHeight() > 0) {
+            fv.measure(
+                View.MeasureSpec.makeMeasureSpec(viewPager.getMeasuredWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(viewPager.getMeasuredHeight(), View.MeasureSpec.EXACTLY)
+            );
+        }
+    }
+
     protected boolean canScrollBackward(MotionEvent ev) {
         return true;
     }
@@ -483,7 +524,7 @@ public abstract class ViewPagerActivity extends BaseFragment {
 
         @Override
         protected long getManualScrollDuration() {
-            return 320L;
+            return 180L;
         }
 
         @Override

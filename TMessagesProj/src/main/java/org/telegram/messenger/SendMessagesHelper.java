@@ -3220,6 +3220,19 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
             }
 
             if (!retry) {
+                TLRPC.TL_message preEditSnapshot = null;
+                if (messageObject.editingMessage != null && newMsg != null && newMsg.id > 0 && org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+                    preEditSnapshot = new TLRPC.TL_message();
+                    preEditSnapshot.id = newMsg.id;
+                    preEditSnapshot.dialog_id = newMsg.dialog_id != 0 ? newMsg.dialog_id : peer;
+                    preEditSnapshot.peer_id = newMsg.peer_id;
+                    preEditSnapshot.date = newMsg.date;
+                    preEditSnapshot.edit_date = newMsg.edit_date;
+                    preEditSnapshot.message = newMsg.message;
+                    if (newMsg.entities != null) {
+                        preEditSnapshot.entities = new ArrayList<>(newMsg.entities);
+                    }
+                }
                 if (messageObject.editingMessage != null) {
                     String oldMessge = newMsg.message;
                     newMsg.message = messageObject.editingMessage.toString();
@@ -3250,6 +3263,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         }
                         messageObject.generateCaption();
                     }
+                }
+                if (preEditSnapshot != null) {
+                    TLRPC.TL_message postEditSnapshot = new TLRPC.TL_message();
+                    postEditSnapshot.id = newMsg.id;
+                    postEditSnapshot.dialog_id = newMsg.dialog_id != 0 ? newMsg.dialog_id : peer;
+                    postEditSnapshot.peer_id = newMsg.peer_id;
+                    postEditSnapshot.date = newMsg.date;
+                    postEditSnapshot.edit_date = getConnectionsManager().getCurrentTime();
+                    postEditSnapshot.flags = newMsg.flags | TLRPC.MESSAGE_FLAG_EDITED;
+                    postEditSnapshot.message = newMsg.message;
+                    if (newMsg.entities != null) {
+                        postEditSnapshot.entities = new ArrayList<>(newMsg.entities);
+                    }
+                    org.nayagram.platform.history.NGMessageEditHistory.recordEdit(currentAccount, peer, preEditSnapshot, postEditSnapshot);
                 }
 
                 ArrayList<TLRPC.Message> arr = new ArrayList<>();
@@ -3602,6 +3629,20 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                 req.schedule_repeat_period = scheduleRepeatPeriod;
                 req.flags |= TLObject.FLAG_18;
             }
+        }
+        if (message != null && messageObject != null && messageObject.messageOwner != null && messageObject.messageOwner.id > 0 && org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+            TLRPC.TL_message postEditSnapshot = new TLRPC.TL_message();
+            postEditSnapshot.id = messageObject.messageOwner.id;
+            postEditSnapshot.dialog_id = messageObject.getDialogId();
+            postEditSnapshot.peer_id = messageObject.messageOwner.peer_id;
+            postEditSnapshot.date = messageObject.messageOwner.date;
+            postEditSnapshot.edit_date = getConnectionsManager().getCurrentTime();
+            postEditSnapshot.flags = messageObject.messageOwner.flags | TLRPC.MESSAGE_FLAG_EDITED;
+            postEditSnapshot.message = message;
+            if (entities != null) {
+                postEditSnapshot.entities = new ArrayList<>(entities);
+            }
+            org.nayagram.platform.history.NGMessageEditHistory.recordEdit(currentAccount, messageObject.getDialogId(), messageObject.messageOwner, postEditSnapshot);
         }
         return getConnectionsManager().sendRequest(req, (response, error) -> {
             if (error == null) {

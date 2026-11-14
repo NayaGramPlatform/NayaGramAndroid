@@ -21183,6 +21183,76 @@ public class ChatActivity extends BaseFragment implements
                 dropPhotoAction = action;
             }
         }
+        if ((oldMessages != null || oldMessagesDict != null) && !isCache && org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && loadIndex == 0 && mode == MODE_DEFAULT) {
+            HashSet<Integer> serverMids = new HashSet<>();
+            int minServerId = Integer.MAX_VALUE;
+            int maxServerId = Integer.MIN_VALUE;
+            for (int a = 0; a < messArr.size(); a++) {
+                MessageObject m = messArr.get(a);
+                int mid = m != null ? m.getId() : 0;
+                if (mid > 0) {
+                    serverMids.add(mid);
+                    if (mid < minServerId) minServerId = mid;
+                    if (mid > maxServerId) maxServerId = mid;
+                }
+            }
+            int windowMaxId = (load_type == 0 && loaded_max_id == 0) ? Integer.MAX_VALUE : maxServerId;
+            ArrayList<MessageObject> restoredAntiDeleted = new ArrayList<>();
+            ArrayList<MessageObject> candidates = new ArrayList<>();
+            if (oldMessages != null) {
+                candidates.addAll(oldMessages.values());
+            } else {
+                for (int i = 0; i < oldMessagesDict.size(); i++) {
+                    candidates.add(oldMessagesDict.valueAt(i));
+                }
+            }
+            for (int i = 0; i < candidates.size(); i++) {
+                MessageObject oldObj = candidates.get(i);
+                if (oldObj == null) {
+                    continue;
+                }
+                int mid = oldObj.getId();
+                if (mid <= 0 || serverMids.contains(mid) || getMessagesController().isLocallyDeleted(dialog_id, mid)) {
+                    continue;
+                }
+                boolean withinWindow = !messArr.isEmpty() && mid >= minServerId && mid <= windowMaxId;
+                if (oldObj.isAntiDeleted || (!oldObj.isOutOwner() && withinWindow)) {
+                    oldObj.deleted = false;
+                    oldObj.isAntiDeleted = true;
+                    oldObj.forceUpdate = true;
+                    oldObj.localGroupId = 0;
+                    if (oldObj.messageOwner != null) {
+                        oldObj.messageOwner.isAntiDeleted = true;
+                    }
+                    getMessagesStorage().updateMessageAntiDeleted(dialog_id, mid, oldObj.messageOwner);
+                    restoredAntiDeleted.add(oldObj);
+                }
+            }
+            if (!restoredAntiDeleted.isEmpty()) {
+                messArr = new ArrayList<>(messArr);
+                if (load_type == 1) {
+                    Collections.sort(restoredAntiDeleted, (a, b) -> Integer.compare(a.getId(), b.getId()));
+                } else {
+                    Collections.sort(restoredAntiDeleted, (a, b) -> Integer.compare(b.getId(), a.getId()));
+                }
+                for (int r = 0; r < restoredAntiDeleted.size(); r++) {
+                    MessageObject rObj = restoredAntiDeleted.get(r);
+                    int insertPos = messArr.size();
+                    for (int p = 0; p < messArr.size(); p++) {
+                        int pId = messArr.get(p).getId();
+                        if (pId > 0 && (load_type == 1 ? pId > rObj.getId() : pId < rObj.getId())) {
+                            insertPos = p;
+                            break;
+                        }
+                        if (pId == 0 && p > 0) {
+                            insertPos = p;
+                            break;
+                        }
+                    }
+                    messArr.add(insertPos, rObj);
+                }
+            }
+        }
         for (int a = 0; a < messArr.size(); a++) {
             MessageObject obj = messArr.get(a);
             if (obj.replyMessageObject != null) {
@@ -21190,6 +21260,12 @@ public class ChatActivity extends BaseFragment implements
                 addReplyMessageOwner(obj, 0);
             }
             int messageId = obj.getId();
+            if (!isCache && messageId > 0 && (oldMessages != null || oldMessagesDict != null) && org.nayagram.platform.NayaConfig.getInstance().isSaveEditHistoryEnabled()) {
+                MessageObject prevObj = oldMessages != null ? oldMessages.get(messageId) : oldMessagesDict.get(messageId);
+                if (prevObj != null && prevObj.messageOwner != null && obj.messageOwner != null) {
+                    org.nayagram.platform.history.NGMessageEditHistory.recordEdit(currentAccount, dialog_id, prevObj.messageOwner, obj.messageOwner);
+                }
+            }
             if (threadMessageId != 0) {
                 if (messageId <= (obj.isOut() ? threadMaxOutboxReadId : threadMaxInboxReadId)) {
                     obj.setIsRead();

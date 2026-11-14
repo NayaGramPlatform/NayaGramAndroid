@@ -3351,17 +3351,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             }
             ngHubItem.setOnClickListener(v -> {
                 v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-                v.animate()
-                        .scaleX(0.92f)
-                        .scaleY(0.92f)
-                        .setDuration(90)
-                        .withEndAction(() -> v.animate()
-                                .scaleX(1.0f)
-                                .scaleY(1.0f)
-                                .setDuration(120)
-                                .withEndAction(() -> presentFragment(new NGHubActivity()))
-                                .start())
-                        .start();
+                presentFragment(new NGHubActivity());
             });
         }
 

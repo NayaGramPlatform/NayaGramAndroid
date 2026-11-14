@@ -98,7 +98,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
     private int detailLang;
     private boolean swipeNavigationEnabled = true;
     private boolean horizontalCards;
-    private boolean mineOnly = false;
+    private boolean mineOnly = true;
     private boolean initialRenderDone = false;
     private boolean plusOpen;
     private boolean closing;
@@ -333,7 +333,7 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         LinearLayout tabRow = new LinearLayout(context);
         tabRow.setOrientation(LinearLayout.HORIZONTAL);
         page.addView(tabRow, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 46, 0, 0, 0, 10));
-        String[] labels = {"Joined Channels", "Joined Groups", "Bots", "Communities"};
+        String[] labels = {"My Channels", "My Groups", "My Bots", "My Communities"};
         tabs = new TextView[labels.length];
         for (int i = 0; i < labels.length; i++) {
             final int section = i;
@@ -425,10 +425,22 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         root.addView(detailsOverlay, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         fragmentView = root;
-        initialRenderDone = true;
-        showSection(selectedSection);
+        initialRenderDone = false;
+        TextView loadingHint = new TextView(context);
+        loadingHint.setText("Loading your channels & groups...");
+        loadingHint.setTextSize(14);
+        loadingHint.setGravity(Gravity.CENTER);
+        loadingHint.setPadding(AndroidUtilities.dp(12), AndroidUtilities.dp(20), AndroidUtilities.dp(12), AndroidUtilities.dp(20));
+        loadingHint.setTextColor(Theme.isCurrentThemeDark() ? 0xFFCBD5E1 : 0xFF64748B);
+        contentColumn.addView(loadingHint, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+        root.post(() -> {
+            if (!closing && getParentActivity() != null && contentColumn != null) {
+                initialRenderDone = true;
+                showSection(selectedSection);
+            }
+        });
         root.postDelayed(() -> {
-            if (getParentActivity() != null) {
+            if (!closing && getParentActivity() != null) {
                 ensureAllSpacesLoaded(true);
             }
         }, 250);
@@ -442,10 +454,9 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
             registerObservers(currentAccount);
         }
         updateAccountCard();
-        if (!initialRenderDone) {
+        if (initialRenderDone) {
             showSection(selectedSection);
         }
-        initialRenderDone = false;
     }
 
     private View buildHero(Context context) {
@@ -1523,18 +1534,98 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
 
         LinearLayout textColumn = new LinearLayout(context);
         textColumn.setOrientation(LinearLayout.VERTICAL);
-        TextView title = new TextView(context);
-        title.setText(titleText.isEmpty() ? "Untitled" : titleText);
-        title.setTextSize(15);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        if (chat != null) {
-            title.setTextColor(0xFF00D4FF); // Cyan title for channels & groups
+
+        if (horizontalCards) {
+            TextView title = new TextView(context);
+            title.setText(titleText.isEmpty() ? "Untitled" : titleText);
+            title.setTextSize(15);
+            title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            if (chat != null) {
+                title.setTextColor(0xFF00D4FF); // Cyan title for channels & groups
+            } else {
+                title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            }
+            title.setMaxLines(1);
+            title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            textColumn.addView(title, LayoutHelper.createLinear(AndroidUtilities.dp(210), LayoutHelper.WRAP_CONTENT));
         } else {
-            title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            LinearLayout topLine = new LinearLayout(context);
+            topLine.setOrientation(LinearLayout.HORIZONTAL);
+            topLine.setGravity(Gravity.CENTER_VERTICAL);
+
+            TextView title = new TextView(context);
+            title.setText(titleText.isEmpty() ? "Untitled" : titleText);
+            title.setTextSize(15);
+            title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            if (chat != null) {
+                title.setTextColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+            } else {
+                title.setTextColor(isDark ? 0xFFF8FAFC : Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+            }
+            title.setMaxLines(1);
+            title.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            topLine.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+            String badgeLabel = null;
+            int badgeBgColor = 0;
+            int badgeTextColor = 0;
+            if (chat != null) {
+                if (chat.creator) {
+                    badgeLabel = "👑 Owner";
+                    badgeBgColor = isDark ? 0x33F59E0B : 0x1AF59E0B;
+                    badgeTextColor = isDark ? 0xFFFBBF24 : 0xFFB45309;
+                } else if (ChatObject.hasAdminRights(chat)) {
+                    badgeLabel = "🛡️ Admin";
+                    badgeBgColor = isDark ? 0x330EA5E9 : 0x1A0284C7;
+                    badgeTextColor = isDark ? 0xFF38BDF8 : 0xFF0369A1;
+                } else {
+                    boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
+                    badgeLabel = isChannel ? "📺 Channel" : "💬 Group";
+                    badgeBgColor = isDark ? 0x2638BDF8 : 0x140284C7;
+                    badgeTextColor = isDark ? 0xFF7DD3FC : 0xFF0284C7;
+                }
+            } else if (user != null && user.bot) {
+                boolean marked = isMarkedMyBot(user.id);
+                badgeLabel = marked ? "⭐ My Bot" : "🤖 Bot";
+                badgeBgColor = isDark ? 0x338B5CF6 : 0x1A7C3AED;
+                badgeTextColor = isDark ? 0xFFC4B5FD : 0xFF6D28D9;
+            }
+            if (badgeLabel != null) {
+                TextView badge = new TextView(context);
+                badge.setText(badgeLabel);
+                badge.setTextSize(10.5f);
+                badge.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                badge.setTextColor(badgeTextColor);
+                badge.setPadding(AndroidUtilities.dp(7), AndroidUtilities.dp(2), AndroidUtilities.dp(7), AndroidUtilities.dp(2));
+                GradientDrawable badgeBg = new GradientDrawable();
+                badgeBg.setCornerRadius(AndroidUtilities.dp(8));
+                badgeBg.setColor(badgeBgColor);
+                badge.setBackground(badgeBg);
+                LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                blp.leftMargin = AndroidUtilities.dp(6);
+                topLine.addView(badge, blp);
+            }
+            textColumn.addView(topLine, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
+
+            if (chat != null && (chat.participants_count > 0 || (chat.username != null && !chat.username.isEmpty()))) {
+                StringBuilder meta = new StringBuilder();
+                if (chat.participants_count > 0) {
+                    boolean isChannel = ChatObject.isChannel(chat) && !chat.megagroup;
+                    meta.append(LocaleController.formatNumber(chat.participants_count, ',')).append(isChannel ? " subscribers" : " members");
+                }
+                if (chat.username != null && !chat.username.isEmpty()) {
+                    if (meta.length() > 0) meta.append(" • ");
+                    meta.append("@").append(chat.username);
+                }
+                TextView metaView = new TextView(context);
+                metaView.setText(meta.toString());
+                metaView.setTextSize(11.5f);
+                metaView.setTextColor(isDark ? 0xFF94A3B8 : 0xFF64748B);
+                metaView.setMaxLines(1);
+                metaView.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                textColumn.addView(metaView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 2, 0, 0));
+            }
         }
-        title.setMaxLines(1);
-        title.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        textColumn.addView(title, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT));
 
         TextView preview = new TextView(context);
         preview.setText(previewText);
@@ -1548,10 +1639,21 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         }
         preview.setMaxLines(horizontalCards ? 3 : 2);
         preview.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        textColumn.addView(preview, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 4, 0, 0));
+        textColumn.addView(preview, LayoutHelper.createLinear(horizontalCards ? AndroidUtilities.dp(210) : LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 3, 0, 0));
         row.addView(textColumn, horizontalCards
                 ? LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT)
                 : new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        if (!horizontalCards) {
+            TextView chevron = new TextView(context);
+            chevron.setText("›");
+            chevron.setTextSize(20);
+            chevron.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+            chevron.setTextColor(isDark ? 0x8038BDF8 : 0x800284C7);
+            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            clp.leftMargin = AndroidUtilities.dp(8);
+            row.addView(chevron, clp);
+        }
 
         row.setOnClickListener(v -> {
             Bundle args = new Bundle();
@@ -1572,17 +1674,21 @@ public class NGHubActivity extends BaseFragment implements NotificationCenter.No
         }
 
         LinearLayout.LayoutParams rowParams;
+        GradientDrawable cardBg = new GradientDrawable();
+        cardBg.setCornerRadius(AndroidUtilities.dp(16));
+        cardBg.setColor(isDark ? 0xFF1E293B : Theme.getColor(Theme.key_windowBackgroundWhite));
+        cardBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x2938BDF8 : 0x1A0284C7);
+        row.setBackground(cardBg);
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            row.setForeground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
+        }
         if (horizontalCards) {
             rowParams = new LinearLayout.LayoutParams(AndroidUtilities.dp(260), ViewGroup.LayoutParams.WRAP_CONTENT);
             rowParams.rightMargin = AndroidUtilities.dp(10);
-            GradientDrawable cardBg = new GradientDrawable();
-            cardBg.setCornerRadius(AndroidUtilities.dp(16));
-            cardBg.setColor(isDark ? 0xFF1E293B : Theme.getColor(Theme.key_windowBackgroundWhite));
-            cardBg.setStroke(AndroidUtilities.dp(1), isDark ? 0x2438BDF8 : 0x14000000);
-            row.setBackground(cardBg);
         } else {
             rowParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            row.setBackground(Theme.createSelectorDrawable(Theme.getColor(Theme.key_listSelector), 2));
+            rowParams.bottomMargin = AndroidUtilities.dp(8);
+            row.setElevation(AndroidUtilities.dp(1));
         }
         activeRows.addView(row, rowParams);
     }
