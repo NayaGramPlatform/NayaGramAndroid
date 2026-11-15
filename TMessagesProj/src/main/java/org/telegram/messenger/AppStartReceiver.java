@@ -14,15 +14,28 @@ import android.content.Intent;
 
 public class AppStartReceiver extends BroadcastReceiver {
 
+    @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent != null && Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
+                || "org.nayagram.platform.start".equals(action)) {
             AndroidUtilities.runOnUIThread(() -> {
-                SharedConfig.loadConfig();
-                if (SharedConfig.passcodeHash.length() > 0) {
-                    SharedConfig.appLocked = true;
-                    SharedConfig.saveConfig();
+                try {
+                    SharedConfig.loadConfig();
+                    if (SharedConfig.passcodeHash.length() > 0) {
+                        SharedConfig.appLocked = true;
+                        SharedConfig.saveConfig();
+                    }
+                    ApplicationLoader.postInitApplication();
+                    ApplicationLoader.startPushService();
+                    if (AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+                        AutoReplySyncWorker.schedule(context);
+                    }
+                } catch (Throwable t) {
+                    FileLog.e("AppStartReceiver error", t);
                 }
-                ApplicationLoader.startPushService();
             });
         }
     }

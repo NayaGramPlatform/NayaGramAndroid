@@ -101,7 +101,11 @@ public class AutoReplyManager {
                 PREFS_NAME, Context.MODE_PRIVATE);
         load();
         if (isAutoReplyEnabled()) {
-            AndroidUtilities.runOnUIThread(this::ensureBackgroundKeepAlive, 1500);
+            AndroidUtilities.runOnUIThread(() -> {
+                ensureBackgroundKeepAlive();
+                AutoReplySyncWorker.schedule(ApplicationLoader.applicationContext);
+                ApplicationLoader.startPushService();
+            }, 1500);
         }
     }
 
@@ -198,10 +202,15 @@ public class AutoReplyManager {
         if (enabled) {
             ensureBackgroundKeepAlive();
             try {
+                AutoReplySyncWorker.schedule(ApplicationLoader.applicationContext);
                 ApplicationLoader.startPushService();
             } catch (Throwable ignored) {}
         } else {
             releaseBackgroundLocks();
+            try {
+                AutoReplySyncWorker.cancel(ApplicationLoader.applicationContext);
+                ApplicationLoader.startPushService();
+            } catch (Throwable ignored) {}
         }
     }
 

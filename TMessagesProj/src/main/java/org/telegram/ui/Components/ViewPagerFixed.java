@@ -1461,7 +1461,7 @@ public class ViewPagerFixed extends FrameLayout {
                     } else {
                         counterPaint.setColor(textPaint.getColor());
                     }
-                    textCounterPaint.setColor(ColorUtils.calculateLuminance(counterPaint.getColor()) > 0.55 ? 0xFF0F172A : Color.WHITE);
+                    textCounterPaint.setColor(ColorUtils.calculateLuminance(counterPaint.getColor()) > 0.55 ? 0xFF0F172A : 0xFFFFFFFF);
                     textCounterPaint.setFakeBoldText(true);
 
                     int x = textX + currentTab.titleWidth + dp(6);

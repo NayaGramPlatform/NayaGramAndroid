@@ -213,9 +213,19 @@ public class ApplicationLoader extends Application {
                     }
 
                     boolean isSlow = isConnectionSlow();
+                    boolean autoReplyOn = false;
+                    try {
+                        autoReplyOn = AutoReplyManager.getInstance().isAutoReplyEnabled();
+                    } catch (Throwable ignored) {}
                     for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
                         ConnectionsManager.getInstance(a).checkConnection();
                         FileLoader.getInstance(a).onNetworkChanged(isSlow);
+                        if (autoReplyOn && UserConfig.getInstance(a).isClientActivated() && isNetworkOnlineFast()) {
+                            try {
+                                ConnectionsManager.getInstance(a).keepNetworkAliveInBackground();
+                                MessagesController.getInstance(a).getDifference();
+                            } catch (Throwable ignored) {}
+                        }
                     }
                 }
             };
@@ -381,17 +391,34 @@ public class ApplicationLoader extends Application {
         } else {
             enabled = MessagesController.getMainSettings(UserConfig.selectedAccount).getBoolean("keepAliveService", true);
         }
+        boolean autoReplyEnabled = false;
         try {
             if (AutoReplyManager.getInstance().isAutoReplyEnabled()) {
                 enabled = true;
+                autoReplyEnabled = true;
                 AutoReplyManager.getInstance().ensureBackgroundKeepAlive();
+                AutoReplySyncWorker.schedule(applicationContext);
             }
         } catch (Throwable ignored) {}
         if (enabled) {
             try {
-                applicationContext.startService(new Intent(applicationContext, NotificationsService.class));
+                Intent serviceIntent = new Intent(applicationContext, NotificationsService.class);
+                if (autoReplyEnabled) {
+                    serviceIntent.putExtra(NotificationsService.EXTRA_START_FOREGROUND, true);
+                    if (Build.VERSION.SDK_INT >= 26) {
+                        applicationContext.startForegroundService(serviceIntent);
+                    } else {
+                        applicationContext.startService(serviceIntent);
+                    }
+                } else {
+                    applicationContext.startService(serviceIntent);
+                }
             } catch (Throwable ignore) {
-
+                if (autoReplyEnabled) {
+                    try {
+                        KeepAliveJob.startJob();
+                    } catch (Throwable ignored) {}
+                }
             }
         } else {
             try {

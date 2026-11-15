@@ -1535,7 +1535,7 @@ public class PushListenerController {
         });
         try {
             pushLatch.await(12, TimeUnit.SECONDS);
-            IncomingMessageInterceptor.awaitBackgroundAutoReply(12000);
+            IncomingMessageInterceptor.awaitBackgroundAutoReply(16000);
         } catch (Throwable ignore) {
 
         }

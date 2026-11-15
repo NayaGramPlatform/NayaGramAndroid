@@ -1,10 +1,14 @@
 package org.telegram.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -34,6 +38,7 @@ import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Business.AwayMessagesActivity;
 import org.telegram.ui.Components.BulletinFactory;
 import org.telegram.ui.Components.EditTextCaption;
 import org.telegram.ui.Components.LayoutHelper;
@@ -169,6 +174,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                     boolean next = !autoAnswerSwitch.isChecked();
                     autoAnswerSwitch.setChecked(next, true);
                     updateStatusPillBadge(autoAnswerStatusBadge, next, 0xFF10B981, isDark);
+                    toggleMenuItem.setIcon(next ? R.drawable.msg_notifications : R.drawable.msg_mute);
                     AutoReplyManager.getInstance().setAutoReplyEnabled(next);
                 }
         ));
@@ -197,6 +203,51 @@ public class NGAutoReplyActivity extends BaseFragment {
                     updateStatusPillBadge(privateOnlyStatusBadge, next, 0xFF0284C7, isDark);
                     AutoReplyManager.getInstance().setPrivateOnly(next);
                 }
+        ));
+
+        settingsCard.addView(createHairlineDivider(context, isDark));
+
+        boolean ignoringBattery = isIgnoringBatteryOptimizations(context);
+        settingsCard.addView(createActionRow(
+                context,
+                R.drawable.msg_settings_old,
+                ignoringBattery ? 0xFF10B981 : 0xFFF59E0B,
+                "Background & Battery Mode",
+                ignoringBattery
+                        ? "Unrestricted — background auto-reply stays active 24/7"
+                        : "Restricted — tap to set NayaGram to Unrestricted so OS never pauses replies",
+                ignoringBattery ? "OPTIMIZED" : "FIX NOW",
+                ignoringBattery ? 0xFF10B981 : 0xFFF59E0B,
+                isDark,
+                v -> {
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                        if (getParentActivity() != null) {
+                            getParentActivity().startActivity(intent);
+                        } else {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
+                        }
+                    } catch (Throwable t) {
+                        BulletinFactory.of(NGAutoReplyActivity.this)
+                                .createSimpleBulletin(R.raw.chats_infotip, "Open Phone Settings > Apps > NayaGram > Battery > Unrestricted")
+                                .show();
+                    }
+                }
+        ));
+
+        settingsCard.addView(createHairlineDivider(context, isDark));
+
+        settingsCard.addView(createActionRow(
+                context,
+                R.drawable.msg_bot,
+                0xFF8B5CF6,
+                "Cloud Away Message (Telegram Business)",
+                "Telegram server-side reply (works even if phone is completely turned off)",
+                "CLOUD",
+                0xFF8B5CF6,
+                isDark,
+                v -> presentFragment(new AwayMessagesActivity())
         ));
 
         column.addView(settingsCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
@@ -484,6 +535,85 @@ public class NGAutoReplyActivity extends BaseFragment {
         lp.leftMargin = AndroidUtilities.dp(64);
         holder.addView(line, lp);
         return holder;
+    }
+
+    private boolean isIgnoringBatteryOptimizations(Context context) {
+        if (context == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        try {
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            return pm != null && pm.isIgnoringBatteryOptimizations(context.getPackageName());
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private View createActionRow(Context context, int iconRes, int iconColor, String title, String subtitle, String badgeText, int badgeColor, boolean isDark, View.OnClickListener onClick) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
+        TypedValue tv = new TypedValue();
+        if (context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true)) {
+            row.setBackgroundResource(tv.resourceId);
+        }
+        row.setClickable(true);
+        row.setOnClickListener(onClick);
+
+        FrameLayout iconWrap = new FrameLayout(context);
+        GradientDrawable iconBg = new GradientDrawable();
+        iconBg.setShape(GradientDrawable.RECTANGLE);
+        iconBg.setCornerRadius(AndroidUtilities.dp(10));
+        iconBg.setColor(iconColor);
+        iconWrap.setBackground(iconBg);
+
+        ImageView iconView = new ImageView(context);
+        iconView.setImageResource(iconRes);
+        iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        iconView.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
+        iconWrap.addView(iconView, LayoutHelper.createFrame(20, 20, Gravity.CENTER));
+        row.addView(iconWrap, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
+
+        LinearLayout texts = new LinearLayout(context);
+        texts.setOrientation(LinearLayout.VERTICAL);
+
+        TextView titleView = new TextView(context);
+        titleView.setText(title);
+        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15.5f);
+        titleView.setTypeface(AndroidUtilities.bold());
+        titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
+        texts.addView(titleView);
+
+        if (!TextUtils.isEmpty(subtitle)) {
+            TextView subView = new TextView(context);
+            subView.setText(subtitle);
+            subView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
+            subView.setTypeface(AndroidUtilities.bold());
+            subView.setTextColor(isDark ? 0xFFCBD5E1 : 0xFF334155);
+            subView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
+            texts.addView(subView);
+        }
+
+        row.addView(texts, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        if (!TextUtils.isEmpty(badgeText)) {
+            TextView badge = new TextView(context);
+            badge.setText(badgeText);
+            badge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11f);
+            badge.setTypeface(AndroidUtilities.bold());
+            badge.setTextColor(badgeColor);
+            badge.setGravity(Gravity.CENTER);
+            badge.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(4));
+            GradientDrawable gd = new GradientDrawable();
+            gd.setCornerRadius(AndroidUtilities.dp(8));
+            gd.setColor((badgeColor & 0x00FFFFFF) | (isDark ? 0x33000000 : 0x1A000000));
+            gd.setStroke(AndroidUtilities.dp(1), badgeColor);
+            badge.setBackground(gd);
+            row.addView(badge, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
+        }
+
+        return row;
     }
 
     private View buildFormattingToolbar(Context context, boolean isDark) {

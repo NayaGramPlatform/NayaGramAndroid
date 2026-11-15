@@ -132,7 +132,7 @@ public class IncomingMessageInterceptor {
             if (trackBackground) {
                 acquireBackgroundJob();
                 // Safety guard so a dead socket or aborted send can never hold WakeLock indefinitely
-                Utilities.globalQueue.postRunnable(this::release, 12_000L);
+                Utilities.globalQueue.postRunnable(this::release, 20_000L);
             }
         }
 
@@ -282,15 +282,16 @@ public class IncomingMessageInterceptor {
                         ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
                         ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
                         ConnectionsManager.getInstance(accountId).checkConnection();
+                        autoReplyManager.ensureBackgroundKeepAlive();
                         AndroidUtilities.runOnUIThread(() -> {
                             try {
                                 MessagesController.getInstance(accountId).getDifference();
                             } catch (Throwable ignored) {}
                         });
-                        // Keep the background handle alive briefly while getDifference fetches the message + user,
-                        // then release this specific handle after 6.5s so PushListenerController never leaks locks.
+                        // Keep the background handle alive while getDifference fetches the message + user,
+                        // then release this specific handle after 14s so PushListenerController waits for dispatch.
                         handedOffToSend = true;
-                        Utilities.globalQueue.postRunnable(jobHandle::release, 6_500L);
+                        Utilities.globalQueue.postRunnable(jobHandle::release, 14_000L);
                         return;
                     }
                     if (user.bot || user.self) {
@@ -312,13 +313,14 @@ public class IncomingMessageInterceptor {
                         ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
                         ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
                         ConnectionsManager.getInstance(accountId).checkConnection();
+                        autoReplyManager.ensureBackgroundKeepAlive();
                         AndroidUtilities.runOnUIThread(() -> {
                             try {
                                 MessagesController.getInstance(accountId).getDifference();
                             } catch (Throwable ignored) {}
                         });
                         handedOffToSend = true;
-                        Utilities.globalQueue.postRunnable(jobHandle::release, 6_500L);
+                        Utilities.globalQueue.postRunnable(jobHandle::release, 14_000L);
                         return;
                     }
                     if (ChatObject.isChannel(chat) && !chat.megagroup && !ChatObject.canPost(chat)) {
