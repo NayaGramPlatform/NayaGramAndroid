@@ -243,12 +243,12 @@ public class IncomingMessageInterceptor {
                     return;
                 }
 
-                // Check message freshness (2 hours tolerance for delayed push delivery)
+                // Check message freshness (6 hours tolerance for offline/reconnect & delayed push delivery)
                 int now = ConnectionsManager.getInstance(accountId).getCurrentTime();
                 if (now <= 0) {
                     now = (int) (System.currentTimeMillis() / 1000L);
                 }
-                if (messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 7200) {
+                if (messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 21600) {
                     return;
                 }
 

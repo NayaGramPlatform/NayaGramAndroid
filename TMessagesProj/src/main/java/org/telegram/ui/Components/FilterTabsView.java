@@ -393,8 +393,9 @@ public class FilterTabsView extends FrameLayout {
             if (isSelected) {
                 textPaint.setColor(0xFFFFFFFF);
             } else {
-                textPaint.setColor(isDark ? 0xFFF1F5F9 : 0xFF1E293B);
+                textPaint.setColor(isDark ? 0xFFF8FAFC : 0xFF0F172A);
             }
+            textPaint.setFakeBoldText(true);
             emojiColorFilter = new PorterDuffColorFilter(textPaint.getColor(), PorterDuff.Mode.SRC_IN);
 
             float counterWidth;
@@ -541,11 +542,12 @@ public class FilterTabsView extends FrameLayout {
                 }
                 if (isSelected) {
                     counterPaint.setColor(0xFFFFFFFF);
-                    textCounterPaint.setColor(0xFF0284C7);
+                    textCounterPaint.setColor(0xFF0369A1);
                 } else {
-                    counterPaint.setColor(isDark ? 0xFF334155 : 0xFFE2E8F0);
-                    textCounterPaint.setColor(isDark ? 0xFF38BDF8 : 0xFF0284C7);
+                    counterPaint.setColor(0xFF0284C7);
+                    textCounterPaint.setColor(0xFFFFFFFF);
                 }
+                textCounterPaint.setFakeBoldText(true);
                 canvas.drawRoundRect(rect, 11.5f * AndroidUtilities.density, 11.5f * AndroidUtilities.density, counterPaint);
 
                 if (animateCounterReplace) {
@@ -960,10 +962,12 @@ public class FilterTabsView extends FrameLayout {
     public FilterTabsView(Context context, Theme.ResourcesProvider resourcesProvider) {
         super(context);
         this.resourcesProvider = resourcesProvider;
-        textCounterPaint.setTextSize(dpf2(11f));
+        textCounterPaint.setTextSize(dpf2(12f));
         textCounterPaint.setTypeface(AndroidUtilities.bold());
-        textPaint.setTextSize(dpf2(14f));
+        textCounterPaint.setFakeBoldText(true);
+        textPaint.setTextSize(dpf2(14.5f));
         textPaint.setTypeface(AndroidUtilities.bold());
+        textPaint.setFakeBoldText(true);
         deletePaint.setStyle(Paint.Style.STROKE);
         deletePaint.setStrokeCap(Paint.Cap.ROUND);
         deletePaint.setStrokeWidth(dp(1.5f));

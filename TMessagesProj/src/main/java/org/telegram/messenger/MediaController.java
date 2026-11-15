@@ -1149,6 +1149,8 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 int len = audioRecorder.read(buffer, buffer.capacity());
                 if (len > 0) {
                     buffer.limit(len);
+                    org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(buffer, len);
+                    buffer.position(0);
                     double sum = 0;
                     try {
                         long newSamplesCount = samplesCount + len / 2;
@@ -5048,6 +5050,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                         writtenFrame = 0;
                         samplesCount = 0;
                         fileBuffer.rewind();
+                        org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
                         audioRecorder.startRecording();
                         recordQueue.postRunnable(recordRunnable);
 
@@ -5156,7 +5159,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 recordReplyingStory = replyStory;
                 recordSendMessageChatArguments = sendMessageChatArguments;
                 fileBuffer.rewind();
-
+                org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
                 audioRecorder.startRecording();
             } catch (Exception e) {
                 FileLog.e(e);

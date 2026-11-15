@@ -85,6 +85,7 @@ public class NGSettingsActivity extends BaseFragment {
 
     private int headerMessaging;
     private int rowOneTimeVoiceVideo;
+    private int rowVoiceChanger;
     private int rowVideoShape;
     private int rowAutoAddText;
     private int rowEditText;
@@ -144,6 +145,7 @@ public class NGSettingsActivity extends BaseFragment {
 
         headerMessaging = rowCount++;
         rowOneTimeVoiceVideo = rowCount++;
+        rowVoiceChanger = rowCount++;
         rowVideoShape = -1;
         rowAutoAddText = rowCount++;
         rowEditText = rowCount++;
@@ -314,6 +316,12 @@ public class NGSettingsActivity extends BaseFragment {
                     cfg.setOneTimeVoiceVideoEnabled(checked);
                     cell.setChecked(checked);
                     BulletinFactory.of(NGSettingsActivity.this).createSimpleBulletin(R.raw.done, "One-time voice & video: " + (checked ? "On" : "Off")).show();
+                } else if (position == rowVoiceChanger) {
+                    org.nayagram.platform.audio.NGVoiceChangerManager.showDialog(getParentActivity(), () -> {
+                        if (listAdapter != null && rowVoiceChanger != -1) {
+                            listAdapter.notifyItemChanged(rowVoiceChanger);
+                        }
+                    });
                 } else if (position == rowVideoShape && rowVideoShape != -1) {
                     showVideoShapePickerDialog();
                 } else if (position == rowAutoAddText) {
@@ -901,6 +909,11 @@ public class NGSettingsActivity extends BaseFragment {
                     c.setActionFeature(R.drawable.msg_text_outlined, 0xFF0EA5E9, "Text style", "Active: " + styleName + " • Tap to choose Bold, Italic, Mono, Spoiler, Quote", true);
                 } else if (position == rowOneTimeVoiceVideo) {
                     c.setFeature(R.drawable.menu_feature_voice, 0xFF0284C7, "One-time voice & video", "Send voice messages and round videos as view-once by default", cfg.isOneTimeVoiceVideoEnabled(), true);
+                } else if (position == rowVoiceChanger) {
+                    String activeVoiceMode = org.nayagram.platform.audio.NGVoiceChangerManager.getModeTitle(
+                            org.nayagram.platform.audio.NGVoiceChangerManager.getSelectedMode(getParentActivity())
+                    );
+                    c.setActionFeature(R.drawable.menu_feature_voice, 0xFF7C3AED, "Voice Changer (Voice Notes)", "Active: " + activeVoiceMode + " • Tap to change effect", true);
                 } else if (position == rowVideoShape && rowVideoShape != -1) {
                     c.setActionFeature(R.drawable.menu_feature_voice, 0xFFEC4899, "Video Message Shapes", cfg.getVideoShapeName(cfg.getVideoShape()), true);
                 } else if (position == rowAutoAddText) {

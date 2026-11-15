@@ -2825,8 +2825,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                         updateFieldHint(true);
                     }
                 });
-
-
+            }
 
             attachButton = new ImageView(context) {
                 @Override

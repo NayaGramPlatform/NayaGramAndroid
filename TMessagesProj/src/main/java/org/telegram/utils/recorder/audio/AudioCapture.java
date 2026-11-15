@@ -93,6 +93,7 @@ final class AudioCapture {
                 return;
             }
             long encoderStartedAtMs = SystemClock.elapsedRealtime();
+            org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
             encoder = AudioRecorderNative.create(outputFile, SAMPLE_RATE, prefixFile);
             if (encoder == null) {
                 throw new IllegalStateException("Unable to initialize native Opus recorder");
@@ -242,6 +243,9 @@ final class AudioCapture {
             frameBuffer.position(0);
             frameBuffer.limit(byteCount);
         }
+        org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(frameBuffer, byteCount);
+        frameBuffer.position(0);
+        frameBuffer.limit(byteCount);
         if (encoder == null || encoder.writeFrame(frameBuffer, byteCount) == 0) {
             throw new IllegalStateException("Native Opus encoding failed");
         }

@@ -202,7 +202,7 @@ public final class NGHiddenAccounts {
                         .show();
             });
         } else {
-            o.add(R.drawable.msg_view_file, "Hide account", () -> requestHide(fragment, account));
+            o.add(R.drawable.msg_view_file, "Hide account", Theme.key_windowBackgroundWhiteBlueText4, Theme.key_actionBarDefaultSubmenuItem, () -> requestHide(fragment, account));
         }
     }
 

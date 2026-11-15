@@ -29,6 +29,8 @@ import org.telegram.messenger.R;
 import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
+import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.ActionBarMenuItem;
 import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
@@ -74,9 +76,10 @@ public class NGAutoReplyActivity extends BaseFragment {
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarWhiteSelector), false);
         actionBar.setTitleColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
 
-        var menu = actionBar.createMenu();
+        ActionBarMenu menu = actionBar.createMenu();
         boolean currentEnabled = AutoReplyManager.getInstance().isAutoReplyEnabled();
-        menu.addItem(MENU_TOGGLE, currentEnabled ? R.drawable.ic_ab_search : R.drawable.ic_close_white);
+        final ActionBarMenuItem toggleMenuItem = menu.addItem(MENU_TOGGLE, currentEnabled ? R.drawable.msg_notifications : R.drawable.msg_mute);
+        toggleMenuItem.setContentDescription("Toggle Auto Answer");
         menu.addItem(MENU_DONE, R.drawable.ic_ab_done);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
@@ -94,17 +97,17 @@ public class NGAutoReplyActivity extends BaseFragment {
                 } else if (id == MENU_TOGGLE) {
                     boolean newState = !AutoReplyManager.getInstance().isAutoReplyEnabled();
                     AutoReplyManager.getInstance().setAutoReplyEnabled(newState);
+                    toggleMenuItem.setIcon(newState ? R.drawable.msg_notifications : R.drawable.msg_mute);
                     if (autoAnswerSwitch != null) {
                         suppressTextWatcher = true;
                         autoAnswerSwitch.setChecked(newState, true);
                         suppressTextWatcher = false;
                     }
                     if (autoAnswerStatusBadge != null) {
-                        autoAnswerStatusBadge.setText(newState ? "ACTIVE" : "OFF");
-                        autoAnswerStatusBadge.setTextColor(newState ? 0xFF10B981 : 0xFFEF4444);
+                        updateStatusPillBadge(autoAnswerStatusBadge, newState, 0xFF10B981, isDark);
                     }
                     BulletinFactory.of(NGAutoReplyActivity.this)
-                            .createSimpleBulletin(R.raw.done, newState ? "Auto-answer enabled (1-Click)" : "Auto-answer disabled")
+                            .createSimpleBulletin(newState ? R.raw.done : R.raw.chats_infotip, newState ? "Auto-answer enabled (1-Click)" : "Auto-answer disabled (1-Click)")
                             .show();
                 } else if (id == MENU_RESET_HISTORY) {
                     AutoReplyManager.getInstance().clearAnsweredDialogs();
