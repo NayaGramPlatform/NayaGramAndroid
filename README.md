@@ -3,7 +3,7 @@
 # 💎 NayaGram Messenger for Android
 ### Official Development Repository (`NayaGramAndroid`)
 
-<img src="https://i.postimg.cc/Ssc2vBFJ/Naya-Gram-Platform-Open-Source.png" width="720" alt="NayaGram Platform Open Source" />
+<img src="https://i.postimg.cc/HxSxRdZF/Naya-Gram-Un-Official-Tele-Gram-Client-Platform.png" width="720" alt="NayaGram Unofficial Telegram Client Platform" />
 
 <p>
   <a href="https://t.me/NayaGramPro"><img src="https://img.shields.io/badge/Telegram-@NayaGramPro-2CA5E0?style=flat-square&logo=telegram&logoColor=white" alt="Telegram"/></a>
