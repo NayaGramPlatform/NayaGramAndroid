@@ -52,6 +52,7 @@ public class NGAutoReplyActivity extends BaseFragment {
 
     private static final int MENU_DONE = 1;
     private static final int MENU_RESET_HISTORY = 2;
+    private static final int MENU_TOGGLE = 3;
 
     private Switch autoAnswerSwitch;
     private TextView autoAnswerStatusBadge;
@@ -73,7 +74,10 @@ public class NGAutoReplyActivity extends BaseFragment {
         actionBar.setItemsBackgroundColor(Theme.getColor(Theme.key_actionBarWhiteSelector), false);
         actionBar.setTitleColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
 
-        actionBar.createMenu().addItem(MENU_DONE, R.drawable.ic_ab_done);
+        var menu = actionBar.createMenu();
+        boolean currentEnabled = AutoReplyManager.getInstance().isAutoReplyEnabled();
+        menu.addItem(MENU_TOGGLE, currentEnabled ? R.drawable.ic_ab_search : R.drawable.ic_close_white);
+        menu.addItem(MENU_DONE, R.drawable.ic_ab_done);
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(int id) {
@@ -87,6 +91,21 @@ public class NGAutoReplyActivity extends BaseFragment {
                             .createSimpleBulletin(R.raw.done, "Auto answer saved")
                             .show();
                     finishFragment();
+                } else if (id == MENU_TOGGLE) {
+                    boolean newState = !AutoReplyManager.getInstance().isAutoReplyEnabled();
+                    AutoReplyManager.getInstance().setAutoReplyEnabled(newState);
+                    if (autoAnswerSwitch != null) {
+                        suppressTextWatcher = true;
+                        autoAnswerSwitch.setChecked(newState, true);
+                        suppressTextWatcher = false;
+                    }
+                    if (autoAnswerStatusBadge != null) {
+                        autoAnswerStatusBadge.setText(newState ? "ACTIVE" : "OFF");
+                        autoAnswerStatusBadge.setTextColor(newState ? 0xFF10B981 : 0xFFEF4444);
+                    }
+                    BulletinFactory.of(NGAutoReplyActivity.this)
+                            .createSimpleBulletin(R.raw.done, newState ? "Auto-answer enabled (1-Click)" : "Auto-answer disabled")
+                            .show();
                 } else if (id == MENU_RESET_HISTORY) {
                     AutoReplyManager.getInstance().clearAnsweredDialogs();
                     BulletinFactory.of(NGAutoReplyActivity.this)

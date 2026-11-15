@@ -2826,17 +2826,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     }
                 });
 
-                ngTextStyleButton = new ImageView(context);
-                ngTextStyleButton.setImageResource(R.drawable.msg_text_outlined);
-                ngTextStyleButton.setScaleType(ImageView.ScaleType.CENTER);
-                ngTextStyleButton.setContentDescription("Text style");
-                ngTextStyleButton.setBackgroundDrawable(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector)));
-                updateNgTextStyleButtonColor();
-                attachLayout.addView(ngTextStyleButton, LayoutHelper.createLinear(DEFAULT_HEIGHT, DEFAULT_HEIGHT));
-                ngTextStyleButton.setOnClickListener(v -> {
-                    org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(getContext(), this::updateNgTextStyleButtonColor);
-                });
-            }
+
 
             attachButton = new ImageView(context) {
                 @Override
@@ -8840,7 +8830,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             if (botButton != null && botButton.getVisibility() == VISIBLE) extraAttachIcons++;
             if (notifyButton != null && notifyButton.getVisibility() == VISIBLE) extraAttachIcons++;
             if (scheduledButton != null && (scheduledButton.getVisibility() == VISIBLE || scheduledButton.getTag() != null)) extraAttachIcons++;
-            if (ngTextStyleButton != null && ngTextStyleButton.getVisibility() == VISIBLE) extraAttachIcons++;
+
             layoutParams.rightMargin = dp(50 + 48 * Math.min(3, extraAttachIcons));
         } else {
             if (scheduledButton != null && scheduledButton.getTag() != null) {
@@ -10480,17 +10470,6 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     private void updateNgTextStyleButtonColor() {
-        if (ngTextStyleButton == null) return;
-        try {
-            int style = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
-            if (style != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR
-                    && style != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE) {
-                int badgeColor = org.nayagram.platform.textstyle.NGTextStyleHelper.getStyleBadgeColor(style);
-                ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(badgeColor, PorterDuff.Mode.SRC_IN));
-            } else {
-                ngTextStyleButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));
-            }
-        } catch (Throwable ignored) {}
     }
 
     private void updateRecordedDeleteIconColors() {
