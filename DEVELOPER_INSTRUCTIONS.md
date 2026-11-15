@@ -1,98 +1,87 @@
-# 🚀 NayaGram Android - Azmat Bhaiyya Local Build Guide
+# 🚀 NayaGram Android — Developer & Contributor Build Guide
 
-Welcome Azmat Bhaiyya! This repository is completely pre-configured and cleaned up for building **NayaGram Android** (Release APK & Google Play AAB bundle).
+Complete instructions for building **NayaGram Android** (`org.nayagram.platform`, **v4.26.75 NG / Build 4097**) from [**NayaGramPlatform/NayaGramAndroid**](https://github.com/NayaGramPlatform/NayaGramAndroid).
 
 ---
 
 ## 🛠️ 1. System Requirements & Prerequisites
 
-Ensure the following tools are installed on your machine:
-* **Operating System:** Linux, macOS, or Windows (WSL2 recommended for Windows)
-* **JDK:** OpenJDK 17 or Temurin JDK 17 (set `JAVA_HOME` to JDK 17)
-* **Android Studio:** Android Studio 2024.2+ (Ladybug / Meerkat / 2025.1+)
-* **Android SDK:**
-  - Android SDK Platform 36 (Android 16 / UpsideDownCake/Baklava)
+* **Operating System:** Linux, macOS, or Windows (WSL2 recommended)
+* **JDK:** OpenJDK 17 or Temurin JDK 17 (`JAVA_HOME` configured to JDK 17)
+* **Android Studio:** Android Studio 2025.1+
+* **Android SDK & Native Tooling:**
+  - Android SDK Platform: `36`
   - Android SDK Build-Tools: `36.0.0`
-  - CMake: `3.22.1` (install via Android Studio SDK Manager -> SDK Tools -> CMake)
-  - Android NDK: `27.2.12479018` (install via SDK Tools -> NDK Side by side -> 27.2.12479018)
+  - CMake: `3.22.1`
+  - Android NDK: `27.2.12479018`
 
 ---
 
-## 📥 2. Cloning the Repository (Crucial: Submodules Required)
+## 📥 2. Cloning the Repository (Submodules Required)
 
-Telegram relies on native C++ libraries (BoringSSL, FFmpeg, Libvpx, WebRTC, Media3). You **MUST** clone with `--recursive`:
+NayaGram uses native C++ libraries (`boringssl`, `ffmpeg`, `libvpx`, `tgcalls`, `tdlib`, `media3`, etc.). Always clone with `--recursive`:
 
 ```bash
-git clone --recursive https://github.com/NayaGramPlatform/NGAndroid.git
-cd NGAndroid
+git clone --recursive https://github.com/NayaGramPlatform/NayaGramAndroid.git
+cd NayaGramAndroid
 ```
 
-*(If you already cloned without submodules, run:)*
+*(If you already cloned without submodules, initialize them via:)*
 ```bash
+git submodule sync --recursive
 git submodule update --init --recursive
 ```
 
 ---
 
-## ⚙️ 3. Environment & Local Configuration
+## ⚙️ 3. Credentials & Local Environment Setup
 
-1. **Create `local.properties`** in the root directory if not present:
-```properties
-sdk.dir=/path/to/your/Android/Sdk
-ndk.dir=/path/to/your/Android/Sdk/ndk/27.2.12479018
-```
+For security, private API keys, Firebase configs, and signing keystores are never hardcoded into source code.
 
-2. **Signing Keystore:**
-- The release keystore is located at: `TMessagesProj/config/release.keystore`
-- Passwords are pre-configured in `gradle.properties`.
+1. **Create `local.properties`** in the project root:
+   ```properties
+   sdk.dir=/path/to/your/Android/Sdk
+   ndk.dir=/path/to/your/Android/Sdk/ndk/27.2.12479018
+   ```
 
-3. **Memory Allocation:**
-In `gradle.properties`, ensure you have sufficient heap:
-```properties
-org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g
-org.gradle.parallel=true
-```
+2. **Get & Set Telegram API Credentials:**
+   Log in at [**https://my.telegram.org**](https://my.telegram.org) (see [**API ID instructions**](https://core.telegram.org/api/obtaining_api_id)) to obtain your own `api_id` and `api_hash`, then export them or pass them as Gradle `-P` flags:
+   ```bash
+   export TELEGRAM_API_ID=YOUR_API_ID
+   export TELEGRAM_API_HASH=YOUR_API_HASH
+   ```
+
+3. **Firebase & Maps Configuration:**
+   - Replace `google-services.json` in `TMessagesProj_App/` and sibling app modules with your own Firebase project file if you need FCM push notifications.
+   - Replace `com.google.android.maps.v2.API_KEY` inside `TMessagesProj/config/*/AndroidManifest*.xml` with your own Google Maps Android API key if map previews are needed.
+
+4. **Signing Keystore (for Release APK / AAB builds):**
+   Supply your keystore via environment variables or `-P` flags:
+   ```bash
+   export RELEASE_KEYSTORE_PATH=/path/to/your-release.jks
+   export RELEASE_STORE_PASSWORD=your_store_password
+   export RELEASE_KEY_PASSWORD=your_key_password
+   export RELEASE_KEY_ALIAS=your_key_alias
+   ```
 
 ---
 
-## 🔨 4. How to Build via Command Line
+## 🔨 4. Building via Command Line
 
-### A. Build Universal Release APK (For Direct Installation / Testing):
-```bash
-./gradlew :TMessagesProj_App:assembleAfatRelease -Pandroid.stripDebugSymbol.enable=false
-```
-*Output Location:*
-`TMessagesProj_App/build/outputs/apk/afat/release/TMessagesProj_App-afat-release.apk`
-
-### B. Build Google Play Release AAB Bundle (For Play Store Submission):
-```bash
-./gradlew :TMessagesProj_App:bundleBundleAfatRelease -Pandroid.stripDebugSymbol.enable=false
-```
-*Output Location:*
-`TMessagesProj_App/build/outputs/bundle/bundleAfatRelease/TMessagesProj_App-bundleAfatRelease.aab`
+* **Build Universal Release APK:**
+  ```bash
+  ./gradlew :TMessagesProj_App:assembleAfatRelease
+  ```
+* **Build Google Play Release AAB (SDK 24+):**
+  ```bash
+  ./gradlew :TMessagesProj_App:bundleBundleAfat_SDK23Release
+  ```
 
 ---
 
 ## 💻 5. Opening in Android Studio
 
-1. Open Android Studio.
-2. Select **"Open"** (Do **NOT** choose "Import").
-3. Select the `NGAndroid` root folder.
-4. Wait for Gradle Sync to complete.
-5. In the Build Variants tool window (bottom left), select:
-   - Module: `:TMessagesProj_App`
-   - Variant: `afatRelease` or `afatDebug`
-6. Click **Build > Generate Signed Bundle / APK...** or run directly from the Run button.
-
----
-
-## 🔍 6. Codebase Fixes Already Completed
-
-All legacy Telegram & NayaGram syntax/resource bugs have been permanently resolved in this branch:
-1. **Resource Names:** Cleaned double extensions (e.g. `*.png.png`).
-2. **Duplicate Resources:** Removed conflicting WebP / PNG mipmaps.
-3. **XML Lint:** Fixed unsupported `iconSpaceReserved` attribute in anti-delete preferences.
-4. **Java Syntax:** Fixed escaped newlines in `NGSettingsActivity.java` and restored `ContactsWidgetProvider.java`.
-5. **Dynamic Metadata:** Eliminated duplicate `ResLottieMeta.java` class collision.
-6. **Dependencies:** Restored upstream `Media3` and `WebKit` modules in `TMessagesProj/build.gradle`.
-7. **Namespace & App Package:** Internal library namespace is strictly `org.telegram.messenger` to preserve 3,000+ `R.class` references, while final application ID is `org.nayagram.platform`.
+1. Open **Android Studio** and select **Open** *(do **not** choose Import)*.
+2. Select the `NayaGramAndroid` root folder and wait for Gradle Sync to finish.
+3. Ensure `TELEGRAM_API_ID` and `TELEGRAM_API_HASH` are available in your environment or `local` Gradle properties *(never commit secrets to Git)*.
+4. In **Build Variants**, select `:TMessagesProj_App` → `afatDebug` or `afatRelease` and run.
