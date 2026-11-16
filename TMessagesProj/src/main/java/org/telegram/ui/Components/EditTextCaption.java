@@ -40,6 +40,7 @@ import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
@@ -316,41 +317,96 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
     }
 
     public void makeSelectedUrl(Runnable onApplied) {
-        final int start;
-        final int end;
+        final Editable currentText = getText();
+        final int textLen = currentText != null ? currentText.length() : 0;
+        int rawStart;
+        int rawEnd;
         if (selectionStart >= 0 && selectionEnd >= 0) {
-            start = selectionStart;
-            end = selectionEnd;
+            rawStart = selectionStart;
+            rawEnd = selectionEnd;
             selectionStart = selectionEnd = -1;
         } else {
-            start = getSelectionStart();
-            end = getSelectionEnd();
+            rawStart = getSelectionStart();
+            rawEnd = getSelectionEnd();
         }
+        rawStart = Math.max(0, Math.min(rawStart, textLen));
+        rawEnd = Math.max(0, Math.min(rawEnd, textLen));
+        if (rawStart > rawEnd) {
+            int tmp = rawStart;
+            rawStart = rawEnd;
+            rawEnd = tmp;
+        }
+        // If user clicked Create Link with only a cursor (no highlighted selection),
+        // auto-detect the adjacent/enclosing word so single-tap formatting works effortlessly.
+        if (rawStart == rawEnd && currentText != null && textLen > 0) {
+            int wStart = rawStart;
+            int wEnd = rawEnd;
+            while (wStart > 0 && !Character.isWhitespace(currentText.charAt(wStart - 1))) {
+                wStart--;
+            }
+            while (wEnd < textLen && !Character.isWhitespace(currentText.charAt(wEnd))) {
+                wEnd++;
+            }
+            if (wEnd > wStart) {
+                rawStart = wStart;
+                rawEnd = wEnd;
+                try {
+                    setSelection(rawStart, rawEnd);
+                } catch (Exception ignored) {}
+            }
+        }
+        final int start = rawStart;
+        final int end = rawEnd;
+
+        String initialUrl = "http://";
+        if (currentText != null && end > start) {
+            URLSpanReplacement[] existing = currentText.getSpans(start, end, URLSpanReplacement.class);
+            if (existing != null && existing.length > 0 && !TextUtils.isEmpty(existing[0].getURL())) {
+                initialUrl = existing[0].getURL();
+            }
+        }
+
+        if (start == end) {
+            showCreateLinkWithTextDialog(start, initialUrl, onApplied);
+            return;
+        }
+
         showInputDialog(
             LocaleController.getString(R.string.CreateLink),
             LocaleController.getString(R.string.URL),
-            "http://",
+            initialUrl,
             true,
             url -> {
+                if (TextUtils.isEmpty(url)) {
+                    return;
+                }
                 Editable editable = getText();
-                CharacterStyle[] spans = editable.getSpans(start, end, CharacterStyle.class);
+                if (editable == null) {
+                    return;
+                }
+                int safeStart = Math.max(0, Math.min(start, editable.length()));
+                int safeEnd = Math.max(safeStart, Math.min(end, editable.length()));
+                if (safeEnd <= safeStart) {
+                    return;
+                }
+                CharacterStyle[] spans = editable.getSpans(safeStart, safeEnd, CharacterStyle.class);
                 if (spans != null && spans.length > 0) {
                     for (CharacterStyle oldSpan : spans) {
                         if (!(oldSpan instanceof AnimatedEmojiSpan) && !(oldSpan instanceof QuoteSpan.QuoteStyleSpan)) {
                             int spanStart = editable.getSpanStart(oldSpan);
                             int spanEnd = editable.getSpanEnd(oldSpan);
                             editable.removeSpan(oldSpan);
-                            if (spanStart < start) {
-                                editable.setSpan(oldSpan, spanStart, start, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            if (spanStart < safeStart) {
+                                editable.setSpan(oldSpan, spanStart, safeStart, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             }
-                            if (spanEnd > end) {
-                                editable.setSpan(oldSpan, end, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            if (spanEnd > safeEnd) {
+                                editable.setSpan(oldSpan, safeEnd, spanEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             }
                         }
                     }
                 }
                 try {
-                    editable.setSpan(createUrlSpan(url), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    editable.setSpan(createUrlSpan(url), safeStart, safeEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 } catch (Exception ignore) {}
                 if (delegate != null) {
                     delegate.onSpansChanged();
@@ -360,6 +416,92 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
                 }
             }
         );
+    }
+
+    private void showCreateLinkWithTextDialog(int insertAt, String initialUrl, Runnable onApplied) {
+        if (!AndroidUtilities.isSafeToShow(getContext())) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), resourcesProvider);
+        builder.setTitle(LocaleController.getString(R.string.CreateLink));
+
+        LinearLayout container = new LinearLayout(getContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(4), AndroidUtilities.dp(24), AndroidUtilities.dp(4));
+
+        final EditTextBoldCursor labelField = new EditTextBoldCursor(getContext());
+        labelField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        labelField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        labelField.setHintText("Text");
+        labelField.setHeaderHintColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader));
+        labelField.setSingleLine(true);
+        labelField.setFocusable(true);
+        labelField.setTransformHintToHeader(true);
+        labelField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_text_RedRegular));
+        labelField.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+        labelField.setBackgroundDrawable(null);
+        labelField.setPadding(0, 0, 0, 0);
+        labelField.setHighlightColor(getThemedColor(Theme.key_chat_inTextSelectionHighlight));
+        labelField.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
+        container.addView(labelField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48, 0, 0, 0, 6));
+
+        final EditTextBoldCursor urlField = new EditTextBoldCursor(getContext());
+        urlField.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18);
+        urlField.setText(initialUrl == null ? "http://" : initialUrl);
+        urlField.setTextColor(getThemedColor(Theme.key_dialogTextBlack));
+        urlField.setHintText(LocaleController.getString(R.string.URL));
+        urlField.setHeaderHintColor(getThemedColor(Theme.key_windowBackgroundWhiteBlueHeader));
+        urlField.setSingleLine(true);
+        urlField.setFocusable(true);
+        urlField.setTransformHintToHeader(true);
+        urlField.setLineColors(getThemedColor(Theme.key_windowBackgroundWhiteInputField), getThemedColor(Theme.key_windowBackgroundWhiteInputFieldActivated), getThemedColor(Theme.key_text_RedRegular));
+        urlField.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        urlField.setBackgroundDrawable(null);
+        urlField.setPadding(0, 0, 0, 0);
+        urlField.setHighlightColor(getThemedColor(Theme.key_chat_inTextSelectionHighlight));
+        urlField.setHandlesColor(getThemedColor(Theme.key_chat_TextSelectionCursor));
+        container.addView(urlField, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, 48));
+
+        builder.setView(container);
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), (dialogInterface, i) -> {
+            String url = urlField.getText().toString().trim();
+            String label = labelField.getText().toString().trim();
+            if (TextUtils.isEmpty(url)) {
+                return;
+            }
+            if (TextUtils.isEmpty(label)) {
+                label = url;
+            }
+            Editable editable = getText();
+            if (editable == null) {
+                return;
+            }
+            int safePos = Math.max(0, Math.min(insertAt, editable.length()));
+            editable.insert(safePos, label);
+            try {
+                editable.setSpan(createUrlSpan(url), safePos, safePos + label.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            } catch (Exception ignore) {}
+            try {
+                setSelection(safePos + label.length());
+            } catch (Exception ignore) {}
+            if (delegate != null) {
+                delegate.onSpansChanged();
+            }
+            if (onApplied != null) {
+                onApplied.run();
+            }
+        });
+        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+        creationLinkDialog = builder.create();
+        creationLinkDialog.setOnDismissListener(dialog -> {
+            creationLinkDialog = null;
+            requestFocus();
+        });
+        creationLinkDialog.setOnShowListener(dialog -> {
+            labelField.requestFocus();
+            AndroidUtilities.showKeyboard(labelField);
+        });
+        creationLinkDialog.show();
     }
 
     public interface InputDialogCallback {
@@ -378,12 +520,11 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
 
     public void showInputDialog(String title, String hint, String initial, boolean showPaste,
                                 boolean adaptive, InputDialogCallback callback) {
-        AlertDialog.Builder builder;
-        if (adaptive) {
-            builder = new AlertDialogDecor.Builder(getContext(), resourcesProvider);
-        } else {
-            builder = new AlertDialog.Builder(getContext(), resourcesProvider);
+        if (!AndroidUtilities.isSafeToShow(getContext())) {
+            return;
         }
+        // Standard AlertDialog.Builder opens reliably across Scheduled Messages, photo captions, and MIUI/HyperOS.
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), resourcesProvider);
         builder.setTitle(title);
 
         FrameLayout container = new FrameLayout(getContext());
@@ -482,23 +623,17 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
             callback.run(editText.getText().toString().trim());
         });
         builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
-        if (adaptive) {
-            creationLinkDialog = builder.create();
-            creationLinkDialog.setOnDismissListener(dialog -> {
-                creationLinkDialog = null;
-                requestFocus();
-            });
-            creationLinkDialog.setOnShowListener(dialog -> {
-                editText.requestFocus();
-                AndroidUtilities.showKeyboard(editText);
-            });
-            creationLinkDialog.showDelayed(250);
-        } else {
-            builder.show().setOnShowListener(dialog -> {
-                editText.requestFocus();
-                AndroidUtilities.showKeyboard(editText);
-            });
-        }
+        creationLinkDialog = builder.create();
+        creationLinkDialog.setOnDismissListener(dialog -> {
+            creationLinkDialog = null;
+            requestFocus();
+        });
+        creationLinkDialog.setOnShowListener(dialog -> {
+            editText.requestFocus();
+            AndroidUtilities.showKeyboard(editText);
+            editText.setSelection(0, editText.getText().length());
+        });
+        creationLinkDialog.show();
         if (editText != null) {
             ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) editText.getLayoutParams();
             if (layoutParams != null) {

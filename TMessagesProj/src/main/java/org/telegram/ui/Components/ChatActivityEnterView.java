@@ -46,6 +46,7 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -640,6 +641,11 @@ public class ChatActivityEnterView extends FrameLayout implements
     private AiButtonDrawable aiButtonIcon;
     private ImageView aiButton;
     private ImageView richButton;
+    private View ngFormatButton;
+    private final Paint ngFormatTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final RectF ngFormatLineRect = new RectF();
+    private float lastFormatButtonTranslationX = Float.NaN;
     private float attachButtonAlpha = 1.0f;
     private ImageView suggestButton;
     @Nullable
@@ -2849,6 +2855,40 @@ public class ChatActivityEnterView extends FrameLayout implements
             updateFieldRight(1);
         }
 
+        ngFormatTextPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        ngFormatTextPaint.setTextAlign(Paint.Align.CENTER);
+        ngFormatTextPaint.setTextSize(dpf2(16.5f));
+        ngFormatButton = new View(context) {
+            @Override
+            public boolean dispatchTouchEvent(MotionEvent event) {
+                if (getAlpha() < 0.5f || getVisibility() != VISIBLE) return false;
+                return super.dispatchTouchEvent(event);
+            }
+
+            @Override
+            protected void onDraw(Canvas canvas) {
+                super.onDraw(canvas);
+                float cx = getWidth() / 2f;
+                float cy = getHeight() / 2f;
+                Paint.FontMetrics fm = ngFormatTextPaint.getFontMetrics();
+                float baseline = cy - dp(1.5f) - (fm.ascent + fm.descent) / 2f;
+                canvas.drawText("A", cx, baseline, ngFormatTextPaint);
+                float halfW = dp(6.5f);
+                float top = cy + dp(6.5f);
+                ngFormatLineRect.set(cx - halfW, top, cx + halfW, top + dp(2f));
+                canvas.drawRoundRect(ngFormatLineRect, dp(1f), dp(1f), ngFormatLinePaint);
+            }
+        };
+        ngFormatButton.setContentDescription("Format text");
+        ScaleStateListAnimator.apply(ngFormatButton);
+        ngFormatButton.setOnClickListener(v -> showQuickFormatMenu());
+        ngFormatButton.setVisibility(View.GONE);
+        ngFormatButton.setAlpha(0.0f);
+        ngFormatButton.setScaleX(0.6f);
+        ngFormatButton.setScaleY(0.6f);
+        messageEditTextContainer.addView(ngFormatButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.BOTTOM | Gravity.RIGHT));
+        updateNgTextStyleButtonColor();
+
         aiButton = new ImageView(context);
         aiButton.setImageDrawable(aiButtonIcon = new AiButtonDrawable(context));
         aiButton.setScaleType(ImageView.ScaleType.CENTER);
@@ -4027,6 +4067,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             public void setVisibility(int visibility) {
                 super.setVisibility(visibility);
                 updateSendAsButton();
+                updateFormatButton();
             }
         };
         recordedAudioPanel.setVisibility(audioToSend == null ? GONE : VISIBLE);
@@ -5548,8 +5589,10 @@ public class ChatActivityEnterView extends FrameLayout implements
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             if (isInitLineCount) {
                 lineCount = getLineCount();
-                showAiButton(lineCount > 2 && !TextUtils.isEmpty(getText().toString().trim()));
-                showRichButton(lineCount > 2 && !TextUtils.isEmpty(getText().toString().trim()));
+                boolean hasText = getText() != null && !TextUtils.isEmpty(getText().toString().trim());
+                showAiButton(lineCount > 2 && hasText);
+                showRichButton(lineCount > 2 && hasText);
+                showFormatButton(hasText);
             }
             isInitLineCount = false;
         }
@@ -5806,8 +5849,10 @@ public class ChatActivityEnterView extends FrameLayout implements
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
                 if (lineCount != messageEditText.getLineCount()) {
-                    showAiButton(messageEditText.getLineCount() > 2 && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim()));
-                    showRichButton(messageEditText.getLineCount() > 2 && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim()));
+                    boolean hasText = messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim());
+                    showAiButton(messageEditText.getLineCount() > 2 && hasText);
+                    showRichButton(messageEditText.getLineCount() > 2 && hasText);
+                    showFormatButton(hasText);
                 }
             }
         };
@@ -5983,6 +6028,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                     nextChangeIsSend = true;
                 }
                 isPaste = false;
+                showFormatButton(charSequence != null && !TextUtils.isEmpty(charSequence.toString().trim()));
                 checkSendButton(true);
                 CharSequence message = AndroidUtilities.getTrimmedString(charSequence.toString());
                 if (delegate != null) {
@@ -6084,9 +6130,11 @@ public class ChatActivityEnterView extends FrameLayout implements
                     }
                 }
 
-                showAiButton(lineCount > 2 && editable != null && !TextUtils.isEmpty(editable.toString().trim()));
+                boolean hasText = editable != null && !TextUtils.isEmpty(editable.toString().trim());
+                showAiButton(lineCount > 2 && hasText);
                 checkIsEphemeralMessage(true);
-                showRichButton(lineCount > 2 && editable != null && !TextUtils.isEmpty(editable.toString().trim()));
+                showRichButton(lineCount > 2 && hasText);
+                showFormatButton(hasText);
             }
         });
         messageEditText.addTextChangedListener(new EditTextSuggestionsFix());
@@ -6177,6 +6225,206 @@ public class ChatActivityEnterView extends FrameLayout implements
                 }
             })
             .start();
+    }
+
+    private boolean shownFormatButton;
+    private void updateFormatButton() {
+        boolean hasText = messageEditText != null && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim());
+        showFormatButton(hasText);
+    }
+
+    private void showFormatButton(boolean show_) {
+        if (ngFormatButton == null) {
+            return;
+        }
+        final boolean show = show_ && !isLiveComment && !richDraftActive && !recordingAudioVideo && (recordedAudioPanel == null || recordedAudioPanel.getVisibility() != View.VISIBLE);
+        if (shownFormatButton == show) {
+            if (show) {
+                updateFormatButtonTranslationX(true);
+            }
+            return;
+        }
+        shownFormatButton = show;
+        updateFormatButtonRightMargin();
+        updateFormatButtonTranslationX(false);
+        ngFormatButton.setVisibility(View.VISIBLE);
+        ngFormatButton.animate()
+            .alpha(show ? 1.0f : 0.0f)
+            .scaleX(show ? 1.0f : 0.6f)
+            .scaleY(show ? 1.0f : 0.6f)
+            .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+            .setDuration(240)
+            .withEndAction(() -> {
+                if (!shownFormatButton && ngFormatButton != null) {
+                    ngFormatButton.setVisibility(View.GONE);
+                }
+            })
+            .start();
+    }
+
+    private void updateFormatButtonRightMargin() {
+        if (messageEditText == null) {
+            return;
+        }
+        if (editingMessageObject != null && !editingMessageObject.needResendWhenEdit()) {
+            FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
+            int targetMargin = shownFormatButton ? dp(44) : dp(4);
+            if (layoutParams.rightMargin != targetMargin) {
+                layoutParams.rightMargin = targetMargin;
+                messageEditText.setLayoutParams(layoutParams);
+            }
+        } else {
+            updateFieldRight(lastAttachVisible);
+        }
+    }
+
+    private void updateFormatButtonTranslationX(boolean animated) {
+        if (ngFormatButton == null) {
+            return;
+        }
+        float target = attachLayoutPaddingTranslationX + attachLayoutTranslationX;
+        if (editingMessageObject == null && sendButton != null) {
+            target += -Math.max(0, sendButton.width() - dp(DEFAULT_HEIGHT + 12)) * sendButton.getAlpha();
+        }
+        if (attachButton != null && attachButton.getVisibility() == View.VISIBLE && attachButtonAlpha > 0.05f) {
+            target -= dp(38);
+        }
+        if (Float.compare(target, lastFormatButtonTranslationX) == 0) {
+            return;
+        }
+        lastFormatButtonTranslationX = target;
+        if (animated && ngFormatButton.getVisibility() == View.VISIBLE) {
+            ngFormatButton.animate()
+                .translationX(target)
+                .setInterpolator(CubicBezierInterpolator.EASE_OUT_QUINT)
+                .setDuration(180)
+                .start();
+        } else {
+            ngFormatButton.setTranslationX(target);
+        }
+    }
+
+    private void showQuickFormatMenu() {
+        if (messageEditText == null || messageEditText.getText() == null) {
+            return;
+        }
+        Editable editable = messageEditText.getText();
+        int len = editable.length();
+        if (len == 0) {
+            return;
+        }
+        int rawStart = Math.max(0, Math.min(messageEditText.getSelectionStart(), len));
+        int rawEnd = Math.max(0, Math.min(messageEditText.getSelectionEnd(), len));
+        if (rawStart > rawEnd) {
+            int tmp = rawStart;
+            rawStart = rawEnd;
+            rawEnd = tmp;
+        }
+        final boolean hasExplicitSelection = rawEnd > rawStart;
+        int targetStart = rawStart;
+        int targetEnd = rawEnd;
+        if (!hasExplicitSelection) {
+            int wStart = rawStart;
+            int wEnd = rawEnd;
+            while (wStart > 0 && !Character.isWhitespace(editable.charAt(wStart - 1))) {
+                wStart--;
+            }
+            while (wEnd < len && !Character.isWhitespace(editable.charAt(wEnd))) {
+                wEnd++;
+            }
+            if (wEnd == wStart) {
+                int p = rawStart;
+                while (p > 0 && Character.isWhitespace(editable.charAt(p - 1))) {
+                    p--;
+                }
+                if (p > 0) {
+                    wStart = p;
+                    wEnd = p;
+                    while (wStart > 0 && !Character.isWhitespace(editable.charAt(wStart - 1))) {
+                        wStart--;
+                    }
+                }
+            }
+            if (wEnd > wStart) {
+                targetStart = wStart;
+                targetEnd = wEnd;
+            }
+        }
+        final int applyStart = targetStart;
+        final int applyEnd = targetEnd;
+        final int cursorStart = rawStart;
+        final int cursorEnd = rawEnd;
+
+        ItemOptions options = parentFragment != null
+            ? ItemOptions.makeOptions(parentFragment, ngFormatButton)
+            : ItemOptions.makeOptions(sizeNotifierLayout != null ? sizeNotifierLayout : this, resourcesProvider, ngFormatButton);
+
+        Runnable prepareSelection = () -> {
+            if (messageEditText != null && applyEnd > applyStart) {
+                messageEditText.setSelectionOverride(applyStart, applyEnd);
+            }
+        };
+
+        options.add(R.drawable.formatting_bold, getString(R.string.Bold), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedBold();
+        });
+        options.add(R.drawable.formatting_italic, getString(R.string.Italic), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedItalic();
+        });
+        options.add(R.drawable.formatting_code, getString(R.string.Mono), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedMono();
+        });
+        options.add(R.drawable.formatting_strikethrough, getString(R.string.Strike), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedStrike();
+        });
+        options.add(R.drawable.formatting_underline, getString(R.string.Underline), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedUnderline();
+        });
+        options.add(R.drawable.formatting_spoiler, getString(R.string.Spoiler), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedSpoiler();
+        });
+        if (parentFragment == null || parentFragment.getChatMode() == 0) {
+            options.add(R.drawable.formatting_quote, getString(R.string.Quote), () -> {
+                prepareSelection.run();
+                if (messageEditText != null) messageEditText.makeSelectedQuote();
+            });
+        }
+        options.add(R.drawable.menu_link_create2, getString(R.string.CreateLink), () -> {
+            AndroidUtilities.runOnUIThread(() -> {
+                if (messageEditText == null) return;
+                if (hasExplicitSelection) {
+                    messageEditText.setSelectionOverride(applyStart, applyEnd);
+                } else {
+                    messageEditText.setSelectionOverride(cursorStart, cursorEnd);
+                }
+                messageEditText.makeSelectedUrl();
+            }, 60);
+        });
+        options.add(R.drawable.iv_text, getString(R.string.Regular), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedRegular();
+        });
+        options.addGap();
+        options.add(R.drawable.msg_edit, "Text style...", () -> {
+            AndroidUtilities.runOnUIThread(() -> {
+                Context ctx = parentActivity != null ? parentActivity : getContext();
+                org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(ctx, this::updateColors);
+            }, 60);
+        });
+
+        options.setGravity(Gravity.RIGHT)
+            .forceTop(true)
+            .allowShowingOnTopOfKeyboard()
+            .setDimAlpha(0)
+            .setDrawScrim(false)
+            .setMaxHeight(Math.min(dp(340), (int) (AndroidUtilities.displaySize.y * 0.45f)))
+            .show();
     }
 
     public void addTextChangedListener(TextWatcher textWatcher) {
@@ -8175,7 +8423,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             } else {
                 color = getThemedColor(Theme.key_chat_messagePanelSend);
             }
-            boolean captionNearAttach = messageEditText != null && (!TextUtils.isEmpty(messageEditText.getCaption()) || messageEditText.isNearRightCaption(dp(DEFAULT_HEIGHT))) || LocaleController.isRTL;
+            boolean captionNearAttach = messageEditText != null && (!TextUtils.isEmpty(messageEditText.getCaption()) || messageEditText.isNearRightCaption(dp(DEFAULT_HEIGHT) + (shownFormatButton ? dp(38) : 0))) || LocaleController.isRTL;
 
             if (color != sendButtonBackgroundColor) {
                 sendButtonBackgroundColor = color;
@@ -8804,6 +9052,7 @@ public class ChatActivityEnterView extends FrameLayout implements
                 suggestButton.setTranslationX(shownSendButton ? -Math.max(0, sendButton.width() - dp(64)) : dp(42));
             }
         }
+        updateFormatButtonTranslationX(animated);
     }
 
     private void setSlowModeButtonVisible(boolean visible) {
@@ -8841,6 +9090,9 @@ public class ChatActivityEnterView extends FrameLayout implements
         layoutParams.rightMargin = Math.max(layoutParams.rightMargin, Math.max(0, sendButton.width() - dp(DEFAULT_HEIGHT)));
         if (doneButton != null && doneButton.getVisibility() == VISIBLE) {
             layoutParams.rightMargin = Math.max(layoutParams.rightMargin, Math.max(0, doneButton.width() - dp(DEFAULT_HEIGHT)));
+        }
+        if (shownFormatButton && !isLiveComment) {
+            layoutParams.rightMargin = Math.max(layoutParams.rightMargin, dp(44));
         }
         if (oldRightMargin != layoutParams.rightMargin) {
             messageEditText.setLayoutParams(layoutParams);
@@ -9784,7 +10036,7 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     protected void isRecordingStateChanged() {
-
+        updateFormatButton();
     }
 
     private void createRecordPanel() {
@@ -9929,6 +10181,8 @@ public class ChatActivityEnterView extends FrameLayout implements
                 attachButton.setScaleX(0.5f);
                 attachButton.setScaleY(0.5f);
             }
+            updateFormatButton();
+            updateFormatButtonTranslationX(false);
             sendButtonContainer.setVisibility(GONE);
             if (scheduledButton != null) {
                 scheduledButton.setVisibility(GONE);
@@ -10117,7 +10371,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             openKeyboard();
             if (messageEditText != null) {
                 FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) messageEditText.getLayoutParams();
-                layoutParams.rightMargin = dp(4);
+                layoutParams.rightMargin = shownFormatButton ? dp(44) : dp(4);
                 messageEditText.setLayoutParams(layoutParams);
             }
             if (recordedAudioPanel != null) {
@@ -10241,6 +10495,7 @@ public class ChatActivityEnterView extends FrameLayout implements
         updateFieldHint(true);
         updateSendAsButton(true);
         updateButtons();
+        updateFormatButtonTranslationX(false);
         updateRichDraftPreview();
     }
 
@@ -10469,6 +10724,13 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     private void updateNgTextStyleButtonColor() {
+        if (ngFormatButton == null) {
+            return;
+        }
+        ngFormatTextPaint.setColor(getThemedColor(Theme.key_glass_defaultIcon));
+        ngFormatLinePaint.setColor(getThemedColor(Theme.key_chat_messagePanelSend));
+        ngFormatButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP, dp(16)));
+        ngFormatButton.invalidate();
     }
 
     private void updateRecordedDeleteIconColors() {
@@ -10852,8 +11114,10 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     private void updateButtons() {
-        showAiButton(messageEditText != null && messageEditText.getLineCount() > 2 && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim()));
-        showRichButton(messageEditText != null && messageEditText.getLineCount() > 2 && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim()));
+        boolean hasText = messageEditText != null && messageEditText.getText() != null && !TextUtils.isEmpty(messageEditText.getText().toString().trim());
+        showAiButton(messageEditText != null && messageEditText.getLineCount() > 2 && hasText);
+        showRichButton(messageEditText != null && messageEditText.getLineCount() > 2 && hasText);
+        showFormatButton(hasText);
     }
 
     private void sendRichDraftAsSimpleMessage() {
@@ -14874,10 +15138,12 @@ public class ChatActivityEnterView extends FrameLayout implements
     }
 
     private void updateAttachButtonTranslationX() {
-        if (attachButton == null) return;
-        attachButton.setTranslationX(attachLayoutPaddingTranslationX + attachLayoutTranslationX + (sendButton != null ? (
-            -Math.max(0, sendButton.width() - dp(DEFAULT_HEIGHT + 12)) * sendButton.getAlpha()
-        ) : 0));
+        if (attachButton != null) {
+            attachButton.setTranslationX(attachLayoutPaddingTranslationX + attachLayoutTranslationX + (sendButton != null ? (
+                -Math.max(0, sendButton.width() - dp(DEFAULT_HEIGHT + 12)) * sendButton.getAlpha()
+            ) : 0));
+        }
+        updateFormatButtonTranslationX(false);
     }
 
     private void updateEmojiButtonParams() {

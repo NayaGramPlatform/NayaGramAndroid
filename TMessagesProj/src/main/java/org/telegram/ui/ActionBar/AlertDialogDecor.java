@@ -6,6 +6,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -17,6 +18,7 @@ import android.view.ContextThemeWrapper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -48,9 +50,27 @@ public class AlertDialogDecor extends AlertDialog {
     private boolean isDismissed = false;
     private long openDelay = 0;
     private final Runnable showRunnable = () -> {
+        if (isDismissed || rootView == null || contentView == null || dimView == null) {
+            return;
+        }
         rootView.setVisibility(View.VISIBLE);
         dimView.setAlpha(0);
-        contentView.startAnimation(AnimationUtils.loadAnimation(getContext(), resEnterAnimation));
+        Animation enterAnim = null;
+        if (resEnterAnimation > 0) {
+            try {
+                enterAnim = AnimationUtils.loadAnimation(getContext(), resEnterAnimation);
+            } catch (Exception ignored) {
+                enterAnim = null;
+            }
+        }
+        if (enterAnim != null) {
+            contentView.startAnimation(enterAnim);
+        } else {
+            contentView.setAlpha(0f);
+            contentView.setScaleX(0.92f);
+            contentView.setScaleY(0.92f);
+            contentView.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
+        }
         dimView.animate().setDuration(DIM_DURATION).alpha(1f).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -69,18 +89,36 @@ public class AlertDialogDecor extends AlertDialog {
         super(context, progressStyle, resourcesProvider);
     }
 
+    @Nullable
     private ViewGroup getDecorView() {
-        return ((ViewGroup) getActivity(getContext()).getWindow().getDecorView());
+        Activity activity = getActivity(getContext());
+        if (activity == null) {
+            return null;
+        }
+        Window window = activity.getWindow();
+        if (window == null) {
+            return null;
+        }
+        View decor = window.getDecorView();
+        return decor instanceof ViewGroup ? (ViewGroup) decor : null;
     }
 
     private void extractAnimations() {
-        TypedValue typedValue = new TypedValue();
-        Resources.Theme theme = getContext().getTheme();
-        theme.resolveAttribute(android.R.attr.windowAnimationStyle, typedValue, true);
-        TypedArray array = getContext().obtainStyledAttributes(typedValue.resourceId, ATTRS);
-        resEnterAnimation = array.getResourceId(0, -1);
-        resExitAnimation = array.getResourceId(1, -1);
-        array.recycle();
+        resEnterAnimation = -1;
+        resExitAnimation = -1;
+        try {
+            TypedValue typedValue = new TypedValue();
+            Resources.Theme theme = getContext().getTheme();
+            if (theme != null && theme.resolveAttribute(android.R.attr.windowAnimationStyle, typedValue, true) && typedValue.resourceId > 0) {
+                TypedArray array = getContext().obtainStyledAttributes(typedValue.resourceId, ATTRS);
+                resEnterAnimation = array.getResourceId(0, -1);
+                resExitAnimation = array.getResourceId(1, -1);
+                array.recycle();
+            }
+        } catch (Exception ignored) {
+            resEnterAnimation = -1;
+            resExitAnimation = -1;
+        }
     }
 
     @Override
@@ -108,8 +146,13 @@ public class AlertDialogDecor extends AlertDialog {
         contentWrapper.addView(contentView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
         container.addView(contentWrapper, new FrameLayout.LayoutParams(params.width, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
 
+        ViewGroup decorView = getDecorView();
+        if (decorView == null) {
+            super.show();
+            return;
+        }
         rootView = container;
-        getDecorView().addView(rootView);
+        decorView.addView(rootView);
         ViewCompat.requestApplyInsets(rootView);
         ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
             final Rect rect = new Rect();
@@ -143,7 +186,8 @@ public class AlertDialogDecor extends AlertDialog {
 
     @Override
     public boolean isShowing() {
-        return getDecorView().indexOfChild(rootView) != -1 && !isDismissed;
+        ViewGroup decorView = getDecorView();
+        return (decorView != null && rootView != null && decorView.indexOfChild(rootView) != -1 && !isDismissed) || super.isShowing();
     }
 
     @Override
@@ -158,7 +202,9 @@ public class AlertDialogDecor extends AlertDialog {
 
     @Override
     public void dismiss() {
-        if (!isShowing()) {
+        ViewGroup decorView = getDecorView();
+        if (decorView == null || rootView == null || decorView.indexOfChild(rootView) == -1) {
+            super.dismiss();
             return;
         }
         if (isDismissed) {
@@ -167,34 +213,49 @@ public class AlertDialogDecor extends AlertDialog {
         isDismissed = true;
         AndroidUtilities.cancelRunOnUIThread(showRunnable);
         if (rootView.getVisibility() != View.VISIBLE) {
-            getDecorView().removeView(rootView);
+            decorView.removeView(rootView);
+            if (onDismissListener != null) {
+                onDismissListener.onDismiss(AlertDialogDecor.this);
+            }
             return;
         }
 
-        Animation animation = AnimationUtils.loadAnimation(getContext(), resExitAnimation);
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
+        Animation animation = null;
+        if (resExitAnimation > 0) {
+            try {
+                animation = AnimationUtils.loadAnimation(getContext(), resExitAnimation);
+            } catch (Exception ignored) {
+                animation = null;
             }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                contentView.setAlpha(0f);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
+        }
         contentView.clearAnimation();
-        contentView.startAnimation(animation);
+        if (animation != null) {
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    contentView.setAlpha(0f);
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+                }
+            });
+            contentView.startAnimation(animation);
+        } else {
+            contentView.animate().alpha(0f).scaleX(0.92f).scaleY(0.92f).setDuration(150).start();
+        }
         dimView.animate().setListener(null).cancel();
         dimView.animate().setDuration(DIM_DURATION).alpha(0f).setListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                getDecorView().removeView(rootView);
+                ViewGroup currentDecor = getDecorView();
+                if (currentDecor != null && rootView != null) {
+                    currentDecor.removeView(rootView);
+                }
                 if (onDismissListener != null) {
                     onDismissListener.onDismiss(AlertDialogDecor.this);
                 }
@@ -203,12 +264,16 @@ public class AlertDialogDecor extends AlertDialog {
     }
 
     private Activity getActivity(Context context) {
+        while (context instanceof ContextWrapper) {
+            if (context instanceof Activity) {
+                return (Activity) context;
+            }
+            context = ((ContextWrapper) context).getBaseContext();
+        }
         if (context instanceof Activity) {
             return (Activity) context;
-        } else if (context instanceof ContextThemeWrapper) {
-            return getActivity(((ContextThemeWrapper) context).getBaseContext());
         }
-        return null;
+        return AndroidUtilities.findActivity(context);
     }
 
     public static class Builder extends AlertDialog.Builder {

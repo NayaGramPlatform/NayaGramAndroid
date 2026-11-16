@@ -201,24 +201,42 @@ jobs:
             -PRELEASE_KEYSTORE_PATH="$RELEASE_KEYSTORE_PATH" \
             --no-build-cache --rerun-tasks --stacktrace
 
-      - name: Verify freshly built native libraries in AAB
+      - name: Verify freshly built native libraries in AAB (including 16 KB alignment)
         run: |
           AAB_FILE=$(find TMessagesProj_App/build/outputs/bundle -name "*.aab" | head -n 1)
           test -n "$AAB_FILE"
           python3 - "$AAB_FILE" << 'PY'
-          import sys, zipfile
+          import sys, zipfile, struct
           path = sys.argv[1]
+          def check_elf_16kb(data):
+              if len(data) < 64 or data[:4] != b'\x7fELF' or data[4] != 2:
+                  return []
+              e_phoff = struct.unpack_from('<Q', data, 32)[0]
+              e_phentsize, e_phnum = struct.unpack_from('<HH', data, 54)
+              return [struct.unpack_from('<Q', data, e_phoff + i * e_phentsize + 48)[0]
+                      for i in range(e_phnum) if struct.unpack_from('<I', data, e_phoff + i * e_phentsize)[0] == 1]
+
           with zipfile.ZipFile(path) as z:
               names = z.namelist()
-          libs = sorted(n for n in names if n.endswith('/libtmessages.49.so'))
-          print('Native tgnet libraries included in AAB:')
-          print('\n'.join(libs) if libs else 'NONE')
-          if not libs:
-              raise SystemExit('ERROR: AAB does not contain libtmessages.49.so')
-          abis = {n.split('/')[2] for n in libs if n.startswith('base/lib/') and len(n.split('/')) > 3}
-          if 'arm64-v8a' not in abis:
-              raise SystemExit('ERROR: arm64-v8a libtmessages.49.so missing')
-          print('Verified ABIs:', ', '.join(sorted(abis)))
+              libs = sorted(n for n in names if n.endswith('/libtmessages.49.so'))
+              print('Native tgnet libraries included in AAB:')
+              print('\n'.join(libs) if libs else 'NONE')
+              if not libs:
+                  raise SystemExit('ERROR: AAB does not contain libtmessages.49.so')
+              abis = {n.split('/')[2] for n in libs if n.startswith('base/lib/') and len(n.split('/')) > 3}
+              if 'arm64-v8a' not in abis:
+                  raise SystemExit('ERROR: arm64-v8a libtmessages.49.so missing')
+              print('Verified ABIs:', ', '.join(sorted(abis)))
+              all_so = sorted(n for n in names if n.endswith('.so'))
+              unaligned = []
+              for so_name in all_so:
+                  if '/arm64-v8a/' in so_name or '/x86_64/' in so_name:
+                      aligns = check_elf_16kb(z.read(so_name))
+                      print(f'16KB ELF check {so_name}: {[hex(a) for a in aligns]}')
+                      if not aligns or any(a < 0x4000 for a in aligns):
+                          unaligned.append((so_name, [hex(a) for a in aligns]))
+              if unaligned:
+                  raise SystemExit(f'ERROR: 64-bit native libraries missing 16KB p_align: {unaligned}')
           PY
 
       - name: Generate Signed Universal APK from AAB
@@ -335,7 +353,7 @@ jobs:
             - **Version Name**: `${{ env.APP_VERSION_NAME }}`
             - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
             - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
-            - **App Size Optimization**: Compressed native libraries (`useLegacyPackaging = true`) and targeted R8 code shrinking.
+            - **16 KB Page Size & Formatting**: Full 16 KB native library alignment (LiteRT + CMake/AGP), fixed Scheduled Create Link dialog, and quick inline `A` formatting shortcut.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab
