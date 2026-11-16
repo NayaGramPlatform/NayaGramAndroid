@@ -1076,7 +1076,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "4.26.63 NG";
+        return "4.26.77 NG";
     }
 
     public String getVersionName() {

@@ -586,7 +586,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "4092";
+        return "4099";
     }
 
     private String getAppVersion() {
@@ -597,7 +597,7 @@ public class NayaAboutActivity extends BaseFragment {
         } catch (Exception e) {
             FileLog.e(e);
         }
-        return "4.26.71 NG";
+        return "4.26.77 NG";
     }
 
     private void openSuperAdmin() {

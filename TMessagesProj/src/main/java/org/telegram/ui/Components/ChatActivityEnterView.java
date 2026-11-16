@@ -67,6 +67,10 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.ImageSpan;
+import android.text.style.StrikethroughSpan;
+import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Property;
 import android.util.TypedValue;
 import android.view.ActionMode;
@@ -642,9 +646,16 @@ public class ChatActivityEnterView extends FrameLayout implements
     private ImageView aiButton;
     private ImageView richButton;
     private View ngFormatButton;
-    private final Paint ngFormatTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatPencilPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatCollarPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatTipPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint ngFormatLinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint ngFormatSparklePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF ngFormatLineRect = new RectF();
+    private final Path ngFormatPath = new Path();
+    private LinearGradient ngFormatPencilGradient;
     private float lastFormatButtonTranslationX = Float.NaN;
     private float attachButtonAlpha = 1.0f;
     private ImageView suggestButton;
@@ -2855,9 +2866,20 @@ public class ChatActivityEnterView extends FrameLayout implements
             updateFieldRight(1);
         }
 
-        ngFormatTextPaint.setTypeface(Typeface.DEFAULT_BOLD);
-        ngFormatTextPaint.setTextAlign(Paint.Align.CENTER);
-        ngFormatTextPaint.setTextSize(dpf2(16.5f));
+        ngFormatRingPaint.setStyle(Paint.Style.STROKE);
+        ngFormatRingPaint.setStrokeWidth(dpf2(1.1f));
+        ngFormatPencilGradient = new LinearGradient(
+            -dpf2(6f), dpf2(6f), dpf2(7f), -dpf2(7f),
+            new int[]{0xFF2563EB, 0xFF6366F1, 0xFFA855F7},
+            new float[]{0f, 0.55f, 1f},
+            Shader.TileMode.CLAMP
+        );
+        ngFormatPencilPaint.setShader(ngFormatPencilGradient);
+        ngFormatPencilPaint.setStyle(Paint.Style.FILL);
+        ngFormatCollarPaint.setStyle(Paint.Style.FILL);
+        ngFormatTipPaint.setStyle(Paint.Style.FILL);
+        ngFormatLinePaint.setStyle(Paint.Style.FILL);
+        ngFormatSparklePaint.setStyle(Paint.Style.FILL);
         ngFormatButton = new View(context) {
             @Override
             public boolean dispatchTouchEvent(MotionEvent event) {
@@ -2870,13 +2892,63 @@ public class ChatActivityEnterView extends FrameLayout implements
                 super.onDraw(canvas);
                 float cx = getWidth() / 2f;
                 float cy = getHeight() / 2f;
-                Paint.FontMetrics fm = ngFormatTextPaint.getFontMetrics();
-                float baseline = cy - dp(1.5f) - (fm.ascent + fm.descent) / 2f;
-                canvas.drawText("A", cx, baseline, ngFormatTextPaint);
-                float halfW = dp(6.5f);
-                float top = cy + dp(6.5f);
-                ngFormatLineRect.set(cx - halfW, top, cx + halfW, top + dp(2f));
-                canvas.drawRoundRect(ngFormatLineRect, dp(1f), dp(1f), ngFormatLinePaint);
+                float radius = dpf2(15.5f);
+
+                // Soft luminous circular badge
+                canvas.drawCircle(cx, cy, radius, ngFormatBgPaint);
+                canvas.drawCircle(cx, cy, radius - dpf2(0.55f), ngFormatRingPaint);
+
+                // Sleek 45-degree calligraphy/formatting pencil
+                canvas.save();
+                canvas.translate(cx + dpf2(0.5f), cy - dpf2(0.5f));
+                canvas.rotate(-45f);
+
+                // Pencil barrel
+                ngFormatLineRect.set(-dpf2(5.2f), -dpf2(2.3f), dpf2(6.0f), dpf2(2.3f));
+                canvas.drawRoundRect(ngFormatLineRect, dpf2(1.4f), dpf2(1.4f), ngFormatPencilPaint);
+
+                // Bright metallic ferrule band near eraser cap
+                ngFormatLineRect.set(dpf2(2.5f), -dpf2(2.3f), dpf2(4.0f), dpf2(2.3f));
+                canvas.drawRect(ngFormatLineRect, ngFormatCollarPaint);
+
+                // Tapered writing tip + nib
+                ngFormatPath.reset();
+                ngFormatPath.moveTo(-dpf2(5.0f), -dpf2(2.2f));
+                ngFormatPath.lineTo(-dpf2(8.8f), 0f);
+                ngFormatPath.lineTo(-dpf2(5.0f), dpf2(2.2f));
+                ngFormatPath.close();
+                canvas.drawPath(ngFormatPath, ngFormatTipPaint);
+
+                // Fine dark nib point
+                ngFormatPath.reset();
+                ngFormatPath.moveTo(-dpf2(7.3f), -dpf2(0.85f));
+                ngFormatPath.lineTo(-dpf2(9.1f), 0f);
+                ngFormatPath.lineTo(-dpf2(7.3f), dpf2(0.85f));
+                ngFormatPath.close();
+                canvas.drawPath(ngFormatPath, ngFormatPencilPaint);
+
+                canvas.restore();
+
+                // Sleek horizontal formatting underline stroke beneath pencil tip
+                ngFormatLineRect.set(cx - dpf2(6.5f), cy + dpf2(7.0f), cx + dpf2(6.5f), cy + dpf2(9.0f));
+                canvas.drawRoundRect(ngFormatLineRect, dpf2(1f), dpf2(1f), ngFormatLinePaint);
+
+                // Crisp 4-point formatting sparkle at top-right
+                float sx = cx + dpf2(6.8f);
+                float sy = cy - dpf2(6.8f);
+                float sr = dpf2(2.6f);
+                float si = sr * 0.34f;
+                ngFormatPath.reset();
+                ngFormatPath.moveTo(sx, sy - sr);
+                ngFormatPath.lineTo(sx + si, sy - si);
+                ngFormatPath.lineTo(sx + sr, sy);
+                ngFormatPath.lineTo(sx + si, sy + si);
+                ngFormatPath.lineTo(sx, sy + sr);
+                ngFormatPath.lineTo(sx - si, sy + si);
+                ngFormatPath.lineTo(sx - sr, sy);
+                ngFormatPath.lineTo(sx - si, sy - si);
+                ngFormatPath.close();
+                canvas.drawPath(ngFormatPath, ngFormatSparklePaint);
             }
         };
         ngFormatButton.setContentDescription("Format text");
@@ -2892,7 +2964,6 @@ public class ChatActivityEnterView extends FrameLayout implements
         aiButton = new ImageView(context);
         aiButton.setImageDrawable(aiButtonIcon = new AiButtonDrawable(context));
         aiButton.setScaleType(ImageView.ScaleType.CENTER);
-        aiButton.setColorFilter(new PorterDuffColorFilter(getThemedColor(Theme.key_glass_defaultIcon), PorterDuff.Mode.MULTIPLY));
         aiButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP, dp(16)));
         textFieldContainer.addView(aiButton, LayoutHelper.createFrame(DEFAULT_HEIGHT, DEFAULT_HEIGHT, Gravity.TOP | Gravity.LEFT, 0, 1, 0, 0));
         aiButton.setContentDescription(getString(R.string.AIEditor));
@@ -6365,36 +6436,46 @@ public class ChatActivityEnterView extends FrameLayout implements
             }
         };
 
-        options.add(R.drawable.formatting_bold, getString(R.string.Bold), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedBold();
-        });
-        options.add(R.drawable.formatting_italic, getString(R.string.Italic), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedItalic();
-        });
-        options.add(R.drawable.formatting_code, getString(R.string.Mono), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedMono();
-        });
-        options.add(R.drawable.formatting_strikethrough, getString(R.string.Strike), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedStrike();
-        });
-        options.add(R.drawable.formatting_underline, getString(R.string.Underline), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedUnderline();
-        });
-        options.add(R.drawable.formatting_spoiler, getString(R.string.Spoiler), () -> {
-            prepareSelection.run();
-            if (messageEditText != null) messageEditText.makeSelectedSpoiler();
-        });
         if (parentFragment == null || parentFragment.getChatMode() == 0) {
             options.add(R.drawable.formatting_quote, getString(R.string.Quote), () -> {
                 prepareSelection.run();
                 if (messageEditText != null) messageEditText.makeSelectedQuote();
             });
         }
+        options.add(R.drawable.formatting_spoiler, getString(R.string.Spoiler), () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedSpoiler();
+        });
+        SpannableString boldTitle = new SpannableString(getString(R.string.Bold));
+        boldTitle.setSpan(new StyleSpan(Typeface.BOLD), 0, boldTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        options.add(R.drawable.formatting_bold, boldTitle, () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedBold();
+        });
+        SpannableString italicTitle = new SpannableString(getString(R.string.Italic));
+        italicTitle.setSpan(new StyleSpan(Typeface.ITALIC), 0, italicTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        options.add(R.drawable.formatting_italic, italicTitle, () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedItalic();
+        });
+        SpannableString monoTitle = new SpannableString(getString(R.string.Mono));
+        monoTitle.setSpan(new TypefaceSpan("monospace"), 0, monoTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        options.add(R.drawable.formatting_code, monoTitle, () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedMono();
+        });
+        SpannableString strikeTitle = new SpannableString(getString(R.string.Strike));
+        strikeTitle.setSpan(new StrikethroughSpan(), 0, strikeTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        options.add(R.drawable.formatting_strikethrough, strikeTitle, () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedStrike();
+        });
+        SpannableString underlineTitle = new SpannableString(getString(R.string.Underline));
+        underlineTitle.setSpan(new UnderlineSpan(), 0, underlineTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        options.add(R.drawable.formatting_underline, underlineTitle, () -> {
+            prepareSelection.run();
+            if (messageEditText != null) messageEditText.makeSelectedUnderline();
+        });
         options.add(R.drawable.menu_link_create2, getString(R.string.CreateLink), () -> {
             AndroidUtilities.runOnUIThread(() -> {
                 if (messageEditText == null) return;
@@ -6404,6 +6485,17 @@ public class ChatActivityEnterView extends FrameLayout implements
                     messageEditText.setSelectionOverride(cursorStart, cursorEnd);
                 }
                 messageEditText.makeSelectedUrl();
+            }, 60);
+        });
+        options.add(R.drawable.msg_calendar2, getString(R.string.FormattedDate), () -> {
+            AndroidUtilities.runOnUIThread(() -> {
+                if (messageEditText == null) return;
+                if (hasExplicitSelection) {
+                    messageEditText.setSelectionOverride(applyStart, applyEnd);
+                } else {
+                    messageEditText.setSelectionOverride(cursorStart, cursorEnd);
+                }
+                messageEditText.makeSelectedDate();
             }, 60);
         });
         options.add(R.drawable.iv_text, getString(R.string.Regular), () -> {
@@ -6423,7 +6515,7 @@ public class ChatActivityEnterView extends FrameLayout implements
             .allowShowingOnTopOfKeyboard()
             .setDimAlpha(0)
             .setDrawScrim(false)
-            .setMaxHeight(Math.min(dp(340), (int) (AndroidUtilities.displaySize.y * 0.45f)))
+            .setMaxHeight(Math.min(dp(380), (int) (AndroidUtilities.displaySize.y * 0.48f)))
             .show();
     }
 
@@ -10727,8 +10819,16 @@ public class ChatActivityEnterView extends FrameLayout implements
         if (ngFormatButton == null) {
             return;
         }
-        ngFormatTextPaint.setColor(getThemedColor(Theme.key_glass_defaultIcon));
-        ngFormatLinePaint.setColor(getThemedColor(Theme.key_chat_messagePanelSend));
+        int accent = getThemedColor(Theme.key_chat_messagePanelSend);
+        if (accent == 0) {
+            accent = 0xFF3B82F6;
+        }
+        ngFormatBgPaint.setColor(ColorUtils.setAlphaComponent(accent, Theme.isCurrentThemeDark() ? 38 : 26));
+        ngFormatRingPaint.setColor(ColorUtils.setAlphaComponent(accent, Theme.isCurrentThemeDark() ? 88 : 64));
+        ngFormatCollarPaint.setColor(Theme.isCurrentThemeDark() ? 0xFFE2E8F0 : 0xFFF1F5F9);
+        ngFormatTipPaint.setColor(Theme.isCurrentThemeDark() ? 0xFFFDE68A : 0xFFFCD34D);
+        ngFormatLinePaint.setColor(accent);
+        ngFormatSparklePaint.setColor(Theme.isCurrentThemeDark() ? 0xFF38BDF8 : 0xFF2563EB);
         ngFormatButton.setBackground(Theme.createSelectorDrawable(getThemedColor(Theme.key_listSelector), Theme.RIPPLE_MASK_CIRCLE_20DP, dp(16)));
         ngFormatButton.invalidate();
     }

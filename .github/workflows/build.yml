@@ -353,7 +353,7 @@ jobs:
             - **Version Name**: `${{ env.APP_VERSION_NAME }}`
             - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
             - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
-            - **16 KB Page Size & Formatting**: Full 16 KB native library alignment (LiteRT + CMake/AGP), fixed Scheduled Create Link dialog, and quick inline `A` formatting shortcut.
+            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 40992.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab

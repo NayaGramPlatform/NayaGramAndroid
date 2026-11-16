@@ -252,23 +252,53 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
     }
 
     public void makeSelectedDate() {
-        int start, end;
+        if (!AndroidUtilities.isSafeToShow(getContext())) {
+            return;
+        }
+        final Editable currentText = getText();
+        final int textLen = currentText != null ? currentText.length() : 0;
+        int rawStart, rawEnd;
         if (selectionStart >= 0 && selectionEnd >= 0) {
-            start = selectionStart;
-            end = selectionEnd;
+            rawStart = selectionStart;
+            rawEnd = selectionEnd;
             selectionStart = selectionEnd = -1;
         } else {
-            start = getSelectionStart();
-            end = getSelectionEnd();
+            rawStart = getSelectionStart();
+            rawEnd = getSelectionEnd();
         }
+        rawStart = Math.max(0, Math.min(rawStart, textLen));
+        rawEnd = Math.max(0, Math.min(rawEnd, textLen));
+        if (rawStart > rawEnd) {
+            int tmp = rawStart;
+            rawStart = rawEnd;
+            rawEnd = tmp;
+        }
+        final int start = rawStart;
+        final int end = rawEnd;
 
         AlertsCreator.createFormattedDatePickerDialog(getContext(), (scheduleDate, flags) -> {
             Editable editable = getText();
+            if (editable == null) {
+                return;
+            }
+            int safeStart = Math.max(0, Math.min(start, editable.length()));
+            int safeEnd = Math.max(safeStart, Math.min(end, editable.length()));
+            if (safeStart == safeEnd) {
+                String dateLabel = LocaleController.formatDateTime(scheduleDate, true);
+                if (TextUtils.isEmpty(dateLabel)) {
+                    dateLabel = "Date";
+                }
+                editable.insert(safeStart, dateLabel);
+                safeEnd = safeStart + dateLabel.length();
+                try {
+                    setSelection(safeEnd);
+                } catch (Exception ignore) {}
+            }
 
             TextStyleSpan.TextStyleRun run = new TextStyleSpan.TextStyleRun();
             run.flags |= TextStyleSpan.FLAG_STYLE_URL;
-            run.start = start;
-            run.end = end;
+            run.start = safeStart;
+            run.end = safeEnd;
 
             TLRPC.TL_messageEntityFormattedDate entity = new TLRPC.TL_messageEntityFormattedDate();
             entity.date = scheduleDate;
@@ -276,7 +306,7 @@ public class EditTextCaption extends EditTextBoldCursor implements FloatingToolb
             entity.applyFlags();
 
             try {
-                editable.setSpan(new FormattedDateSpan(editable.subSequence(start, end).toString(), run, entity), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                editable.setSpan(new FormattedDateSpan(editable.subSequence(safeStart, safeEnd).toString(), run, entity), safeStart, safeEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             } catch (Exception ignore) {
 
             }
