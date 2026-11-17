@@ -420,7 +420,7 @@ public class LiteMode {
         }
     }
 
-    private static class BatteryReceiver extends BroadcastReceiver {
+    public static class BatteryReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             onBatteryChanged(intent);

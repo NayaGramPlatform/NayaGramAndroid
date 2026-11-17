@@ -742,7 +742,7 @@ public class GroupCallPip implements NotificationCenter.NotificationCenterDelega
 
     private static void showInner(Context context, int account) {
         if (instance != null) {
-            instance.destroy();
+            instance.onDestroy();
         }
         final boolean overlay = AndroidUtilities.checkInlinePermissions(ApplicationLoader.applicationContext);
         final android.app.Activity activity = AndroidUtilities.findActivity(context);
@@ -798,6 +798,10 @@ public class GroupCallPip implements NotificationCenter.NotificationCenterDelega
 
     public boolean isOverlay() {
         return isOverlay;
+    }
+
+    public void destroy() {
+        onDestroy();
     }
 
     private void onDestroy() {
