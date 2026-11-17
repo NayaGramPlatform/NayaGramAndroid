@@ -219,8 +219,8 @@ android {
         }
     }
 
-    // NayaGram v4.26.80 NG: internal code 4102. Installed/Play code is 4102 * 10 + ABI (bundleAfat_SDK23 = 41022).
-    // Public name comes from APP_VERSION_NAME ("4.26.80 NG").
+    // NayaGram v4.26.81 NG: internal code 4103. Installed/Play code is 4103 * 10 + ABI (bundleAfat_SDK23 = 41032).
+    // Public name comes from APP_VERSION_NAME ("4.26.81 NG").
     defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
 
     applicationVariants.all { variant ->
