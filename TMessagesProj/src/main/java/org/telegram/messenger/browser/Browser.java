@@ -309,6 +309,8 @@ public class Browser {
                 || h.equals("telegra.ph") || h.endsWith(".telegra.ph")
                 || h.equals("fragment.com") || h.endsWith(".fragment.com")
                 || h.equals("nayagram.pro") || h.endsWith(".nayagram.pro");
+    }
+
     private static boolean isWebAuthTokenParam(String part) {
         final int eq = part.indexOf('=');
         String name = eq < 0 ? part : part.substring(0, eq);
@@ -425,6 +427,7 @@ public class Browser {
                 }
             } catch (Throwable ignored) {
             }
+        }
         if (!keepWebAuthTokens) {
             uri = withoutWebAuthTokens(uri);
         }
