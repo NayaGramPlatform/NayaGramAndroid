@@ -3713,7 +3713,13 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                     blueImageView.setTranslationY(-AndroidUtilities.dp(24));
                 }
                 frameLayout.addView(blueImageView, LayoutHelper.createFrame(size, size, Gravity.LEFT | Gravity.TOP, 0, 0, 0, currentType == AUTH_TYPE_MESSAGE && !AndroidUtilities.isSmallScreen() ? -AndroidUtilities.dp(16) : 0));
-                titleTextView.setText(overrideTitle != null ? overrideTitle : getString(currentType == AUTH_TYPE_MESSAGE ? R.string.SentAppCodeTitle : R.string.SentSmsCodeTitle));
+                {
+                    String appCodeTitle = overrideTitle != null ? overrideTitle : getString(currentType == AUTH_TYPE_MESSAGE ? R.string.SentAppCodeTitle : R.string.SentSmsCodeTitle);
+                    if (currentType == AUTH_TYPE_MESSAGE && overrideTitle == null && appCodeTitle != null && !appCodeTitle.toLowerCase().contains("telegram")) {
+                        appCodeTitle = appCodeTitle.replace("NayaGram", "NayaGram or TeleGram");
+                    }
+                    titleTextView.setText(appCodeTitle);
+                }
                 addView(titleTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, 0, 18, 0, 0));
                 int sideMargin = currentType == AUTH_TYPE_FRAGMENT_SMS ? 16 : 0;
                 addView(confirmTextView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL | Gravity.TOP, sideMargin, 17, sideMargin, 0));
@@ -4382,7 +4388,19 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 str = spanned;
             } else {
                 if (currentType == AUTH_TYPE_MESSAGE) {
-                    str = AndroidUtilities.replaceTags(LocaleController.formatString("SentAppCodeWithPhone", R.string.SentAppCodeWithPhone, LocaleController.addNbsp(number)));
+                    String rawSentApp = LocaleController.formatString("SentAppCodeWithPhone", R.string.SentAppCodeWithPhone, LocaleController.addNbsp(number));
+                    if (rawSentApp != null) {
+                        rawSentApp = rawSentApp.replace("**NayaGram** app", "**NayaGram Or TeleGram App**")
+                                               .replace("**Telegram** app", "**NayaGram Or TeleGram App**")
+                                               .replace("**NayaGram** অ্যাপে", "**NayaGram Or TeleGram App**-এ");
+                    }
+                    SpannableStringBuilder ssb = AndroidUtilities.replaceTags(rawSentApp);
+                    int hlIdx = TextUtils.indexOf(ssb, "NayaGram Or TeleGram App");
+                    if (hlIdx >= 0) {
+                        int hlEnd = hlIdx + "NayaGram Or TeleGram App".length();
+                        ssb.setSpan(new android.text.style.ForegroundColorSpan(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText4)), hlIdx, hlEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    str = ssb;
                 } else if (currentType == AUTH_TYPE_SMS) {
                     str = AndroidUtilities.replaceTags(LocaleController.formatString("SentSmsCode", R.string.SentSmsCode, LocaleController.addNbsp(number)));
                 } else if (currentType == AUTH_TYPE_FLASH_CALL) {

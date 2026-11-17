@@ -35,9 +35,9 @@
     <!--code enter view-->
     <string name="YourCode">Phone verification</string>
     <string name="SentSmsCode">We’ve sent an SMS with an activation code to your phone **%1$s**.</string>
-    <string name="SentAppCode">We\'ve sent the code to the **NayaGram** app on your other device.</string>
-    <string name="SentAppCodeWithPhone">We\'ve sent the code to the **NayaGram** app for %1$s on your other device.</string>
-    <string name="SentAppCodeTitle">Check your NayaGram messages</string>
+    <string name="SentAppCode">We\'ve sent the code to the **NayaGram Or TeleGram App** on your other device.</string>
+    <string name="SentAppCodeWithPhone">We\'ve sent the code to the **NayaGram Or TeleGram App** for %1$s on your other device.</string>
+    <string name="SentAppCodeTitle">Check your NayaGram or TeleGram messages</string>
     <string name="SentFragmentCode">Get the code for %1$s in the Anonymous Numbers section on Fragment.</string>
     <string name="SentSmsCodeTitle">Enter code</string>
     <string name="OpenFragment">Open Fragment</string>

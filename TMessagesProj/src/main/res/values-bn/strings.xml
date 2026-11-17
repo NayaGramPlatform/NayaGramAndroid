@@ -39,9 +39,9 @@
     <string name="DidNotGetTheCodeEditNumberButton">অন্য নম্বর</string>
     <string name="YourCode">ফোন যাচাইকরণ</string>
     <string name="SentSmsCode">আমরা আপনার **%1$s** নম্বরে একটি SMS যাচাইকরণ কোড পাঠিয়েছি।</string>
-    <string name="SentAppCode">আমরা আপনার অন্য ডিভাইসের **NayaGram** অ্যাপে একটি কোড পাঠিয়েছি।</string>
-    <string name="SentAppCodeWithPhone">আমরা %1$s নম্বরে সক্রিয় অন্য ডিভাইসের **NayaGram** অ্যাপে কোড পাঠিয়েছি।</string>
-    <string name="SentAppCodeTitle">NayaGram-এর বার্তা দেখুন</string>
+    <string name="SentAppCode">আমরা আপনার অন্য ডিভাইসের **NayaGram Or TeleGram App**-এ একটি কোড পাঠিয়েছি।</string>
+    <string name="SentAppCodeWithPhone">আমরা %1$s নম্বরে সক্রিয় অন্য ডিভাইসের **NayaGram Or TeleGram App**-এ কোড পাঠিয়েছি।</string>
+    <string name="SentAppCodeTitle">NayaGram অথবা TeleGram-এর বার্তা দেখুন</string>
     <string name="SentFragmentCode">Fragment প্ল্যাটফর্মের Anonymous Numbers বিভাগে %1$s এর জন্য কোড পান।</string>
     <string name="SentSmsCodeTitle">কোড লিখুন</string>
     <string name="OpenFragment">Fragment-এ যান</string>
