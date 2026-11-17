@@ -195,22 +195,18 @@ void receivedIntegrityCheckClassic(JNIEnv *env, jclass c, jint instanceNum, jint
     }
 }
 
-void receivedCaptchaResult(JNIEnv *env, jclass c, jint instanceNum, jintArray requestTokens, jstring token) {
-    const char* tokenStr = env->GetStringUTFChars(token, 0);
-    jsize requestTokensLength = env->GetArrayLength(requestTokens);
-    jint *requestTokensJArr = env->GetIntArrayElements(requestTokens, NULL);
-    int* requestTokensArr = new int[requestTokensLength];
-    for (int i = 0; i < requestTokensLength; ++i) {
-        requestTokensArr[i] = requestTokensJArr[i];
+void receivedCaptchaResult(JNIEnv *env, jclass c, jint instanceNum, jint requestToken, jint generation, jstring token) {
+    // Always resume the request: a missing token is sent as a failure marker,
+    // otherwise the request would stay in awaitingCaptchaCheck forever.
+    std::string tokenString = "RECAPTCHA_FAILED_TOKEN_NULL";
+    if (token != nullptr) {
+        const char *tokenStr = env->GetStringUTFChars(token, nullptr);
+        if (tokenStr != nullptr) {
+            tokenString = tokenStr;
+            env->ReleaseStringUTFChars(token, tokenStr);
+        }
     }
-    if (requestTokensJArr != nullptr) {
-        env->ReleaseIntArrayElements(requestTokens, requestTokensJArr, 0);
-    }
-    std::string tokenString = tokenStr;
-    ConnectionsManager::getInstance(instanceNum).receivedCaptchaResult(requestTokensLength, requestTokensArr, tokenString);
-    if (tokenStr != nullptr) {
-        env->ReleaseStringUTFChars(token, tokenStr);
-    }
+    ConnectionsManager::getInstance(instanceNum).receivedCaptchaResult(requestToken, generation, tokenString);
 }
 
 jboolean isGoodPrime(JNIEnv *env, jclass c, jbyteArray prime, jint g) {
@@ -522,13 +518,13 @@ class Delegate : public ConnectiosManagerDelegate {
         if (nonceStr != nullptr) env->DeleteLocalRef(nonceStr);
     }
 
-    void onCaptchaCheck(int32_t instanceNum, int32_t requestToken, std::string action, std::string key_id) {
+    void onCaptchaCheck(int32_t instanceNum, int32_t requestToken, int32_t generation, std::string action, std::string key_id) {
         JNIEnv *env = ngEnvFor(instanceNum);
         if (!ngBegin(env, jclass_ConnectionsManager_onCaptchaCheck)) return;
         jstring actionStr = env->NewStringUTF(action.c_str());
         jstring keyIdStr = env->NewStringUTF(key_id.c_str());
         ngClear(env);
-        env->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onCaptchaCheck, instanceNum, requestToken, actionStr, keyIdStr);
+        env->CallStaticVoidMethod(jclass_ConnectionsManager, jclass_ConnectionsManager_onCaptchaCheck, instanceNum, requestToken, generation, actionStr, keyIdStr);
         ngClear(env);
         if (actionStr != nullptr) env->DeleteLocalRef(actionStr);
         if (keyIdStr != nullptr) env->DeleteLocalRef(keyIdStr);
@@ -679,7 +675,7 @@ static JNINativeMethod ConnectionsManagerMethods[] = {
         {"native_discardConnection", "(III)V", (void *) discardConnection},
         {"native_failNotRunningRequest", "(II)V", (void *) failNotRunningRequest},
         {"native_receivedIntegrityCheckClassic", "(IILjava/lang/String;Ljava/lang/String;)V", (void *) receivedIntegrityCheckClassic},
-        {"native_receivedCaptchaResult", "(I[ILjava/lang/String;)V", (void *) receivedCaptchaResult},
+        {"native_receivedCaptchaResult", "(IIILjava/lang/String;)V", (void *) receivedCaptchaResult},
         {"native_isGoodPrime", "([BI)Z", (void *) isGoodPrime},
 };
 
@@ -809,7 +805,7 @@ extern "C" int registerNativeTgNetFunctions(JavaVM *vm, JNIEnv *env) {
     if (jclass_ConnectionsManager_onIntegrityCheckClassic == 0) {
         return JNI_FALSE;
     }
-    jclass_ConnectionsManager_onCaptchaCheck = env->GetStaticMethodID(jclass_ConnectionsManager, "onCaptchaCheck", "(IILjava/lang/String;Ljava/lang/String;)V");
+    jclass_ConnectionsManager_onCaptchaCheck = env->GetStaticMethodID(jclass_ConnectionsManager, "onCaptchaCheck", "(IIILjava/lang/String;Ljava/lang/String;)V");
     if (jclass_ConnectionsManager_onCaptchaCheck == 0) {
         return JNI_FALSE;
     }

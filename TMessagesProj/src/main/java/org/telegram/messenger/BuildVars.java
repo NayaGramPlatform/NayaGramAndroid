@@ -25,7 +25,7 @@ public class BuildVars {
     public static boolean CHECK_UPDATES = true;
     public static boolean NO_SCOPED_STORAGE = Build.VERSION.SDK_INT <= 29;
     /** Internal NayaGram number. Play's uploaded versionCode is this times 10 plus the ABI digit. */
-    public static final int BUILD_VERSION = 4099;
+    public static final int BUILD_VERSION = 4100;
     public static String BUILD_VERSION_STRING = BuildConfig.BUILD_VERSION_STRING;
 
     // Injected at build time from TELEGRAM_API_ID / TELEGRAM_API_HASH env or -P flags.
@@ -46,18 +46,13 @@ public class BuildVars {
 
     // NG Studio Access - For developer features only. Does not access user's private messages.
     public static final long[] NG_STUDIO_ACCESS_IDS = new long[]{6364439415L, 7295177502L, 7903352256L};
-
     public static boolean isNgStudioAllowed(long userId) {
-        // Only allow studio access, not user data access
         for (long id : NG_STUDIO_ACCESS_IDS) if (id == userId) return true;
         return false;
     }
 
-
-    // Passkeys are removed. Leaving this on makes the phone login screen call
-    // Credential Manager, which shows Google Password Manager and the saved
-    // account phone numbers. Do not turn this back on.
     public static boolean SUPPORTS_PASSKEYS = false;
+    public static boolean SUPPORTS_FPNV = false;
 
     static {
         if (ApplicationLoader.applicationContext != null) {

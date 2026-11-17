@@ -11,22 +11,22 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.RadialGradient;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
-import android.graphics.RenderNode;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.core.graphics.ColorUtils;
+import androidx.annotation.Nullable;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.FileLoader;
@@ -39,28 +39,47 @@ import org.telegram.messenger.UserObject;
 import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
-import org.telegram.ui.ProfileActivity;
+import org.telegram.ui.Components.blur3.BlurredBackgroundDrawableViewFactory;
+import org.telegram.ui.Components.blur3.drawable.BlurredBackgroundDrawable;
 
 public class ProfileMusicView extends View {
 
     private final Theme.ResourcesProvider resourcesProvider;
-
     private final PorterDuffColorFilter filterColorWhite = new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
     private final PorterDuffColorFilter filterColorBlack = new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN);
 
     private Text author, title;
+    private ProfileMusicView trailingView;
+    private ProfileMusicView leadingView;
+
+    // The two pills share a centered row and the same profile/blur animation state.
+    public void setTrailingView(ProfileMusicView view) {
+        trailingView = view;
+        view.leadingView = this;
+        invalidate();
+        view.invalidate();
+    }
+
     private final Paint iconPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint iconBadgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint equalizerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gradientOverlayPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint arrowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path arrowPath = new Path();
     private final Drawable icon;
 
     private final RectF rect = new RectF();
     private final RectF barRect = new RectF();
+
+    public void getButtonBoundsOnScreen(RectF bounds) {
+        int[] location = new int[2];
+        getLocationOnScreen(location);
+        bounds.set(rect);
+        bounds.offset(location[0], location[1]);
+    }
+
     private final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint strokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path clipPath = new Path();
 
     private final ButtonBounce bounce = new ButtonBounce(this);
@@ -98,36 +117,41 @@ public class ProfileMusicView extends View {
         );
     }
 
-    private int textColor = Color.WHITE;
+    protected int textColor = Color.WHITE;
     private int subtitleColor = Color.WHITE;
+    protected boolean hasProfileColor;
     private float parentExpanded;
-    private int backgroundColor;
-    private boolean withShadows;
+    private int buttonColor;
+    private boolean hasColorById;
+    private RadialGradient radialGradient;
+    private float radialGradientWidth;
+    private final Paint shaderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Matrix matrix = new Matrix();
 
     public void setColor(MessagesController.PeerColor peerColor) {
-        int color1, color2;
-        if (peerColor == null) {
-            color1 = color2 = Theme.getColor(Theme.key_actionBarDefault, resourcesProvider);
-        } else {
-            color1 = peerColor.getBgColor1(Theme.isCurrentThemeDark());
-            color2 = peerColor.getBgColor2(Theme.isCurrentThemeDark());
-        }
-        if (peerColor == null) {
-            backgroundColor = Theme.isCurrentThemeDark()
-                    ? 0xFF0F172A
-                    : Theme.getColor(Theme.key_windowBackgroundWhite, resourcesProvider);
-            withShadows = true;
-        } else {
-            backgroundColor = Theme.adaptHSV(ColorUtils.blendARGB(color1, color2, .15f), +.04f, -.09f);
-            withShadows = false;
-        }
-        backgroundPaint.setColor(backgroundColor);
+        hasProfileColor = peerColor != null;
+        if (trailingView != null) trailingView.setColor(peerColor);
+        invalidate();
+    }
+
+    // Same color as ProfileActionsView buttons.
+    public void setButtonColor(int color, boolean hasColorById) {
+        if (trailingView != null) trailingView.setButtonColor(color, hasColorById);
+        if (buttonColor == color && this.hasColorById == hasColorById) return;
+        buttonColor = color;
+        this.hasColorById = hasColorById;
+        radialGradient = null;
+        backgroundPaint.setColor(color);
         checkTextColor();
+    }
+
+    private boolean isButtonColorLight() {
+        return AndroidUtilities.computePerceivedBrightness(buttonColor) > 0.72f;
     }
 
     private void checkTextColor() {
         final boolean isDark = Theme.isCurrentThemeDark();
-        final boolean useBlackText = !isDark && parentExpanded < 0.8f && AndroidUtilities.computePerceivedBrightness(backgroundColor) > 0.72f;
+        final boolean useBlackText = !isDark && parentExpanded < 0.8f && isButtonColorLight();
         textColor = useBlackText ? Theme.getColor(Theme.key_windowBackgroundWhiteBlackText, resourcesProvider) : Color.WHITE;
         subtitleColor = useBlackText ? 0xFF6D28D9 : 0xFFE0F7FA;
         icon.setColorFilter(new PorterDuffColorFilter(0xFF00D4FF, PorterDuff.Mode.SRC_IN));
@@ -138,12 +162,15 @@ public class ProfileMusicView extends View {
     }
 
     public void setParentExpanded(float expanded) {
+        if (trailingView != null) trailingView.setParentExpanded(expanded);
         if (parentExpanded != expanded) {
             parentExpanded = expanded;
             checkTextColor();
             invalidate();
         }
     }
+
+
 
     public void setMusicDocument(TLRPC.Document document) {
         CharSequence author = getAuthor(document);
@@ -181,6 +208,7 @@ public class ProfileMusicView extends View {
         if (!TextUtils.isEmpty(fileName)) {
             return fileName;
         }
+//        return getString(R.string.AudioUnknownTitle);
         return null;
     }
 
@@ -206,41 +234,37 @@ public class ProfileMusicView extends View {
         setContentDescription(getString(R.string.AccDescrProfileMusic) + " " + author + " — " + title);
     }
 
-    private ProfileActivity.AvatarImageView avatarView;
-    private boolean ignoreRect = false;
-    private RenderNode renderNode;
-    private float renderNodeScale;
-    private float renderNodeTranslateY;
-
-    public void drawingBlur(boolean drawing) {
-        if (ignoreRect != drawing || renderNode != null) {
-            ignoreRect = drawing;
-            renderNode = null;
-            avatarView = null;
-            invalidate();
-        }
+    public void setSideBySide(boolean sideBySide, boolean left) {
+        invalidate();
     }
 
-    public void drawingBlur(RenderNode renderNode, ProfileActivity.AvatarImageView avatarView, float scale, float dy) {
-        this.ignoreRect = false;
-        this.renderNode = renderNode;
-        this.avatarView = avatarView;
-        this.renderNodeScale = scale;
-        this.renderNodeTranslateY = dy;
+    /** The pill's glass, like the action buttons'; without it the pill is filled with their color. */
+    @Nullable
+    private BlurredBackgroundDrawable glass;
+    private float glassRadius;
+
+    /** The pill on glass, see {@link ProfileButtonsGlass#actionsFactory}. */
+    public void setGlassFactory(@Nullable BlurredBackgroundDrawableViewFactory factory) {
+        if (trailingView != null) trailingView.setGlassFactory(factory);
+        glass = factory != null ? factory.create(this, ProfileButtonsGlass.NO_COLORS) : null;
+        glassRadius = 0;
         invalidate();
     }
 
     private float currentHeight;
-    private boolean isSideBySide;
-    private boolean isLeft = true;
 
-    public void setSideBySide(boolean sideBySide, boolean left) {
-        this.isSideBySide = sideBySide;
-        this.isLeft = left;
-        invalidate();
+    @Override
+    public void setAlpha(float alpha) {
+        super.setAlpha(alpha);
+        if (trailingView != null) trailingView.setAlpha(alpha);
+    }
+
+    protected boolean isOnProfilePhoto() {
+        return parentExpanded >= 0.8f;
     }
 
     public void updatePosition(float y, float newHeight) {
+        if (trailingView != null) trailingView.updatePosition(y, newHeight);
         currentHeight = newHeight;
         setTranslationY(y - dp(12));
         invalidate();
@@ -267,87 +291,17 @@ public class ProfileMusicView extends View {
         return bounce.isPressed();
     }
 
-    @Override
-    protected void onDraw(@NonNull Canvas canvas) {
-        if (this.author == null || this.title == null) return;
-
-        final float alpha = Utilities.clamp01((currentHeight) / dp(21));
-        final float scale = bounce.getScale(0.02f);
-        if (alpha <= 0) return;
-
-        final int padding = dp(12);
-        final int maxWidth = getWidth() - padding * 2;
+    protected float getContentWidth(float maxWidth) {
         final float eqWidth = dp(14);
+        final float textWidth = Math.max(0, maxWidth - dp(18) - dp(20f) - eqWidth - dp(10));
+        this.author.ellipsize(textWidth / 2f);
+        this.title.ellipsize(Math.max(0, textWidth - this.author.getWidth()));
+        return dp(20f) + this.author.getWidth() + this.title.getWidth() + eqWidth + dp(10);
+    }
 
-        this.author.ellipsize((maxWidth - dp(52)) / 2f);
-        this.title.ellipsize(maxWidth - this.author.getWidth() - dp(52));
-
-        final float width = dp(20f) + this.author.getWidth() + this.title.getWidth() + eqWidth + dp(10);
-        final float containerWidth = dp(18) + width;
-        float centerX = isSideBySide ? (isLeft ? getWidth() * 0.28f : getWidth() * 0.72f) : (getWidth() / 2f);
-
-        canvas.save();
-        canvas.scale(scale, scale, getWidth() / 2f, getHeight() / 2f);
-
-        final float pillHeight = dp(22) * alpha;
-        final float top = (getHeight() - pillHeight) / 2f;
-        rect.set(
-            centerX - containerWidth / 2f,
-            top,
-            centerX + containerWidth / 2f,
-            top + pillHeight
-        );
-        if (withShadows && SharedConfig.shadowsInSections) {
-            backgroundPaint.setShadowLayer(dpf2(3), 0, dpf2(1f), multAlpha(0x2200B4D8, alpha));
-            strokePaint.setShadowLayer(dpf2(0.5f), 0, 0, multAlpha(0x18000000, alpha));
-            strokePaint.setColor(0);
-        } else {
-            backgroundPaint.setShadowLayer(0, 0, 0, 0);
-        }
-        int wasAlpha = backgroundPaint.getAlpha();
-        backgroundPaint.setAlpha((int) (wasAlpha * alpha));
-        if (withShadows && SharedConfig.shadowsInSections) {
-            canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, strokePaint);
-        }
-        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, backgroundPaint);
-
-        gradientOverlayPaint.setShader(new LinearGradient(
-            rect.left, rect.top, rect.right, rect.bottom,
-            new int[]{multAlpha(0x2800D4FF, alpha), multAlpha(0x227C3AED, alpha), multAlpha(0x2410B981, alpha)},
-            null,
-            Shader.TileMode.CLAMP
-        ));
-        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, gradientOverlayPaint);
-
-        strokePaint.setStyle(Paint.Style.STROKE);
-        strokePaint.setStrokeWidth(dpf2(1.3f));
-        strokePaint.setColor(Theme.isCurrentThemeDark() ? 0x8000D4FF : 0x5500D4FF);
-        strokePaint.setShader(new LinearGradient(
-            rect.left, rect.top, rect.right, rect.bottom,
-            new int[]{multAlpha(0xCC00D4FF, alpha), multAlpha(0xAA7C3AED, alpha), multAlpha(0xCC10B981, alpha)},
-            null,
-            Shader.TileMode.CLAMP
-        ));
-        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, strokePaint);
-        strokePaint.setShader(null);
-        backgroundPaint.setAlpha(wasAlpha);
-
-        clipPath.rewind();
-        clipPath.addRoundRect(rect, rect.height() / 2f, rect.height() / 2f, Path.Direction.CW);
-
-        canvas.save();
-        canvas.clipPath(clipPath);
-        if (!ignoreRect && renderNode != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && canvas.isHardwareAccelerated()) {
-            canvas.save();
-            canvas.translate(0f, renderNodeTranslateY);
-            canvas.scale(renderNodeScale, renderNodeScale);
-            canvas.drawRenderNode(renderNode);
-            canvas.restore();
-        }
-
-        canvas.translate((getWidth() - width) / 2f, 0);
-
+    protected void drawContent(Canvas canvas, float alpha) {
         final float cy = getHeight() / 2f;
+        final float eqWidth = dp(14);
         final float badgeRadius = dp(8f);
         canvas.drawCircle(badgeRadius, cy, badgeRadius, iconBadgePaint);
 
@@ -361,7 +315,6 @@ public class ProfileMusicView extends View {
         this.title.draw(canvas, 0, cy, subtitleColor, 0.92f * alpha);
         canvas.translate(this.title.getWidth() + dp(4), 0);
 
-        // Live animated 3-bar NayaGram equalizer (Cyan, Purple, Emerald)
         final long now = SystemClock.elapsedRealtime();
         final int[] eqColors = new int[]{0xFF00D4FF, 0xFF7C3AED, 0xFF10B981};
         final float barW = dpf2(2.2f);
@@ -382,11 +335,118 @@ public class ProfileMusicView extends View {
         canvas.translate(dpf2(3.2f), cy);
         canvas.drawPath(arrowPath, arrowPaint);
 
-        canvas.restore();
-        canvas.restore();
-
         if (alpha > 0.05f && getVisibility() == VISIBLE) {
             postInvalidateOnAnimation();
         }
+    }
+
+    private boolean hasVisibleCompanion() {
+        ProfileMusicView companion = trailingView != null ? trailingView : leadingView;
+        return companion != null && companion.getVisibility() == VISIBLE;
+    }
+
+    private float getPillWidth(float maxWidth) {
+        return dp(16) + getContentWidth(maxWidth);
+    }
+
+    @Override
+    protected void onDraw(@NonNull Canvas canvas) {
+        if (this.author == null || this.title == null) return;
+
+        final float alpha = Utilities.clamp01((currentHeight) / dp(21));
+        final float scale = bounce.getScale(0.02f);
+        if (alpha <= 0) {
+            if (glass != null) {
+                glass.setAlpha(0);
+            }
+            return;
+        }
+
+        final int padding = dp(12);
+        final int maxWidth = getWidth() - padding * 2;
+
+        float containerWidth;
+        float left;
+        if (hasVisibleCompanion()) {
+            ProfileMusicView leading = leadingView != null ? leadingView : this;
+            ProfileMusicView trailing = trailingView != null ? trailingView : this;
+            // Reserve the balance first so long song titles cannot push it offscreen.
+            float trailingWidth = trailing.getPillWidth(maxWidth / 2f);
+            float leadingWidth = leading.getPillWidth(Math.max(0, maxWidth - trailingWidth - dp(6)));
+            left = (getWidth() - leadingWidth - dp(6) - trailingWidth) / 2f;
+            containerWidth = leadingView != null ? trailingWidth : leadingWidth;
+            if (leadingView != null) left += leadingWidth + dp(6);
+        } else {
+            containerWidth = getPillWidth(maxWidth);
+            left = (getWidth() - containerWidth) / 2f;
+        }
+
+        rect.set(left, dp(10), left + containerWidth, dp(10) + dp(17) * alpha);
+        canvas.save();
+        canvas.scale(scale, scale, rect.centerX(), getHeight() / 2f);
+
+        if (glass != null) {
+            final float radius = rect.height() / 2f;
+            if (glassRadius != radius) {
+                glassRadius = radius;
+                glass.setRadius(radius);
+            }
+            glass.setBounds((int) rect.left, (int) rect.top, (int) Math.ceil(rect.right), (int) Math.ceil(rect.bottom));
+            glass.setAlpha((int) (0xFF * alpha));
+            glass.draw(canvas);
+        } else {
+            final float bgAlpha = hasColorById ? 0.1f : 1f;
+            backgroundPaint.setShadowLayer(0, 0, 0, 0);
+            int wasAlpha = backgroundPaint.getAlpha();
+            backgroundPaint.setAlpha((int) (wasAlpha * alpha * bgAlpha));
+            canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, backgroundPaint);
+            backgroundPaint.setAlpha(wasAlpha);
+            if (hasColorById && buttonColor != 0) {
+                if (radialGradient == null || radialGradientWidth != rect.width()) {
+                    radialGradientWidth = rect.width();
+                    radialGradient = new RadialGradient(
+                        rect.width() / 2f, dp(17) / 2f, rect.width() * 0.65f,
+                        Theme.multAlpha(buttonColor, 0.8f), buttonColor,
+                        Shader.TileMode.CLAMP
+                    );
+                    shaderPaint.setShader(radialGradient);
+                }
+                matrix.setTranslate(rect.left, rect.top);
+                radialGradient.setLocalMatrix(matrix);
+                shaderPaint.setAlpha((int) (0xFF * alpha));
+                canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, shaderPaint);
+            }
+        }
+
+        gradientOverlayPaint.setShader(new LinearGradient(
+            rect.left, rect.top, rect.right, rect.bottom,
+            new int[]{multAlpha(0x2800D4FF, alpha), multAlpha(0x227C3AED, alpha), multAlpha(0x2410B981, alpha)},
+            null,
+            Shader.TileMode.CLAMP
+        ));
+        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, gradientOverlayPaint);
+
+        strokePaint.setStyle(Paint.Style.STROKE);
+        strokePaint.setStrokeWidth(dpf2(1.2f));
+        strokePaint.setShader(new LinearGradient(
+            rect.left, rect.top, rect.right, rect.bottom,
+            new int[]{multAlpha(0xCC00D4FF, alpha), multAlpha(0xAA7C3AED, alpha), multAlpha(0xCC10B981, alpha)},
+            null,
+            Shader.TileMode.CLAMP
+        ));
+        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, strokePaint);
+        strokePaint.setShader(null);
+
+        clipPath.rewind();
+        clipPath.addRoundRect(rect, rect.height() / 2f, rect.height() / 2f, Path.Direction.CW);
+
+        canvas.save();
+        canvas.clipPath(clipPath);
+        canvas.translate(rect.left + dp(8), 0);
+        drawContent(canvas, alpha);
+
+        canvas.restore();
+
+        canvas.restore();
     }
 }

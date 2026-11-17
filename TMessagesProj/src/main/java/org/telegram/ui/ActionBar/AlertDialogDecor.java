@@ -30,6 +30,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.FileLog;
 import org.telegram.ui.Stories.recorder.KeyboardNotifier;
 
 public class AlertDialogDecor extends AlertDialog {
@@ -118,6 +119,20 @@ public class AlertDialogDecor extends AlertDialog {
         } catch (Exception ignored) {
             resEnterAnimation = -1;
             resExitAnimation = -1;
+        }
+    }
+
+    // Some vendor themes leave windowEnterAnimation/windowExitAnimation unset in the dialog animation style
+    @Nullable
+    private Animation loadAnimation(int res) {
+        if (res == 0 || res == -1) {
+            return null;
+        }
+        try {
+            return AnimationUtils.loadAnimation(getContext(), res);
+        } catch (Resources.NotFoundException e) {
+            FileLog.e(e);
+            return null;
         }
     }
 

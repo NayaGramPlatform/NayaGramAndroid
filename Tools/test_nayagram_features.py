@@ -77,13 +77,13 @@ def test_dynamic_footer_and_branding():
     props_source = Path("gradle.properties").read_text(encoding="utf-8")
     app_gradle_source = Path("TMessagesProj_App/build.gradle").read_text(encoding="utf-8")
     buildvars_source = Path("TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java").read_text(encoding="utf-8")
-    assert "APP_VERSION_CODE=4099" in props_source
-    assert "APP_VERSION_NAME=4.26.77 NG" in props_source
-    assert "BUILD_VERSION = 4099" in buildvars_source
-    assert "internal code 4099" in app_gradle_source
-    assert "4.26.77 NG" in app_gradle_source
-    assert '"4.26.77 NG"' in about_source
-    assert '"4.26.77 NG"' in settings_source
+    assert "APP_VERSION_CODE=4100" in props_source
+    assert "APP_VERSION_NAME=4.26.78 NG" in props_source
+    assert "BUILD_VERSION = 4100" in buildvars_source
+    assert "internal code 4100" in app_gradle_source
+    assert "4.26.78 NG" in app_gradle_source
+    assert '"4.26.78 NG"' in about_source
+    assert '"4.26.78 NG"' in settings_source
     assert "getInstalledAppVersionName()" in settings_source
     assert 'String nayaGramInfo = "NayaGram for Android v" + getInstalledAppVersionName() + " (" + code + ")";' in settings_source
     assert 'footer.setText("NayaGram v" + getAppVersion() + " • Build " + getInternalBuildCode()' in about_source
@@ -203,7 +203,7 @@ def test_advanced_feature_wiring():
     profile = (root / "TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java").read_text(encoding="utf-8")
     assert 'ConnectionsManager.getInstance(currentAccount).getCurrentDatacenterId()' in profile
     assert 'NayaConfig.getInstance().isShowIdAndDc() && user.id > 0' in profile
-    assert 'onlineTextView[2].setOnLongClickListener' in profile
+    assert ('onlineTextView.setOnLongClickListener' in profile or 'onlineTextView[2].setOnLongClickListener' in profile)
     assert 'long-press the line to copy' in tutorial
     assert 'Tutorial-only translation helper used by the Feature Pipeline language guide.' in translator
     assert 'It is not wired into private chats, groups, channels, or the main feature toggle.' in translator

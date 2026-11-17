@@ -219,8 +219,8 @@ android {
         }
     }
 
-    // NayaGram v4.26.77 NG: internal code 4099. Installed/Play code is 4099 * 10 + ABI (bundleAfat_SDK23 = 40992).
-    // Public name comes from APP_VERSION_NAME ("4.26.77 NG").
+    // NayaGram v4.26.78 NG: internal code 4100. Installed/Play code is 4100 * 10 + ABI (bundleAfat_SDK23 = 41002).
+    // Public name comes from APP_VERSION_NAME ("4.26.78 NG").
     defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
 
     applicationVariants.all { variant ->
@@ -250,8 +250,8 @@ android {
         externalNativeBuild {
             cmake {
                 version '3.22.1'
-                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-21', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
-                targets 'tmessages.49'
+                arguments '-DANDROID_STL=c++_static', '-DANDROID_PLATFORM=android-23', '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON'
+                targets 'tmessages.49', 'twidget'
             }
         }
     }
