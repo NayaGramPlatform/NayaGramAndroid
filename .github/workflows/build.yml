@@ -353,7 +353,7 @@ jobs:
             - **Version Name**: `${{ env.APP_VERSION_NAME }}`
             - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
             - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
-            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 41002, MTProto Layer 233 (Telegram 13.2.2), and Interactive Bot Widgets.
+            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 41022, MTProto Layer 233 (Telegram 13.2.2), and Interactive Bot Widgets.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab
