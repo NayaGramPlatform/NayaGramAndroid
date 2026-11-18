@@ -10552,14 +10552,21 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             Activity activity = AndroidUtilities.findActivity(getContext());
             Window window = activity == null ? null : activity.getWindow();
             if (window != null) {
-                flagSecure = new FlagSecureReason(window, () ->
-                    currentMessageObject != null && currentMessageObject.messageOwner != null && (
-                        currentMessageObject.type == MessageObject.TYPE_PAID_MEDIA && (groupMedia == null || !groupMedia.hidden) ||
+                flagSecure = new FlagSecureReason(window, () -> {
+                    if (currentMessageObject == null || currentMessageObject.messageOwner == null) {
+                        return false;
+                    }
+                    if (MessageObject.getMedia(currentMessageObject.messageOwner) instanceof TLRPC.TL_messageMediaWidget) {
+                        return false;
+                    }
+                    if (org.nayagram.platform.NayaConfig.getInstance().isAllowScreenshotsEnabled()) {
+                        return false;
+                    }
+                    return currentMessageObject.type == MessageObject.TYPE_PAID_MEDIA && (groupMedia == null || !groupMedia.hidden) ||
                         currentMessageObject.messageOwner.noforwards && !currentMessageObject.isEphemeral() ||
                         currentMessageObject.isVoiceOnce() ||
-                        currentMessageObject.hasRevealedExtendedMedia()
-                    )
-                );
+                        currentMessageObject.hasRevealedExtendedMedia();
+                });
                 if (attachedToWindow) {
                     flagSecure.attach();
                 }

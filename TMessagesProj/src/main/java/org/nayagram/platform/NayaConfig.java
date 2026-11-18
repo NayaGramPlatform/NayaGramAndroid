@@ -57,6 +57,7 @@ public class NayaConfig {
     private static final String KEY_AUTO_ADD_TEXT_VALUE = "feature_auto_add_text_value";
     private static final String KEY_ONE_TIME_VOICE_VIDEO = "feature_one_time_voice_video";
     private static final String KEY_HIDE_PHONE_NUMBER = "feature_hide_phone_number";
+    private static final String KEY_ALLOW_SCREENSHOTS = "feature_allow_screenshots";
     private static final String KEY_VERIFIED_BADGE = "feature_verified_badge";
     private static final String KEY_APP_THEME_MODE = "feature_app_theme_mode";
 
@@ -371,6 +372,8 @@ public class NayaConfig {
     public void setOneTimeVoiceVideoEnabled(boolean e) { preferences.edit().putBoolean(KEY_ONE_TIME_VOICE_VIDEO, e).apply(); }
     public boolean isHidePhoneNumberEnabled() { return preferences.getBoolean(KEY_HIDE_PHONE_NUMBER, false); }
     public void setHidePhoneNumberEnabled(boolean e) { preferences.edit().putBoolean(KEY_HIDE_PHONE_NUMBER, e).apply(); }
+    public boolean isAllowScreenshotsEnabled() { return preferences == null || preferences.getBoolean(KEY_ALLOW_SCREENSHOTS, true); }
+    public void setAllowScreenshotsEnabled(boolean e) { if (preferences != null) preferences.edit().putBoolean(KEY_ALLOW_SCREENSHOTS, e).apply(); }
 
     public int getAppThemeMode() { return preferences.getInt(KEY_APP_THEME_MODE, THEME_MODE_DARK_SLATE); }
     public void setAppThemeMode(int mode) { preferences.edit().putInt(KEY_APP_THEME_MODE, mode).apply(); }
@@ -514,6 +517,7 @@ public class NayaConfig {
             .putBoolean(KEY_ONE_TIME_VOICE_VIDEO, false)
             .putBoolean(KEY_PREVENT_MESSAGE_DELETION, false)
             .putBoolean(KEY_SAVE_EDIT_HISTORY, false)
+            .putBoolean(KEY_ALLOW_SCREENSHOTS, true)
             .apply();
     }
 }

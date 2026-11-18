@@ -249,7 +249,20 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
                 }
         ));
 
-// 23. Reduce Motion (functional: applies Telegram's animation preference)
+// 25. Allow Screenshots & Recording (Bot widgets, protected chats, stories)
+        allFeatures.add(new FeatureItem(
+                25,
+                0xFF10B981,
+                0xFF059669,
+                R.drawable.msg_photo_settings,
+                new String[]{"Allow Screenshots & Recording", "স্ক্রিনশট ও রেকর্ডিং অনুমতি", "السماح بلقطات الشاشة والتسجيل"},
+                new String[]{
+                        "Allow taking screenshots and screen recordings in interactive bot widgets and protected chats (except Secret Chats & Passcode Lock).",
+                        "বট উইজেট ও প্রটেক্টেড চ্যাটে স্ক্রিনশট ও স্ক্রিন রেকর্ডিং চালু রাখুন (সিক্রেট চ্যাট ও পাসকোড লক ছাড়া)।",
+                        "السماح بالتقاط لقطات الشاشة والتسجيل في ودجات البوتات والمحادثات المحمية (باستثناء المحادثات السرية وقفل رمز المرور)."
+                }
+        ));
+        // 23. Reduce Motion (functional: applies Telegram's animation preference)
         allFeatures.add(new FeatureItem(
                 23,
                 0xFF64748B,
@@ -318,6 +331,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: return cfg.isReadableTextEnabled();
             case 23: return cfg.isReduceMotion();
             case 24: return cfg.isPreventMessageDeletionEnabled();
+            case 25: return cfg.isAllowScreenshotsEnabled();
             case 11: return cfg.isShowIdAndDc();
             case 14: return true;
             default: return false;
@@ -337,6 +351,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: // Telegram native message font size
             case 23: // Telegram interface animation preference
             case 24: // Anti-Delete Messages
+            case 25: // Allow Screenshots & Recording
                 return true;
             default:
                 return false;
@@ -421,6 +436,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
             case 22: cfg.setReadableTextEnabled(newState); break;
             case 23: cfg.setReduceMotion(newState); break;
             case 24: cfg.setPreventMessageDeletionEnabled(newState); break;
+            case 25: cfg.setAllowScreenshotsEnabled(newState); break;
             case 11: cfg.setShowIdAndDc(newState); break;
         }
     }

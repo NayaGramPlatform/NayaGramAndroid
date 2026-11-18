@@ -8754,7 +8754,7 @@ public class ChatActivity extends BaseFragment implements
 
         flagSecure = new FlagSecureReason(getParentActivity().getWindow(), () ->
             currentEncryptedChat != null ||
-            isPeerNoForwards()
+            (isPeerNoForwards() && !org.nayagram.platform.NayaConfig.getInstance().isAllowScreenshotsEnabled())
         );
 
         if (oldMessage != null) {

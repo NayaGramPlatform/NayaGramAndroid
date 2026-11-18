@@ -223,6 +223,9 @@ jobs:
               print('\n'.join(libs) if libs else 'NONE')
               if not libs:
                   raise SystemExit('ERROR: AAB does not contain libtmessages.49.so')
+              twidget_libs = sorted(n for n in names if n.endswith('/libtwidget.so'))
+              if not twidget_libs:
+                  raise SystemExit('ERROR: AAB does not contain libtwidget.so')
               abis = {n.split('/')[2] for n in libs if n.startswith('base/lib/') and len(n.split('/')) > 3}
               if 'arm64-v8a' not in abis:
                   raise SystemExit('ERROR: arm64-v8a libtmessages.49.so missing')
@@ -353,7 +356,7 @@ jobs:
             - **Version Name**: `${{ env.APP_VERSION_NAME }}`
             - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
             - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
-            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 41032, MTProto Layer 233 (Telegram 13.2.2), and Interactive Bot Widgets.
+            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 41042, MTProto Layer 233 (Telegram 13.2.2), fixed Bot API 10.4 Interactive Widgets (twidget/widget-sandbox v0.6.5), and Screenshots/Screen Recording support.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab

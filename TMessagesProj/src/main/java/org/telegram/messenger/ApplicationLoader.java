@@ -305,15 +305,16 @@ public class ApplicationLoader extends Application {
         }
 
         super.onCreate();
-        try {
-            SchedulerInitializer.initializeScheduler(this);
-        } catch (Throwable t) {
-            FileLog.e("SchedulerInitializer hook error", t);
-        }
 
         // The widget engine's isolated process has no files, network or accounts: none of the client starts there.
         if (org.telegram.utils.twidget.WidgetEngineService.isEngineProcess()) {
             return;
+        }
+
+        try {
+            SchedulerInitializer.initializeScheduler(this);
+        } catch (Throwable t) {
+            FileLog.e("SchedulerInitializer hook error", t);
         }
 
         // AndroidUtilities must be initialized before FileLog
