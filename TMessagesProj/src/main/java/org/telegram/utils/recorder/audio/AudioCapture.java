@@ -113,6 +113,7 @@ final class AudioCapture {
     }
 
     void start() {
+        org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
         encoderHandler.post(this::startEncoder);
         captureHandler.post(this::startCapture);
     }
