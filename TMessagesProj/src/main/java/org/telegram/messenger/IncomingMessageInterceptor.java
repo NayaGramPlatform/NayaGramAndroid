@@ -3,6 +3,7 @@ package org.telegram.messenger;
 import android.content.Context;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.text.TextUtils;
 
 import org.nayagram.platform.NayaConfig;
 import org.telegram.tgnet.ConnectionsManager;
@@ -17,17 +18,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 /**
- * IncomingMessageInterceptor - Clean Auto Answer dispatcher.
- * - Replies to incoming messages with native Telegram formatting & links.
- * - Works immediately while offline/backgrounded (via FCM Push or background MTProto updates) by using a
- *   reference-counted background job latch and WakeLock until Telegram's server acknowledges the reply.
- * - Strictly preserves the user's offline / last-seen timestamp: never calls setAppPaused(false, false) while
- *   offline or on a secondary account, marks the sendMessage request as background=true, and immediately sends
- *   TL_account.updateStatus(offline=true) as soon as the server processes the auto-reply.
+ * IncomingMessageInterceptor - Private 1-on-1 Inbox Auto Answer dispatcher.
+ * - Strictly restricted to direct 1-on-1 private human chats ONLY (groups, supergroups, channels,
+ *   discussion threads, bots, support, and official service accounts are permanently blocked).
+ * - Supports rich formatted text, hyperlinks, and attached media (Photo, Video, Voice Note, Audio, File).
+ * - Works reliably online and offline/backgrounded (via FCM Push or background MTProto updates) using
+ *   a reference-counted background job latch and WakeLock until Telegram acknowledges the reply.
+ * - Preserves the user's offline / last-seen timestamp via background=true and TL_account.updateStatus(offline=true).
  */
 public class IncomingMessageInterceptor {
+
     private static final String TAG = "IncomingMessageInterceptor";
     private static final Pattern SINGLE_UNDERSCORE_PATTERN = Pattern.compile("(?<!_)_([^\\s_][^_]*?[^\\s_]|[^\\s_])_(?!_)");
+    private static final int TELEGRAM_MAX_CAPTION_LENGTH = 1024;
 
     private static final AtomicBoolean autoReplyDispatchOnUiThread = new AtomicBoolean(false);
     private static final ConcurrentHashMap<Integer, Long> keepOfflineUntilByAccount = new ConcurrentHashMap<>();
@@ -74,8 +77,8 @@ public class IncomingMessageInterceptor {
     }
 
     /**
-     * Called by SendMessagesHelper when a background/auto-reply TL_messages_sendMessage
-     * finishes (or exits early/errors). Releases its tracked background job token cleanly.
+     * Called by SendMessagesHelper when a background/auto-reply TL_messages_sendMessage or
+     * TL_messages_sendMedia finishes (or exits early/errors). Releases its tracked background job token cleanly.
      */
     public static void onAutoReplyServerResponse(final int accountId, final long dialogId, final boolean hasError) {
         JobHandle trackedHandle = dialogId != 0L ? jobHandlesByDialog.remove(dialogId) : null;
@@ -96,6 +99,7 @@ public class IncomingMessageInterceptor {
             } else if (dialogId != 0L) {
                 lastDispatchedDialogByAccount.remove(accountId, dialogId);
             }
+
             boolean shouldStayOffline = ApplicationLoader.mainInterfacePaused
                     || !ApplicationLoader.isScreenOn
                     || accountId != UserConfig.selectedAccount
@@ -126,13 +130,13 @@ public class IncomingMessageInterceptor {
         private final boolean trackBackground;
         private final long dialogId;
 
-        JobHandle(boolean trackBackground, long dialogId) {
+        JobHandle(boolean trackBackground, long dialogId, long safetyTimeoutMs) {
             this.trackBackground = trackBackground;
             this.dialogId = dialogId;
             if (trackBackground) {
-                acquireBackgroundJob();
+                acquireBackgroundJob(safetyTimeoutMs);
                 // Safety guard so a dead socket or aborted send can never hold WakeLock indefinitely
-                Utilities.globalQueue.postRunnable(this::release, 20_000L);
+                Utilities.globalQueue.postRunnable(this::release, safetyTimeoutMs);
             }
         }
 
@@ -146,7 +150,7 @@ public class IncomingMessageInterceptor {
         }
     }
 
-    private static void acquireBackgroundJob() {
+    private static void acquireBackgroundJob(long timeoutMs) {
         synchronized (backgroundLock) {
             if (pendingBackgroundJobs == 0 || activeBackgroundLatch == null || activeBackgroundLatch.getCount() == 0) {
                 activeBackgroundLatch = new CountDownLatch(1);
@@ -161,7 +165,7 @@ public class IncomingMessageInterceptor {
                             activeWakeLock.setReferenceCounted(false);
                         }
                         if (!activeWakeLock.isHeld()) {
-                            activeWakeLock.acquire(15_000L);
+                            activeWakeLock.acquire(Math.max(15_000L, timeoutMs));
                         }
                     }
                 }
@@ -199,7 +203,9 @@ public class IncomingMessageInterceptor {
         if (!config.isSmartAutoReply() && !autoReplyManager.isAutoReplyEnabled()) {
             return;
         }
-        if (messageObject.isOutOwner() || messageObject.isOut() || messageObject.messageOwner.action != null) {
+        final TLRPC.Message owner = messageObject.messageOwner;
+        if (messageObject.isOutOwner() || messageObject.isOut() || owner.action != null
+                || owner.post || owner.from_scheduled) {
             return;
         }
         if (messageObject.isReactionPush || messageObject.isStoryPush || messageObject.isStoryReactionPush
@@ -208,38 +214,58 @@ public class IncomingMessageInterceptor {
             return;
         }
 
+        // HARD 1-ON-1 PRIVATE HUMAN INBOX CHECK:
+        // Reject all groups, supergroups, broadcast channels, discussion threads, bots & system accounts.
+        if (owner.peer_id != null && !(owner.peer_id instanceof TLRPC.TL_peerUser)) {
+            return;
+        }
+        if (owner.from_id != null && !(owner.from_id instanceof TLRPC.TL_peerUser)) {
+            return;
+        }
         final long dialogId = messageObject.getDialogId();
         final int messageId = messageObject.getId();
-        if (dialogId == 0 || (autoReplyManager.isPrivateOnly() && dialogId <= 0)) {
+        if (!AutoReplyManager.isEligiblePrivateUserDialog(dialogId, accountId)) {
             return;
         }
         if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
             return;
         }
 
+        final boolean hasValidMediaAtCheck = autoReplyManager.hasValidMedia();
         final boolean isOfflineOrBackground = ApplicationLoader.mainInterfacePaused
                 || !ApplicationLoader.isScreenOn
                 || accountId != UserConfig.selectedAccount;
-
-        final JobHandle jobHandle = new JobHandle(isOfflineOrBackground, dialogId);
+        final long safetyTimeoutMs = hasValidMediaAtCheck ? 42_000L : 20_000L;
+        final JobHandle jobHandle = new JobHandle(isOfflineOrBackground, dialogId, safetyTimeoutMs);
 
         Utilities.globalQueue.postRunnable(() -> {
             boolean handedOffToSend = false;
             try {
+                if (!AutoReplyManager.isEligiblePrivateUserDialog(dialogId, accountId)) {
+                    return;
+                }
                 if (autoReplyManager.shouldSkipDuplicate(dialogId, messageId)) {
                     return;
                 }
 
-                String replyText = autoReplyManager.getAutoAnswerText();
-                if (replyText == null || replyText.trim().isEmpty()) {
+                final boolean hasMedia = autoReplyManager.hasValidMedia();
+                final int mediaType = hasMedia ? autoReplyManager.getMediaType() : AutoReplyManager.MEDIA_TYPE_NONE;
+                final String mediaPath = hasMedia ? autoReplyManager.getMediaPath() : "";
+                final String mediaMime = hasMedia ? autoReplyManager.getMediaMime() : "";
+
+                String replyText = hasMedia
+                        ? autoReplyManager.getRawAutoAnswerText()
+                        : autoReplyManager.getAutoAnswerText();
+                if (!hasMedia && (replyText == null || replyText.trim().isEmpty())) {
                     replyText = config.getAutoReplyText();
                 }
-                if (replyText == null || replyText.trim().isEmpty()) {
+                final boolean hasText = replyText != null && !replyText.trim().isEmpty();
+                if (!hasText && !hasMedia) {
                     return;
                 }
 
-                String incomingText = messageObject.messageOwner.message;
-                if (incomingText != null && incomingText.trim().equalsIgnoreCase(replyText.trim())) {
+                String incomingText = owner.message;
+                if (!hasMedia && hasText && incomingText != null && incomingText.trim().equalsIgnoreCase(replyText.trim())) {
                     return;
                 }
 
@@ -248,84 +274,46 @@ public class IncomingMessageInterceptor {
                 if (now <= 0) {
                     now = (int) (System.currentTimeMillis() / 1000L);
                 }
-                if (messageObject.messageOwner.date > 0 && Math.abs(now - messageObject.messageOwner.date) > 21600) {
+                if (owner.date > 0 && Math.abs(now - owner.date) > 21600) {
                     return;
                 }
-
                 if (!PerChatAutoReplySettings.canAutoReplyForChat(dialogId)) {
                     return;
                 }
-
                 if (MessagesController.getInstance(accountId).getSendPaidMessagesStars(dialogId) > 0) {
                     return;
                 }
 
-                // Ensure peer (User or Chat) is fully loaded so SendMessagesHelper has valid access_hash
-                if (dialogId > 0) {
-                    if (dialogId == UserConfig.getInstance(accountId).getClientUserId()) {
-                        return;
-                    }
-                    TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
-                    if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
+                // Resolve private 1-on-1 human user peer so SendMessagesHelper has a valid access_hash
+                TLRPC.User user = MessagesController.getInstance(accountId).getUser(dialogId);
+                if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
+                    try {
+                        TLRPC.User dbUser = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
+                        if (dbUser != null && !dbUser.min && (dbUser.access_hash != 0 || dbUser.self)) {
+                            MessagesController.getInstance(accountId).putUser(dbUser, false);
+                            user = dbUser;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+                if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
+                    // Brand-new private human contact via FCM push: wake network & fetch difference;
+                    // do NOT mark dialog answered yet so getDifference() triggers auto-reply with valid access_hash.
+                    ConnectionsManager.onInternalPushReceived(accountId);
+                    ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
+                    ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
+                    ConnectionsManager.getInstance(accountId).checkConnection();
+                    autoReplyManager.ensureBackgroundKeepAlive();
+                    AndroidUtilities.runOnUIThread(() -> {
                         try {
-                            TLRPC.User dbUser = MessagesStorage.getInstance(accountId).getUserSync(dialogId);
-                            if (dbUser != null && !dbUser.min && (dbUser.access_hash != 0 || dbUser.self)) {
-                                MessagesController.getInstance(accountId).putUser(dbUser, false);
-                                user = dbUser;
-                            }
+                            MessagesController.getInstance(accountId).getDifference();
                         } catch (Throwable ignored) {}
-                    }
-                    if (user == null || user.min || (user.access_hash == 0 && !user.self && user.fromMessageDialogId == 0)) {
-                        // Peer not in local DB yet (e.g. brand-new contact via FCM push). Wake network & fetch difference;
-                        // do NOT mark dialog answered yet so getDifference() will trigger auto-reply with valid access_hash!
-                        ConnectionsManager.onInternalPushReceived(accountId);
-                        ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
-                        ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
-                        ConnectionsManager.getInstance(accountId).checkConnection();
-                        autoReplyManager.ensureBackgroundKeepAlive();
-                        AndroidUtilities.runOnUIThread(() -> {
-                            try {
-                                MessagesController.getInstance(accountId).getDifference();
-                            } catch (Throwable ignored) {}
-                        });
-                        // Keep the background handle alive while getDifference fetches the message + user,
-                        // then release this specific handle after 14s so PushListenerController waits for dispatch.
-                        handedOffToSend = true;
-                        Utilities.globalQueue.postRunnable(jobHandle::release, 14_000L);
-                        return;
-                    }
-                    if (user.bot || user.self) {
-                        return;
-                    }
-                } else {
-                    TLRPC.Chat chat = MessagesController.getInstance(accountId).getChat(-dialogId);
-                    if (chat == null || chat.min) {
-                        try {
-                            TLRPC.Chat dbChat = MessagesStorage.getInstance(accountId).getChatSync(-dialogId);
-                            if (dbChat != null && !dbChat.min) {
-                                MessagesController.getInstance(accountId).putChat(dbChat, false);
-                                chat = dbChat;
-                            }
-                        } catch (Throwable ignored) {}
-                    }
-                    if (chat == null || chat.min) {
-                        ConnectionsManager.onInternalPushReceived(accountId);
-                        ConnectionsManager.getInstance(accountId).keepNetworkAliveInBackground();
-                        ConnectionsManager.getInstance(accountId).resumeNetworkMaybe();
-                        ConnectionsManager.getInstance(accountId).checkConnection();
-                        autoReplyManager.ensureBackgroundKeepAlive();
-                        AndroidUtilities.runOnUIThread(() -> {
-                            try {
-                                MessagesController.getInstance(accountId).getDifference();
-                            } catch (Throwable ignored) {}
-                        });
-                        handedOffToSend = true;
-                        Utilities.globalQueue.postRunnable(jobHandle::release, 14_000L);
-                        return;
-                    }
-                    if (ChatObject.isChannel(chat) && !chat.megagroup && !ChatObject.canPost(chat)) {
-                        return;
-                    }
+                    });
+                    handedOffToSend = true;
+                    Utilities.globalQueue.postRunnable(jobHandle::release, 14_000L);
+                    return;
+                }
+                if (user.bot || user.self || user.support || user.deleted) {
+                    return;
                 }
 
                 // Synchronously check and mark message + cooldown window to prevent duplicate sends from push + socket
@@ -335,60 +323,63 @@ public class IncomingMessageInterceptor {
                     }
                     autoReplyManager.markMessageAnswered(dialogId, messageId);
                 }
+
                 lastDispatchedDialogByAccount.put(accountId, dialogId);
 
                 ArrayList<TLRPC.MessageEntity> entities = null;
-                String cleanText = replyText;
-                String entJson = autoReplyManager.getAutoAnswerEntitiesJson();
-                if (entJson != null && !entJson.isEmpty()) {
-                    entities = AutoReplyManager.parseEntitiesFromJson(entJson);
-                }
-                if (entities == null || entities.isEmpty()) {
-                    String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
-                    CharSequence[] messageArr = new CharSequence[]{preprocessed};
-                    entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
-                    if (entities == null) {
-                        entities = new ArrayList<>();
+                String cleanText = hasText ? replyText : "";
+                if (hasText) {
+                    String entJson = autoReplyManager.getAutoAnswerEntitiesJson();
+                    if (entJson != null && !entJson.isEmpty()) {
+                        entities = AutoReplyManager.parseEntitiesFromJson(entJson);
                     }
-                    cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
-                }
+                    if (entities == null || entities.isEmpty()) {
+                        String preprocessed = SINGLE_UNDERSCORE_PATTERN.matcher(replyText).replaceAll("__$1__");
+                        CharSequence[] messageArr = new CharSequence[]{preprocessed};
+                        entities = MediaDataController.getInstance(accountId).getEntities(messageArr, true);
+                        if (entities == null) {
+                            entities = new ArrayList<>();
+                        }
+                        cleanText = messageArr[0] != null ? messageArr[0].toString() : replyText;
+                    }
 
-                try {
-                    int activeStyle = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
-                    if (activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE
-                            && activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR
-                            && cleanText.length() > 0) {
-                        TLRPC.MessageEntity entity = null;
-                        switch (activeStyle) {
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_BOLD:
-                                entity = new TLRPC.TL_messageEntityBold();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_ITALIC:
-                                entity = new TLRPC.TL_messageEntityItalic();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_SPOILER:
-                                entity = new TLRPC.TL_messageEntitySpoiler();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_MONO:
-                                entity = new TLRPC.TL_messageEntityCode();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_STRIKE:
-                                entity = new TLRPC.TL_messageEntityStrike();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_UNDERLINE:
-                                entity = new TLRPC.TL_messageEntityUnderline();
-                                break;
-                            case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_QUOTE:
-                                entity = new TLRPC.TL_messageEntityBlockquote();
-                                break;
+                    try {
+                        int activeStyle = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyle();
+                        if (activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_NONE
+                                && activeStyle != org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_REGULAR
+                                && cleanText.length() > 0) {
+                            TLRPC.MessageEntity entity = null;
+                            switch (activeStyle) {
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_BOLD:
+                                    entity = new TLRPC.TL_messageEntityBold();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_ITALIC:
+                                    entity = new TLRPC.TL_messageEntityItalic();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_SPOILER:
+                                    entity = new TLRPC.TL_messageEntitySpoiler();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_MONO:
+                                    entity = new TLRPC.TL_messageEntityCode();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_STRIKE:
+                                    entity = new TLRPC.TL_messageEntityStrike();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_UNDERLINE:
+                                    entity = new TLRPC.TL_messageEntityUnderline();
+                                    break;
+                                case org.nayagram.platform.textstyle.NGTextStyleHelper.STYLE_QUOTE:
+                                    entity = new TLRPC.TL_messageEntityBlockquote();
+                                    break;
+                            }
+                            if (entity != null) {
+                                entity.offset = 0;
+                                entity.length = cleanText.length();
+                                entities.add(entity);
+                            }
                         }
-                        if (entity != null) {
-                            entity.offset = 0;
-                            entity.length = cleanText.length();
-                            entities.add(entity);
-                        }
-                    }
-                } catch (Throwable ignored) {}
+                    } catch (Throwable ignored) {}
+                }
 
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
                 final String finalCleanText = cleanText;
@@ -399,7 +390,7 @@ public class IncomingMessageInterceptor {
                         || config.isAutoReplyStealthMode();
 
                 if (preserveOffline) {
-                    markKeepOfflineWindow(accountId, 25_000L);
+                    markKeepOfflineWindow(accountId, hasMedia ? 45_000L : 25_000L);
                 }
 
                 if (isOfflineOrBackground) {
@@ -409,6 +400,7 @@ public class IncomingMessageInterceptor {
                     }
                 }
                 handedOffToSend = true;
+
                 AndroidUtilities.runOnUIThread(() -> {
                     boolean sentDispatched = false;
                     try {
@@ -424,10 +416,23 @@ public class IncomingMessageInterceptor {
 
                         autoReplyDispatchOnUiThread.set(true);
                         try {
-                            SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-                                    finalCleanText, dialogId, null, null, null, true, finalEntities, null, sendExtraParams, false, 0, 0, null, false
-                            );
-                            SendMessagesHelper.getInstance(accountId).sendMessage(params);
+                            if (hasMedia && !TextUtils.isEmpty(mediaPath)) {
+                                dispatchMediaAutoReply(
+                                        accountId,
+                                        dialogId,
+                                        mediaType,
+                                        mediaPath,
+                                        mediaMime,
+                                        finalCleanText,
+                                        finalEntities,
+                                        sendExtraParams
+                                );
+                            } else {
+                                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                                        finalCleanText, dialogId, null, null, null, true, finalEntities, null, sendExtraParams, false, 0, 0, null, false
+                                );
+                                SendMessagesHelper.getInstance(accountId).sendMessage(params);
+                            }
                             sentDispatched = true;
                         } finally {
                             autoReplyDispatchOnUiThread.set(false);
@@ -443,7 +448,8 @@ public class IncomingMessageInterceptor {
                         }
                     }
                 });
-                FileLog.d(TAG + ": auto-answer dispatched to dialog " + dialogId + " (preserveOffline=" + preserveOffline + ")");
+                FileLog.d(TAG + ": private inbox auto-answer dispatched to user " + dialogId
+                        + " (mediaType=" + mediaType + ", preserveOffline=" + preserveOffline + ")");
             } catch (Exception e) {
                 FileLog.e(TAG + ": auto-answer failed", e);
             } finally {
@@ -452,6 +458,98 @@ public class IncomingMessageInterceptor {
                 }
             }
         });
+    }
+
+    private static void dispatchMediaAutoReply(
+            int accountId,
+            long dialogId,
+            int mediaType,
+            String mediaPath,
+            String mediaMime,
+            String text,
+            ArrayList<TLRPC.MessageEntity> entities,
+            HashMap<String, String> extraParams
+    ) {
+        AccountInstance accountInstance = AccountInstance.getInstance(accountId);
+        boolean hasText = !TextUtils.isEmpty(text) && !text.trim().isEmpty();
+        boolean longText = hasText && text.length() > TELEGRAM_MAX_CAPTION_LENGTH;
+        String caption = (hasText && !longText) ? text : "";
+        ArrayList<TLRPC.MessageEntity> captionEntities = caption.isEmpty() ? null : entities;
+
+        if (mediaType == AutoReplyManager.MEDIA_TYPE_PHOTO || mediaType == AutoReplyManager.MEDIA_TYPE_VIDEO) {
+            SendMessagesHelper.SendingMediaInfo info = new SendMessagesHelper.SendingMediaInfo();
+            info.path = mediaPath;
+            info.isVideo = (mediaType == AutoReplyManager.MEDIA_TYPE_VIDEO);
+            info.caption = caption.isEmpty() ? null : caption;
+            info.entities = captionEntities;
+            info.params = new HashMap<>(extraParams);
+            ArrayList<SendMessagesHelper.SendingMediaInfo> mediaList = new ArrayList<>(1);
+            mediaList.add(info);
+            SendMessagesHelper.prepareSendingMedia(
+                    accountInstance,
+                    mediaList,
+                    dialogId,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    false,
+                    null,
+                    false,
+                    0,
+                    0,
+                    0,
+                    false,
+                    null,
+                    null,
+                    0,
+                    false,
+                    0,
+                    0,
+                    null
+            );
+        } else {
+            // Voice notes (.ogg Opus auto-detected as native Telegram voice message),
+            // audio tracks (.m4a/.mp3), and files/documents
+            ArrayList<String> paths = new ArrayList<>(1);
+            paths.add(mediaPath);
+            ArrayList<String> originalPaths = new ArrayList<>(1);
+            originalPaths.add(mediaPath);
+            SendMessagesHelper.prepareSendingDocuments(
+                    accountInstance,
+                    paths,
+                    originalPaths,
+                    null,
+                    caption.isEmpty() ? null : caption,
+                    captionEntities,
+                    TextUtils.isEmpty(mediaMime) ? null : mediaMime,
+                    dialogId,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    0,
+                    0,
+                    null,
+                    null,
+                    0,
+                    false,
+                    0,
+                    0,
+                    null
+            );
+        }
+
+        // If message text exceeds Telegram's 1024-char caption limit, also send full formatted text right after
+        if (longText) {
+            SendMessagesHelper.SendMessageParams textParams = SendMessagesHelper.SendMessageParams.of(
+                    text, dialogId, null, null, null, true, entities, null, extraParams, false, 0, 0, null, false
+            );
+            SendMessagesHelper.getInstance(accountId).sendMessage(textParams);
+        }
     }
 
     private static void sendOfflineStatusNow(final int accountId, final Runnable onComplete) {

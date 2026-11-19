@@ -428,7 +428,7 @@ public class FeatureListAdapter extends RecyclerView.Adapter<FeatureListViewHold
         if (cfg == null) return;
         switch (item.number) {
             case 2: cfg.setMessageScheduler(newState); break;
-            case 3: cfg.setSmartAutoReply(newState); break;
+            case 3: org.telegram.messenger.AutoReplyManager.getInstance().setAutoReplyEnabled(newState); break;
             case 4: cfg.setStorySaverEnabled(newState); break;
             case 5: cfg.setAnonymousStories(newState); break;
             case 18: cfg.setDataSaverEnabled(newState); break;

@@ -902,8 +902,20 @@ public class NGSettingsActivity extends BaseFragment {
                     String modeName = mode == NayaConfig.THEME_MODE_LIGHT ? "Light Slate" : (mode == NayaConfig.THEME_MODE_NEON_AURORA ? "Naya Neon Aurora (Cyan-Purple)" : "Dark Slate Blue");
                     c.setActionFeature(R.drawable.msg_theme, 0xFF8B5CF6, "Naya Theme Mode", modeName, true);
                 } else if (position == rowSmartAutoReply) {
-                    boolean active = org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled();
-                    c.setActionFeature(R.drawable.ic_naya_robot, 0xFF10B981, "Auto answer", active ? "Active • Replies once automatically" : "Automatically reply once to the first message", true);
+                    org.telegram.messenger.AutoReplyManager arm = org.telegram.messenger.AutoReplyManager.getInstance();
+                    boolean active = arm.isAutoReplyEnabled();
+                    String mediaSuffix = arm.hasValidMedia()
+                            ? (" + " + org.telegram.messenger.AutoReplyManager.getMediaTypeLabel(arm.getMediaType()))
+                            : "";
+                    c.setActionFeature(
+                            R.drawable.ic_naya_robot,
+                            0xFF10B981,
+                            "Auto answer",
+                            active
+                                    ? ("Active • Private 1-on-1 inbox only" + mediaSuffix)
+                                    : "Private 1-on-1 inbox auto-reply (groups & channels excluded)",
+                            true
+                    );
                 } else if (position == rowTextStyle) {
                     String styleName = org.nayagram.platform.textstyle.NGTextStyleHelper.getSelectedStyleName();
                     c.setActionFeature(R.drawable.msg_text_outlined, 0xFF0EA5E9, "Text style", "Active: " + styleName + " • Tap to choose Bold, Italic, Mono, Spoiler, Quote", true);

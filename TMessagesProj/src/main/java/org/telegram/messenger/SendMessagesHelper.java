@@ -6143,6 +6143,15 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                         request.ephemeralReceiverBotId = ephemeralReceiverBotId;
                         request.peer = sendToPeer;
                         request.silent = newMsg.silent;
+                        if (IncomingMessageInterceptor.isAutoReplyDispatchActive()
+                                || IncomingMessageInterceptor.isKeepOfflineActive(currentAccount)
+                                || (params != null && "1".equals(params.get("ng_auto_reply")))
+                                || ApplicationLoader.mainInterfacePaused
+                                || !ApplicationLoader.isScreenOn
+                                || currentAccount != UserConfig.selectedAccount
+                                || org.nayagram.platform.NayaConfig.getInstance().isStealthOfflinePresenceEnabled()) {
+                            request.background = true;
+                        }
                         int replyToTopMsgInt = 0;
                         if (replyToTopMsg != null) {
                             replyToTopMsgInt = replyToTopMsg.getId();
@@ -11540,6 +11549,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                             final String originalPathFinal = originalPath;
                             final String finalPath = path;
                             final HashMap<String, String> params = new HashMap<>();
+                            if (info.params != null) {
+                                params.putAll(info.params);
+                            }
                             final Bitmap thumbFinal = thumb;
                             final String thumbKeyFinal = thumbKey;
                             final TLRPC.PhotoSize coverFinal = cover;
@@ -11746,6 +11758,9 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
                                 final TLRPC.TL_photo photoFinal = photo;
                                 final String parentFinal = parentObject;
                                 final HashMap<String, String> params = new HashMap<>();
+                                if (info.params != null) {
+                                    params.putAll(info.params);
+                                }
                                 final Bitmap[] bitmapFinal = new Bitmap[1];
                                 final String[] keyFinal = new String[1];
                                 if (photo.has_stickers = info.masks != null && !info.masks.isEmpty()) {
