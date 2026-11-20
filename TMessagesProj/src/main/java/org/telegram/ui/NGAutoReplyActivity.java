@@ -19,9 +19,7 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
-import android.os.PowerManager;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
@@ -88,11 +86,6 @@ public class NGAutoReplyActivity extends BaseFragment {
     private ActionBarMenuItem toggleMenuItem;
     private EditTextCaption autoAnswerEditText;
     private boolean suppressTextWatcher = false;
-
-    // Battery status row views (refreshed onResume)
-    private FrameLayout batteryIconWrap;
-    private TextView batterySubView;
-    private TextView batteryBadgeView;
 
     // Live Inbox Preview card views
     private LinearLayout previewMediaContainer;
@@ -280,9 +273,7 @@ public class NGAutoReplyActivity extends BaseFragment {
                 }
         ));
 
-        settingsCard.addView(createHairlineDivider(context, isDark));
 
-        settingsCard.addView(createBatteryStatusRow(context, isDark));
 
         column.addView(settingsCard, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 0, 0, 14));
 
@@ -566,93 +557,6 @@ public class NGAutoReplyActivity extends BaseFragment {
 
         fragmentView = root;
         return fragmentView;
-    }
-
-    private View createBatteryStatusRow(Context context, boolean isDark) {
-        LinearLayout row = new LinearLayout(context);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(AndroidUtilities.dp(16), AndroidUtilities.dp(12), AndroidUtilities.dp(16), AndroidUtilities.dp(12));
-        TypedValue tv = new TypedValue();
-        if (context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true)) {
-            row.setBackgroundResource(tv.resourceId);
-        }
-        row.setClickable(true);
-        row.setOnClickListener(v -> {
-            try {
-                Intent intent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                if (getParentActivity() != null) {
-                    getParentActivity().startActivity(intent);
-                } else {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
-                }
-            } catch (Throwable t) {
-                BulletinFactory.of(NGAutoReplyActivity.this)
-                        .createSimpleBulletin(R.raw.chats_infotip, "Open Phone Settings > Apps > NayaGram > Battery > Unrestricted")
-                        .show();
-            }
-        });
-
-        batteryIconWrap = new FrameLayout(context);
-        ImageView iconView = new ImageView(context);
-        iconView.setImageResource(R.drawable.msg_settings_old);
-        iconView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        iconView.setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN));
-        batteryIconWrap.addView(iconView, LayoutHelper.createFrame(20, 20, Gravity.CENTER));
-        row.addView(batteryIconWrap, LayoutHelper.createLinear(36, 36, Gravity.CENTER_VERTICAL, 0, 0, 12, 0));
-
-        LinearLayout texts = new LinearLayout(context);
-        texts.setOrientation(LinearLayout.VERTICAL);
-
-        TextView titleView = new TextView(context);
-        titleView.setText("Offline & Background Mode");
-        titleView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15.5f);
-        titleView.setTypeface(AndroidUtilities.bold());
-        titleView.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteBlackText));
-        texts.addView(titleView);
-
-        batterySubView = new TextView(context);
-        batterySubView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
-        batterySubView.setTextColor(isDark ? 0xFFCBD5E1 : 0xFF334155);
-        batterySubView.setPadding(0, AndroidUtilities.dp(2), 0, 0);
-        texts.addView(batterySubView);
-
-        row.addView(texts, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        batteryBadgeView = new TextView(context);
-        batteryBadgeView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 11f);
-        batteryBadgeView.setTypeface(AndroidUtilities.bold());
-        batteryBadgeView.setGravity(Gravity.CENTER);
-        batteryBadgeView.setPadding(AndroidUtilities.dp(8), AndroidUtilities.dp(4), AndroidUtilities.dp(8), AndroidUtilities.dp(4));
-        row.addView(batteryBadgeView, LayoutHelper.createLinear(LayoutHelper.WRAP_CONTENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_VERTICAL, 8, 0, 0, 0));
-
-        refreshBatteryStatusRow(context);
-        return row;
-    }
-
-    private void refreshBatteryStatusRow(Context context) {
-        if (context == null || batteryIconWrap == null || batterySubView == null || batteryBadgeView == null) return;
-        boolean ignoringBattery = isIgnoringBatteryOptimizations(context);
-        int color = ignoringBattery ? 0xFF10B981 : 0xFFF59E0B;
-
-        GradientDrawable iconBg = new GradientDrawable();
-        iconBg.setShape(GradientDrawable.RECTANGLE);
-        iconBg.setCornerRadius(AndroidUtilities.dp(10));
-        iconBg.setColor(color);
-        batteryIconWrap.setBackground(iconBg);
-
-        batterySubView.setText(ignoringBattery
-                ? "Unrestricted — offline & background replies run 24/7"
-                : "Restricted — tap to allow Unrestricted battery for offline replies");
-
-        batteryBadgeView.setText(ignoringBattery ? "OPTIMIZED" : "FIX NOW");
-        batteryBadgeView.setTextColor(color);
-        GradientDrawable gd = new GradientDrawable();
-        gd.setCornerRadius(AndroidUtilities.dp(8));
-        gd.setColor((color & 0x00FFFFFF) | (isDarkTheme ? 0x33000000 : 0x1A000000));
-        gd.setStroke(AndroidUtilities.dp(1), color);
-        batteryBadgeView.setBackground(gd);
     }
 
     private View createMediaAttachTile(Context context, int iconRes, int color, String label, boolean isDark, View.OnClickListener onClick) {
@@ -1583,18 +1487,6 @@ public class NGAutoReplyActivity extends BaseFragment {
         return d;
     }
 
-    private boolean isIgnoringBatteryOptimizations(Context context) {
-        if (context == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        try {
-            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            return pm != null && pm.isIgnoringBatteryOptimizations(context.getPackageName());
-        } catch (Throwable ignored) {
-            return false;
-        }
-    }
-
     private View buildFormattingToolbar(Context context, boolean isDark) {
         HorizontalScrollView hsv = new HorizontalScrollView(context);
         hsv.setHorizontalScrollBarEnabled(false);
@@ -1820,9 +1712,6 @@ public class NGAutoReplyActivity extends BaseFragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (getParentActivity() != null) {
-            refreshBatteryStatusRow(getParentActivity());
-        }
     }
 
     @Override

@@ -19928,7 +19928,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                     if (messageObject.isMusic() && canSaveSelectedMessage(messageObject)) {
                         canSaveMusicCount--;
-                    } else if (messageObject.isDocument() && canSaveSelectedMessage(messageObject)) {
+                    } else if ((messageObject.isDocument() || (messageObject.isVoice() && !messageObject.isVoiceOnce())) && canSaveSelectedMessage(messageObject)) {
                         canSaveDocumentsCount--;
                     } else {
                         cantSaveMessagesCount--;
@@ -19965,7 +19965,7 @@ public class ChatActivity extends BaseFragment implements
                     }
                     if (messageObject.isMusic() && canSaveSelectedMessage(messageObject)) {
                         canSaveMusicCount++;
-                    } else if (messageObject.isDocument() && canSaveSelectedMessage(messageObject)) {
+                    } else if ((messageObject.isDocument() || (messageObject.isVoice() && !messageObject.isVoiceOnce())) && canSaveSelectedMessage(messageObject)) {
                         canSaveDocumentsCount++;
                     } else {
                         cantSaveMessagesCount++;
@@ -34833,6 +34833,7 @@ public class ChatActivity extends BaseFragment implements
                 }
                 boolean isMusic = selectedObject.isMusic();
                 boolean isDocument = selectedObject.isDocument();
+                boolean isVoice = selectedObject.isVoice();
 
                 if (selectedObject.isPoll()) {
                     final TLRPC.Message omsg = selectedObject.messageOwner;
@@ -34866,7 +34867,7 @@ public class ChatActivity extends BaseFragment implements
                             BulletinFactory.of(this).createDownloadBulletin(isMusicFinal ? BulletinFactory.FileType.AUDIOS : BulletinFactory.FileType.UNKNOWNS, count, themeDelegate).show();
                         }
                     });
-                } else if (isMusic || isDocument) {
+                } else if (isMusic || isDocument || isVoice) {
                     ArrayList<MessageObject> messageObjects;
                     if (selectedObjectGroup != null) {
                         messageObjects = new ArrayList<>(selectedObjectGroup.messages);
@@ -34874,13 +34875,13 @@ public class ChatActivity extends BaseFragment implements
                         messageObjects = new ArrayList<>();
                         messageObjects.add(selectedObject);
                     }
-                    final boolean isMusicFinal = isMusic;
+                    final boolean isAudioFinal = isMusic || isVoice;
                     MediaController.saveFilesFromMessages(getParentActivity(), getAccountInstance(), messageObjects, (count) -> {
                         if (getParentActivity() == null || fragmentView == null) {
                             return;
                         }
                         if (count > 0) {
-                            BulletinFactory.of(this).createDownloadBulletin(isMusicFinal ? BulletinFactory.FileType.AUDIOS : BulletinFactory.FileType.UNKNOWNS, count, themeDelegate).show();
+                            BulletinFactory.of(this).createDownloadBulletin(isAudioFinal ? BulletinFactory.FileType.AUDIOS : BulletinFactory.FileType.UNKNOWNS, count, themeDelegate).show();
                         }
                     });
                 } else if (selectedObject.isLivePhoto()) {
@@ -46974,6 +46975,10 @@ public class ChatActivity extends BaseFragment implements
                             }
                         } else if (selectedObject.isMusic() && !noforwardsOrPaidMedia && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()) {
                             items.add(LocaleController.getString(R.string.SaveToMusic));
+                            options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
+                            icons.add(R.drawable.msg_download);
+                        } else if (selectedObject.isVoice() && !noforwardsOrPaidMedia && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()) {
+                            items.add(LocaleController.getString(R.string.SaveToDownloads));
                             options.add(OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC);
                             icons.add(R.drawable.msg_download);
                         } else if (selectedObject.isDocument() && !noforwardsOrPaidMedia && !selectedObject.isVoiceOnce() && !selectedObject.isRoundOnce()) {

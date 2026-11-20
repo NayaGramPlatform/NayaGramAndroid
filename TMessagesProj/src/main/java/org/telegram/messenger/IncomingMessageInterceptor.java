@@ -194,7 +194,63 @@ public class IncomingMessageInterceptor {
         }
     }
 
+    /**
+     * Triggered directly from PushListenerController when an FCM push arrives while offline/closed.
+     * Guarantees the push process holds a WakeLock and JobHandle until the reply is dispatched & ACKed.
+     */
+    public static void processIncomingPushMessage(MessageObject messageObject, int accountId) {
+        processIncomingMessageInternal(messageObject, accountId, true);
+    }
+
+    /**
+     * Triggered from PushListenerController when a private 1-on-1 push arrives without readable text
+     * (e.g. locked/hidden push preview or muted message) so MTProto wakes up and fetches difference
+     * while holding a background JobHandle.
+     */
+    public static void triggerOfflineDifferenceSync(int accountId, long dialogId) {
+        try {
+            final AutoReplyManager autoReplyManager = AutoReplyManager.getInstance();
+            final NayaConfig config = NayaConfig.getInstance();
+            if (!config.isSmartAutoReply() && !autoReplyManager.isAutoReplyEnabled()) {
+                return;
+            }
+            if (!AutoReplyManager.isEligiblePrivateUserDialog(dialogId, accountId)) {
+                return;
+            }
+            if (autoReplyManager.hasAnsweredDialog(dialogId)) {
+                return;
+            }
+            final long timeoutMs = autoReplyManager.hasValidMedia() ? 38_000L : 20_000L;
+            final JobHandle jobHandle = new JobHandle(true, dialogId, timeoutMs);
+            JobHandle prev = jobHandlesByDialog.put(dialogId, jobHandle);
+            if (prev != null && prev != jobHandle) {
+                prev.release();
+            }
+            markKeepOfflineWindow(accountId, timeoutMs);
+            AndroidUtilities.runOnUIThread(() -> {
+                try {
+                    ConnectionsManager cm = ConnectionsManager.getInstance(accountId);
+                    ConnectionsManager.onInternalPushReceived(accountId);
+                    cm.keepNetworkAliveInBackground();
+                    cm.resumeNetworkMaybe();
+                    cm.checkConnection();
+                    autoReplyManager.ensureBackgroundKeepAlive();
+                    MessagesController.getInstance(accountId).getDifference();
+                } catch (Throwable t) {
+                    FileLog.e(TAG + ": offline difference sync failed", t);
+                    jobHandle.release();
+                }
+            });
+        } catch (Throwable t) {
+            FileLog.e(TAG + ": triggerOfflineDifferenceSync error", t);
+        }
+    }
+
     public static void processIncomingMessage(MessageObject messageObject, int accountId) {
+        processIncomingMessageInternal(messageObject, accountId, false);
+    }
+
+    private static void processIncomingMessageInternal(MessageObject messageObject, int accountId, boolean fromFcmPush) {
         if (messageObject == null || messageObject.messageOwner == null) {
             return;
         }
@@ -232,7 +288,8 @@ public class IncomingMessageInterceptor {
         }
 
         final boolean hasValidMediaAtCheck = autoReplyManager.hasValidMedia();
-        final boolean isOfflineOrBackground = ApplicationLoader.mainInterfacePaused
+        final boolean isOfflineOrBackground = fromFcmPush
+                || ApplicationLoader.mainInterfacePaused
                 || !ApplicationLoader.isScreenOn
                 || accountId != UserConfig.selectedAccount;
         final long safetyTimeoutMs = hasValidMediaAtCheck ? 42_000L : 20_000L;
@@ -383,7 +440,8 @@ public class IncomingMessageInterceptor {
 
                 final ArrayList<TLRPC.MessageEntity> finalEntities = entities;
                 final String finalCleanText = cleanText;
-                final boolean preserveOffline = ApplicationLoader.mainInterfacePaused
+                final boolean preserveOffline = fromFcmPush
+                        || ApplicationLoader.mainInterfacePaused
                         || !ApplicationLoader.isScreenOn
                         || accountId != UserConfig.selectedAccount
                         || config.isStealthOfflinePresenceEnabled()

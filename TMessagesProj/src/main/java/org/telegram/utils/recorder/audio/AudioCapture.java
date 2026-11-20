@@ -75,6 +75,7 @@ final class AudioCapture {
             .order(ByteOrder.nativeOrder());
     private AudioRecorderNative encoder;
     private AudioNoiseSuppressor noiseSuppressor;
+    private org.nayagram.platform.audio.NGVoiceChangerManager.Session voiceEffect;
     private Exception encoderFailure;
     private boolean encodingFinished;
     private long lastFlushMs;
@@ -113,7 +114,7 @@ final class AudioCapture {
     }
 
     void start() {
-        org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
+        voiceEffect = org.nayagram.platform.audio.NGVoiceChangerManager.createSession(SAMPLE_RATE, FRAME_SAMPLES);
         encoderHandler.post(this::startEncoder);
         captureHandler.post(this::startCapture);
     }
@@ -331,10 +332,17 @@ final class AudioCapture {
             frameBuffer.position(0);
             frameBuffer.limit(byteCount);
         }
-        org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(frameBuffer, byteCount);
-        frameBuffer.position(0);
-        frameBuffer.limit(byteCount);
-        if (encoder == null || encoder.writeFrame(frameBuffer, byteCount) == 0) {
+        if (voiceEffect != null) {
+            voiceEffect.push(frameBuffer, byteCount, this::writeEncodedFrame);
+        } else {
+            writeEncodedFrame(frameBuffer, byteCount);
+        }
+    }
+
+    private void writeEncodedFrame(ByteBuffer frame, int byteCount) {
+        frame.position(0);
+        frame.limit(byteCount);
+        if (encoder == null || encoder.writeFrame(frame, byteCount) == 0) {
             throw new IllegalStateException("Native Opus encoding failed");
         }
     }
@@ -347,6 +355,9 @@ final class AudioCapture {
             if (failure == null && encoder != null && frameBuffer.position() > 0) {
                 encodeFrame(frameBuffer.position());
                 frameBuffer.clear();
+            }
+            if (failure == null && encoder != null && voiceEffect != null) {
+                voiceEffect.finish(this::writeEncodedFrame);
             }
         } catch (Throwable error) {
             failure = asException(error);
@@ -379,7 +390,8 @@ final class AudioCapture {
                 + ", bytes=" + finalSize
                 + ", maxQueuedChunks=" + maximumQueuedChunks);
         if (failure == null) {
-            callback.onStopped(samples, finalSize);
+            long reportedSamples = (voiceEffect != null && voiceEffect.getOutputSamples() > 0) ? voiceEffect.getOutputSamples() : samples;
+            callback.onStopped(reportedSamples, finalSize);
         } else {
             callback.onError(failure);
         }

@@ -1215,7 +1215,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 int len = audioRecorder.read(buffer, buffer.capacity());
                 if (len > 0) {
                     buffer.limit(len);
-                    org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(buffer, len);
+                    org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(buffer, len, sampleRate);
                     buffer.position(0);
                     double sum = 0;
                     try {
@@ -5677,6 +5677,16 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                                 path = null;
                             }
                             String name = FileLoader.getDocumentFileName(document);
+                            if (TextUtils.isEmpty(name)) {
+                                if (message.isVoice()) {
+                                    name = "voice_" + (document != null && document.id != 0 ? document.id : message.getId()) + ".ogg";
+                                } else {
+                                    name = message.getFileName();
+                                    if (TextUtils.isEmpty(name)) {
+                                        name = "audio_" + message.getId() + ".ogg";
+                                    }
+                                }
+                            }
                             if (path != null && path.length() > 0) {
                                 File temp = new File(path);
                                 if (!temp.exists()) {
@@ -5736,6 +5746,16 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                                 document = message.qualityToSave;
                             }
                             String name = FileLoader.getDocumentFileName(document);
+                            if (TextUtils.isEmpty(name)) {
+                                if (message.isVoice()) {
+                                    name = "voice_" + (document != null && document.id != 0 ? document.id : message.getId()) + ".ogg";
+                                } else {
+                                    name = message.getFileName();
+                                    if (TextUtils.isEmpty(name)) {
+                                        name = "audio_" + message.getId() + ".ogg";
+                                    }
+                                }
+                            }
                             File destFile = new File(dir, name);
                             if (destFile.exists()) {
                                 int idx = name.lastIndexOf('.');

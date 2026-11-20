@@ -30,6 +30,8 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 
 /**
  * NGVoiceChangerManager - Real-time 48kHz mono PCM Voice Changer for Voice Notes.
@@ -65,43 +67,16 @@ public final class NGVoiceChangerManager {
             MODE_TELEPHONE
     };
 
-    private static final int TONE_NONE = 0;
-    private static final int TONE_BASS_DEEP = 1;
-    private static final int TONE_MALE = 2;
-    private static final int TONE_FEMALE = 3;
-
-    private static final int SAMPLE_RATE = 48_000;
-    private static final int PITCH_RING_SIZE = 4096;
-    private static final int PITCH_RING_MASK = PITCH_RING_SIZE - 1;
-    private static final int GRAIN_SIZE = 1024;
-    private static final float MIN_DELAY = 64f;
-    private static final float MAX_DELAY = MIN_DELAY + GRAIN_SIZE;
-    private static final int DELAY_RING_SIZE = 16384;
-    private static final int DELAY_RING_MASK = DELAY_RING_SIZE - 1;
+    private static final int DEFAULT_SAMPLE_RATE = 48_000;
 
     private static volatile int cachedMode = -1;
 
     private static final Object DSP_LOCK = new Object();
-    private static final float[] pitchRing = new float[PITCH_RING_SIZE];
-    private static final float[] delayRing = new float[DELAY_RING_SIZE];
-    private static int pitchWriteIdx = 0;
-    private static float readPosA = wrapRingStatic(-(MIN_DELAY + GRAIN_SIZE * 0.5f));
-    private static float readPosB = wrapRingStatic(-(MIN_DELAY + GRAIN_SIZE));
-    private static int delayIdx = 0;
-    private static double robotPhase = 0.0;
-    private static float lpPrev = 0f;
-    private static float lpHighPrev = 0f;
-    private static float hpPrevIn = 0f;
-    private static float hpPrevOut = 0f;
-    private static float bpX1 = 0f, bpX2 = 0f, bpY1 = 0f, bpY2 = 0f;
+    private static StudioDsp legacyDsp = null;
+    private static int legacyDspMode = MODE_NORMAL;
+    private static int legacyDspSampleRate = DEFAULT_SAMPLE_RATE;
 
     private NGVoiceChangerManager() {}
-
-    private static float wrapRingStatic(float pos) {
-        float p = pos % PITCH_RING_SIZE;
-        if (p < 0f) p += PITCH_RING_SIZE;
-        return p;
-    }
 
     private static SharedPreferences getPrefs(Context context) {
         if (context == null) {
@@ -174,11 +149,11 @@ public final class NGVoiceChangerManager {
             case MODE_MALE: return 0xFF3B82F6;
             case MODE_FEMALE: return 0xFFEC4899;
             case MODE_DEEP: return 0xFF8B5CF6;
-            case MODE_CHIPMUNK: return 0xFFF59E0B;
+            case MODE_CHIPMUNK: return 0xFFD946EF;
             case MODE_ROBOT: return 0xFF06B6D4;
             case MODE_HELIUM: return 0xFFF43F5E;
             case MODE_CAVE: return 0xFF10B981;
-            case MODE_TELEPHONE: return 0xFF22C55E;
+            case MODE_TELEPHONE: return 0xFF6366F1;
             default: return 0xFF0EA5E9;
         }
     }
@@ -188,11 +163,11 @@ public final class NGVoiceChangerManager {
             case MODE_MALE: return 0xFF1D4ED8;
             case MODE_FEMALE: return 0xFFBE185D;
             case MODE_DEEP: return 0xFF5B21B6;
-            case MODE_CHIPMUNK: return 0xFFD97706;
+            case MODE_CHIPMUNK: return 0xFFA21CAF;
             case MODE_ROBOT: return 0xFF0E7490;
             case MODE_HELIUM: return 0xFFE11D48;
             case MODE_CAVE: return 0xFF047857;
-            case MODE_TELEPHONE: return 0xFF15803D;
+            case MODE_TELEPHONE: return 0xFF4338CA;
             default: return 0xFF0284C7;
         }
     }
@@ -206,17 +181,75 @@ public final class NGVoiceChangerManager {
 
         LinearLayout dialogContainer = new LinearLayout(context);
         dialogContainer.setOrientation(LinearLayout.VERTICAL);
-        dialogContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(4), AndroidUtilities.dp(14), AndroidUtilities.dp(4));
+        dialogContainer.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(14), AndroidUtilities.dp(4));
 
-        // Subtitle
-        TextView subTitle = new TextView(context);
-        subTitle.setText("Select a voice character for outgoing voice notes");
-        subTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13f);
-        subTitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF475569);
-        subTitle.setPadding(AndroidUtilities.dp(4), 0, AndroidUtilities.dp(4), AndroidUtilities.dp(8));
-        dialogContainer.addView(subTitle, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        // Premium Studio Header Card (replaces plain AlertDialog title)
+        LinearLayout headerCard = new LinearLayout(context);
+        headerCard.setOrientation(LinearLayout.HORIZONTAL);
+        headerCard.setGravity(Gravity.CENTER_VERTICAL);
+        headerCard.setPadding(AndroidUtilities.dp(14), AndroidUtilities.dp(12), AndroidUtilities.dp(14), AndroidUtilities.dp(12));
+        GradientDrawable headerBg = new GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                isDark ? new int[]{0xFF1E293B, 0xFF0F172A} : new int[]{0xFFEFF6FF, 0xFFF5F3FF}
+        );
+        headerBg.setCornerRadius(AndroidUtilities.dp(16));
+        headerBg.setStroke(AndroidUtilities.dp(1.2f), isDark ? 0xFF334155 : 0xFFC7D2FE);
+        headerCard.setBackground(headerBg);
+
+        VoiceIconView headerEmblem = new VoiceIconView(context, MODE_NORMAL);
+        LinearLayout.LayoutParams emblemLp = new LinearLayout.LayoutParams(AndroidUtilities.dp(42), AndroidUtilities.dp(42));
+        emblemLp.rightMargin = AndroidUtilities.dp(12);
+        headerCard.addView(headerEmblem, emblemLp);
+
+        LinearLayout headerTextCol = new LinearLayout(context);
+        headerTextCol.setOrientation(LinearLayout.VERTICAL);
+
+        LinearLayout titleRow = new LinearLayout(context);
+        titleRow.setOrientation(LinearLayout.HORIZONTAL);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView mainTitle = new TextView(context);
+        mainTitle.setText("Voice Changer");
+        mainTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 18.5f);
+        mainTitle.setTypeface(AndroidUtilities.bold());
+        mainTitle.setTextColor(isDark ? 0xFFF8FAFC : 0xFF0F172A);
+        titleRow.addView(mainTitle, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ));
+
+        TextView hdBadge = new TextView(context);
+        hdBadge.setText("HD STUDIO");
+        hdBadge.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 9.5f);
+        hdBadge.setTypeface(AndroidUtilities.bold());
+        hdBadge.setTextColor(0xFFFFFFFF);
+        hdBadge.setPadding(AndroidUtilities.dp(7), AndroidUtilities.dp(2.5f), AndroidUtilities.dp(7), AndroidUtilities.dp(2.5f));
+        GradientDrawable hdBg = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFF2563EB, 0xFF7C3AED}
+        );
+        hdBg.setCornerRadius(AndroidUtilities.dp(8));
+        hdBadge.setBackground(hdBg);
+        LinearLayout.LayoutParams hdLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        hdLp.leftMargin = AndroidUtilities.dp(8);
+        titleRow.addView(hdBadge, hdLp);
+        headerTextCol.addView(titleRow);
+
+        TextView subTitle = new TextView(context);
+        subTitle.setText("Crystal-clear studio voice characters");
+        subTitle.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.2f);
+        subTitle.setTextColor(isDark ? 0xFF94A3B8 : 0xFF475569);
+        subTitle.setPadding(0, AndroidUtilities.dp(2), 0, 0);
+        headerTextCol.addView(subTitle);
+
+        headerCard.addView(headerTextCol, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        LinearLayout.LayoutParams headerCardLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        headerCardLp.bottomMargin = AndroidUtilities.dp(10);
+        dialogContainer.addView(headerCard, headerCardLp);
 
         // Live Active Character Banner
         LinearLayout activeBanner = new LinearLayout(context);
@@ -281,7 +314,7 @@ public final class NGVoiceChangerManager {
 
         LinearLayout listRoot = new LinearLayout(context);
         listRoot.setOrientation(LinearLayout.VERTICAL);
-        listRoot.setPadding(AndroidUtilities.dp(2), AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(6));
+        listRoot.setPadding(AndroidUtilities.dp(2), AndroidUtilities.dp(4), AndroidUtilities.dp(4), AndroidUtilities.dp(8));
         scrollView.addView(listRoot, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ));
@@ -363,7 +396,6 @@ public final class NGVoiceChangerManager {
         updateRowStates(rowViews, titleViews, tickViews, pendingMode[0], isDark, -1);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("Voice Changer");
         builder.setView(dialogContainer);
         builder.setPositiveButton("Select", (dialog, which) -> {
             confirmedByButton[0] = true;
@@ -825,228 +857,428 @@ public final class NGVoiceChangerManager {
         }
     }
 
-    public static void resetSession() {
-        synchronized (DSP_LOCK) {
-            java.util.Arrays.fill(pitchRing, 0f);
-            java.util.Arrays.fill(delayRing, 0f);
-            pitchWriteIdx = 0;
-            readPosA = wrapRingStatic(-(MIN_DELAY + GRAIN_SIZE * 0.5f));
-            readPosB = wrapRingStatic(-(MIN_DELAY + GRAIN_SIZE));
-            delayIdx = 0;
-            robotPhase = 0.0;
-            lpPrev = 0f;
-            lpHighPrev = 0f;
-            hpPrevIn = 0f;
-            hpPrevOut = 0f;
-            bpX1 = 0f;
-            bpX2 = 0f;
-            bpY1 = 0f;
-            bpY2 = 0f;
+    /**
+     * Frame callback for streaming voice-changed PCM frames into the native Opus encoder.
+     */
+    public interface FrameSink {
+        void write(ByteBuffer frame, int byteCount);
+    }
+
+    /**
+     * Per-recording streaming session for Telegram's AudioCapture (V2 recorder).
+     * Runs AFTER RNNoise so background microphone noise is already removed before vocal shaping.
+     * Uses NGSonic (Apache-2.0 PICOLA pitch-synchronous speech engine) for crystal-clear voice
+     * shifting without granular warble, buzz, or clipping, then drains the tail cleanly on finish().
+     */
+    public static final class Session {
+        private final StudioDsp dsp;
+        private final ByteBuffer outBuf;
+        private short[] inShorts;
+        private long outputSamples = 0L;
+
+        private Session(StudioDsp dsp, int frameSamples) {
+            this.dsp = dsp;
+            this.outBuf = ByteBuffer.allocateDirect(frameSamples * 2).order(ByteOrder.nativeOrder());
+            this.inShorts = new short[frameSamples];
+        }
+
+        public long getOutputSamples() {
+            return outputSamples;
+        }
+
+        public long lengthOf(long micSamples) {
+            float speed = dsp.speed;
+            return speed == 1.0f ? micSamples : (long) (micSamples / speed);
+        }
+
+        public void push(ByteBuffer pcm, int byteCount, FrameSink sink) {
+            if (pcm == null || byteCount < 2 || sink == null) return;
+            int samples = byteCount >> 1;
+            if (inShorts.length < samples) {
+                inShorts = new short[samples];
+            }
+            ByteOrder prevOrder = pcm.order();
+            pcm.order(ByteOrder.nativeOrder());
+            pcm.position(0);
+            pcm.limit(samples << 1);
+            pcm.asShortBuffer().get(inShorts, 0, samples);
+            pcm.order(prevOrder);
+
+            short[] processed = dsp.process(inShorts, samples);
+            emitSamples(processed, sink);
+        }
+
+        public void finish(FrameSink sink) {
+            if (sink == null) return;
+            short[] tail = dsp.drain();
+            emitSamples(tail, sink);
+            if (outBuf.position() > 0) {
+                emitBuffer(outBuf.position(), sink);
+            }
+        }
+
+        private void emitSamples(short[] samples, FrameSink sink) {
+            if (samples == null || samples.length == 0) return;
+            for (int i = 0; i < samples.length; i++) {
+                outBuf.putShort(samples[i]);
+                if (!outBuf.hasRemaining()) {
+                    emitBuffer(outBuf.capacity(), sink);
+                }
+            }
+        }
+
+        private void emitBuffer(int bytes, FrameSink sink) {
+            outBuf.position(0);
+            outBuf.limit(bytes);
+            sink.write(outBuf, bytes);
+            outputSamples += (bytes >> 1);
+            outBuf.clear();
         }
     }
 
     /**
-     * Processes 16-bit mono 48kHz PCM samples in-place inside {@code buffer} over {@code byteCount} bytes.
-     * Leaves buffer position restored to 0 on exit.
+     * Creates a new streaming voice changer session for the currently selected character,
+     * or returns {@code null} when Normal Voice (bypass) is active.
+     */
+    public static Session createSession(int sampleRate, int frameSamples) {
+        int mode = getSelectedMode(ApplicationLoader.applicationContext);
+        if (mode == MODE_NORMAL) {
+            return null;
+        }
+        int sr = sampleRate > 0 ? sampleRate : DEFAULT_SAMPLE_RATE;
+        int fs = frameSamples > 0 ? frameSamples : 960;
+        return new Session(new StudioDsp(mode, sr), fs);
+    }
+
+    public static void resetSession() {
+        synchronized (DSP_LOCK) {
+            legacyDsp = null;
+            legacyDspMode = MODE_NORMAL;
+        }
+    }
+
+    /**
+     * In-place PCM processing fallback for legacy MediaController AudioRecord path.
+     * Uses NGSonic PICOLA pitch-synchronous shifting + FIFO buffer so output matches input length cleanly.
      */
     public static void processPcmBuffer(ByteBuffer buffer, int byteCount) {
+        processPcmBuffer(buffer, byteCount, DEFAULT_SAMPLE_RATE);
+    }
+
+    public static void processPcmBuffer(ByteBuffer buffer, int byteCount, int sampleRate) {
         if (buffer == null || byteCount < 2) return;
         int mode = getSelectedMode(ApplicationLoader.applicationContext);
         if (mode == MODE_NORMAL) return;
 
         final int samples = byteCount >> 1;
+        final int sr = sampleRate > 0 ? sampleRate : DEFAULT_SAMPLE_RATE;
         synchronized (DSP_LOCK) {
+            if (legacyDsp == null || legacyDspMode != mode || legacyDspSampleRate != sr) {
+                legacyDsp = new StudioDsp(mode, sr);
+                legacyDspMode = mode;
+                legacyDspSampleRate = sr;
+            }
+            ByteOrder prevOrder = buffer.order();
+            buffer.order(ByteOrder.nativeOrder());
+            buffer.position(0);
+            buffer.limit(samples << 1);
+            short[] in = new short[samples];
+            buffer.asShortBuffer().get(in, 0, samples);
+
+            short[] out = legacyDsp.processFixedLength(in, samples);
+            buffer.position(0);
+            buffer.limit(samples << 1);
+            buffer.asShortBuffer().put(out, 0, samples);
+            buffer.order(prevOrder);
+            buffer.position(0);
+        }
+    }
+
+    /**
+     * Studio-clean real-time vocal DSP processor backed by NGSonic (PICOLA pitch-synchronous engine),
+     * 75 Hz DC/rumble removal, smooth musical EQ, damped multi-tap hall/cave reflections,
+     * intelligible robot vocalizer, exact Butterworth telephone bandpass, and soft-knee tanh limiter.
+     */
+    private static final class StudioDsp {
+        final int mode;
+        final int sampleRate;
+        final float speed;
+        private final NGSonic sonic;
+
+        // 75 Hz DC & low-end rumble high-pass filter state
+        private final float dcAlpha;
+        private float dcPrevIn = 0f;
+        private float dcPrevOut = 0f;
+
+        // Smooth vocal EQ state
+        private float lp1 = 0f;
+        private float lp2 = 0f;
+        private float hpIn = 0f;
+        private float hpOut = 0f;
+        private final float hp140Alpha;
+        private final float hp300Alpha;
+        private final float lpShelfAlpha;
+        private final float lpSmoothAlpha;
+
+        // Clean Robot carrier phase
+        private double robotPhase = 0.0;
+        private final double robotStep;
+
+        // Clean Cave multi-tap damped feedback delay
+        private final float[] caveDelay;
+        private final int caveTap1;
+        private final int caveTap2;
+        private final int caveTap3;
+        private int cavePos = 0;
+        private float caveDamp = 0f;
+
+        // Telephone 2nd-order Butterworth bandpass biquad (340 Hz - 3100 Hz)
+        private final float bpB0, bpB1, bpB2, bpA1, bpA2;
+        private float bpX1 = 0f, bpX2 = 0f, bpY1 = 0f, bpY2 = 0f;
+
+        // FIFO ring for legacy fixed-length in-place caller
+        private final short[] legacyFifo = new short[16384];
+        private int fifoRead = 0;
+        private int fifoWrite = 0;
+        private int fifoCount = 0;
+
+        StudioDsp(int mode, int sampleRate) {
+            this.mode = mode;
+            this.sampleRate = sampleRate;
+
+            // Pitch & speed via NGSonic (PICOLA pitch-synchronous: zero grain buzz or metallic noise)
+            float pitchSemitones = 0f;
+            float sp = 1.0f;
             switch (mode) {
                 case MODE_MALE:
-                    processPitchShift(buffer, samples, 0.82f, TONE_MALE);
+                    pitchSemitones = -4.2f; // Natural clear baritone male voice
                     break;
                 case MODE_FEMALE:
-                    processPitchShift(buffer, samples, 1.24f, TONE_FEMALE);
-                    break;
-                case MODE_CHIPMUNK:
-                    processPitchShift(buffer, samples, 1.48f, TONE_NONE);
+                    pitchSemitones = +4.8f; // Smooth clear natural female voice
                     break;
                 case MODE_DEEP:
-                    processPitchShift(buffer, samples, 0.72f, TONE_BASS_DEEP);
+                    pitchSemitones = -7.2f; // Rich cinematic bass voice
+                    break;
+                case MODE_CHIPMUNK:
+                    pitchSemitones = +9.2f; // Playful clear high-pitched voice
+                    sp = 1.08f;
                     break;
                 case MODE_HELIUM:
-                    processPitchShift(buffer, samples, 1.72f, TONE_NONE);
-                    break;
-                case MODE_ROBOT:
-                    processRobot(buffer, samples);
-                    break;
-                case MODE_CAVE:
-                    processCaveEcho(buffer, samples);
-                    break;
-                case MODE_TELEPHONE:
-                    processTelephone(buffer, samples);
+                    pitchSemitones = +6.8f; // Light airy helium pitch
                     break;
                 default:
                     break;
             }
-        }
-        buffer.position(0);
-    }
-
-    private static void processPitchShift(ByteBuffer buffer, int samples, float pitchRatio, int toneMode) {
-        final float halfGrain = GRAIN_SIZE * 0.5f;
-
-        for (int i = 0; i < samples; i++) {
-            int offset = i << 1;
-            float in = buffer.getShort(offset);
-            pitchRing[pitchWriteIdx & PITCH_RING_MASK] = in;
-
-            float distA = wrapDistance(pitchWriteIdx, readPosA);
-            float distB = wrapDistance(pitchWriteIdx, readPosB);
-
-            if (pitchRatio > 1.0f) {
-                if (distA < MIN_DELAY) {
-                    readPosA = wrapRing(readPosA - GRAIN_SIZE);
-                    distA += GRAIN_SIZE;
-                }
-                if (distA > MAX_DELAY + 64f) {
-                    readPosA = wrapRing(pitchWriteIdx - (MIN_DELAY + halfGrain));
-                    distA = MIN_DELAY + halfGrain;
-                }
-                if (distB < MIN_DELAY) {
-                    readPosB = wrapRing(readPosB - GRAIN_SIZE);
-                    distB += GRAIN_SIZE;
-                }
-                if (distB > MAX_DELAY + 64f) {
-                    readPosB = wrapRing(pitchWriteIdx - MAX_DELAY);
-                    distB = MAX_DELAY;
-                }
+            this.speed = sp;
+            if (pitchSemitones != 0f || sp != 1.0f) {
+                float pitchFactor = (float) Math.pow(2.0, pitchSemitones / 12.0);
+                this.sonic = new NGSonic(sampleRate, 1, sp, pitchFactor, sampleRate);
             } else {
-                if (distA > MAX_DELAY) {
-                    readPosA = wrapRing(readPosA + GRAIN_SIZE);
-                    distA -= GRAIN_SIZE;
-                }
-                if (distA < MIN_DELAY - 32f) {
-                    readPosA = wrapRing(pitchWriteIdx - (MIN_DELAY + halfGrain));
-                    distA = MIN_DELAY + halfGrain;
-                }
-                if (distB > MAX_DELAY) {
-                    readPosB = wrapRing(readPosB + GRAIN_SIZE);
-                    distB -= GRAIN_SIZE;
-                }
-                if (distB < MIN_DELAY - 32f) {
-                    readPosB = wrapRing(pitchWriteIdx - MAX_DELAY);
-                    distB = MAX_DELAY;
-                }
+                this.sonic = null;
             }
 
-            float phaseA = Math.min(1f, Math.max(0f, (distA - MIN_DELAY) / GRAIN_SIZE));
-            float phaseB = Math.min(1f, Math.max(0f, (distB - MIN_DELAY) / GRAIN_SIZE));
-            float winA = 0.5f * (1f - (float) Math.cos(2.0 * Math.PI * phaseA));
-            float winB = 0.5f * (1f - (float) Math.cos(2.0 * Math.PI * phaseB));
-            float wSum = winA + winB;
-            if (wSum < 0.001f) wSum = 1f;
+            // Sample-rate-exact filter coefficients
+            this.dcAlpha = (float) Math.exp(-2.0 * Math.PI * 70.0 / sampleRate);
+            this.hp140Alpha = (float) Math.exp(-2.0 * Math.PI * 145.0 / sampleRate);
+            this.hp300Alpha = (float) Math.exp(-2.0 * Math.PI * 300.0 / sampleRate);
+            this.lpShelfAlpha = (float) (1.0 - Math.exp(-2.0 * Math.PI * 220.0 / sampleRate));
+            this.lpSmoothAlpha = (float) (1.0 - Math.exp(-2.0 * Math.PI * 4200.0 / sampleRate));
+            this.robotStep = 2.0 * Math.PI * 86.0 / sampleRate;
 
-            float sampleA = readInterpolated(readPosA);
-            float sampleB = readInterpolated(readPosB);
-            float out = (sampleA * winA + sampleB * winB) / wSum;
-
-            if (toneMode == TONE_BASS_DEEP) {
-                lpPrev = lpPrev + 0.35f * (out - lpPrev);
-                out = 0.65f * out + 0.50f * lpPrev;
-            } else if (toneMode == TONE_MALE) {
-                // Warm natural chest resonance (~245 Hz shelf) + smooth natural upper clarity
-                lpPrev = lpPrev + 0.032f * (out - lpPrev);
-                lpHighPrev = lpHighPrev + 0.45f * (out - lpHighPrev);
-                out = 0.80f * lpHighPrev + 0.34f * lpPrev;
-            } else if (toneMode == TONE_FEMALE) {
-                // Trim sub-145 Hz chest boom & add natural feminine brightness
-                float hp = 0.9812f * (hpPrevOut + out - hpPrevIn);
-                hpPrevIn = out;
-                hpPrevOut = hp;
-                lpHighPrev = lpHighPrev + 0.68f * (hp - lpHighPrev);
-                out = hp * 0.86f + lpHighPrev * 0.22f;
+            if (mode == MODE_CAVE) {
+                int len = Math.max(1024, (int) (sampleRate * 0.34f));
+                this.caveDelay = new float[len];
+                this.caveTap1 = (int) (sampleRate * 0.085f);
+                this.caveTap2 = (int) (sampleRate * 0.175f);
+                this.caveTap3 = (int) (sampleRate * 0.285f);
+            } else {
+                this.caveDelay = null;
+                this.caveTap1 = 0;
+                this.caveTap2 = 0;
+                this.caveTap3 = 0;
             }
 
-            buffer.putShort(offset, clampToShort(out));
-
-            pitchWriteIdx = (pitchWriteIdx + 1) & PITCH_RING_MASK;
-            readPosA = wrapRing(readPosA + pitchRatio);
-            readPosB = wrapRing(readPosB + pitchRatio);
+            // Exact RBJ Audio EQ Cookbook Bandpass (center ~1150 Hz, Q ~0.85 -> ~340 Hz to 3100 Hz)
+            double w0 = 2.0 * Math.PI * 1150.0 / sampleRate;
+            double alpha = Math.sin(w0) / (2.0 * 0.85);
+            double a0 = 1.0 + alpha;
+            this.bpB0 = (float) (alpha / a0);
+            this.bpB1 = 0f;
+            this.bpB2 = (float) (-alpha / a0);
+            this.bpA1 = (float) (-2.0 * Math.cos(w0) / a0);
+            this.bpA2 = (float) ((1.0 - alpha) / a0);
         }
-    }
 
-    private static float wrapRing(float pos) {
-        if (pos >= PITCH_RING_SIZE) pos -= PITCH_RING_SIZE;
-        if (pos < 0f) pos += PITCH_RING_SIZE;
-        if (pos >= PITCH_RING_SIZE || pos < 0f) {
-            pos = ((pos % PITCH_RING_SIZE) + PITCH_RING_SIZE) % PITCH_RING_SIZE;
+        short[] process(short[] input, int count) {
+            // 1. Clean 70 Hz DC/rumble removal before pitch analysis so Sonic tracks pitch cleanly
+            short[] clean = new short[count];
+            for (int i = 0; i < count; i++) {
+                float x = input[i] / 32768f;
+                float hp = dcAlpha * (dcPrevOut + x - dcPrevIn);
+                dcPrevIn = x;
+                dcPrevOut = hp;
+                clean[i] = floatToShort(hp);
+            }
+
+            // 2. Pitch-synchronous shifting via NGSonic (zero granular buzzing!)
+            short[] pitched;
+            if (sonic != null) {
+                sonic.queueInput(ShortBuffer.wrap(clean, 0, count));
+                pitched = readSonicOutput();
+            } else {
+                pitched = clean;
+            }
+
+            // 3. Smooth post vocal shaping & soft-knee limiting
+            applyVocalStages(pitched);
+            return pitched;
         }
-        return pos;
-    }
 
-    private static float wrapDistance(int writeIdx, float readPos) {
-        float d = writeIdx - readPos;
-        if (d < 0f) d += PITCH_RING_SIZE;
-        return d;
-    }
+        short[] drain() {
+            short[] rest;
+            if (sonic != null) {
+                sonic.queueEndOfStream();
+                rest = readSonicOutput();
+            } else {
+                rest = new short[0];
+            }
+            int tailLen = (mode == MODE_CAVE) ? (sampleRate / 2) : 0;
+            short[] out = new short[rest.length + tailLen];
+            System.arraycopy(rest, 0, out, 0, rest.length);
+            applyVocalStages(out);
+            if (tailLen > 0) {
+                for (int i = 0; i < tailLen; i++) {
+                    float fade = 1f - (float) i / (float) tailLen;
+                    out[rest.length + i] = (short) (out[rest.length + i] * fade);
+                }
+            }
+            return out;
+        }
 
-    private static float readInterpolated(float pos) {
-        int i0 = ((int) pos) & PITCH_RING_MASK;
-        int i1 = (i0 + 1) & PITCH_RING_MASK;
-        float frac = pos - (int) pos;
-        return pitchRing[i0] + frac * (pitchRing[i1] - pitchRing[i0]);
-    }
+        short[] processFixedLength(short[] input, int count) {
+            short[] produced = process(input, count);
+            for (int i = 0; i < produced.length; i++) {
+                if (fifoCount < legacyFifo.length) {
+                    legacyFifo[fifoWrite] = produced[i];
+                    fifoWrite = (fifoWrite + 1) % legacyFifo.length;
+                    fifoCount++;
+                }
+            }
+            short[] out = new short[count];
+            int available = Math.min(count, fifoCount);
+            // Align available samples to end on initial warm-up frame so there is no click
+            int pad = count - available;
+            for (int i = 0; i < available; i++) {
+                out[pad + i] = legacyFifo[fifoRead];
+                fifoRead = (fifoRead + 1) % legacyFifo.length;
+                fifoCount--;
+            }
+            return out;
+        }
 
-    private static void processRobot(ByteBuffer buffer, int samples) {
-        final double step = 2.0 * Math.PI * 65.0 / SAMPLE_RATE;
-        for (int i = 0; i < samples; i++) {
-            int offset = i << 1;
-            float in = buffer.getShort(offset);
-            float mod = (float) (0.70 * Math.sin(robotPhase) + 0.30 * Math.sin(robotPhase * 2.0));
-            // Keep 28% dry signal so speech articulation stays crystal clear
-            float out = (in * mod * 1.15f) + (in * 0.28f);
-            buffer.putShort(offset, clampToShort(out));
-            robotPhase += step;
-            if (robotPhase >= 2.0 * Math.PI) {
-                robotPhase -= 2.0 * Math.PI;
+        private short[] readSonicOutput() {
+            int outBytes = sonic.getOutputSize();
+            int outSamples = outBytes >> 1;
+            if (outSamples <= 0) {
+                return new short[0];
+            }
+            short[] out = new short[outSamples];
+            sonic.getOutput(ShortBuffer.wrap(out));
+            return out;
+        }
+
+        private void applyVocalStages(short[] samples) {
+            if (samples == null || samples.length == 0) return;
+            for (int i = 0; i < samples.length; i++) {
+                float x = samples[i] / 32768f;
+                switch (mode) {
+                    case MODE_MALE: {
+                        // Gentle warm chest shelf (+2 dB low warmth, natural crisp top)
+                        lp1 += lpShelfAlpha * (x - lp1);
+                        x = x * 0.94f + lp1 * 0.22f;
+                        break;
+                    }
+                    case MODE_FEMALE: {
+                        // Trim sub-145 Hz boom for clean, bright, natural feminine tone
+                        float hp = hp140Alpha * (hpOut + x - hpIn);
+                        hpIn = x;
+                        hpOut = hp;
+                        x = hp * 1.04f;
+                        break;
+                    }
+                    case MODE_DEEP: {
+                        // Warm deep bass resonance without muddiness
+                        lp1 += lpShelfAlpha * (x - lp1);
+                        x = x * 0.88f + lp1 * 0.36f;
+                        break;
+                    }
+                    case MODE_HELIUM: {
+                        // Light airy timbre (trim low fundamentals below ~300 Hz)
+                        float hp = hp300Alpha * (hpOut + x - hpIn);
+                        hpIn = x;
+                        hpOut = hp;
+                        x = hp * 1.06f;
+                        break;
+                    }
+                    case MODE_CHIPMUNK: {
+                        // Slight smoothing to avoid sibilance harshness at high pitch
+                        lp2 += lpSmoothAlpha * (x - lp2);
+                        x = x * 0.82f + lp2 * 0.22f;
+                        break;
+                    }
+                    case MODE_ROBOT: {
+                        // Smooth sinusoidal vocal carrier with 45% dry clarity (zero static buzz)
+                        float mod = (float) (0.76 * Math.sin(robotPhase) + 0.24 * Math.sin(robotPhase * 2.0));
+                        robotPhase += robotStep;
+                        if (robotPhase >= 2.0 * Math.PI) robotPhase -= 2.0 * Math.PI;
+                        float wet = x * mod * 0.95f + x * 0.45f;
+                        lp2 += lpSmoothAlpha * (wet - lp2);
+                        x = lp2 * 1.02f;
+                        break;
+                    }
+                    case MODE_CAVE: {
+                        if (caveDelay != null) {
+                            int len = caveDelay.length;
+                            int idx1 = (cavePos - caveTap1 + len) % len;
+                            int idx2 = (cavePos - caveTap2 + len) % len;
+                            int idx3 = (cavePos - caveTap3 + len) % len;
+                            float rawWet = caveDelay[idx1] * 0.48f + caveDelay[idx2] * 0.30f + caveDelay[idx3] * 0.18f;
+                            // Warm wall damping (absorbs harsh treble in echo repeats)
+                            caveDamp += 0.45f * (rawWet - caveDamp);
+                            caveDelay[cavePos] = x + caveDamp * 0.38f;
+                            cavePos = (cavePos + 1) % len;
+                            x = x * 0.84f + caveDamp * 0.56f;
+                        }
+                        break;
+                    }
+                    case MODE_TELEPHONE: {
+                        // Clean Butterworth 340 Hz - 3100 Hz bandpass + gentle warm saturation
+                        float y = bpB0 * x + bpB1 * bpX1 + bpB2 * bpX2 - bpA1 * bpY1 - bpA2 * bpY2;
+                        bpX2 = bpX1;
+                        bpX1 = x;
+                        bpY2 = bpY1;
+                        bpY1 = y;
+                        x = (float) Math.tanh(y * 1.85) * 0.96f;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+                samples[i] = floatToShort(softLimit(x));
             }
         }
-    }
 
-    private static void processCaveEcho(ByteBuffer buffer, int samples) {
-        final int tap1Offset = 5280;  // ~110ms
-        final int tap2Offset = 10800; // ~225ms
-        for (int i = 0; i < samples; i++) {
-            int offset = i << 1;
-            float in = buffer.getShort(offset);
-            float e1 = delayRing[(delayIdx - tap1Offset) & DELAY_RING_MASK];
-            float e2 = delayRing[(delayIdx - tap2Offset) & DELAY_RING_MASK];
-            float wet = e1 * 0.45f + e2 * 0.30f;
-            delayRing[delayIdx & DELAY_RING_MASK] = in + wet * 0.52f;
-            float out = in * 0.85f + wet * 0.70f;
-            buffer.putShort(offset, clampToShort(out));
-            delayIdx = (delayIdx + 1) & DELAY_RING_MASK;
+        private static float softLimit(float x) {
+            float a = Math.abs(x);
+            if (a <= 0.88f) return x;
+            float bent = 0.88f + 0.12f * (float) Math.tanh((a - 0.88f) / 0.12f);
+            return x < 0f ? -bent : bent;
         }
-    }
 
-    private static void processTelephone(ByteBuffer buffer, int samples) {
-        // Bandpass coefficients tuned for ~350 Hz - 3100 Hz @ 48 kHz
-        final float b0 = 0.1602f, b1 = 0f, b2 = -0.1602f;
-        final float a1 = -1.6485f, a2 = 0.6796f;
-        for (int i = 0; i < samples; i++) {
-            int offset = i << 1;
-            float x0 = buffer.getShort(offset);
-            float y0 = b0 * x0 + b1 * bpX1 + b2 * bpX2 - a1 * bpY1 - a2 * bpY2;
-            bpX2 = bpX1;
-            bpX1 = x0;
-            bpY2 = bpY1;
-            bpY1 = y0;
-            // Subtle warm telephone saturation boost
-            float norm = y0 / 32768f;
-            float driven = (float) Math.tanh(norm * 2.2) * 32767f * 0.92f;
-            buffer.putShort(offset, clampToShort(driven));
+        private static short floatToShort(float x) {
+            if (x >= 1.0f) return 32767;
+            if (x <= -1.0f) return -32768;
+            return (short) (x * 32767f);
         }
-    }
-
-    private static short clampToShort(float value) {
-        if (value > 32767f) return 32767;
-        if (value < -32768f) return -32768;
-        return (short) value;
     }
 }

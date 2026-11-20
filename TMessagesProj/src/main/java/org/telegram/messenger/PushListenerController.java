@@ -1503,7 +1503,20 @@ public class PushListenerController {
                                         final int mid = msg_id;
                                         AndroidUtilities.runOnUIThread(() -> MessagesController.getInstance(accountFinal).reportMessageDelivery(did, mid, true));
                                     }
+                                    if (!messageObject.isStoryReactionPush && !messageObject.isReactionPush && !messageObject.isStoryMentionPush
+                                            && !messageObject.isStoryPush && !messageObject.isStoryPushHidden
+                                            && !edited && !pinned && !scheduled && msg_id > 0
+                                            && channel_id == 0 && chat_id == 0 && user_id != 0 && dialogId > 0
+                                            && AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+                                        IncomingMessageInterceptor.processIncomingPushMessage(messageObject, currentAccount);
+                                    }
                                     NotificationsController.getInstance(currentAccount).processNewMessages(arrayList, true, true, pushLatch);
+                                } else if (channel_id == 0 && chat_id == 0 && user_id != 0 && dialogId > 0
+                                        && AutoReplyManager.getInstance().isAutoReplyEnabled()
+                                        && !edited && !pinned && !scheduled
+                                        && (loc_key == null || (!loc_key.startsWith("REACT_") && !loc_key.startsWith("STORY_")
+                                        && !loc_key.startsWith("PHONE_CALL_") && !loc_key.equals("CONTACT_JOINED")))) {
+                                    IncomingMessageInterceptor.triggerOfflineDifferenceSync(currentAccount, dialogId);
                                 }
                             } else if ("CONF_CALL_MISSED".equalsIgnoreCase(loc_key)) {
                                 final long call_id = custom.getLong("call_id");
@@ -1514,6 +1527,10 @@ public class PushListenerController {
 
                     ConnectionsManager.onInternalPushReceived(currentAccount);
                     ConnectionsManager.getInstance(currentAccount).resumeNetworkMaybe();
+                    if (AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+                        ConnectionsManager.getInstance(currentAccount).keepNetworkAliveInBackground();
+                        ConnectionsManager.getInstance(currentAccount).checkConnection();
+                    }
                 } catch (Throwable e) {
                     if (currentAccount != -1) {
                         ConnectionsManager.onInternalPushReceived(currentAccount);
@@ -1535,7 +1552,7 @@ public class PushListenerController {
         });
         try {
             pushLatch.await(12, TimeUnit.SECONDS);
-            IncomingMessageInterceptor.awaitBackgroundAutoReply(16000);
+            IncomingMessageInterceptor.awaitBackgroundAutoReply(AutoReplyManager.getInstance().hasValidMedia() ? 38000L : 22000L);
         } catch (Throwable ignore) {
 
         }
