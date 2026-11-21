@@ -12510,6 +12510,11 @@ public class MessagesController extends BaseController implements NotificationCe
         loadDialogs(folderId, offset, count, fromCache, null);
     }
 
+    private boolean isCurrentAccountBot() {
+        TLRPC.User me = getUserConfig().getCurrentUser();
+        return (me != null && me.bot) || org.nayagram.platform.auth.NGBotSessionManager.isBotAccount(currentAccount);
+    }
+
     public void loadDialogs(final int folderId, int offset, int count, boolean fromCache, Runnable onEmptyCallback) {
         if (loadingDialogs.get(folderId) || resetingDialogs) {
             return;
@@ -12522,6 +12527,21 @@ public class MessagesController extends BaseController implements NotificationCe
         if (fromCache) {
             getMessagesStorage().getDialogs(folderId, offset == 0 ? 0 : nextDialogsCacheOffset.get(folderId, 0), count, folderId == 0 && offset == 0);
         } else {
+            if (isCurrentAccountBot()) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    loadingDialogs.put(folderId, false);
+                    dialogsEndReached.put(folderId, true);
+                    serverDialogsEndReached.put(folderId, true);
+                    if (folderId == 0) {
+                        dialogsLoaded = true;
+                    }
+                    getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                    if (onEmptyCallback != null && getDialogs(folderId).isEmpty()) {
+                        onEmptyCallback.run();
+                    }
+                });
+                return;
+            }
             TLRPC.TL_messages_getDialogs req = new TLRPC.TL_messages_getDialogs();
             req.limit = count;
             req.exclude_pinned = true;
@@ -12602,6 +12622,19 @@ public class MessagesController extends BaseController implements NotificationCe
                     if (onEmptyCallback != null && dialogsRes.dialogs.isEmpty()) {
                         AndroidUtilities.runOnUIThread(onEmptyCallback);
                     }
+                } else if (error.text != null && error.text.contains("BOT_METHOD_INVALID")) {
+                    AndroidUtilities.runOnUIThread(() -> {
+                        loadingDialogs.put(folderId, false);
+                        dialogsEndReached.put(folderId, true);
+                        serverDialogsEndReached.put(folderId, true);
+                        if (folderId == 0) {
+                            dialogsLoaded = true;
+                        }
+                        getNotificationCenter().postNotificationName(NotificationCenter.dialogsNeedReload);
+                        if (onEmptyCallback != null && getDialogs(folderId).isEmpty()) {
+                            onEmptyCallback.run();
+                        }
+                    });
                 }
             });
         }
@@ -17439,6 +17472,10 @@ public class MessagesController extends BaseController implements NotificationCe
 
     public void loadPinnedDialogs(final int folderId, long newDialogId, ArrayList<Long> order) {
         if (loadingPinnedDialogs.indexOfKey(folderId) >= 0 || getUserConfig().isPinnedDialogsLoaded(folderId)) {
+            return;
+        }
+        if (isCurrentAccountBot()) {
+            getUserConfig().setPinnedDialogsLoaded(folderId, true);
             return;
         }
         loadingPinnedDialogs.put(folderId, 1);

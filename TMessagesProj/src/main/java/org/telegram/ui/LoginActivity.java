@@ -1666,10 +1666,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
     }
 
     public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res, String token) {
-        onAuthSuccess(res);
         if (res != null && res.user != null) {
             org.nayagram.platform.auth.NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
         }
+        onAuthSuccess(res, true);
     }
 
     public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res) {

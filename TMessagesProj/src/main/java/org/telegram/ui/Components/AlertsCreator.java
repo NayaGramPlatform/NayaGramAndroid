@@ -341,7 +341,7 @@ public class AlertsCreator {
     }
 
     public static Dialog processError(int currentAccount, TLRPC.TL_error error, BaseFragment fragment, TLObject request, Object... args) {
-        if (error == null || error.code == 406 || error.text == null) {
+        if (error == null || error.code == 406 || error.text == null || error.text.contains("BOT_METHOD_INVALID")) {
             return null;
         }
         if ("BALANCE_TOO_LOW".equalsIgnoreCase(error.text)) {

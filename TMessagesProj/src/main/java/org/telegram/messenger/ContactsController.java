@@ -1515,6 +1515,17 @@ public class ContactsController extends BaseController {
             }
             getMessagesStorage().getContacts();
         } else {
+            TLRPC.User currentUser = getUserConfig().getCurrentUser();
+            if ((currentUser != null && currentUser.bot) || org.nayagram.platform.auth.NGBotSessionManager.isBotAccount(currentAccount)) {
+                contactsLoaded = true;
+                AndroidUtilities.runOnUIThread(() -> {
+                    synchronized (loadContactsSync) {
+                        loadingContacts = false;
+                    }
+                    getNotificationCenter().postNotificationName(NotificationCenter.contactsDidLoad);
+                });
+                return;
+            }
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("load contacts from server");
             }
@@ -1522,6 +1533,16 @@ public class ContactsController extends BaseController {
             TLRPC.TL_contacts_getContacts req = new TLRPC.TL_contacts_getContacts();
             req.hash = hash;
             getConnectionsManager().sendRequest(req, (response, error) -> {
+                if (error != null && error.text != null && error.text.contains("BOT_METHOD_INVALID")) {
+                    contactsLoaded = true;
+                    AndroidUtilities.runOnUIThread(() -> {
+                        synchronized (loadContactsSync) {
+                            loadingContacts = false;
+                        }
+                        getNotificationCenter().postNotificationName(NotificationCenter.contactsDidLoad);
+                    });
+                    return;
+                }
                 if (error == null) {
                     TLRPC.contacts_Contacts res = (TLRPC.contacts_Contacts) response;
                     if (hash != 0 && res instanceof TLRPC.TL_contacts_contactsNotModified) {

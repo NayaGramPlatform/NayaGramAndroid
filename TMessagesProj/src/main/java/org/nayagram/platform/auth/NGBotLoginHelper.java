@@ -198,12 +198,17 @@ public class NGBotLoginHelper {
             progress[0].showDelayed(300);
         }
         FileLog.d("NGBotLoginHelper: Initiating bot login with token " + NGBotSessionManager.maskToken(token));
+        ConnectionsManager cm = ConnectionsManager.getInstance(currentAccount);
+        if (cm.isTestBackend()) {
+            cm.switchBackend(false);
+        }
+        cm.cleanup(false);
         TL_auth_importBotAuthorization req = new TL_auth_importBotAuthorization();
         req.flags = 0;
         req.api_id = BuildVars.APP_ID;
         req.api_hash = BuildVars.APP_HASH;
         req.bot_auth_token = token;
-        ConnectionsManager.getInstance(currentAccount).sendRequest(
+        cm.sendRequest(
                 req,
                 (response, error) -> AndroidUtilities.runOnUIThread(() -> {
                     if (fragment instanceof LoginActivity) {
@@ -226,7 +231,10 @@ public class NGBotLoginHelper {
                         AlertsCreator.showSimpleAlert(fragment, "Bot Login Failed", errorMsg);
                     }
                 }),
-                ConnectionsManager.RequestFlagFailOnServerErrors | ConnectionsManager.RequestFlagWithoutLogin
+                ConnectionsManager.RequestFlagFailOnServerErrors
+                        | ConnectionsManager.RequestFlagWithoutLogin
+                        | ConnectionsManager.RequestFlagTryDifferentDc
+                        | ConnectionsManager.RequestFlagEnableUnauthorized
         );
     }
 
@@ -252,6 +260,7 @@ public class NGBotLoginHelper {
         if (token != null) {
             NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
         }
+        MessagesController.getInstance(currentAccount).putDialogsEndReachedAfterRegistration();
         if (LaunchActivity.instance != null) {
             LaunchActivity.instance.switchToAccount(currentAccount, true);
         }
