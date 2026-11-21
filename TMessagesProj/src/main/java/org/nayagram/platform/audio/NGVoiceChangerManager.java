@@ -937,6 +937,39 @@ public final class NGVoiceChangerManager {
     }
 
     /**
+     * Direct variable-length PCM processor for legacy MediaController AudioRecord path
+     * (zero-dropout streaming with full tail drain on stop).
+     */
+    public static final class DirectEffect {
+        private final StudioDsp dsp;
+
+        private DirectEffect(StudioDsp dsp) {
+            this.dsp = dsp;
+        }
+
+        public short[] process(short[] input, int count) {
+            return dsp.process(input, count);
+        }
+
+        public short[] drain() {
+            return dsp.drain();
+        }
+    }
+
+    /**
+     * Creates a direct streaming effect for MediaController's AudioRecord path,
+     * or returns {@code null} when Normal Voice (bypass) is active.
+     */
+    public static DirectEffect createDirectEffect(int sampleRate) {
+        int mode = getSelectedMode(ApplicationLoader.applicationContext);
+        if (mode == MODE_NORMAL) {
+            return null;
+        }
+        int sr = sampleRate > 0 ? sampleRate : DEFAULT_SAMPLE_RATE;
+        return new DirectEffect(new StudioDsp(mode, sr));
+    }
+
+    /**
      * Creates a new streaming voice changer session for the currently selected character,
      * or returns {@code null} when Normal Voice (bypass) is active.
      */
@@ -958,8 +991,7 @@ public final class NGVoiceChangerManager {
     }
 
     /**
-     * In-place PCM processing fallback for legacy MediaController AudioRecord path.
-     * Uses NGSonic PICOLA pitch-synchronous shifting + FIFO buffer so output matches input length cleanly.
+     * In-place PCM processing fallback (with jitter-cushion queue so pitch/formant frames never drop out).
      */
     public static void processPcmBuffer(ByteBuffer buffer, int byteCount) {
         processPcmBuffer(buffer, byteCount, DEFAULT_SAMPLE_RATE);
@@ -995,108 +1027,137 @@ public final class NGVoiceChangerManager {
     }
 
     /**
-     * Studio-clean real-time vocal DSP processor backed by NGSonic (PICOLA pitch-synchronous engine),
-     * 75 Hz DC/rumble removal, smooth musical EQ, damped multi-tap hall/cave reflections,
-     * intelligible robot vocalizer, exact Butterworth telephone bandpass, and soft-knee tanh limiter.
+     * Studio-grade real-time vocal DSP engine combining:
+     * 1. Cepstral STFT FormantWarp (independent vocal tract length control for genuine Male/Female/Helium/Deep voices)
+     * 2. NGSonic (PICOLA pitch-synchronous pitch shifting with zero granular buzz)
+     * 3. Zero-phase STFT Spectral Vocoder (clean robotic voice with zero static)
+     * 4. Freeverb (8 damped feedback combs + 4 series allpasses + 200 Hz HPF for lush Cave acoustics)
+     * 5. Exact RBJ Butterworth bandpass (clean Telephone) & soft-knee tanh limiter
      */
     private static final class StudioDsp {
+        private static final float WARP_HEADROOM = 0.5f;
+
         final int mode;
         final int sampleRate;
         final float speed;
-        private final NGSonic sonic;
+        final float outputGain;
+        private final float inputScale;
 
-        // 75 Hz DC & low-end rumble high-pass filter state
+        private final FormantWarp warp;
+        private int warpLagLeft;
+        private final NGSonic sonic;
+        private final SpectralRobot spectralRobot;
+        private final Freeverb caveReverb;
+        private final int spectralLag;
+        private final int fadeLength;
+
+        // Gentle 65 Hz DC & breath-plosive high-pass before analysis
         private final float dcAlpha;
         private float dcPrevIn = 0f;
         private float dcPrevOut = 0f;
-
-        // Smooth vocal EQ state
-        private float lp1 = 0f;
-        private float lp2 = 0f;
-        private float hpIn = 0f;
-        private float hpOut = 0f;
-        private final float hp140Alpha;
-        private final float hp300Alpha;
-        private final float lpShelfAlpha;
-        private final float lpSmoothAlpha;
-
-        // Clean Robot carrier phase
-        private double robotPhase = 0.0;
-        private final double robotStep;
-
-        // Clean Cave multi-tap damped feedback delay
-        private final float[] caveDelay;
-        private final int caveTap1;
-        private final int caveTap2;
-        private final int caveTap3;
-        private int cavePos = 0;
-        private float caveDamp = 0f;
 
         // Telephone 2nd-order Butterworth bandpass biquad (340 Hz - 3100 Hz)
         private final float bpB0, bpB1, bpB2, bpA1, bpA2;
         private float bpX1 = 0f, bpX2 = 0f, bpY1 = 0f, bpY2 = 0f;
 
-        // FIFO ring for legacy fixed-length in-place caller
-        private final short[] legacyFifo = new short[16384];
-        private int fifoRead = 0;
-        private int fifoWrite = 0;
-        private int fifoCount = 0;
+        // Jitter-buffered FIFO for fixed-length fallback callers
+        private short[] legacyQueue = new short[32768];
+        private int legacyQueued = 0;
+        private boolean legacyStarted = false;
 
         StudioDsp(int mode, int sampleRate) {
             this.mode = mode;
             this.sampleRate = sampleRate;
 
-            // Pitch & speed via NGSonic (PICOLA pitch-synchronous: zero grain buzz or metallic noise)
-            float pitchSemitones = 0f;
+            float semitones = 0f;
+            Float formantSemitones = null;
+            float gain = 1.0f;
             float sp = 1.0f;
+
             switch (mode) {
                 case MODE_MALE:
-                    pitchSemitones = -4.2f; // Natural clear baritone male voice
+                    // Genuine adult male: deep -6 st pitch with natural -3 st vocal tract formants (zero monster mud)
+                    semitones = -6.0f;
+                    formantSemitones = -3.0f;
+                    gain = 1.02f;
                     break;
                 case MODE_FEMALE:
-                    pitchSemitones = +4.8f; // Smooth clear natural female voice
+                    // Genuine adult female: bright +9 st pitch with natural +3.5 st vocal tract formants (zero chipmunk)
+                    semitones = 9.0f;
+                    formantSemitones = 3.5f;
+                    gain = 1.10f;
                     break;
                 case MODE_DEEP:
-                    pitchSemitones = -7.2f; // Rich cinematic bass voice
-                    break;
-                case MODE_CHIPMUNK:
-                    pitchSemitones = +9.2f; // Playful clear high-pitched voice
-                    sp = 1.08f;
+                    // Deep cinematic narrator voice: -8 st pitch, -4.5 st formants
+                    semitones = -8.0f;
+                    formantSemitones = -4.5f;
+                    gain = 1.04f;
                     break;
                 case MODE_HELIUM:
-                    pitchSemitones = +6.8f; // Light airy helium pitch
+                    // Real helium gas acoustics: formants jump +9 st while pitch rises +3 st
+                    semitones = 3.0f;
+                    formantSemitones = 9.0f;
+                    gain = 0.96f;
+                    break;
+                case MODE_CHIPMUNK:
+                    // Playful crisp cartoon voice: +12 st pitch with +5.5 st formants (clear, never shrill)
+                    semitones = 12.0f;
+                    formantSemitones = 5.5f;
+                    gain = 1.08f;
+                    break;
+                case MODE_ROBOT:
+                    gain = 1.15f;
+                    break;
+                case MODE_CAVE:
+                    gain = 1.0f;
+                    break;
+                case MODE_TELEPHONE:
+                    gain = 1.02f;
                     break;
                 default:
                     break;
             }
+
             this.speed = sp;
-            if (pitchSemitones != 0f || sp != 1.0f) {
-                float pitchFactor = (float) Math.pow(2.0, pitchSemitones / 12.0);
+            this.outputGain = gain;
+
+            // NGSonic moves formants along with pitch, so FormantWarp shifts only the residual difference
+            if (formantSemitones != null && Math.abs(formantSemitones - semitones) > 0.05f) {
+                float warpFactor = (float) Math.pow(2.0, (formantSemitones - semitones) / 12.0);
+                this.warp = new FormantWarp(warpFactor, sampleRate);
+                this.warpLagLeft = this.warp.size;
+                this.inputScale = 1.0f / WARP_HEADROOM;
+            } else {
+                this.warp = null;
+                this.warpLagLeft = 0;
+                this.inputScale = 1.0f;
+            }
+
+            if (semitones != 0f || sp != 1.0f) {
+                float pitchFactor = (float) Math.pow(2.0, semitones / 12.0);
                 this.sonic = new NGSonic(sampleRate, 1, sp, pitchFactor, sampleRate);
             } else {
                 this.sonic = null;
             }
 
-            // Sample-rate-exact filter coefficients
-            this.dcAlpha = (float) Math.exp(-2.0 * Math.PI * 70.0 / sampleRate);
-            this.hp140Alpha = (float) Math.exp(-2.0 * Math.PI * 145.0 / sampleRate);
-            this.hp300Alpha = (float) Math.exp(-2.0 * Math.PI * 300.0 / sampleRate);
-            this.lpShelfAlpha = (float) (1.0 - Math.exp(-2.0 * Math.PI * 220.0 / sampleRate));
-            this.lpSmoothAlpha = (float) (1.0 - Math.exp(-2.0 * Math.PI * 4200.0 / sampleRate));
-            this.robotStep = 2.0 * Math.PI * 86.0 / sampleRate;
+            if (mode == MODE_ROBOT) {
+                int hop = Math.max(64, Math.round(sampleRate / 120.0f));
+                this.spectralRobot = new SpectralRobot(1024, hop);
+                this.spectralLag = this.spectralRobot.size;
+            } else {
+                this.spectralRobot = null;
+                this.spectralLag = 0;
+            }
 
             if (mode == MODE_CAVE) {
-                int len = Math.max(1024, (int) (sampleRate * 0.34f));
-                this.caveDelay = new float[len];
-                this.caveTap1 = (int) (sampleRate * 0.085f);
-                this.caveTap2 = (int) (sampleRate * 0.175f);
-                this.caveTap3 = (int) (sampleRate * 0.285f);
+                this.caveReverb = new Freeverb(sampleRate, 0.70f, 0.30f, 35.0f);
+                this.fadeLength = sampleRate;
             } else {
-                this.caveDelay = null;
-                this.caveTap1 = 0;
-                this.caveTap2 = 0;
-                this.caveTap3 = 0;
+                this.caveReverb = null;
+                this.fadeLength = 0;
             }
+
+            this.dcAlpha = (float) Math.exp(-2.0 * Math.PI * 65.0 / sampleRate);
 
             // Exact RBJ Audio EQ Cookbook Bandpass (center ~1150 Hz, Q ~0.85 -> ~340 Hz to 3100 Hz)
             double w0 = 2.0 * Math.PI * 1150.0 / sampleRate;
@@ -1110,7 +1171,11 @@ public final class NGVoiceChangerManager {
         }
 
         short[] process(short[] input, int count) {
-            // 1. Clean 70 Hz DC/rumble removal before pitch analysis so Sonic tracks pitch cleanly
+            if (input == null || count <= 0) {
+                return new short[0];
+            }
+
+            // 1. Clean 65 Hz DC/rumble removal so pitch tracking & formant envelopes stay rock-steady
             short[] clean = new short[count];
             for (int i = 0; i < count; i++) {
                 float x = input[i] / 32768f;
@@ -1120,36 +1185,46 @@ public final class NGVoiceChangerManager {
                 clean[i] = floatToShort(hp);
             }
 
-            // 2. Pitch-synchronous shifting via NGSonic (zero granular buzzing!)
+            // 2. Cepstral FormantWarp (if active) with headroom protection and leading-lag trim
+            short[] source = (warp != null) ? runWarp(clean, count) : clean;
+
+            // 3. Pitch-synchronous shifting via NGSonic (zero granular buzzing)
             short[] pitched;
             if (sonic != null) {
-                sonic.queueInput(ShortBuffer.wrap(clean, 0, count));
+                if (source.length > 0) {
+                    sonic.queueInput(ShortBuffer.wrap(source, 0, source.length));
+                }
                 pitched = readSonicOutput();
             } else {
-                pitched = clean;
+                pitched = source;
             }
 
-            // 3. Smooth post vocal shaping & soft-knee limiting
-            applyVocalStages(pitched);
+            // 4. Clean post stages (Spectral Robot / Freeverb Cave / Telephone) + soft-knee limiter
+            applyStages(pitched);
             return pitched;
         }
 
         short[] drain() {
+            short[] warpRest = (warp != null) ? runWarp(new short[warp.size], warp.size) : new short[0];
             short[] rest;
             if (sonic != null) {
+                if (warpRest.length > 0) {
+                    sonic.queueInput(ShortBuffer.wrap(warpRest, 0, warpRest.length));
+                }
                 sonic.queueEndOfStream();
                 rest = readSonicOutput();
             } else {
-                rest = new short[0];
+                rest = warpRest;
             }
-            int tailLen = (mode == MODE_CAVE) ? (sampleRate / 2) : 0;
-            short[] out = new short[rest.length + tailLen];
+
+            short[] out = new short[rest.length + spectralLag + fadeLength];
             System.arraycopy(rest, 0, out, 0, rest.length);
-            applyVocalStages(out);
-            if (tailLen > 0) {
-                for (int i = 0; i < tailLen; i++) {
-                    float fade = 1f - (float) i / (float) tailLen;
-                    out[rest.length + i] = (short) (out[rest.length + i] * fade);
+            applyStages(out);
+            if (fadeLength > 0) {
+                int fadeStart = rest.length + spectralLag;
+                for (int i = 0; i < fadeLength; i++) {
+                    float fade = 1f - (float) i / (float) fadeLength;
+                    out[fadeStart + i] = (short) (out[fadeStart + i] * fade);
                 }
             }
             return out;
@@ -1157,22 +1232,48 @@ public final class NGVoiceChangerManager {
 
         short[] processFixedLength(short[] input, int count) {
             short[] produced = process(input, count);
-            for (int i = 0; i < produced.length; i++) {
-                if (fifoCount < legacyFifo.length) {
-                    legacyFifo[fifoWrite] = produced[i];
-                    fifoWrite = (fifoWrite + 1) % legacyFifo.length;
-                    fifoCount++;
+            if (produced.length > 0) {
+                if (legacyQueued + produced.length > legacyQueue.length) {
+                    int nextCap = Math.max(legacyQueue.length * 2, legacyQueued + produced.length);
+                    short[] grown = new short[nextCap];
+                    System.arraycopy(legacyQueue, 0, grown, 0, legacyQueued);
+                    legacyQueue = grown;
                 }
+                System.arraycopy(produced, 0, legacyQueue, legacyQueued, produced.length);
+                legacyQueued += produced.length;
+            }
+            // Wait until queue holds a 2-frame cushion before outputting so Sonic/Warp never click or underrun
+            if (!legacyStarted && legacyQueued >= count * 2) {
+                legacyStarted = true;
+            }
+            if (legacyQueued > count * 8) {
+                int drop = legacyQueued - count * 2;
+                System.arraycopy(legacyQueue, drop, legacyQueue, 0, legacyQueued - drop);
+                legacyQueued -= drop;
             }
             short[] out = new short[count];
-            int available = Math.min(count, fifoCount);
-            // Align available samples to end on initial warm-up frame so there is no click
-            int pad = count - available;
-            for (int i = 0; i < available; i++) {
-                out[pad + i] = legacyFifo[fifoRead];
-                fifoRead = (fifoRead + 1) % legacyFifo.length;
-                fifoCount--;
+            if (!legacyStarted) {
+                return out;
             }
+            int take = Math.min(count, legacyQueued);
+            if (take > 0) {
+                System.arraycopy(legacyQueue, 0, out, 0, take);
+                System.arraycopy(legacyQueue, take, legacyQueue, 0, legacyQueued - take);
+                legacyQueued -= take;
+            }
+            return out;
+        }
+
+        private short[] runWarp(short[] input, int count) {
+            int skip = Math.min(warpLagLeft, count);
+            short[] out = new short[count - skip];
+            for (int i = 0; i < count; i++) {
+                float y = warp.process(input[i] / 32768f) * WARP_HEADROOM;
+                if (i >= skip) {
+                    out[i - skip] = floatToShort(y);
+                }
+            }
+            warpLagLeft -= skip;
             return out;
         }
 
@@ -1187,91 +1288,31 @@ public final class NGVoiceChangerManager {
             return out;
         }
 
-        private void applyVocalStages(short[] samples) {
+        private void applyStages(short[] samples) {
             if (samples == null || samples.length == 0) return;
             for (int i = 0; i < samples.length; i++) {
-                float x = samples[i] / 32768f;
-                switch (mode) {
-                    case MODE_MALE: {
-                        // Gentle warm chest shelf (+2 dB low warmth, natural crisp top)
-                        lp1 += lpShelfAlpha * (x - lp1);
-                        x = x * 0.94f + lp1 * 0.22f;
-                        break;
-                    }
-                    case MODE_FEMALE: {
-                        // Trim sub-145 Hz boom for clean, bright, natural feminine tone
-                        float hp = hp140Alpha * (hpOut + x - hpIn);
-                        hpIn = x;
-                        hpOut = hp;
-                        x = hp * 1.04f;
-                        break;
-                    }
-                    case MODE_DEEP: {
-                        // Warm deep bass resonance without muddiness
-                        lp1 += lpShelfAlpha * (x - lp1);
-                        x = x * 0.88f + lp1 * 0.36f;
-                        break;
-                    }
-                    case MODE_HELIUM: {
-                        // Light airy timbre (trim low fundamentals below ~300 Hz)
-                        float hp = hp300Alpha * (hpOut + x - hpIn);
-                        hpIn = x;
-                        hpOut = hp;
-                        x = hp * 1.06f;
-                        break;
-                    }
-                    case MODE_CHIPMUNK: {
-                        // Slight smoothing to avoid sibilance harshness at high pitch
-                        lp2 += lpSmoothAlpha * (x - lp2);
-                        x = x * 0.82f + lp2 * 0.22f;
-                        break;
-                    }
-                    case MODE_ROBOT: {
-                        // Smooth sinusoidal vocal carrier with 45% dry clarity (zero static buzz)
-                        float mod = (float) (0.76 * Math.sin(robotPhase) + 0.24 * Math.sin(robotPhase * 2.0));
-                        robotPhase += robotStep;
-                        if (robotPhase >= 2.0 * Math.PI) robotPhase -= 2.0 * Math.PI;
-                        float wet = x * mod * 0.95f + x * 0.45f;
-                        lp2 += lpSmoothAlpha * (wet - lp2);
-                        x = lp2 * 1.02f;
-                        break;
-                    }
-                    case MODE_CAVE: {
-                        if (caveDelay != null) {
-                            int len = caveDelay.length;
-                            int idx1 = (cavePos - caveTap1 + len) % len;
-                            int idx2 = (cavePos - caveTap2 + len) % len;
-                            int idx3 = (cavePos - caveTap3 + len) % len;
-                            float rawWet = caveDelay[idx1] * 0.48f + caveDelay[idx2] * 0.30f + caveDelay[idx3] * 0.18f;
-                            // Warm wall damping (absorbs harsh treble in echo repeats)
-                            caveDamp += 0.45f * (rawWet - caveDamp);
-                            caveDelay[cavePos] = x + caveDamp * 0.38f;
-                            cavePos = (cavePos + 1) % len;
-                            x = x * 0.84f + caveDamp * 0.56f;
-                        }
-                        break;
-                    }
-                    case MODE_TELEPHONE: {
-                        // Clean Butterworth 340 Hz - 3100 Hz bandpass + gentle warm saturation
-                        float y = bpB0 * x + bpB1 * bpX1 + bpB2 * bpX2 - bpA1 * bpY1 - bpA2 * bpY2;
-                        bpX2 = bpX1;
-                        bpX1 = x;
-                        bpY2 = bpY1;
-                        bpY1 = y;
-                        x = (float) Math.tanh(y * 1.85) * 0.96f;
-                        break;
-                    }
-                    default:
-                        break;
+                float x = (samples[i] / 32768f) * inputScale;
+                if (spectralRobot != null) {
+                    x = spectralRobot.process(x);
+                } else if (caveReverb != null) {
+                    x = x * 0.85f + caveReverb.process(x) * 0.30f;
+                } else if (mode == MODE_TELEPHONE) {
+                    float y = bpB0 * x + bpB1 * bpX1 + bpB2 * bpX2 - bpA1 * bpY1 - bpA2 * bpY2;
+                    bpX2 = bpX1;
+                    bpX1 = x;
+                    bpY2 = bpY1;
+                    bpY1 = y;
+                    x = (float) Math.tanh(y * 1.35) * 0.94f;
                 }
+                x *= outputGain;
                 samples[i] = floatToShort(softLimit(x));
             }
         }
 
         private static float softLimit(float x) {
             float a = Math.abs(x);
-            if (a <= 0.88f) return x;
-            float bent = 0.88f + 0.12f * (float) Math.tanh((a - 0.88f) / 0.12f);
+            if (a <= 0.90f) return x;
+            float bent = 0.90f + 0.10f * (float) Math.tanh((a - 0.90f) / 0.10f);
             return x < 0f ? -bent : bent;
         }
 
@@ -1279,6 +1320,344 @@ public final class NGVoiceChangerManager {
             if (x >= 1.0f) return 32767;
             if (x <= -1.0f) return -32768;
             return (short) (x * 32767f);
+        }
+    }
+
+    /**
+     * Cepstral STFT Formant Warper: shifts vocal tract resonances (formants) independently of pitch.
+     * 75% overlapping Hann windows, 1.5 ms cepstral lifter (excluding harmonics), clamped +/-18 dB log gain
+     * so quiet room noise between words is never amplified.
+     */
+    private static final class FormantWarp {
+        private static final float LIFTER_SECONDS = 0.0015f;
+        private static final int LIFTER_TAPER = 16;
+        private static final float MAX_LOG_GAIN = 2.0794415f; // ln(8)
+
+        private final float factor;
+        final int size;
+        private final int hop;
+        private final int half;
+        private final int lifter;
+        private final float scale;
+
+        private final float[] window;
+        private final float[] input;
+        private final float[] output;
+        private final float[] re;
+        private final float[] im;
+        private final float[] cepstrumRe;
+        private final float[] cepstrumIm;
+        private final float[] envelope;
+        private final Radix2Fft fft;
+        private int pos = 0;
+        private int sinceFrame = 0;
+
+        FormantWarp(float factor, int sampleRate) {
+            this.factor = factor;
+            this.size = sampleRate > 32000 ? 2048 : 1024;
+            this.hop = size / 4;
+            this.half = size / 2;
+            this.lifter = Math.max(8, Math.round(sampleRate * LIFTER_SECONDS));
+            this.scale = hop / (0.375f * size);
+            this.window = new float[size];
+            for (int i = 0; i < size; i++) {
+                this.window[i] = (float) (0.5 - 0.5 * Math.cos(2.0 * Math.PI * i / size));
+            }
+            this.input = new float[size];
+            this.output = new float[size];
+            this.re = new float[size];
+            this.im = new float[size];
+            this.cepstrumRe = new float[size];
+            this.cepstrumIm = new float[size];
+            this.envelope = new float[half + 1];
+            this.fft = new Radix2Fft(size);
+        }
+
+        float process(float x) {
+            input[pos] = x;
+            float y = output[pos];
+            output[pos] = 0f;
+            pos = (pos + 1) % size;
+            if (++sinceFrame == hop) {
+                sinceFrame = 0;
+                processFrame();
+            }
+            return y;
+        }
+
+        private void processFrame() {
+            for (int i = 0; i < size; i++) {
+                re[i] = input[(pos + i) % size] * window[i];
+                im[i] = 0f;
+            }
+            fft.transform(re, im, false);
+
+            for (int k = 0; k <= half; k++) {
+                float mag = (float) Math.hypot(re[k], im[k]);
+                float level = (float) Math.log(mag + 1e-9f);
+                cepstrumRe[k] = level;
+                cepstrumIm[k] = 0f;
+                if (k > 0 && k < half) {
+                    cepstrumRe[size - k] = level;
+                    cepstrumIm[size - k] = 0f;
+                }
+            }
+            fft.transform(cepstrumRe, cepstrumIm, true);
+
+            for (int n = 0; n < size; n++) {
+                int q = (n <= half) ? n : (size - n);
+                if (q < lifter) {
+                    // keep full spectral envelope
+                } else if (q < lifter + LIFTER_TAPER) {
+                    cepstrumRe[n] *= (float) (0.5 + 0.5 * Math.cos(Math.PI * (q - lifter) / LIFTER_TAPER));
+                } else {
+                    cepstrumRe[n] = 0f;
+                }
+                cepstrumIm[n] = 0f;
+            }
+            fft.transform(cepstrumRe, cepstrumIm, false);
+
+            for (int k = 0; k <= half; k++) {
+                envelope[k] = cepstrumRe[k];
+            }
+
+            for (int k = 0; k <= half; k++) {
+                float from = k / factor;
+                int below = (int) from;
+                float target;
+                if (below >= half) {
+                    target = envelope[half];
+                } else {
+                    target = envelope[below] + (envelope[below + 1] - envelope[below]) * (from - below);
+                }
+                float diff = target - envelope[k];
+                if (diff > MAX_LOG_GAIN) diff = MAX_LOG_GAIN;
+                else if (diff < -MAX_LOG_GAIN) diff = -MAX_LOG_GAIN;
+                float gain = (float) Math.exp(diff);
+                re[k] *= gain;
+                im[k] *= gain;
+                if (k > 0 && k < half) {
+                    re[size - k] = re[k];
+                    im[size - k] = -im[k];
+                }
+            }
+            fft.transform(re, im, true);
+            for (int i = 0; i < size; i++) {
+                output[(pos + i) % size] += re[i] * window[i] * scale;
+            }
+        }
+    }
+
+    /**
+     * Zero-phase STFT Spectral Robot Vocoder (clean robotic timbre with zero buzz/static).
+     */
+    private static final class SpectralRobot {
+        final int size;
+        private final int hop;
+        private final int half;
+        private final float scale;
+        private final float[] window;
+        private final float[] input;
+        private final float[] output;
+        private final float[] re;
+        private final float[] im;
+        private final Radix2Fft fft;
+        private int pos = 0;
+        private int sinceFrame = 0;
+
+        SpectralRobot(int size, int hop) {
+            this.size = size;
+            this.hop = hop;
+            this.half = size / 2;
+            this.scale = hop / (0.375f * size);
+            this.window = new float[size];
+            for (int i = 0; i < size; i++) {
+                this.window[i] = (float) (0.5 - 0.5 * Math.cos(2.0 * Math.PI * i / size));
+            }
+            this.input = new float[size];
+            this.output = new float[size];
+            this.re = new float[size];
+            this.im = new float[size];
+            this.fft = new Radix2Fft(size);
+        }
+
+        float process(float x) {
+            input[pos] = x;
+            float y = output[pos];
+            output[pos] = 0f;
+            pos = (pos + 1) % size;
+            if (++sinceFrame == hop) {
+                sinceFrame = 0;
+                processFrame();
+            }
+            return y;
+        }
+
+        private void processFrame() {
+            for (int i = 0; i < size; i++) {
+                re[i] = input[(pos + i) % size] * window[i];
+                im[i] = 0f;
+            }
+            fft.transform(re, im, false);
+            re[0] = 0f;
+            im[0] = 0f;
+            for (int k = 1; k <= half; k++) {
+                float mag = (float) Math.hypot(re[k], im[k]);
+                re[k] = (k % 2 == 0) ? mag : -mag;
+                im[k] = 0f;
+                if (k < half) {
+                    re[size - k] = re[k];
+                    im[size - k] = 0f;
+                }
+            }
+            fft.transform(re, im, true);
+            for (int i = 0; i < size; i++) {
+                output[(pos + i) % size] += re[i] * window[i] * scale;
+            }
+        }
+    }
+
+    /**
+     * In-place power-of-two Radix-2 FFT.
+     */
+    private static final class Radix2Fft {
+        private final int size;
+        private final float[] cosTable;
+        private final float[] sinTable;
+        private final int[] reversed;
+
+        Radix2Fft(int size) {
+            this.size = size;
+            this.cosTable = new float[size / 2];
+            this.sinTable = new float[size / 2];
+            for (int i = 0; i < size / 2; i++) {
+                double angle = 2.0 * Math.PI * i / size;
+                this.cosTable[i] = (float) Math.cos(angle);
+                this.sinTable[i] = (float) Math.sin(angle);
+            }
+            this.reversed = new int[size];
+            int j = 0;
+            for (int i = 1; i < size; i++) {
+                int bit = size >> 1;
+                while ((j & bit) != 0) {
+                    j ^= bit;
+                    bit >>= 1;
+                }
+                j ^= bit;
+                this.reversed[i] = j;
+            }
+        }
+
+        void transform(float[] re, float[] im, boolean inverse) {
+            for (int i = 0; i < size; i++) {
+                int j = reversed[i];
+                if (i < j) {
+                    float tr = re[i];
+                    re[i] = re[j];
+                    re[j] = tr;
+                    float ti = im[i];
+                    im[i] = im[j];
+                    im[j] = ti;
+                }
+            }
+            for (int length = 2; length <= size; length <<= 1) {
+                int half = length >> 1;
+                int step = size / length;
+                for (int start = 0; start < size; start += length) {
+                    for (int k = 0; k < half; k++) {
+                        float wr = cosTable[k * step];
+                        float wi = inverse ? sinTable[k * step] : -sinTable[k * step];
+                        int a = start + k;
+                        int b = a + half;
+                        float tr = re[b] * wr - im[b] * wi;
+                        float ti = re[b] * wi + im[b] * wr;
+                        re[b] = re[a] - tr;
+                        im[b] = im[a] - ti;
+                        re[a] += tr;
+                        im[a] += ti;
+                    }
+                }
+            }
+            if (inverse) {
+                float s = 1f / size;
+                for (int i = 0; i < size; i++) {
+                    re[i] *= s;
+                    im[i] *= s;
+                }
+            }
+        }
+    }
+
+    /**
+     * Freeverb (Jezar at Dreampoint, public domain): 8 damped parallel combs + 4 series allpasses + 200 Hz HPF.
+     */
+    private static final class Freeverb {
+        private static final int[] COMB_TUNINGS = {1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617};
+        private static final int[] ALLPASS_TUNINGS = {556, 441, 341, 225};
+
+        private final float[][] combs;
+        private final int[] combPos;
+        private final float[] combStore;
+        private final float[][] allpasses;
+        private final int[] allpassPos;
+        private final float feedback;
+        private final float damp;
+        private final float[] preDelay;
+        private int preDelayPos = 0;
+        private final float hpCoef;
+        private float hpOut = 0f;
+        private float hpIn = 0f;
+
+        Freeverb(int sampleRate, float room, float dampParam, float preDelayMs) {
+            float scale = sampleRate / 44100f;
+            this.combs = new float[COMB_TUNINGS.length][];
+            for (int i = 0; i < COMB_TUNINGS.length; i++) {
+                this.combs[i] = new float[Math.max(16, (int) (COMB_TUNINGS[i] * scale))];
+            }
+            this.combPos = new int[COMB_TUNINGS.length];
+            this.combStore = new float[COMB_TUNINGS.length];
+            this.allpasses = new float[ALLPASS_TUNINGS.length][];
+            for (int i = 0; i < ALLPASS_TUNINGS.length; i++) {
+                this.allpasses[i] = new float[Math.max(16, (int) (ALLPASS_TUNINGS[i] * scale))];
+            }
+            this.allpassPos = new int[ALLPASS_TUNINGS.length];
+            this.feedback = room * 0.28f + 0.70f;
+            this.damp = dampParam * 0.40f;
+            this.preDelay = preDelayMs > 0f ? new float[Math.max(1, (int) (sampleRate * preDelayMs / 1000f))] : null;
+            this.hpCoef = (float) Math.exp(-2.0 * Math.PI * 200.0 / sampleRate);
+        }
+
+        float process(float dry) {
+            hpOut = hpCoef * (hpOut + dry - hpIn);
+            hpIn = dry;
+            float x = hpOut;
+            float input = x;
+            if (preDelay != null) {
+                float delayed = preDelay[preDelayPos];
+                preDelay[preDelayPos] = x;
+                preDelayPos = (preDelayPos + 1) % preDelay.length;
+                input = delayed;
+            }
+            input *= 0.030f;
+            float out = 0f;
+            for (int c = 0; c < combs.length; c++) {
+                float[] line = combs[c];
+                int p = combPos[c];
+                float y = line[p];
+                combStore[c] = y * (1f - damp) + combStore[c] * damp;
+                line[p] = input + combStore[c] * feedback;
+                combPos[c] = (p + 1) % line.length;
+                out += y;
+            }
+            for (int a = 0; a < allpasses.length; a++) {
+                float[] line = allpasses[a];
+                int p = allpassPos[a];
+                float buffered = line[p];
+                line[p] = out + buffered * 0.5f;
+                allpassPos[a] = (p + 1) % line.length;
+                out = buffered - out;
+            }
+            return out * 3.0f;
         }
     }
 }

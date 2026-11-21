@@ -1199,6 +1199,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
     private Runnable recordStartRunnable;
     private DispatchQueue2 recordQueue;
     private DispatchQueue2 fileEncodingQueue;
+    private volatile org.nayagram.platform.audio.NGVoiceChangerManager.DirectEffect voiceEffect;
     private Runnable recordRunnable = new Runnable() {
         @Override
         public void run() {
@@ -1214,8 +1215,19 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 buffer.rewind();
                 int len = audioRecorder.read(buffer, buffer.capacity());
                 if (len > 0) {
+                    final org.nayagram.platform.audio.NGVoiceChangerManager.DirectEffect effect = voiceEffect;
+                    final boolean changed = effect != null;
+                    if (changed) {
+                        ByteBuffer processed = applyVoiceEffect(effect, buffer, len);
+                        recordBuffers.add(buffer);
+                        if (processed.limit() == 0) {
+                            recordQueue.postRunnable(recordRunnable);
+                            return;
+                        }
+                        buffer = processed;
+                        len = processed.limit();
+                    }
                     buffer.limit(len);
-                    org.nayagram.platform.audio.NGVoiceChangerManager.processPcmBuffer(buffer, len, sampleRate);
                     buffer.position(0);
                     double sum = 0;
                     try {
@@ -1256,7 +1268,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                     buffer.position(0);
                     final double amplitude = Math.sqrt(sum / len / 2);
                     final ByteBuffer finalBuffer = buffer;
-                    final boolean flush = len != buffer.capacity();
+                    final boolean flush = !changed && len != buffer.capacity();
                     fileEncodingQueue.postRunnable(() -> {
                         while (finalBuffer.hasRemaining()) {
                             int oldLimit = -1;
@@ -1278,7 +1290,9 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                                 finalBuffer.limit(oldLimit);
                             }
                         }
-                        recordQueue.postRunnable(() -> recordBuffers.add(finalBuffer));
+                        if (!changed) {
+                            recordQueue.postRunnable(() -> recordBuffers.add(finalBuffer));
+                        }
                     });
                     recordQueue.postRunnable(recordRunnable);
                     AndroidUtilities.runOnUIThread(() -> NotificationCenter.getInstance(recordingCurrentAccount).postNotificationName(NotificationCenter.recordProgressChanged, recordingGuid, amplitude));
@@ -5261,7 +5275,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                         writtenFrame = 0;
                         samplesCount = 0;
                         fileBuffer.rewind();
-                        org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
+                        voiceEffect = org.nayagram.platform.audio.NGVoiceChangerManager.createDirectEffect(sampleRate);
                         audioRecorder.startRecording();
                         recordQueue.postRunnable(recordRunnable);
 
@@ -5375,7 +5389,7 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
                 recordReplyingStory = replyStory;
                 recordSendMessageChatArguments = sendMessageChatArguments;
                 fileBuffer.rewind();
-                org.nayagram.platform.audio.NGVoiceChangerManager.resetSession();
+                voiceEffect = org.nayagram.platform.audio.NGVoiceChangerManager.createDirectEffect(sampleRate);
                 audioRecorder.startRecording();
             } catch (Exception e) {
                 FileLog.e(e);
@@ -5489,13 +5503,70 @@ public class MediaController implements AudioManager.OnAudioFocusChangeListener,
         ignoreOnPause = false;
     }
 
+    private static ByteBuffer applyVoiceEffect(org.nayagram.platform.audio.NGVoiceChangerManager.DirectEffect effect, ByteBuffer raw, int len) {
+        int count = len >> 1;
+        short[] input = new short[count];
+        ByteOrder prevOrder = raw.order();
+        raw.order(ByteOrder.nativeOrder());
+        raw.position(0);
+        raw.limit(count << 1);
+        raw.asShortBuffer().get(input, 0, count);
+        raw.order(prevOrder);
+        return toVoiceEffectBuffer(effect.process(input, count));
+    }
+
+    private static ByteBuffer toVoiceEffectBuffer(short[] samples) {
+        ByteBuffer buffer = ByteBuffer.allocate(samples.length * 2);
+        buffer.order(ByteOrder.nativeOrder());
+        buffer.asShortBuffer().put(samples);
+        buffer.position(0);
+        buffer.limit(samples.length * 2);
+        return buffer;
+    }
+
+    private void writeVoiceEffectTail(ByteBuffer tail) {
+        while (tail.hasRemaining()) {
+            int oldLimit = -1;
+            if (tail.remaining() > fileBuffer.remaining()) {
+                oldLimit = tail.limit();
+                tail.limit(fileBuffer.remaining() + tail.position());
+            }
+            fileBuffer.put(tail);
+            if (fileBuffer.position() == fileBuffer.limit()) {
+                writeVoiceEffectFrame(fileBuffer.limit());
+            }
+            if (oldLimit != -1) {
+                tail.limit(oldLimit);
+            }
+        }
+        if (fileBuffer.position() > 0) {
+            writeVoiceEffectFrame(fileBuffer.position());
+        }
+    }
+
+    private void writeVoiceEffectFrame(int bytes) {
+        if (writeFrame(fileBuffer, bytes) != 0) {
+            recordTimeCount += bytes / 2 / (sampleRate / 1000);
+            writtenFrame++;
+        } else {
+            FileLog.e("writing frame failed");
+        }
+        fileBuffer.rewind();
+    }
+
     private void stopRecordingInternal(final int send, boolean notify, int scheduleDate, boolean once, long payStars) {
+        final org.nayagram.platform.audio.NGVoiceChangerManager.DirectEffect effect = voiceEffect;
+        voiceEffect = null;
         if (send != 0 && recordingAudioFile != null) {
             final TLRPC.TL_document audioToSend = recordingAudio;
             final File recordingAudioFileToSend_ = recordingAudioFile;
             final File recordingPrevAudioFileToSend_ = recordingPrevAudioFile;
             if (BuildVars.LOGS_ENABLED) {
                 FileLog.d("stop recording internal filename " + (recordingAudioFile.getPath()));
+            }
+            if (effect != null) {
+                final ByteBuffer tail = toVoiceEffectBuffer(effect.drain());
+                fileEncodingQueue.postRunnable(() -> writeVoiceEffectTail(tail));
             }
             fileEncodingQueue.postRunnable(() -> {
                 stopRecord();

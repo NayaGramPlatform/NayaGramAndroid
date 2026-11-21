@@ -3561,6 +3561,9 @@ public class ChatActivity extends BaseFragment implements
 
     @Override
     public View createView(Context context) {
+        if (dialog_id > 0 && org.telegram.messenger.AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+            org.telegram.messenger.AutoReplyManager.getInstance().removeAnsweredDialog(dialog_id);
+        }
         Timer t = Timer.create("ChatActivity.createView");
 
         final GlassEngine glassEngine = getGlassEngine();

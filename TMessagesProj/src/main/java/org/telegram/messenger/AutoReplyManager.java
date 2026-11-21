@@ -563,6 +563,10 @@ public class AutoReplyManager {
     }
 
     public synchronized boolean shouldSkipDuplicate(long dialogId, int messageId) {
+        // Novagram-style clean behavior: reply ONCE per private chat until you open or manually reply to it.
+        if (answeredDialogs.contains(dialogId)) {
+            return true;
+        }
         if (messageId != 0) {
             Integer lastMsgId = lastAnsweredMsgIdByDialog.get(dialogId);
             if (lastMsgId != null && lastMsgId == messageId) {
@@ -577,6 +581,9 @@ public class AutoReplyManager {
     }
 
     public synchronized void markMessageAnswered(long dialogId, int messageId) {
+        if (answeredDialogs.add(dialogId)) {
+            saveAnsweredDialogsLocked();
+        }
         lastReplyTimestampByDialog.put(dialogId, System.currentTimeMillis());
         if (messageId != 0) {
             lastAnsweredMsgIdByDialog.put(dialogId, messageId);
@@ -585,7 +592,7 @@ public class AutoReplyManager {
     }
 
     public synchronized boolean hasAnsweredDialog(long dialogId) {
-        return shouldSkipDuplicate(dialogId, 0);
+        return answeredDialogs.contains(dialogId) || shouldSkipDuplicate(dialogId, 0);
     }
 
     public synchronized void markAnsweredDialog(long dialogId) {
@@ -593,11 +600,23 @@ public class AutoReplyManager {
     }
 
     public synchronized void removeAnsweredDialog(long dialogId) {
-        answeredDialogs.remove(dialogId);
+        boolean removedDialog = answeredDialogs.remove(dialogId);
         lastReplyTimestampByDialog.remove(dialogId);
-        if (lastAnsweredMsgIdByDialog.remove(dialogId) != null) {
-            saveLastAnsweredMsgIdsLocked();
+        if (removedDialog) {
+            saveAnsweredDialogsLocked();
         }
+    }
+
+    private void saveAnsweredDialogsLocked() {
+        try {
+            StringBuilder sb = new StringBuilder();
+            for (Long id : answeredDialogs) {
+                if (id == null) continue;
+                if (sb.length() > 0) sb.append(',');
+                sb.append(id);
+            }
+            preferences.edit().putString(KEY_ANSWERED_DIALOGS, sb.toString()).apply();
+        } catch (Throwable ignored) {}
     }
 
     public synchronized void clearAnsweredDialogs() {
@@ -655,9 +674,17 @@ public class AutoReplyManager {
         answeredDialogs.clear();
         lastReplyTimestampByDialog.clear();
         lastAnsweredMsgIdByDialog.clear();
-        if (preferences.contains(KEY_ANSWERED_DIALOGS)) {
-            preferences.edit().remove(KEY_ANSWERED_DIALOGS).apply();
-        }
+        try {
+            String savedDialogs = preferences.getString(KEY_ANSWERED_DIALOGS, "");
+            if (savedDialogs != null && !savedDialogs.isEmpty()) {
+                for (String token : savedDialogs.split(",")) {
+                    String trimmed = token.trim();
+                    if (!trimmed.isEmpty()) {
+                        answeredDialogs.add(Long.parseLong(trimmed));
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
         try {
             String raw = preferences.getString(KEY_LAST_ANSWERED_MSG_IDS, "");
             if (raw != null && !raw.isEmpty()) {

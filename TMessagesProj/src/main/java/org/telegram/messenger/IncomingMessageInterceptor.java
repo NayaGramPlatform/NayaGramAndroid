@@ -472,12 +472,14 @@ public class IncomingMessageInterceptor {
                         HashMap<String, String> sendExtraParams = new HashMap<>(2);
                         sendExtraParams.put("ng_auto_reply", "1");
 
+                        final MessageObject replyTarget = (messageObject != null && messageObject.getId() > 0) ? messageObject : null;
                         autoReplyDispatchOnUiThread.set(true);
                         try {
                             if (hasMedia && !TextUtils.isEmpty(mediaPath)) {
                                 dispatchMediaAutoReply(
                                         accountId,
                                         dialogId,
+                                        replyTarget,
                                         mediaType,
                                         mediaPath,
                                         mediaMime,
@@ -486,10 +488,14 @@ public class IncomingMessageInterceptor {
                                         sendExtraParams
                                 );
                             } else {
-                                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
-                                        finalCleanText, dialogId, null, null, null, true, finalEntities, null, sendExtraParams, false, 0, 0, null, false
+                                dispatchTextAutoReply(
+                                        accountId,
+                                        dialogId,
+                                        replyTarget,
+                                        finalCleanText,
+                                        finalEntities,
+                                        sendExtraParams
                                 );
-                                SendMessagesHelper.getInstance(accountId).sendMessage(params);
                             }
                             sentDispatched = true;
                         } finally {
@@ -518,9 +524,78 @@ public class IncomingMessageInterceptor {
         });
     }
 
+    private static void dispatchTextAutoReply(
+            int accountId,
+            long dialogId,
+            MessageObject replyTarget,
+            String text,
+            ArrayList<TLRPC.MessageEntity> entities,
+            HashMap<String, String> extraParams
+    ) {
+        if (TextUtils.isEmpty(text)) return;
+        AccountInstance accountInstance = AccountInstance.getInstance(accountId);
+        int maxLength = Math.max(1024, accountInstance.getMessagesController().maxMessageLength);
+
+        if (text.length() <= maxLength) {
+            SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                    text, dialogId, replyTarget, null, null, true, entities, null, extraParams, true, 0, 0, null, false
+            );
+            SendMessagesHelper.getInstance(accountId).sendMessage(params);
+            return;
+        }
+
+        // Novagram-style smart multi-part splitting for long auto-replies (>4096 chars)
+        int start = 0;
+        boolean firstChunk = true;
+        while (start < text.length()) {
+            int end = Math.min(start + maxLength, text.length());
+            if (text.length() > start + maxLength) {
+                int tabIndex = -1, enterIndex = -1, dotIndex = -1, wsIndex = -1;
+                int i = start + maxLength - 1;
+                int k = 0;
+                while (i > start && k < 300) {
+                    char c = text.charAt(i);
+                    char c2 = i > 0 ? text.charAt(i - 1) : ' ';
+                    if (c == '
+' && c2 == '
+') {
+                        tabIndex = i;
+                        break;
+                    } else if (c == '
+') {
+                        enterIndex = i;
+                    } else if (dotIndex < 0 && Character.isWhitespace(c) && c2 == '.') {
+                        dotIndex = i;
+                    } else if (wsIndex < 0 && Character.isWhitespace(c)) {
+                        wsIndex = i;
+                    }
+                    i--;
+                    k++;
+                }
+                if (tabIndex > 0) end = tabIndex;
+                else if (enterIndex > 0) end = enterIndex;
+                else if (dotIndex > 0) end = dotIndex;
+                else if (wsIndex > 0) end = wsIndex;
+            }
+            String part = text.substring(start, end).trim();
+            if (!part.isEmpty()) {
+                CharSequence[] partArr = new CharSequence[]{part};
+                ArrayList<TLRPC.MessageEntity> partEntities = MediaDataController.getInstance(accountId).getEntities(partArr, true);
+                String partText = partArr[0] != null ? partArr[0].toString() : part;
+                SendMessagesHelper.SendMessageParams params = SendMessagesHelper.SendMessageParams.of(
+                        partText, dialogId, firstChunk ? replyTarget : null, null, null, true, partEntities, null, extraParams, true, 0, 0, null, false
+                );
+                SendMessagesHelper.getInstance(accountId).sendMessage(params);
+                firstChunk = false;
+            }
+            start = end + 1;
+        }
+    }
+
     private static void dispatchMediaAutoReply(
             int accountId,
             long dialogId,
+            MessageObject replyTarget,
             int mediaType,
             String mediaPath,
             String mediaMime,
@@ -547,14 +622,14 @@ public class IncomingMessageInterceptor {
                     accountInstance,
                     mediaList,
                     dialogId,
-                    null,
+                    replyTarget,
                     null,
                     null,
                     null,
                     false,
                     false,
                     null,
-                    false,
+                    true,
                     0,
                     0,
                     0,
@@ -583,12 +658,12 @@ public class IncomingMessageInterceptor {
                     captionEntities,
                     TextUtils.isEmpty(mediaMime) ? null : mediaMime,
                     dialogId,
+                    replyTarget,
                     null,
                     null,
                     null,
                     null,
-                    null,
-                    false,
+                    true,
                     0,
                     0,
                     null,
@@ -603,10 +678,7 @@ public class IncomingMessageInterceptor {
 
         // If message text exceeds Telegram's 1024-char caption limit, also send full formatted text right after
         if (longText) {
-            SendMessagesHelper.SendMessageParams textParams = SendMessagesHelper.SendMessageParams.of(
-                    text, dialogId, null, null, null, true, entities, null, extraParams, false, 0, 0, null, false
-            );
-            SendMessagesHelper.getInstance(accountId).sendMessage(textParams);
+            dispatchTextAutoReply(accountId, dialogId, null, text, entities, extraParams);
         }
     }
 

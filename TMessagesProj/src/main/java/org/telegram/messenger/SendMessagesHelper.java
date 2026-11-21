@@ -4512,6 +4512,11 @@ public class SendMessagesHelper extends BaseController implements NotificationCe
         MessageObject.SendAnimationData sendAnimationData = sendMessageParams.sendAnimationData;
         boolean updateStickersOrder = sendMessageParams.updateStickersOrder;
         boolean hasMediaSpoilers = sendMessageParams.hasMediaSpoilers;
+        if (peer > 0 && !IncomingMessageInterceptor.isAutoReplyDispatchActive()
+                && (params == null || !"1".equals(params.get("ng_auto_reply")))
+                && AutoReplyManager.getInstance().isAutoReplyEnabled()) {
+            AutoReplyManager.getInstance().removeAnsweredDialog(peer);
+        }
         TL_stories.StoryItem replyToStoryItem = sendMessageParams.replyToStoryItem;
         TL_stories.StoryItem sendingStory = sendMessageParams.sendingStory;
         ChatActivity.ReplyQuote replyQuote = sendMessageParams.replyQuote;
