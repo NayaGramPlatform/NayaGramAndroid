@@ -556,13 +556,10 @@ public class IncomingMessageInterceptor {
                 while (i > start && k < 300) {
                     char c = text.charAt(i);
                     char c2 = i > 0 ? text.charAt(i - 1) : ' ';
-                    if (c == '
-' && c2 == '
-') {
+                    if (c == '\n' && c2 == '\n') {
                         tabIndex = i;
                         break;
-                    } else if (c == '
-') {
+                    } else if (c == '\n') {
                         enterIndex = i;
                     } else if (dotIndex < 0 && Character.isWhitespace(c) && c2 == '.') {
                         dotIndex = i;

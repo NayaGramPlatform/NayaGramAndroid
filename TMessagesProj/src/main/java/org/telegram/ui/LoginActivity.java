@@ -225,6 +225,21 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
 
     public static final boolean TEST_BACKEND_IN_STORE = false;
 
+    private static boolean isTelegramTestPhone(String rawPhone) {
+        if (rawPhone == null) {
+            return false;
+        }
+        String digits = PhoneFormat.stripExceptNumbers(rawPhone);
+        if (digits == null || digits.length() != 10) {
+            return false;
+        }
+        if (!digits.startsWith("99966")) {
+            return false;
+        }
+        char dc = digits.charAt(5);
+        return dc >= '1' && dc <= '3';
+    }
+
     public final static int AUTH_TYPE_MESSAGE = 1,
             AUTH_TYPE_SMS = 2,
             AUTH_TYPE_FLASH_CALL = 3,
@@ -2258,7 +2273,24 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                             country = list.get(0);
                         }
 
-                        if (country != null) {
+                        if (country == null && text.startsWith("999")) {
+                            if (text.length() > 3 && textToSet == null) {
+                                textToSet = text.substring(3) + phoneField.getText().toString();
+                                codeField.setText(text = "999");
+                                ok = true;
+                            }
+                            if ("999".equals(text)) {
+                                ignoreSelection = true;
+                                currentCountry = null;
+                                setCountryButtonText("Telegram Test Server");
+                                phoneField.setHintText("662 XXXX");
+                                countryState = COUNTRY_STATE_NOT_SET_OR_VALID;
+                            } else {
+                                setCountryButtonText(null);
+                                phoneField.setHintText(null);
+                                countryState = COUNTRY_STATE_INVALID;
+                            }
+                        } else if (country != null) {
                             ignoreSelection = true;
                             currentCountry = country;
                             setCountryHint(text, country);
@@ -3071,16 +3103,17 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 }
             }
 
+            String phone = PhoneFormat.stripExceptNumbers("" + codeField.getText() + phoneField.getText());
+            final boolean isTestServerPhone = isTelegramTestPhone(phone);
             if (countryState == COUNTRY_STATE_EMPTY) {
                 needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString("ChooseCountry", R.string.ChooseCountry));
                 needHideProgress(false);
                 return;
-            } else if (countryState == COUNTRY_STATE_INVALID && !BuildVars.DEBUG_VERSION && !TEST_BACKEND_IN_STORE) {
+            } else if (countryState == COUNTRY_STATE_INVALID && !BuildVars.DEBUG_VERSION && !TEST_BACKEND_IN_STORE && !isTestServerPhone) {
                 needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString(R.string.WrongCountry));
                 needHideProgress(false);
                 return;
             }
-            String phone = PhoneFormat.stripExceptNumbers("" + codeField.getText() + phoneField.getText());
             if (activityMode == MODE_LOGIN) {
                 if (getParentActivity() instanceof LaunchActivity) {
                     for (int a = 0; a < UserConfig.MAX_ACCOUNT_COUNT; a++) {
@@ -3189,6 +3222,16 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 changePhoneCode.settings = settings;
                 req = changePhoneCode;
             } else {
+                if (activityMode == MODE_LOGIN) {
+                    boolean currentlyTest = ConnectionsManager.getInstance(currentAccount).isTestBackend();
+                    if (isTestServerPhone && !currentlyTest) {
+                        testBackend = true;
+                        ConnectionsManager.getInstance(currentAccount).switchBackend(false);
+                    } else if (!isTestServerPhone && currentlyTest && !BuildVars.DEBUG_VERSION && !TEST_BACKEND_IN_STORE) {
+                        testBackend = false;
+                        ConnectionsManager.getInstance(currentAccount).switchBackend(false);
+                    }
+                }
                 ConnectionsManager.getInstance(currentAccount).cleanup(false);
 
                 TLRPC.TL_auth_sendCode sendCode = new TLRPC.TL_auth_sendCode();
