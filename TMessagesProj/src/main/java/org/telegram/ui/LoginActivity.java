@@ -2546,7 +2546,11 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 bottomMargin = Math.max(16, bottomMargin - 28);
             }
 
-            final boolean allowTestBackend = (BuildVars.DEBUG_VERSION || TEST_BACKEND_IN_STORE) || getConnectionsManager().isTestBackend();
+            if (!BuildVars.DEBUG_VERSION && !TEST_BACKEND_IN_STORE && activityMode == MODE_LOGIN && getConnectionsManager().isTestBackend()) {
+                testBackend = false;
+                getConnectionsManager().switchBackend(false);
+            }
+            final boolean allowTestBackend = BuildVars.DEBUG_VERSION || TEST_BACKEND_IN_STORE;
             if (allowTestBackend && activityMode == MODE_LOGIN) {
                 testBackendCheckBox = new CheckBoxCell(context, 2);
                 testBackendCheckBox.setText(getString(R.string.DebugTestBackend), "", testBackend = getConnectionsManager().isTestBackend(), false);
