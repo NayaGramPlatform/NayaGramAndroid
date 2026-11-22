@@ -12514,7 +12514,7 @@ public class MessagesController extends BaseController implements NotificationCe
         loadDialogs(folderId, offset, count, fromCache, null);
     }
 
-    private boolean isCurrentAccountBot() {
+    public boolean isCurrentAccountBot() {
         TLRPC.User me = getUserConfig().getCurrentUser();
         return (me != null && me.bot) || org.nayagram.platform.auth.NGBotSessionManager.isBotAccount(currentAccount);
     }
