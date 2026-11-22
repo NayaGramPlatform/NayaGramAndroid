@@ -1670,6 +1670,9 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
             org.nayagram.platform.auth.NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
         }
         onAuthSuccess(res, true);
+        if (res != null && res.user != null) {
+            org.nayagram.platform.auth.NGBotLoginHelper.seedBotWelcomeWorkspace(currentAccount, res.user);
+        }
     }
 
     public void handleBotAuthSuccess(TLRPC.TL_auth_authorization res) {
@@ -2523,7 +2526,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         BulletinFactory.of(slideViewsContainer, null).createSimpleBulletin(R.raw.contacts_sync_off, getString("SyncContactsOff", R.string.SyncContactsOff)).show();
                     }
                 });
+            }
 
+            // Show 'Log in with bot token' on BOTH initial fresh-install login AND Add Account login
+            if (activityMode == MODE_LOGIN) {
                 TextView botLoginButton = new TextView(context);
                 botLoginButton.setText(getString("LogInWithBotToken", R.string.LogInWithBotToken));
                 botLoginButton.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 15);
@@ -2536,8 +2542,8 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                 botLoginButton.setFocusable(true);
                 botLoginButton.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector), AndroidUtilities.dp(8), AndroidUtilities.dp(8)));
                 botLoginButton.setOnClickListener(v -> org.nayagram.platform.auth.NGBotLoginHelper.showBotLoginDialog(LoginActivity.this, currentAccount));
-                addView(botLoginButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 16, 6, 16, 0));
-                bottomMargin -= 28;
+                addView(botLoginButton, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL, 16, 8, 16, 0));
+                bottomMargin = Math.max(16, bottomMargin - 28);
             }
 
             final boolean allowTestBackend = (BuildVars.DEBUG_VERSION || TEST_BACKEND_IN_STORE) || getConnectionsManager().isTestBackend();

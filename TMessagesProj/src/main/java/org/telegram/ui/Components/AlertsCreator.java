@@ -344,6 +344,10 @@ public class AlertsCreator {
         if (error == null || error.code == 406 || error.text == null || error.text.contains("BOT_METHOD_INVALID")) {
             return null;
         }
+        if (MessagesController.getInstance(currentAccount).isCurrentAccountBot()
+                && (error.text.contains("USER_IS_BOT") || error.text.contains("PEER_ID_INVALID") || error.text.contains("BOT_"))) {
+            return null;
+        }
         if ("BALANCE_TOO_LOW".equalsIgnoreCase(error.text)) {
             final long price = StarsController.getAllowedPaidStars(request);
             final long dialogId = StarsController.getPeer(request);

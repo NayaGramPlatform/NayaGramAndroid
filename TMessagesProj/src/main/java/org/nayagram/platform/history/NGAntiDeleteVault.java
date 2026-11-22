@@ -960,8 +960,25 @@ public final class NGAntiDeleteVault {
                     continue;
                 }
 
-                int vaultDate = Math.max(cur.intValue(1), maxSavedDate);
-                int vaultLastMid = Math.max(cur.intValue(3), maxSavedMid);
+                // Always use the actual latest anti-deleted message ID/date from saved_messages,
+                // never a stale saved_dialogs.last_mid snapshot that could revert real-time previews.
+                int vaultDate = maxSavedDate;
+                int vaultLastMid = maxSavedMid;
+
+                boolean savedMsgExistsInMain = false;
+                SQLiteCursor existMsgCur = null;
+                try {
+                    existMsgCur = mainDb.queryFinalized(String.format(Locale.US,
+                            "SELECT 1 FROM messages_v2 WHERE uid = %d AND mid = %d LIMIT 1", did, vaultLastMid));
+                    savedMsgExistsInMain = existMsgCur.next();
+                } finally {
+                    if (existMsgCur != null) {
+                        existMsgCur.dispose();
+                    }
+                }
+                if (!savedMsgExistsInMain) {
+                    continue;
+                }
 
                 int mainLastMid = -1;
                 int mainDate = 0;
@@ -1002,10 +1019,10 @@ public final class NGAntiDeleteVault {
                     insertDialogSt.bindInteger(18, 0);
                     insertDialogSt.step();
                     reuseAll(toReuse);
-                } else if (vaultLastMid > mainLastMid) {
+                } else if (vaultLastMid > mainLastMid && vaultDate >= mainDate) {
                     updateLastSt.requery();
                     updateLastSt.bindInteger(1, vaultLastMid);
-                    updateLastSt.bindInteger(2, Math.max(mainDate, vaultDate));
+                    updateLastSt.bindInteger(2, vaultDate);
                     updateLastSt.bindLong(3, did);
                     updateLastSt.step();
                 }
@@ -1436,12 +1453,25 @@ public final class NGAntiDeleteVault {
             LongSparseArray<TLRPC.Chat> chatsDict,
             LongSparseArray<ArrayList<MessageObject>> newDialogMessages,
             int currentAccount) {
+        mergeSavedDialogsForFolder(ownerUserId, folderId, dialogsRes, usersDict, chatsDict, newDialogMessages, currentAccount, false);
+    }
+
+    public static void mergeSavedDialogsForFolder(
+            long ownerUserId,
+            int folderId,
+            TLRPC.messages_Dialogs dialogsRes,
+            LongSparseArray<TLRPC.User> usersDict,
+            LongSparseArray<TLRPC.Chat> chatsDict,
+            LongSparseArray<ArrayList<MessageObject>> newDialogMessages,
+            int currentAccount,
+            boolean allowInjectMissing) {
         if (ownerUserId == 0 || dialogsRes == null || (folderId != 0 && folderId != 1)) {
             return;
         }
         if (!NayaConfig.getInstance().isPreventMessageDeletionEnabled() || !hasVaultForUser(ownerUserId)) {
             return;
         }
+        MessagesController controller = MessagesController.getInstance(currentAccount);
 
         LongSparseArray<TLRPC.Dialog> byDid = new LongSparseArray<>(dialogsRes.dialogs.size());
         for (int i = 0; i < dialogsRes.dialogs.size(); i++) {
@@ -1492,11 +1522,17 @@ public final class NGAntiDeleteVault {
 
                     TLRPC.Dialog existing = byDid.get(did);
                     if (existing == null) {
+                        // Never overwrite an already-loaded live dialog (e.g., pinned or Page 1 chats
+                        // while Page 2/3/4 server pagination runs with offset == 0).
+                        TLRPC.Dialog loadedDialog = controller != null ? controller.dialogs_dict.get(did) : null;
+                        if (loadedDialog != null || !allowInjectMissing) {
+                            continue;
+                        }
                         TLRPC.TL_dialog d = new TLRPC.TL_dialog();
                         d.id = did;
-                        d.peer = MessagesController.getInstance(currentAccount).getPeer(did);
-                        d.last_message_date = Math.max(cur.intValue(1), latestMsg.date);
-                        d.top_message = Math.max(cur.intValue(2), latestMsg.id);
+                        d.peer = controller.getPeer(did);
+                        d.last_message_date = latestMsg.date;
+                        d.top_message = latestMsg.id;
                         d.read_inbox_max_id = cur.intValue(3);
                         d.read_outbox_max_id = cur.intValue(4);
                         d.pts = cur.intValue(5);
@@ -1515,9 +1551,9 @@ public final class NGAntiDeleteVault {
                         byDid.put(did, d);
                         collectDialogPeer(did, userIds, chatIds);
                         MessagesStorage.addUsersAndChatsFromMessage(latestMsg, userIds, chatIds, null);
-                    } else if (latestMsg.id > existing.top_message) {
+                    } else if (latestMsg.id > existing.top_message && latestMsg.date >= existing.last_message_date) {
                         existing.top_message = latestMsg.id;
-                        existing.last_message_date = Math.max(existing.last_message_date, latestMsg.date);
+                        existing.last_message_date = latestMsg.date;
                         dialogsRes.messages.add(latestMsg);
                         addedMessages.add(latestMsg);
                         collectDialogPeer(did, userIds, chatIds);

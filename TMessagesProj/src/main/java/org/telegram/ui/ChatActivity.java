@@ -27336,9 +27336,9 @@ public class ChatActivity extends BaseFragment implements
             Integer mid = markAsDeletedMessages.get(a);
             MessageObject obj = chatAdapter != null && chatAdapter.isFiltered ? filteredMessagesDict.get(mid) :  messagesDict[loadIndex].get(mid);
             if (obj != null) {
-                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner()) {
+                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && dialog_id != getUserConfig().getClientUserId()) {
                     if (getMessagesController().isLocallyDeleted(dialog_id, mid)) {
-                        getMessagesController().removeLocallyDeleted(dialog_id, mid);
+                        // Keep localDeleted key so async MessagesStorage delete queue honors permanent deletion.
                     } else {
                         obj.deleted = false;
                         obj.isAntiDeleted = true;

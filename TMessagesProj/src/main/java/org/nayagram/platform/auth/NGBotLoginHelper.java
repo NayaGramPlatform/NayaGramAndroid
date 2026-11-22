@@ -261,8 +261,77 @@ public class NGBotLoginHelper {
             NGBotSessionManager.saveBotSession(currentAccount, token, res.user);
         }
         MessagesController.getInstance(currentAccount).putDialogsEndReachedAfterRegistration();
+        seedBotWelcomeWorkspace(currentAccount, res.user);
         if (LaunchActivity.instance != null) {
             LaunchActivity.instance.switchToAccount(currentAccount, true);
+        }
+    }
+
+    /**
+     * Seeds a local Saved Messages guide thread for Bot sessions so the chat list is not blank
+     * and the full Chat UI (Composer, Floating Formatting Bar, Voice Changer, Themes, Hub) can be inspected.
+     */
+    public static void seedBotWelcomeWorkspace(int currentAccount, TLRPC.User botUser) {
+        if (botUser == null || !botUser.bot || botUser.id == 0) {
+            return;
+        }
+        try {
+            int now = Math.max(ConnectionsManager.getInstance(currentAccount).getCurrentTime(), (int) (System.currentTimeMillis() / 1000L));
+            String handle = !TextUtils.isEmpty(botUser.username) ? "@" + botUser.username : "Bot Account";
+
+            TLRPC.TL_message m1 = new TLRPC.TL_message();
+            m1.id = 1;
+            m1.dialog_id = botUser.id;
+            m1.peer_id = new TLRPC.TL_peerUser();
+            m1.peer_id.user_id = botUser.id;
+            m1.from_id = new TLRPC.TL_peerUser();
+            m1.from_id.user_id = botUser.id;
+            m1.date = now - 2;
+            m1.out = false;
+            m1.unread = false;
+            m1.media = new TLRPC.TL_messageMediaEmpty();
+            m1.message = "Welcome to NayaGram (" + handle + ")! Open this chat to explore the Smart Composer, Floating Formatting Bar, Glowing AI button, Voice Changer Studio HD, Stickers, Themes, and NayaGram Hub.";
+
+            TLRPC.TL_message m2 = new TLRPC.TL_message();
+            m2.id = 2;
+            m2.dialog_id = botUser.id;
+            m2.peer_id = new TLRPC.TL_peerUser();
+            m2.peer_id.user_id = botUser.id;
+            m2.from_id = new TLRPC.TL_peerUser();
+            m2.from_id.user_id = botUser.id;
+            m2.date = now;
+            m2.out = false;
+            m2.unread = false;
+            m2.media = new TLRPC.TL_messageMediaEmpty();
+            m2.message = "Telegram Bot API Note: Bot accounts can reply to any user who sends /start to " + handle + ". Per Telegram MTProto limits, VoIP Audio/Video calls and initiating unsolicited DMs require a phone-verified user account.";
+
+            TLRPC.TL_dialog dialog = new TLRPC.TL_dialog();
+            dialog.id = botUser.id;
+            dialog.peer = new TLRPC.TL_peerUser();
+            dialog.peer.user_id = botUser.id;
+            dialog.top_message = m2.id;
+            dialog.last_message_date = m2.date;
+            dialog.read_inbox_max_id = m2.id;
+            dialog.read_outbox_max_id = m2.id;
+            dialog.unread_count = 0;
+            dialog.pinned = true;
+            dialog.pinnedNum = 1;
+            dialog.folder_id = 0;
+
+            TLRPC.TL_messages_dialogs dialogsRes = new TLRPC.TL_messages_dialogs();
+            dialogsRes.dialogs.add(dialog);
+            dialogsRes.messages.add(m2);
+            dialogsRes.users.add(botUser);
+
+            java.util.ArrayList<TLRPC.Message> msgs = new java.util.ArrayList<>(2);
+            msgs.add(m1);
+            msgs.add(m2);
+
+            MessagesStorage.getInstance(currentAccount).putMessages(msgs, true, true, false, 0, org.telegram.ui.ChatActivity.MODE_DEFAULT, 0);
+            MessagesStorage.getInstance(currentAccount).putDialogs(dialogsRes, 0);
+            MessagesController.getInstance(currentAccount).processLoadedDialogs(dialogsRes, null, null, 0, 0, 20, 0, false, false, true);
+        } catch (Throwable t) {
+            FileLog.e("NGBotLoginHelper: seedBotWelcomeWorkspace failed", t);
         }
     }
 }

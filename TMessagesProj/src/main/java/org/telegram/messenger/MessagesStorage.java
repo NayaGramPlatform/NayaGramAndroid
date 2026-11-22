@@ -11951,6 +11951,13 @@ public class MessagesStorage extends BaseController {
 
                 if (preservedChannelMessages != null && !preservedChannelMessages.isEmpty()) {
                     putMessagesInternal(preservedChannelMessages, true, true, 0, true, ChatActivity.MODE_DEFAULT, 0);
+                    long ownerUid = getUserConfig().getClientUserId();
+                    for (int a = 0; a < preservedChannelMessages.size(); a++) {
+                        TLRPC.Message pm = preservedChannelMessages.get(a);
+                        if (pm != null && pm.isAntiDeleted && pm.id > 0) {
+                            org.nayagram.platform.history.NGAntiDeleteVault.saveFromMainDb(ownerUid, database, did, pm.id);
+                        }
+                    }
                 }
 
                 updateDialogsWithDeletedMessages(-channelId, channelId, new ArrayList<>(), null);
@@ -15145,7 +15152,7 @@ public class MessagesStorage extends BaseController {
                             }
                             data.reuse();
                             if (DialogObject.isEncryptedDialog(did) || deleteFiles) {
-                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, message.id)) {
+                                if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (did == currentUser && message.out) || getMessagesController().isLocallyDeleted(did, message.id)) {
                                     addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                                 }
                             }
@@ -15196,7 +15203,7 @@ public class MessagesStorage extends BaseController {
                             TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
                             message.readAttachPath(data, getUserConfig().clientUserId);
                             data.reuse();
-                            if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, message.id)) {
+                            if (!org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() || (did == currentUser && message.out) || getMessagesController().isLocallyDeleted(did, message.id)) {
                                 addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                             }
                             if (message.action instanceof TLRPC.TL_messageActionTopicCreate) {
@@ -15463,7 +15470,7 @@ public class MessagesStorage extends BaseController {
                                         }
                                     }
                                 }
-                                boolean allowPermanentDelete = (isOutRow && !isChannelPost) || getMessagesController().isLocallyDeleted(did, amid);
+                                boolean allowPermanentDelete = (did == currentUser && isOutRow) || getMessagesController().isLocallyDeleted(did, amid);
                                 if (allowPermanentDelete) {
                                     actualDeletedMids.add(amid);
                                     database.executeFast(String.format(Locale.US, "DELETE FROM messages_v2 WHERE mid = %d AND uid = %d", amid, did)).stepThis().dispose();
@@ -16066,7 +16073,7 @@ public class MessagesStorage extends BaseController {
                                 }
                             }
                         }
-                        boolean allowPermanentDelete = (isOutRow && !isChannelPost) || getMessagesController().isLocallyDeleted(targetUid, amid);
+                        boolean allowPermanentDelete = (targetUid == currentUser && isOutRow) || getMessagesController().isLocallyDeleted(targetUid, amid);
                         if (allowPermanentDelete) {
                             actualDeletedMids.add(amid);
                             database.executeFast(String.format(Locale.US, "DELETE FROM messages_v2 WHERE mid = %d AND uid = %d", amid, targetUid)).stepThis().dispose();
@@ -16983,7 +16990,7 @@ public class MessagesStorage extends BaseController {
                         state_messages_tags = database.executeFast("REPLACE INTO tag_message_id VALUES(?, ?, ?, ?)");
                     }
                     preserveExistingAntiDeletedInternal(messages.messages);
-                    if (threadMessageId == 0 && mode == ChatActivity.MODE_DEFAULT && DialogObject.isChatDialog(dialogId) && org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled()
+                    if (threadMessageId == 0 && mode == ChatActivity.MODE_DEFAULT && (DialogObject.isChatDialog(dialogId) || (DialogObject.isUserDialog(dialogId) && dialogId != selfId)) && org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled()
                             && (load_type == LOAD_BACKWARD || load_type == LOAD_FROM_UNREAD || load_type == LOAD_AROUND_MESSAGE) && !messages.messages.isEmpty()) {
                         SparseBooleanArray returnedMids = new SparseBooleanArray();
                         int minReturnedId = Integer.MAX_VALUE;
@@ -17012,7 +17019,7 @@ public class MessagesStorage extends BaseController {
                                     }
                                     TLRPC.Message oldMsg = TLRPC.Message.TLdeserialize(oldData, oldData.readInt32(false), false);
                                     oldData.reuse();
-                                    if (oldMsg == null || (oldMsg.out && !oldMsg.post)) {
+                                    if (oldMsg == null || (dialogId == selfId && oldMsg.out)) {
                                         continue;
                                     }
                                     NativeByteBuffer paramsBuf = missingCur.byteBufferValue(2);

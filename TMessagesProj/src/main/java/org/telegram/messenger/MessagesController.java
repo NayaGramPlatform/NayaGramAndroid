@@ -11783,6 +11783,10 @@ public class MessagesController extends BaseController implements NotificationCe
                     });
                     return;
                 }
+                if (isCurrentAccountBot() && dialogId == getUserConfig().getClientUserId()) {
+                    AndroidUtilities.runOnUIThread(() -> getNotificationCenter().postNotificationName(NotificationCenter.loadingMessagesFailed, classGuid, null, null));
+                    return;
+                }
                 TLRPC.TL_messages_getHistory req = new TLRPC.TL_messages_getHistory();
                 req.peer = getInputPeer(dialogId);
                 if (load_type == 4) {
@@ -13538,9 +13542,11 @@ public class MessagesController extends BaseController implements NotificationCe
                 getUserConfig().setTotalDialogsCount(folderId, totalDialogsLoadCount);
                 getUserConfig().saveConfig(false);
             }
-            if (!fromCache && offset == 0) {
+            final int serverDialogsSize = dialogsRes.dialogs.size();
+            if (!fromCache && loadType == 0) {
+                boolean serverPageEndReached = (serverDialogsSize == 0 || serverDialogsSize != count);
                 org.nayagram.platform.history.NGAntiDeleteVault.mergeSavedDialogsForFolder(
-                        getUserConfig().getClientUserId(), folderId, dialogsRes, usersDict, chatsDict, new_dialogMessage, currentAccount);
+                        getUserConfig().getClientUserId(), folderId, dialogsRes, usersDict, chatsDict, new_dialogMessage, currentAccount, serverPageEndReached);
             }
 
             ArrayList<TLRPC.Dialog> dialogsToReload = new ArrayList<>();
@@ -13734,7 +13740,8 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                         }
                         if (oldMsgsDeleted || oldMsgs == null || currentDialog.top_message > 0) {
-                            if (value.top_message >= currentDialog.top_message || (oldMsgs == null) != (newMsgs == null) || oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size()) {
+                            boolean allowSizeRefresh = oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size() && (oldMsgsDeleted || value.top_message >= currentDialog.top_message);
+                            if (value.top_message >= currentDialog.top_message || (oldMsgs == null && newMsgs != null) || allowSizeRefresh) {
                                 dialogs_dict.put(key, value);
                                 dialogMessage.put(key, newMsgs);
                                 if (oldMsgs != null) {
@@ -13830,7 +13837,7 @@ public class MessagesController extends BaseController implements NotificationCe
 
                 if (loadType != DIALOGS_LOAD_TYPE_CHANNEL && loadType != DIALOGS_LOAD_TYPE_UNKNOWN) {
                     if (!migrate) {
-                        dialogsEndReached.put(folderId, (dialogsRes.dialogs.size() == 0 || dialogsRes.dialogs.size() != count) && loadType == 0);
+                        dialogsEndReached.put(folderId, (serverDialogsSize == 0 || serverDialogsSize != count) && loadType == 0);
                         if (archivedDialogsCount > 0 && archivedDialogsCount < 20 && folderId == 0) {
                             dialogsEndReached.put(1, true);
                             long[] dialogsLoadOffsetArchived = getUserConfig().getDialogLoadOffsets(folderId);
@@ -13839,7 +13846,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                         }
                         if (!fromCache) {
-                            serverDialogsEndReached.put(folderId, (dialogsRes.dialogs.size() == 0 || dialogsRes.dialogs.size() != count) && loadType == 0);
+                            serverDialogsEndReached.put(folderId, (serverDialogsSize == 0 || serverDialogsSize != count) && loadType == 0);
                         }
                     }
                 }
@@ -17729,7 +17736,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         Integer id = ids.get(b);
                         MessageObject obj = dialogMessagesByIds.get(id);
                         if (obj != null) {
-                            if (antiDeleteEnabled && !obj.isOutOwner() && !isLocallyDeleted(obj.getDialogId(), id)) {
+                            if (antiDeleteEnabled && obj.getDialogId() != getUserConfig().getClientUserId() && !isLocallyDeleted(obj.getDialogId(), id)) {
                                 obj.deleted = false;
                                 obj.isAntiDeleted = true;
                                 obj.forceUpdate = true;
@@ -17752,7 +17759,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             }
                             for (int b = 0, size2 = ids.size(); b < size2; b++) {
                                 if (obj.getId() == ids.get(b)) {
-                                    if (antiDeleteEnabled && !obj.isOutOwner() && !isLocallyDeleted(dialogId != 0 ? dialogId : -channelId, obj.getId())) {
+                                    if (antiDeleteEnabled && (dialogId != 0 ? dialogId : -channelId) != getUserConfig().getClientUserId() && !isLocallyDeleted(dialogId != 0 ? dialogId : -channelId, obj.getId())) {
                                         obj.deleted = false;
                                         obj.isAntiDeleted = true;
                                         obj.forceUpdate = true;
@@ -21340,7 +21347,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (BuildVars.LOGS_ENABLED) {
                                     FileLog.d("mark messages " + obj.getId() + " deleted");
                                 }
-                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(obj.getDialogId(), id)) {
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && obj.getDialogId() != getUserConfig().getClientUserId() && !isLocallyDeleted(obj.getDialogId(), id)) {
                                     obj.deleted = false;
                                     obj.isAntiDeleted = true;
                                     obj.forceUpdate = true;
@@ -21361,7 +21368,7 @@ public class MessagesController extends BaseController implements NotificationCe
                                 if (obj != null) {
                                     for (int b = 0, size2 = arrayList.size(); b < size2; b++) {
                                         if (obj.getId() == arrayList.get(b)) {
-                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(dialogId, obj.getId())) {
+                                            if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && dialogId != getUserConfig().getClientUserId() && !isLocallyDeleted(dialogId, obj.getId())) {
                                                 obj.deleted = false;
                                                 obj.isAntiDeleted = true;
                                                 obj.forceUpdate = true;
@@ -21414,7 +21421,7 @@ public class MessagesController extends BaseController implements NotificationCe
                         for (int i = 0; i < objs.size(); ++i) {
                             MessageObject obj = objs.get(i);
                             if (obj != null && obj.getId() <= id) {
-                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && !obj.isOutOwner() && !isLocallyDeleted(did, obj.getId())) {
+                                if (org.nayagram.platform.NayaConfig.getInstance().isPreventMessageDeletionEnabled() && did != getUserConfig().getClientUserId() && !isLocallyDeleted(did, obj.getId())) {
                                     obj.deleted = false;
                                     obj.isAntiDeleted = true;
                                     obj.forceUpdate = true;
