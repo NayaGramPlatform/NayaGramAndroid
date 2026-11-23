@@ -1677,14 +1677,14 @@ public class MessagesController extends BaseController implements NotificationCe
         savedGifsLimitPremium = mainPreferences.getInt("savedGifsLimitPremium", 400);
         stickersFavedLimitDefault = mainPreferences.getInt("stickersFavedLimitDefault", 5);
         stickersFavedLimitPremium = mainPreferences.getInt("stickersFavedLimitPremium", 200);
-        maxPinnedDialogsCountDefault = Math.max(10, mainPreferences.getInt("maxPinnedDialogsCountDefault", 10));
-        maxPinnedDialogsCountPremium = Math.max(20, mainPreferences.getInt("maxPinnedDialogsCountPremium", 20));
+        maxPinnedDialogsCountDefault = mainPreferences.getInt("maxPinnedDialogsCountDefault", 5);
+        maxPinnedDialogsCountPremium = mainPreferences.getInt("maxPinnedDialogsCountPremium", 10);
         dialogFiltersLimitDefault = mainPreferences.getInt("dialogFiltersLimitDefault", 10);
         dialogFiltersLimitPremium = mainPreferences.getInt("dialogFiltersLimitPremium", 20);
         dialogFiltersChatsLimitDefault = mainPreferences.getInt("dialogFiltersChatsLimitDefault", 100);
         dialogFiltersChatsLimitPremium = mainPreferences.getInt("dialogFiltersChatsLimitPremium", 200);
-        dialogFiltersPinnedLimitDefault = Math.max(15, mainPreferences.getInt("dialogFiltersPinnedLimitDefault", 15));
-        dialogFiltersPinnedLimitPremium = Math.max(30, mainPreferences.getInt("dialogFiltersPinnedLimitPremium", 30));
+        dialogFiltersPinnedLimitDefault = mainPreferences.getInt("dialogFiltersPinnedLimitDefault", 100);
+        dialogFiltersPinnedLimitPremium = mainPreferences.getInt("dialogFiltersPinnedLimitPremium", 200);
         publicLinksLimitDefault = mainPreferences.getInt("publicLinksLimitDefault", 10);
         publicLinksLimitPremium = mainPreferences.getInt("publicLinksLimitPremium", 20);
         captionLengthLimitDefault = mainPreferences.getInt("captionLengthLimitDefault", 1024);
@@ -2261,6 +2261,14 @@ public class MessagesController extends BaseController implements NotificationCe
                         DialogFilter filter = dialogFilters.get(a);
                         dialogFiltersById.put(filter.id, filter);
                     }
+                    for (int a = 0; a < selectedDialogFilter.length; a++) {
+                        if (selectedDialogFilter[a] != null) {
+                            DialogFilter refreshed = dialogFiltersById.get(selectedDialogFilter[a].id);
+                            if (refreshed != null) {
+                                selectedDialogFilter[a] = refreshed;
+                            }
+                        }
+                    }
                     Collections.sort(dialogFilters, (o1, o2) -> {
                         if (o1.order > o2.order) {
                             return 1;
@@ -2333,7 +2341,8 @@ public class MessagesController extends BaseController implements NotificationCe
                                 }
                             }
                             if (oldMsgsDeleted || oldMsgs == null || currentDialog.top_message > 0) {
-                                if (newDialog.top_message >= currentDialog.top_message || (oldMsgs == null) != (newMsgs == null) || oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size()) {
+                                boolean allowSizeRefresh = oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size() && (oldMsgsDeleted || newDialog.top_message >= currentDialog.top_message);
+                                if (newDialog.top_message >= currentDialog.top_message || (oldMsgs == null && newMsgs != null) || allowSizeRefresh) {
                                     dialogs_dict.put(key, newDialog);
                                     dialogMessage.put(key, newMsgs);
                                     if (oldMsgs != null) {
@@ -3512,18 +3521,48 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                     break;
                 }
-                case "pinned_dialogs_count_max_default":
-                case "pinned_dialogs_count_max_premium":
-                case "dialog_filters_pinned_limit_default":
+                case "pinned_dialogs_count_max_default": {
+                    if (value.value instanceof TLRPC.TL_jsonNumber) {
+                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
+                        if (number.value != maxPinnedDialogsCountDefault) {
+                            maxPinnedDialogsCountDefault = (int) number.value;
+                            editor.putInt("maxPinnedDialogsCountDefault", maxPinnedDialogsCountDefault);
+                            changed = true;
+                        }
+                    }
+                    break;
+                }
+                case "pinned_dialogs_count_max_premium": {
+                    if (value.value instanceof TLRPC.TL_jsonNumber) {
+                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
+                        if (number.value != maxPinnedDialogsCountPremium) {
+                            maxPinnedDialogsCountPremium = (int) number.value;
+                            editor.putInt("maxPinnedDialogsCountPremium", maxPinnedDialogsCountPremium);
+                            changed = true;
+                        }
+                    }
+                    break;
+                }
+                case "dialog_filters_pinned_limit_default": {
+                    if (value.value instanceof TLRPC.TL_jsonNumber) {
+                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
+                        if (number.value != dialogFiltersPinnedLimitDefault) {
+                            dialogFiltersPinnedLimitDefault = (int) number.value;
+                            editor.putInt("dialogFiltersPinnedLimitDefault", dialogFiltersPinnedLimitDefault);
+                            changed = true;
+                        }
+                    }
+                    break;
+                }
                 case "dialog_filters_pinned_limit_premium": {
-                    maxPinnedDialogsCountDefault = 10;
-                    maxPinnedDialogsCountPremium = 20;
-                    dialogFiltersPinnedLimitDefault = 15;
-                    dialogFiltersPinnedLimitPremium = 30;
-                    editor.putInt("maxPinnedDialogsCountDefault", 10);
-                    editor.putInt("maxPinnedDialogsCountPremium", 20);
-                    editor.putInt("dialogFiltersPinnedLimitDefault", 15);
-                    editor.putInt("dialogFiltersPinnedLimitPremium", 30);
+                    if (value.value instanceof TLRPC.TL_jsonNumber) {
+                        TLRPC.TL_jsonNumber number = (TLRPC.TL_jsonNumber) value.value;
+                        if (number.value != dialogFiltersPinnedLimitPremium) {
+                            dialogFiltersPinnedLimitPremium = (int) number.value;
+                            editor.putInt("dialogFiltersPinnedLimitPremium", dialogFiltersPinnedLimitPremium);
+                            changed = true;
+                        }
+                    }
                     break;
                 }
                 case "dialog_filters_limit_default": {
@@ -12086,10 +12125,6 @@ public class MessagesController extends BaseController implements NotificationCe
                 return;
             }
         }
-        if (!isCache && mode == ChatActivity.MODE_DEFAULT && !DialogObject.isEncryptedDialog(dialogId)) {
-            org.nayagram.platform.history.NGAntiDeleteVault.mergeServerWindowMessages(
-                    getUserConfig().getClientUserId(), dialogId, threadMessageId, load_type, max_id, count, messagesRes, usersDict, chatsDict, this);
-        }
         int size = messagesRes.messages.size();
         if (!isCache) {
             Integer inboxValue = dialogs_read_inbox_max.get(dialogId);
@@ -12126,11 +12161,29 @@ public class MessagesController extends BaseController implements NotificationCe
                     }
                 }
             }
+            // Persist strictly pure server messages so MessagesStorage.closeHolesInTable only closes the real server page
+            // and never wipes out holes containing real undeleted messages between injected Vault messages.
+            TLRPC.TL_messages_messages serverOnlyRes = new TLRPC.TL_messages_messages();
+            serverOnlyRes.flags = messagesRes.flags;
+            serverOnlyRes.inexact = messagesRes.inexact;
+            serverOnlyRes.count = messagesRes.count;
+            serverOnlyRes.pts = messagesRes.pts;
+            serverOnlyRes.next_rate = messagesRes.next_rate;
+            serverOnlyRes.offset_id_offset = messagesRes.offset_id_offset;
+            serverOnlyRes.messages.addAll(messagesRes.messages);
+            serverOnlyRes.users.addAll(messagesRes.users);
+            serverOnlyRes.chats.addAll(messagesRes.chats);
+            serverOnlyRes.topics.addAll(messagesRes.topics);
             if (threadMessageId == 0 || isTopic || mode == ChatActivity.MODE_SUGGESTIONS || mode == ChatActivity.MODE_SAVED || mode == ChatActivity.MODE_QUICK_REPLIES || mode == ChatActivity.MODE_WELCOME_MESSAGES) {
-                getMessagesStorage().putMessages(messagesRes, dialogId, load_type, max_id, createDialog, mode, threadMessageId);
+                getMessagesStorage().putMessages(serverOnlyRes, dialogId, load_type, max_id, createDialog, mode, threadMessageId);
             }
             if (mode == ChatActivity.MODE_SAVED) {
-                getSavedMessagesController().update(threadMessageId, messagesRes);
+                getSavedMessagesController().update(threadMessageId, serverOnlyRes);
+            }
+            if (mode == ChatActivity.MODE_DEFAULT && !DialogObject.isEncryptedDialog(dialogId)) {
+                org.nayagram.platform.history.NGAntiDeleteVault.mergeServerWindowMessages(
+                        getUserConfig().getClientUserId(), dialogId, threadMessageId, load_type, max_id, count, messagesRes, usersDict, chatsDict, this);
+                size = messagesRes.messages.size();
             }
         }
 
@@ -13544,6 +13597,27 @@ public class MessagesController extends BaseController implements NotificationCe
             }
             final int serverDialogsSize = dialogsRes.dialogs.size();
             if (!fromCache && loadType == 0) {
+                for (int a = 0; a < serverDialogsSize; a++) {
+                    TLRPC.Dialog d = dialogsRes.dialogs.get(a);
+                    if (d != null) {
+                        DialogObject.initDialog(d);
+                        if (d.id != 0 && d.last_message_date == 0) {
+                            ArrayList<MessageObject> dMsgs = new_dialogMessage.get(d.id);
+                            if (dMsgs != null) {
+                                int maxDate = Integer.MIN_VALUE;
+                                for (int i = 0; i < dMsgs.size(); ++i) {
+                                    MessageObject msg = dMsgs.get(i);
+                                    if (msg != null && msg.messageOwner != null && msg.messageOwner.date > maxDate) {
+                                        maxDate = msg.messageOwner.date;
+                                    }
+                                }
+                                if (maxDate > Integer.MIN_VALUE) {
+                                    d.last_message_date = maxDate;
+                                }
+                            }
+                        }
+                    }
+                }
                 boolean serverPageEndReached = (serverDialogsSize == 0 || serverDialogsSize != count);
                 org.nayagram.platform.history.NGAntiDeleteVault.mergeSavedDialogsForFolder(
                         getUserConfig().getClientUserId(), folderId, dialogsRes, usersDict, chatsDict, new_dialogMessage, currentAccount, serverPageEndReached);
@@ -13727,6 +13801,7 @@ public class MessagesController extends BaseController implements NotificationCe
                     } else {
                         if (loadType != DIALOGS_LOAD_TYPE_CACHE) {
                             currentDialog.notify_settings = value.notify_settings;
+                            currentDialog.folder_id = value.folder_id;
                         }
                         currentDialog.pinned = value.pinned;
                         currentDialog.pinnedNum = value.pinnedNum;
@@ -14313,7 +14388,8 @@ public class MessagesController extends BaseController implements NotificationCe
                             FileLog.d("processDialogsUpdate oldMsgDeleted " + oldMsgsDeleted);
                         }
                         if (oldMsgs == null || currentDialog.top_message > 0) {
-                            if (oldMsgsDeleted || value.top_message > currentDialog.top_message || (oldMsgs == null) != (newMsgs == null) || oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size()) {
+                            boolean allowSizeRefresh = oldMsgs != null && newMsgs != null && oldMsgs.size() != newMsgs.size() && (oldMsgsDeleted || value.top_message >= currentDialog.top_message);
+                            if (oldMsgsDeleted || value.top_message > currentDialog.top_message || (oldMsgs == null && newMsgs != null) || allowSizeRefresh) {
                                 dialogs_dict.put(key, value);
                                 dialogMessage.put(key, newMsgs);
                                 for (int i = 0; oldMsgs != null && i < oldMsgs.size(); ++i) {

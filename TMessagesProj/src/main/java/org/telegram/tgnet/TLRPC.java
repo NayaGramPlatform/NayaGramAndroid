@@ -25189,6 +25189,8 @@ public class TLRPC {
                     return new TL_messageActionBotAllowed_layer153();
                 case TL_messageActionBotAllowed.constructor:
                     return new TL_messageActionBotAllowed();
+                case TL_messageActionBotInvite.constructor:
+                    return new TL_messageActionBotInvite();
                 case TL_messageActionPaymentSent.constructor:
                     return new TL_messageActionPaymentSent();
                 case TL_messageActionPaymentSent_layer193.constructor:
@@ -26381,6 +26383,38 @@ public class TLRPC {
         public void serializeToStream(OutputSerializedData stream) {
             stream.writeInt32(constructor);
             stream.writeString(domain);
+        }
+    }
+
+    public static class TL_messageActionBotInvite extends MessageAction {
+        public static final int constructor = 0xe509b17b;
+
+        public long inviter_id;
+
+        public void readParams(InputSerializedData stream, boolean exception) {
+            inviter_id = stream.readInt64(exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt64(inviter_id);
+        }
+    }
+
+    public static class TL_messages_inviteUsersToBot extends TLMethod<Bool> {
+        public static final int constructor = 0x1db7effb;
+
+        public InputUser bot;
+        public ArrayList<InputUser> users = new ArrayList<>();
+
+        public Bool deserializeResponseT(InputSerializedData stream, int constructor, boolean exception) {
+            return Bool.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            bot.serializeToStream(stream);
+            Vector.serialize(stream, users);
         }
     }
 

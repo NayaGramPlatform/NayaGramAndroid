@@ -5883,6 +5883,15 @@ public class MessageObject {
                         }
                         messageText = str;
                     }
+                } else if (messageOwner.action instanceof TLRPC.TL_messageActionBotInvite) {
+                    long inviterId = ((TLRPC.TL_messageActionBotInvite) messageOwner.action).inviter_id;
+                    TLRPC.User inviterUser = inviterId != 0 ? getUser(users, sUsers, inviterId) : null;
+                    if (inviterUser != null) {
+                        String inviterName = UserObject.getUserName(inviterUser);
+                        messageText = inviterName + " invited you to this bot";
+                    } else {
+                        messageText = "You were invited to this bot";
+                    }
                 } else if (messageOwner.action instanceof TLRPC.TL_messageActionAttachMenuBotAllowed || messageOwner.action instanceof TLRPC.TL_messageActionBotAllowed && ((TLRPC.TL_messageActionBotAllowed) messageOwner.action).attach_menu) {
                     messageText = getString(R.string.ActionAttachMenuBotAllowed);
                 } else if (messageOwner.action instanceof TLRPC.TL_messageActionSecureValuesSent) {

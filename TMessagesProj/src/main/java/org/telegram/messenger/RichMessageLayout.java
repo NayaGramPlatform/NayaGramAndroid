@@ -1073,7 +1073,10 @@ public class RichMessageLayout {
                 captionBlock.setContentPadding(dp(2), 0);
                 blocks.add(captionBlock);
             }
-            quotes.add(new QuoteBackground(startIndex, blocks.size() - 1, quotePadding, quoteLevel));
+            quotes.add(new QuoteBackground(
+                startIndex, blocks.size() - 1, quotePadding, quoteLevel,
+                dp(8), quote.collapsed ? dp(8) : 0
+            ));
 
             return null;
         } else if (pageBlock instanceof TL_iv.pageBlockPullquote) {

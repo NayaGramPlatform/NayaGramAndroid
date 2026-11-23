@@ -2170,6 +2170,12 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                                     noPaidMessagesToken = data.getQueryParameter("free");
                                                 }
                                                 text = data.getQueryParameter("text");
+                                            } else if (path.startsWith("botinvite/")) {
+                                                List<String> segments = data.getPathSegments();
+                                                if (segments.size() >= 2 && !TextUtils.isEmpty(segments.get(1))) {
+                                                    username = segments.get(1);
+                                                    botUser = data.getQueryParameter("start");
+                                                }
                                             } else if (path.startsWith("addstickers/")) {
                                                 sticker = path.replace("addstickers/", "");
                                             } else if (path.startsWith("auction/")) {

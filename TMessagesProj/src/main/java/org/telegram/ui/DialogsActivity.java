@@ -10734,6 +10734,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 }
             }
             updateStatus(UserConfig.getInstance(account).getCurrentUser(), true);
+            updateTitleVerifiedBadge();
         } else if (id == NotificationCenter.appDidLogout) {
             dialogsLoaded[currentAccount] = false;
         } else if (id == NotificationCenter.encryptedChatUpdated) {
@@ -10947,7 +10948,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (id == NotificationCenter.currentUserPremiumStatusChanged) {
             updateStatus(UserConfig.getInstance(account).getCurrentUser(), true);
             updateStoriesPosting();
-        } else if (id == NotificationCenter.reloadInterface || id == NotificationCenter.mainUserInfoChanged || id == NotificationCenter.updateInterfaces) {
+        } else if (id == NotificationCenter.reloadInterface || id == NotificationCenter.mainUserInfoChanged) {
             updateStatus(UserConfig.getInstance(currentAccount).getCurrentUser(), true);
             updateTitleVerifiedBadge();
         } else if (id == NotificationCenter.onDatabaseReset) {

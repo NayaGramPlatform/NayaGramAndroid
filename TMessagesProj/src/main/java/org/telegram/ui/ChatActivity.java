@@ -21861,6 +21861,7 @@ public class ChatActivity extends BaseFragment implements
             HashSet<Integer> serverMids = new HashSet<>();
             int minServerId = Integer.MAX_VALUE;
             int maxServerId = Integer.MIN_VALUE;
+            int maxServerDate = 0;
             for (int a = 0; a < messArr.size(); a++) {
                 MessageObject m = messArr.get(a);
                 int mid = m != null ? m.getId() : 0;
@@ -21868,9 +21869,13 @@ public class ChatActivity extends BaseFragment implements
                     serverMids.add(mid);
                     if (mid < minServerId) minServerId = mid;
                     if (mid > maxServerId) maxServerId = mid;
+                    if (m.messageOwner != null && m.messageOwner.date > maxServerDate) {
+                        maxServerDate = m.messageOwner.date;
+                    }
                 }
             }
             int windowMaxId = (load_type == 0 && loaded_max_id == 0) ? Integer.MAX_VALUE : maxServerId;
+            int nowSec = getConnectionsManager().getCurrentTime();
             ArrayList<MessageObject> restoredAntiDeleted = new ArrayList<>();
             ArrayList<MessageObject> candidates = new ArrayList<>();
             if (oldMessages != null) {
@@ -21889,8 +21894,10 @@ public class ChatActivity extends BaseFragment implements
                 if (mid <= 0 || serverMids.contains(mid) || getMessagesController().isLocallyDeleted(dialog_id, mid)) {
                     continue;
                 }
-                boolean withinWindow = !messArr.isEmpty() && mid >= minServerId && mid <= windowMaxId;
-                if (oldObj.isAntiDeleted || (!oldObj.isOutOwner() && withinWindow)) {
+                int oldDate = oldObj.messageOwner != null ? oldObj.messageOwner.date : 0;
+                boolean isInFlightLive = mid > maxServerId && (oldDate <= 0 || (maxServerDate > 0 && oldDate >= maxServerDate) || (nowSec - oldDate) < 120);
+                boolean withinWindow = !messArr.isEmpty() && mid >= minServerId && mid <= windowMaxId && !isInFlightLive;
+                if (oldObj.isAntiDeleted || (dialog_id != getUserConfig().getClientUserId() && withinWindow)) {
                     oldObj.deleted = false;
                     oldObj.isAntiDeleted = true;
                     oldObj.forceUpdate = true;
@@ -23157,9 +23164,9 @@ public class ChatActivity extends BaseFragment implements
                 if (mid <= 0 || mid > max_id) {
                     continue;
                 }
-                if (antiDelete && !obj.isOutOwner()) {
+                if (antiDelete && dialog_id != getUserConfig().getClientUserId()) {
                     if (getMessagesController().isLocallyDeleted(dialog_id, mid)) {
-                        getMessagesController().removeLocallyDeleted(dialog_id, mid);
+                        // Keep localDeleted marker intact so async MessagesStorage deletion still honors it.
                     } else {
                         obj.deleted = false;
                         obj.isAntiDeleted = true;

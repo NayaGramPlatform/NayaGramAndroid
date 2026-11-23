@@ -11860,6 +11860,7 @@ public class MessagesStorage extends BaseController {
                 if (antiDeleteChannel) {
                     SparseBooleanArray incomingMids = new SparseBooleanArray();
                     int minDiffMid = Integer.MAX_VALUE;
+                    int maxDiffMid = Integer.MIN_VALUE;
                     if (difference.messages != null) {
                         for (int a = 0; a < difference.messages.size(); a++) {
                             TLRPC.Message m = difference.messages.get(a);
@@ -11868,9 +11869,13 @@ public class MessagesStorage extends BaseController {
                                 if (m.id < minDiffMid) {
                                     minDiffMid = m.id;
                                 }
+                                if (m.id > maxDiffMid) {
+                                    maxDiffMid = m.id;
+                                }
                             }
                         }
                     }
+                    long selfUid = getUserConfig().getClientUserId();
                     SQLiteCursor prevCur = null;
                     try {
                         prevCur = database.queryFinalized(String.format(Locale.US, "SELECT mid, data, custom_params FROM messages_v2 WHERE uid = %d AND mid > 0 ORDER BY mid DESC LIMIT 500", did));
@@ -11883,7 +11888,7 @@ public class MessagesStorage extends BaseController {
                             if (data != null) {
                                 TLRPC.Message oldMsg = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
                                 if (oldMsg != null) {
-                                    oldMsg.readAttachPath(data, getUserConfig().clientUserId);
+                                    oldMsg.readAttachPath(data, selfUid);
                                 }
                                 data.reuse();
                                 NativeByteBuffer params = prevCur.byteBufferValue(2);
@@ -11895,11 +11900,11 @@ public class MessagesStorage extends BaseController {
                                 }
                                 if (oldMsg != null && oldMsg.id > 0) {
                                     oldMsg.dialog_id = did;
-                                    boolean inReplacedRange = (minDiffMid == Integer.MAX_VALUE) || (oldMsg.id >= minDiffMid);
-                                    if (!oldMsg.isAntiDeleted && inReplacedRange && (!oldMsg.out || oldMsg.post)) {
+                                    boolean inReplacedRange = minDiffMid != Integer.MAX_VALUE && oldMsg.id >= minDiffMid && oldMsg.id <= maxDiffMid;
+                                    if (!oldMsg.isAntiDeleted && inReplacedRange && did != selfUid) {
                                         oldMsg.isAntiDeleted = true;
                                     }
-                                    if (oldMsg.isAntiDeleted || oldMsg.id < minDiffMid) {
+                                    if (oldMsg.isAntiDeleted) {
                                         if (preservedChannelMessages == null) {
                                             preservedChannelMessages = new ArrayList<>();
                                         }
@@ -15254,18 +15259,7 @@ public class MessagesStorage extends BaseController {
                             int rmid = rCur.intValue(0);
                             long ruid = rCur.longValue(1);
                             int rout = rCur.intValue(2);
-                            boolean isChannelPost = false;
-                            if (rout == 1 && ruid < 0) {
-                                NativeByteBuffer rData = rCur.byteBufferValue(3);
-                                if (rData != null) {
-                                    TLRPC.Message rMsg = TLRPC.Message.TLdeserialize(rData, rData.readInt32(false), false);
-                                    rData.reuse();
-                                    if (rMsg != null && rMsg.post) {
-                                        isChannelPost = true;
-                                    }
-                                }
-                            }
-                            if (((rout == 1 && !isChannelPost) || getMessagesController().isLocallyDeleted(ruid, rmid)) && !replyIdsList.contains(rmid)) {
+                            if (((ruid == currentUser && rout == 1) || getMessagesController().isLocallyDeleted(ruid, rmid)) && !replyIdsList.contains(rmid)) {
                                 replyIdsList.add(rmid);
                             }
                         }
@@ -15314,10 +15308,10 @@ public class MessagesStorage extends BaseController {
                         state.step();
                         state.dispose();
                         state = null;
-                        database.commitTransaction();
                         data.reuse();
                     }
                 }
+                database.commitTransaction();
 
                 deleteFromDownloadQueue(idsToDelete, true);
                 AndroidUtilities.runOnUIThread(() -> getFileLoader().cancelLoadFiles(namesToDelete));
@@ -15759,7 +15753,10 @@ public class MessagesStorage extends BaseController {
                 state = null;
                 database.commitTransaction();
             } else {
-                dialogsToUpdate.add(-channelId);
+                long targetDid = channelId != 0 ? -channelId : originalDialogId;
+                if (targetDid != 0) {
+                    dialogsToUpdate.add(targetDid);
+                }
             }
             if (additionalDialogsToUpdate != null) {
                 for (int a = 0; a < additionalDialogsToUpdate.size(); a++) {
@@ -16009,7 +16006,7 @@ public class MessagesStorage extends BaseController {
                         TLRPC.Message message = TLRPC.Message.TLdeserialize(data, data.readInt32(false), false);
                         message.readAttachPath(data, getUserConfig().clientUserId);
                         data.reuse();
-                        if (!antiDeleteEnabled || (message.out && !message.post) || getMessagesController().isLocallyDeleted(did, msgId)) {
+                        if (!antiDeleteEnabled || (did == getUserConfig().getClientUserId() && message.out) || getMessagesController().isLocallyDeleted(did, msgId)) {
                             addFilesToDelete(message, filesToDelete, idsToDelete, namesToDelete, false);
                         }
                     }
@@ -16995,15 +16992,18 @@ public class MessagesStorage extends BaseController {
                         SparseBooleanArray returnedMids = new SparseBooleanArray();
                         int minReturnedId = Integer.MAX_VALUE;
                         int maxReturnedId = Integer.MIN_VALUE;
+                        int maxReturnedDate = 0;
                         for (int a = 0; a < count; a++) {
                             TLRPC.Message m = messages.messages.get(a);
                             if (m != null && m.id > 0) {
                                 returnedMids.put(m.id, true);
                                 if (m.id < minReturnedId) minReturnedId = m.id;
                                 if (m.id > maxReturnedId) maxReturnedId = m.id;
+                                if (m.date > maxReturnedDate) maxReturnedDate = m.date;
                             }
                         }
                         int windowMaxId = (load_type == LOAD_BACKWARD && max_id == 0) ? Integer.MAX_VALUE : maxReturnedId;
+                        int nowSec = getConnectionsManager().getCurrentTime();
                         if (minReturnedId != Integer.MAX_VALUE && minReturnedId <= windowMaxId) {
                             SQLiteCursor missingCur = null;
                             try {
@@ -17020,6 +17020,10 @@ public class MessagesStorage extends BaseController {
                                     TLRPC.Message oldMsg = TLRPC.Message.TLdeserialize(oldData, oldData.readInt32(false), false);
                                     oldData.reuse();
                                     if (oldMsg == null || (dialogId == selfId && oldMsg.out)) {
+                                        continue;
+                                    }
+                                    // Never falsely mark brand-new in-flight live messages (mid > maxReturnedId) as deleted
+                                    if (amid > maxReturnedId && (oldMsg.date <= 0 || (maxReturnedDate > 0 && oldMsg.date >= maxReturnedDate) || (nowSec - oldMsg.date) < 120)) {
                                         continue;
                                     }
                                     NativeByteBuffer paramsBuf = missingCur.byteBufferValue(2);

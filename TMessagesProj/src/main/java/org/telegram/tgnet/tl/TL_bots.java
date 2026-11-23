@@ -1327,4 +1327,83 @@ public class TL_bots {
             stream.writeString(username);
         }
     }
+
+    public static class TL_bots_setBotSettings extends TLMethod<TLRPC.User> {
+        public static final int constructor = 0x7CC0C0CA;
+
+        public int flags;
+        public TLRPC.InputUser bot;
+        public boolean inline_mode;
+        public String inline_placeholder;
+        public boolean inline_geo;
+        public int inline_feedback;
+        public boolean nochats;
+        public boolean chat_history;
+        public boolean business;
+        public boolean can_manage_bots;
+        public boolean guestchat;
+        public boolean guard;
+        public boolean forum_view;
+        public boolean forum_can_manage_topics;
+        public boolean forum_sidebar;
+        public boolean bot_to_bot_communication_mode;
+        public String callback_mode;
+
+        public TLRPC.User deserializeResponseT(InputSerializedData stream, int constructor, boolean exception) {
+            return TLRPC.User.TLdeserialize(stream, constructor, exception);
+        }
+
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            stream.writeInt32(flags);
+            if (hasFlag(flags, FLAG_0) && bot != null) {
+                bot.serializeToStream(stream);
+            }
+            if (hasFlag(flags, FLAG_1)) {
+                stream.writeBool(inline_mode);
+            }
+            if (hasFlag(flags, FLAG_2)) {
+                stream.writeString(inline_placeholder != null ? inline_placeholder : "");
+            }
+            if (hasFlag(flags, FLAG_3)) {
+                stream.writeBool(inline_geo);
+            }
+            if (hasFlag(flags, FLAG_4)) {
+                stream.writeInt32(inline_feedback);
+            }
+            if (hasFlag(flags, FLAG_5)) {
+                stream.writeBool(nochats);
+            }
+            if (hasFlag(flags, FLAG_6)) {
+                stream.writeBool(chat_history);
+            }
+            if (hasFlag(flags, FLAG_7)) {
+                stream.writeBool(business);
+            }
+            if (hasFlag(flags, FLAG_8)) {
+                stream.writeBool(can_manage_bots);
+            }
+            if (hasFlag(flags, FLAG_9)) {
+                stream.writeBool(guestchat);
+            }
+            if (hasFlag(flags, FLAG_10)) {
+                stream.writeBool(guard);
+            }
+            if (hasFlag(flags, FLAG_11)) {
+                stream.writeBool(forum_view);
+            }
+            if (hasFlag(flags, FLAG_12)) {
+                stream.writeBool(forum_can_manage_topics);
+            }
+            if (hasFlag(flags, FLAG_13)) {
+                stream.writeBool(forum_sidebar);
+            }
+            if (hasFlag(flags, FLAG_14)) {
+                stream.writeBool(bot_to_bot_communication_mode);
+            }
+            if (hasFlag(flags, FLAG_15)) {
+                stream.writeString(callback_mode != null ? callback_mode : "default");
+            }
+        }
+    }
 }

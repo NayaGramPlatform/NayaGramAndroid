@@ -1551,13 +1551,27 @@ public final class NGAntiDeleteVault {
                         byDid.put(did, d);
                         collectDialogPeer(did, userIds, chatIds);
                         MessagesStorage.addUsersAndChatsFromMessage(latestMsg, userIds, chatIds, null);
-                    } else if (latestMsg.id > existing.top_message && latestMsg.date >= existing.last_message_date) {
-                        existing.top_message = latestMsg.id;
-                        existing.last_message_date = latestMsg.date;
-                        dialogsRes.messages.add(latestMsg);
-                        addedMessages.add(latestMsg);
-                        collectDialogPeer(did, userIds, chatIds);
-                        MessagesStorage.addUsersAndChatsFromMessage(latestMsg, userIds, chatIds, null);
+                    } else {
+                        int serverDate = existing.last_message_date;
+                        if (serverDate == 0 && newDialogMessages != null) {
+                            ArrayList<MessageObject> srvMsgs = newDialogMessages.get(did);
+                            if (srvMsgs != null) {
+                                for (int k = 0; k < srvMsgs.size(); k++) {
+                                    MessageObject sm = srvMsgs.get(k);
+                                    if (sm != null && sm.messageOwner != null && sm.messageOwner.date > serverDate) {
+                                        serverDate = sm.messageOwner.date;
+                                    }
+                                }
+                            }
+                        }
+                        if (latestMsg.isAntiDeleted && latestMsg.id > existing.top_message && (serverDate == 0 || latestMsg.date >= serverDate)) {
+                            existing.top_message = latestMsg.id;
+                            existing.last_message_date = latestMsg.date;
+                            dialogsRes.messages.add(latestMsg);
+                            addedMessages.add(latestMsg);
+                            collectDialogPeer(did, userIds, chatIds);
+                            MessagesStorage.addUsersAndChatsFromMessage(latestMsg, userIds, chatIds, null);
+                        }
                     }
                 }
                 cur.dispose();

@@ -112,34 +112,9 @@ public final class AutoPinChannelManager {
                     }
 
                     TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
-                    if (dialog == null) {
-                        dialog = new TLRPC.TL_dialog();
-                        dialog.id = dialogId;
-                        dialog.unread_count = 0;
-                        dialog.top_message = 0;
-                        dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
-                        controller.dialogs_dict.put(dialogId, dialog);
-                        ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
-                        if (mainDialogs != null && !mainDialogs.contains(dialog)) {
-                            mainDialogs.add(0, dialog);
-                        }
+                    if (dialog != null && !dialog.pinned) {
+                        controller.pinDialog(dialogId, true, null, 0);
                     }
-                    dialog.pinned = true;
-                    dialog.pinnedNum = 9999;
-
-                    TLRPC.TL_messages_toggleDialogPin toggleReq = new TLRPC.TL_messages_toggleDialogPin();
-                    toggleReq.pinned = true;
-                    TLRPC.TL_inputDialogPeer dialogPeer = new TLRPC.TL_inputDialogPeer();
-                    TLRPC.TL_inputPeerChannel inputPeer = new TLRPC.TL_inputPeerChannel();
-                    inputPeer.channel_id = chat.id;
-                    inputPeer.access_hash = chat.access_hash;
-                    dialogPeer.peer = inputPeer;
-                    toggleReq.peer = dialogPeer;
-                    ConnectionsManager.getInstance(account).sendRequest(toggleReq, (tResp, tErr) -> {});
-
-                    controller.pinDialog(dialogId, true, null, 0);
-                    controller.sortDialogs(null);
-                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.dialogsNeedReload);
 
                     if (listener != null) {
                         listener.onResolved(dialogId);
@@ -154,25 +129,10 @@ public final class AutoPinChannelManager {
         try {
             MessagesController controller = MessagesController.getInstance(account);
             TLRPC.Dialog dialog = controller.dialogs_dict.get(dialogId);
-            if (dialog == null) {
-                dialog = new TLRPC.TL_dialog();
-                dialog.id = dialogId;
-                dialog.unread_count = 0;
-                dialog.top_message = 0;
-                dialog.last_message_date = ConnectionsManager.getInstance(account).getCurrentTime();
-                controller.dialogs_dict.put(dialogId, dialog);
-                ArrayList<TLRPC.Dialog> mainDialogs = controller.getDialogs(0);
-                if (mainDialogs != null && !mainDialogs.contains(dialog)) {
-                    mainDialogs.add(0, dialog);
-                }
+            if (dialog == null || dialog.pinned) {
+                return;
             }
-            if (!dialog.pinned) {
-                dialog.pinned = true;
-                dialog.pinnedNum = 9999;
-                controller.pinDialog(dialogId, true, null, 0);
-            }
-            controller.sortDialogs(null);
-            NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.dialogsNeedReload);
+            controller.pinDialog(dialogId, true, null, 0);
         } catch (Throwable ignored) {
         }
     }

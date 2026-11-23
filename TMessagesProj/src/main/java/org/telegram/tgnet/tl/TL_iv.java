@@ -880,6 +880,7 @@ public class TL_iv {
                 case pageBlockList_layer82.constructor: return new pageBlockList_layer82();
                 case pageBlockBlockquote.constructor: return new pageBlockBlockquote();
                 case pageBlockBlockquoteBlocks.constructor: return new pageBlockBlockquoteBlocks();
+                case pageBlockBlockquoteBlocks_layer233.constructor: return new pageBlockBlockquoteBlocks_layer233();
                 case pageBlockPullquote.constructor: return new pageBlockPullquote();
                 case pageBlockBlockquote_layer228.constructor: return new pageBlockBlockquote_layer228();
                 case pageBlockPhoto.constructor: return new pageBlockPhoto();
@@ -1197,10 +1198,33 @@ public class TL_iv {
         }
     }
     public static class pageBlockBlockquoteBlocks extends PageBlock {
-        public static final int constructor = 0xe6e47c4;
+        public static final int constructor = 0x2613f896;
 
+        public int flags;
+        public boolean collapsed;
         public ArrayList<PageBlock> blocks = new ArrayList<>();
         public RichText caption;
+
+        @Override
+        public void readParams(InputSerializedData stream, boolean exception) {
+            flags = stream.readInt32(exception);
+            collapsed = hasFlag(flags, FLAG_0);
+            blocks = Vector.deserialize(stream, PageBlock::TLdeserialize, exception);
+            caption = RichText.TLdeserialize(stream, stream.readInt32(exception), exception);
+        }
+
+        @Override
+        public void serializeToStream(OutputSerializedData stream) {
+            stream.writeInt32(constructor);
+            flags = setFlag(flags, FLAG_0, collapsed);
+            stream.writeInt32(flags);
+            Vector.serialize(stream, blocks);
+            caption.serializeToStream(stream);
+        }
+    }
+
+    public static class pageBlockBlockquoteBlocks_layer233 extends pageBlockBlockquoteBlocks {
+        public static final int constructor = 0xe6e47c4;
 
         @Override
         public void readParams(InputSerializedData stream, boolean exception) {
