@@ -7,6 +7,9 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build Signed AAB and APK
@@ -346,17 +349,23 @@ jobs:
         continue-on-error: true
         if: github.ref == 'refs/heads/master'
         with:
-          tag_name: "${{ env.APP_VERSION_TAG }}-b${{ github.run_number }}"
+          tag_name: "${{ env.APP_VERSION_TAG }}"
           name: "NayaGram Release v${{ env.APP_VERSION_NAME }} (Build ${{ env.APP_VERSION_CODE }})"
           body: |
             ### 🚀 NayaGram Release v${{ env.APP_VERSION_NAME }} (Build ${{ env.APP_VERSION_CODE }})
-            
-            **Release Highlights:**
-            - **Version Code**: `${{ env.APP_VERSION_CODE }}`
+
+            **Build Info:**
             - **Version Name**: `${{ env.APP_VERSION_NAME }}`
-            - **Background Auto-Reply Engine**: Reliable FCM push wake lock, 64-bit ID parsing, min-peer recovery, and deduplication across offline/killed states.
-            - **Anti-Delete Hardening**: Protected push deletions, channel post media/replydata preservation, and persistent dialog preview badges.
-            - **Glowing AI & Pencil Formatting Tools**: Animated vibrant glowing AI button, sleek pencil formatting menu (with Quote, Spoiler, Bold, Italic, Mono, Strike, Underline, Create Link, Date, Regular & Text Style), 16 KB compliance, and Play Store version 41062, MTProto Layer 233 (Telegram 13.2.2), fixed Bot API 10.4 Interactive Widgets (twidget/widget-sandbox v0.6.5), Screenshots/Screen Recording support, and redesigned Voice Changer UI/UX with Male & Female voice presets.
+            - **Internal Build Code**: `${{ env.APP_VERSION_CODE }}`
+            - **Google Play Version Code**: `${{ env.APP_VERSION_CODE }}2`
+
+            **What's New & Improved:**
+            - **Real-Time Chat Previews & Anti-Delete Reliability**: Faster live dialog previews and stronger preservation of undeleted messages across chats and channels.
+            - **Folder & Navigation Stability**: Smoother chat folder switching and improved multi-account session reliability.
+            - **Bot API 10.5 Client Support**: Expanded client-side support for the latest Telegram Bot API 10.5 capabilities and interactive widgets.
+            - **Login & Connection Hardening**: Cleaner production login flow with automatic recovery from stale backend states.
+            - **Voice Changer & Auto-Reply**: Studio NGSonic DSP voice presets, voice note downloads, and reliable background Auto-Reply handling.
+            - **Platform & Compliance**: 16 KB Android page-size alignment, Android 16 (SDK 36) target, and MTProto Layer 233.
           files: |
             build_output/NayaGram-Release.apk
             build_output/NayaGram-Release.aab
