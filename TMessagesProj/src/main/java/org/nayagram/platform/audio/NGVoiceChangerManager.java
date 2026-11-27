@@ -1448,7 +1448,6 @@ public final class NGVoiceChangerManager {
 
         // Stage 1: Clean speech frontend (BEFORE NGSonic!)
         private final Biquad preHpf;        // 95 Hz 2nd-order Butterworth rumble/hum cut
-        private final Biquad prePresence;   // +2.0 dB vocal intelligibility clarity boost
         private final VocalNoiseGate gate;  // Adaptive soft-knee noise gate (-20 dB floor)
 
         // Stage 2: Clean PICOLA pitch/speed shifter (phase-intact, zero metallic ringing)
@@ -1470,6 +1469,7 @@ public final class NGVoiceChangerManager {
         private double lfoPhase = 0.0;
         private final float[] robotComb;
         private int robotCombPos = 0;
+        private float robotCombLp = 0f;
         private float hoarseLp = 0f;
         private int rngState = 0x13579BDF;
 
@@ -1495,9 +1495,8 @@ public final class NGVoiceChangerManager {
             this.fxMix = clamp(fxMixParam, 0f, 1f);
             this.noiseGateEnabled = noiseGateEnabled;
 
-            // Stage 1: Clean 95 Hz Butterworth HPF + speech presence + adaptive noise gate
+            // Stage 1: Clean 95 Hz Butterworth HPF + adaptive vocal noise gate (zero stacked EQ)
             this.preHpf = Biquad.highPass(sampleRate, 95.0, 0.707);
-            this.prePresence = Biquad.peaking(sampleRate, 2800.0, 1.0, 2.0);
             this.gate = new VocalNoiseGate(sampleRate);
 
             // Stage 2: NGSonic runs FIRST on clean, un-smeared speech!
@@ -1527,18 +1526,18 @@ public final class NGVoiceChangerManager {
                     outGain = 1.08f;
                     break;
                 case MODE_FEMALE:
-                    low = Biquad.lowShelf(sampleRate, 210.0, -3.5 * eqScale);
-                    mid = Biquad.peaking(sampleRate, 3000.0, 1.0, 3.6 * eqScale);
+                    low = Biquad.lowShelf(sampleRate, 200.0, -2.8 * eqScale);
+                    mid = Biquad.peaking(sampleRate, 2800.0, 0.9, 2.2 * eqScale);
                     outGain = 1.12f;
                     break;
                 case MODE_CHILD:
-                    low = Biquad.lowShelf(sampleRate, 240.0, -4.2 * eqScale);
-                    mid = Biquad.peaking(sampleRate, 3300.0, 1.0, 3.8 * eqScale);
+                    low = Biquad.lowShelf(sampleRate, 230.0, -3.2 * eqScale);
+                    mid = Biquad.peaking(sampleRate, 3000.0, 0.9, 2.4 * eqScale);
                     outGain = 1.12f;
                     break;
                 case MODE_MOUSE:
-                    low = Biquad.lowShelf(sampleRate, 320.0, -5.0 * eqScale);
-                    mid = Biquad.peaking(sampleRate, 3800.0, 1.1, 3.2 * eqScale);
+                    low = Biquad.lowShelf(sampleRate, 300.0, -3.8 * eqScale);
+                    mid = Biquad.peaking(sampleRate, 3400.0, 0.95, 2.2 * eqScale);
                     outGain = 1.14f;
                     break;
                 case MODE_MONSTER:
@@ -1554,8 +1553,8 @@ public final class NGVoiceChangerManager {
                     outGain = 1.08f;
                     break;
                 case MODE_HELIUM:
-                    low = Biquad.lowShelf(sampleRate, 280.0, -4.5 * eqScale);
-                    mid = Biquad.peaking(sampleRate, 3500.0, 1.0, 3.4 * eqScale);
+                    low = Biquad.lowShelf(sampleRate, 260.0, -3.4 * eqScale);
+                    mid = Biquad.peaking(sampleRate, 3200.0, 0.95, 2.3 * eqScale);
                     outGain = 1.10f;
                     break;
                 case MODE_CHIPMUNK:
@@ -1603,7 +1602,7 @@ public final class NGVoiceChangerManager {
 
             this.eqLow = low;
             this.eqMid = mid;
-            this.eqAirLpf = Biquad.lowPass(sampleRate, Math.min(9500.0, sampleRate * 0.42), 0.707);
+            this.eqAirLpf = Biquad.lowPass(sampleRate, Math.min(7600.0, sampleRate * 0.42), 0.707);
             this.phoneBandpass = phone;
             this.echo = ec;
             this.caveReverb = rev;
@@ -1629,7 +1628,6 @@ public final class NGVoiceChangerManager {
                 if (noiseGateEnabled) {
                     x = gate.process(x);
                 }
-                x = prePresence.process(x);
                 clean[i] = floatToShort(softLimit(x));
             }
 
@@ -1736,8 +1734,10 @@ public final class NGVoiceChangerManager {
 
                 // Clean character FX (strictly gated by speechWeight!)
                 if (mode == MODE_ROBOT && robotComb != null) {
-                    float delayed = robotComb[robotCombPos];
-                    robotComb[robotCombPos] = x + delayed * 0.36f * speechWeight;
+                    float delayedRaw = robotComb[robotCombPos];
+                    robotCombLp = robotCombLp * 0.65f + delayedRaw * 0.35f;
+                    float delayed = robotCombLp;
+                    robotComb[robotCombPos] = x + delayed * 0.24f * speechWeight;
                     robotCombPos = (robotCombPos + 1) % robotComb.length;
 
                     modPhase1 += twoPi * 72.0 * invSr;
@@ -1755,8 +1755,10 @@ public final class NGVoiceChangerManager {
                     modPhase1 += twoPi * instFreq * invSr;
                     if (modPhase1 > twoPi) modPhase1 -= twoPi;
 
-                    float delayed = robotComb[robotCombPos];
-                    robotComb[robotCombPos] = x + delayed * 0.28f * speechWeight;
+                    float delayedRaw = robotComb[robotCombPos];
+                    robotCombLp = robotCombLp * 0.65f + delayedRaw * 0.35f;
+                    float delayed = robotCombLp;
+                    robotComb[robotCombPos] = x + delayed * 0.20f * speechWeight;
                     robotCombPos = (robotCombPos + 1) % robotComb.length;
 
                     float alien = (x * 0.65f + delayed * 0.35f) * (float) (0.50 + 0.50 * Math.sin(modPhase1));

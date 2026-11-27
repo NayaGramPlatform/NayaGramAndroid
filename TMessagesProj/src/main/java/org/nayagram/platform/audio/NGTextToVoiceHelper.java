@@ -334,8 +334,16 @@ public final class NGTextToVoiceHelper {
                                     MessageObject threadMsg = chatActivity.getThreadMessage();
 
                                     long localId = SharedConfig.getLastLocalId();
+                                    SharedConfig.saveConfig();
+                                    TLRPC.TL_document doc = new TLRPC.TL_document();
+                                    doc.file_reference = new byte[0];
+                                    doc.dc_id = Integer.MIN_VALUE;
+                                    doc.id = localId;
+                                    doc.user_id = UserConfig.getInstance(currentAccount).getClientUserId();
+                                    doc.mime_type = NGVoiceOpusWriter.MIME_TYPE;
+
                                     File audioDir = FileLoader.getDirectory(FileLoader.MEDIA_DIR_AUDIO);
-                                    File outFile = new File(audioDir, "ng_t2v_" + Math.abs(localId) + "_" + System.currentTimeMillis() + ".ogg");
+                                    File outFile = new File(audioDir, System.currentTimeMillis() + "_" + FileLoader.getAttachFileName(doc));
                                     NGVoiceOpusWriter.Result encoded = NGVoiceOpusWriter.encodePcmToOgg(outFile, pcm48k, NGVoiceDemoPlayer.SAMPLE_RATE);
 
                                     AndroidUtilities.runOnUIThread(() -> {
@@ -345,12 +353,6 @@ public final class NGTextToVoiceHelper {
                                             Toast.makeText(ctx, "Could not encode voice message", Toast.LENGTH_SHORT).show();
                                             return;
                                         }
-                                        TLRPC.TL_document doc = new TLRPC.TL_document();
-                                        doc.file_reference = new byte[0];
-                                        doc.dc_id = Integer.MIN_VALUE;
-                                        doc.id = localId;
-                                        doc.user_id = UserConfig.getInstance(currentAccount).getClientUserId();
-                                        doc.mime_type = NGVoiceOpusWriter.MIME_TYPE;
                                         doc.date = ConnectionsManager.getInstance(currentAccount).getCurrentTime();
                                         doc.size = encoded.file.length();
 

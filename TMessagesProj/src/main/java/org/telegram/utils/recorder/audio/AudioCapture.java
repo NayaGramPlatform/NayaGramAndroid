@@ -242,7 +242,9 @@ final class AudioCapture {
             if (encoder == null) {
                 throw new IllegalStateException("Unable to initialize native Opus recorder");
             }
-            if (noiseSuppression == AudioRecordingSession.NoiseSuppression.RNNOISE) {
+            boolean voiceChangerRnnoise = voiceEffect != null
+                    && org.nayagram.platform.audio.NGVoiceChangerManager.isNoiseGateEnabled(null);
+            if (noiseSuppression == AudioRecordingSession.NoiseSuppression.RNNOISE || voiceChangerRnnoise) {
                 noiseSuppressor = AudioNoiseSuppressor.create();
                 if (noiseSuppressor == null) {
                     diagnostics.log("RNNoise unavailable; recording unprocessed PCM");
