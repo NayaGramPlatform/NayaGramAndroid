@@ -41,6 +41,7 @@ public final class NGChatMenuHelper {
     public static final int ITEM_AUTO_TRANSLATE = 29004;
     public static final int ITEM_TEXT_STYLE = 29005;
     public static final int ITEM_VOICE_CHANGER = 29006;
+    public static final int ITEM_TEXT_TO_VOICE = 29007;
 
     private static final String PREFS_CHAT = "nayagram_chat_prefs_";
 
@@ -49,6 +50,8 @@ public final class NGChatMenuHelper {
         boolean dark = Theme.isCurrentThemeDark();
         headerItem.lazilyAddSubItem(ITEM_VOICE_CHANGER, R.drawable.menu_feature_voice, "Voice Changer")
                 .setColors(dark ? 0xFFFFFFFF : 0xFF7C3AED, dark ? 0xFFA78BFA : 0xFF7C3AED);
+        headerItem.lazilyAddSubItem(ITEM_TEXT_TO_VOICE, R.drawable.msg_filled_data_voice, "Text to Voice")
+                .setColors(dark ? 0xFFFFFFFF : 0xFF0EA5E9, dark ? 0xFF38BDF8 : 0xFF0EA5E9);
         headerItem.lazilyAddSubItem(ITEM_TEXT_STYLE, R.drawable.msg_text_outlined, "Text style")
                 .setColors(dark ? 0xFFFFFFFF : 0xFF0284C7, dark ? 0xFF38BDF8 : 0xFF0284C7);
         headerItem.lazilyAddSubItem(ITEM_CHAT_ID, R.drawable.settings_faq, "ID: " + dialogId)
@@ -66,7 +69,10 @@ public final class NGChatMenuHelper {
             Toast.makeText(activity, "Chat ID copied: " + dialogId, Toast.LENGTH_SHORT).show();
             return true;
         } else if (id == ITEM_VOICE_CHANGER) {
-            org.nayagram.platform.audio.NGVoiceChangerManager.showDialog(activity, null);
+            org.nayagram.platform.audio.NGVoiceChangerManager.showDialog(chatActivity, null);
+            return true;
+        } else if (id == ITEM_TEXT_TO_VOICE) {
+            org.nayagram.platform.audio.NGTextToVoiceHelper.showDialog(activity, chatActivity);
             return true;
         } else if (id == ITEM_TEXT_STYLE) {
             org.nayagram.platform.textstyle.NGTextStyleHelper.showDialog(activity);

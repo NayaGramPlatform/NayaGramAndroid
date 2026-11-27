@@ -925,7 +925,7 @@ public class NGSettingsActivity extends BaseFragment {
                     String activeVoiceMode = org.nayagram.platform.audio.NGVoiceChangerManager.getModeTitle(
                             org.nayagram.platform.audio.NGVoiceChangerManager.getSelectedMode(getParentActivity())
                     );
-                    c.setActionFeature(R.drawable.menu_feature_voice, 0xFF7C3AED, "Voice Changer (Voice Notes)", "Active: " + activeVoiceMode + " • Tap to change effect", true);
+                    c.setActionFeature(R.drawable.menu_feature_voice, 0xFF7C3AED, "Voice Changer (Voice Notes)", "Active: " + activeVoiceMode + " • Demo, Tune & Text-to-Voice", true);
                 } else if (position == rowVideoShape && rowVideoShape != -1) {
                     c.setActionFeature(R.drawable.menu_feature_voice, 0xFFEC4899, "Video Message Shapes", cfg.getVideoShapeName(cfg.getVideoShape()), true);
                 } else if (position == rowAutoAddText) {

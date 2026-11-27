@@ -22,7 +22,7 @@ This repository ([**NayaGramPlatform/NayaGramAndroid**](https://github.com/NayaG
 | Property | Value |
 | :--- | :--- |
 | **Application ID (Google Play)** | `org.nayagram.platform` ([**View on Google Play**](https://play.google.com/store/apps/details?id=org.nayagram.platform)) |
-| **Current Version** | `v4.26.86 NG` (**Build `4108`**) |
+| **Current Version** | `v4.26.87 NG` (**Build `4109`**) |
 | **License** | [**GNU General Public License v2.0 or later**](LICENSE) |
 | **Privacy Policy** | [**NayaGram Privacy Policy**](https://nayagramplatform.github.io/PrivacyArticleCenter/) |
 
@@ -31,7 +31,7 @@ This repository ([**NayaGramPlatform/NayaGramAndroid**](https://github.com/NayaG
 ## 📋 Disclosure & Compliance
 - **Unofficial Client Notice:** NayaGram is an independent third-party client powered by the Telegram API. It is not affiliated with Telegram FZ-LLC / Telegram Messenger Inc.
 - **Build-Time Secrets:** `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, and release signing credentials are injected at build time via environment variables or CI secrets (`-P` flags) and are never hardcoded in source files.
-- **Full Source Parity:** Application source code (`TMessagesProj`, `TMessagesProj_App`, native C++ submodules, and resources) matches the `v4.26.86 NG` (**Build `4108`**) release.
+- **Full Source Parity:** Application source code (`TMessagesProj`, `TMessagesProj_App`, native C++ submodules, and resources) matches the `v4.26.87 NG` (**Build `4109`**) release.
 
 ---
 
