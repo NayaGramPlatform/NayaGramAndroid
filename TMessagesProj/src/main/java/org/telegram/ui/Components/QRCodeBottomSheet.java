@@ -110,7 +110,7 @@ public class QRCodeBottomSheet extends BottomSheet {
         buttonTextView.setTypeface(AndroidUtilities.bold());
         buttonTextView.setText(LocaleController.getString(R.string.ShareQrCode));
         buttonTextView.setOnClickListener(view -> {
-            Uri uri = AndroidUtilities.getBitmapShareUri(qrCode, "qr_tmp.png", Bitmap.CompressFormat.PNG);
+            Uri uri = AndroidUtilities.getBitmapShareUri(qrCode, "NayaGram_QR.png", Bitmap.CompressFormat.PNG);
             if (uri != null) {
                 Intent i = new Intent(Intent.ACTION_SEND);
 

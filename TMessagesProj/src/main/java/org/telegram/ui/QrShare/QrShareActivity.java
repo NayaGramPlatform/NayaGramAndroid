@@ -213,7 +213,7 @@ public class QrShareActivity extends BaseFragment {
             return;
         }
         final android.graphics.Bitmap bitmap = view.renderShareImage();
-        final Uri uri = bitmap != null ? AndroidUtilities.getBitmapShareUri(bitmap, "qr_tmp.jpg", android.graphics.Bitmap.CompressFormat.JPEG) : null;
+        final Uri uri = bitmap != null ? AndroidUtilities.getBitmapShareUri(bitmap, "NayaGram_QR.jpg", android.graphics.Bitmap.CompressFormat.JPEG) : null;
         final Intent intent = new Intent(Intent.ACTION_SEND);
         if (uri != null) {
             intent.setType("image/*");
@@ -251,7 +251,7 @@ public class QrShareActivity extends BaseFragment {
     /** Waits for the storage permission (Android 6–10), then saves. */
     private boolean saveAfterPermission;
 
-    /** The QR as an image (the same one as shared) to the gallery: Pictures/Telegram before Android 10, MediaStore after. */
+    /** The QR as an image (the same one as shared) to the gallery: Pictures/NayaGram before Android 10, MediaStore after. */
     private void saveToGallery() {
         final android.app.Activity activity = getParentActivity();
         if (activity == null || view == null || view.getCurrentLink() == null) {
@@ -269,7 +269,7 @@ public class QrShareActivity extends BaseFragment {
         }
         Utilities.globalQueue.postRunnable(() -> {
             // the external cache: MediaController.saveFile does not take files from the app's internal storage
-            final java.io.File file = new java.io.File(AndroidUtilities.getCacheDir(), "qr_code_" + System.currentTimeMillis() + ".png");
+            final java.io.File file = new java.io.File(AndroidUtilities.getCacheDir(), "NayaGram_QR_" + System.currentTimeMillis() + ".png");
             boolean written = false;
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
                 written = bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
